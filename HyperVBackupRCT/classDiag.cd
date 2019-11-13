@@ -1,0 +1,161 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1" MembersFormat="NameAndType">
+  <Class Name="HyperVBackupRCT.DiffHandler">
+    <Position X="11.75" Y="2.75" Width="2.25" />
+    <TypeIdentifier>
+      <HashCode>AAQAAAgAAAAAAAAABAAAAAAAAAABAAAAAAEAAAAAAAA=</HashCode>
+      <FileName>DiffHandler.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="HyperVBackupRCT.RestoreHandler">
+    <Position X="11.75" Y="0.5" Width="2.5" />
+    <TypeIdentifier>
+      <HashCode>AEQAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAACAAACAAA=</HashCode>
+      <FileName>RestoreHandler.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="HyperVBackupRCT.SnapshotHandler">
+    <Position X="0.5" Y="0.5" Width="3.5" />
+    <TypeIdentifier>
+      <HashCode>QAQAAggAAACAAAAQBAAAAAAAKAwAAAAAiAABAIiAAAA=</HashCode>
+      <FileName>SnapshotHandler.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="HyperVBackupRCT.VirtualDiskHandler">
+    <Position X="9" Y="0.5" Width="2.5" />
+    <Compartments>
+      <Compartment Name="Fields" Collapsed="true" />
+    </Compartments>
+    <NestedTypes>
+      <Struct Name="HyperVBackupRCT.VirtualDiskHandler.VirtualStorageType" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>VirtualDiskHandler.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Struct>
+      <Struct Name="HyperVBackupRCT.VirtualDiskHandler.ATTACH_VIRTUAL_DISK_PARAMETERS_Version1" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>VirtualDiskHandler.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Struct>
+      <Struct Name="HyperVBackupRCT.VirtualDiskHandler.GetVirtualDiskInfo" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>VirtualDiskHandler.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Struct>
+      <Enum Name="HyperVBackupRCT.VirtualDiskHandler.ATTACH_VIRTUAL_DISK_VERSION" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>VirtualDiskHandler.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+      <Struct Name="HyperVBackupRCT.VirtualDiskHandler.OPEN_VIRTUAL_DISK_PARAMETERS_Version2" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>VirtualDiskHandler.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Struct>
+      <Enum Name="HyperVBackupRCT.VirtualDiskHandler.DETACH_VIRTUAL_DISK_FLAG" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>VirtualDiskHandler.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+      <Enum Name="HyperVBackupRCT.VirtualDiskHandler.VirtualStorageDeviceType" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>VirtualDiskHandler.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+      <Enum Name="HyperVBackupRCT.VirtualDiskHandler.ATTACH_VIRTUAL_DISK_FLAG" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>VirtualDiskHandler.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+      <Struct Name="HyperVBackupRCT.VirtualDiskHandler.GetVirtualDiskInfoUnion" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>VirtualDiskHandler.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Struct>
+      <Struct Name="HyperVBackupRCT.VirtualDiskHandler.GetVirtualDiskInfoParentLocation" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>VirtualDiskHandler.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Struct>
+      <Struct Name="HyperVBackupRCT.VirtualDiskHandler.ATTACH_VIRTUAL_DISK_PARAMETERS" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>VirtualDiskHandler.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Struct>
+      <Struct Name="HyperVBackupRCT.VirtualDiskHandler.GetVirtualDiskInfoSize" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>VirtualDiskHandler.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Struct>
+      <Struct Name="HyperVBackupRCT.VirtualDiskHandler.GetVirtualDiskInfoPhysicalDisk" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>VirtualDiskHandler.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Struct>
+      <Enum Name="HyperVBackupRCT.VirtualDiskHandler.OPEN_VIRTUAL_DISK_VERSION" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>VirtualDiskHandler.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+      <Struct Name="HyperVBackupRCT.VirtualDiskHandler.OPEN_VIRTUAL_DISK_PARAMETERS" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>VirtualDiskHandler.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Struct>
+      <Struct Name="HyperVBackupRCT.VirtualDiskHandler.GetVirtualDiskInfoChangeTrackingState" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>VirtualDiskHandler.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Struct>
+      <Struct Name="HyperVBackupRCT.VirtualDiskHandler.VIRTUAL_STORAGE_TYPE" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>VirtualDiskHandler.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Struct>
+      <Enum Name="HyperVBackupRCT.VirtualDiskHandler.VirtualDiskAccessMask" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>VirtualDiskHandler.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+      <Enum Name="HyperVBackupRCT.VirtualDiskHandler.OPEN_VIRTUAL_DISK_FLAG" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>VirtualDiskHandler.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+      <Struct Name="HyperVBackupRCT.VirtualDiskHandler.OPEN_VIRTUAL_DISK_PARAMETERS_Version1" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>VirtualDiskHandler.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Struct>
+      <Enum Name="HyperVBackupRCT.VirtualDiskHandler.GetVirtualDiskInfoVersion" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>VirtualDiskHandler.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+      <Enum Name="HyperVBackupRCT.VirtualDiskHandler.VIRTUAL_DISK_ACCESS_MASK" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>VirtualDiskHandler.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+    </NestedTypes>
+    <TypeIdentifier>
+      <HashCode>EAAAAIjEBoAAQAgEASQDBAAAIBICAACAgYAACCAICkA=</HashCode>
+      <FileName>VirtualDiskHandler.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="HyperVBackupRCT.WmiUtilities">
+    <Position X="4.25" Y="0.5" Width="4.5" />
+    <TypeIdentifier>
+      <HashCode>gCAAAASAABEAFAACJDgAABAAAQAACAAAAAgAAgIAQgA=</HashCode>
+      <FileName>wmiUtilities.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Struct Name="HyperVBackupRCT.ChangedBlock">
+    <Position X="14.25" Y="3" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AACAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>ChangedBlock.cs</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>
