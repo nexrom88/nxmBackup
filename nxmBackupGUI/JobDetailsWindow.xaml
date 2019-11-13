@@ -1,0 +1,27 @@
+﻿<Window x:Class="nxmBackupGUI.JobDetailsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:nxmBackupGUI"
+        mc:Ignorable="d"
+        Title="Job Details" Height="431" Width="310" ResizeMode="NoResize" Loaded="Window_Loaded">
+    <Grid>
+
+        <ComboBox x:Name="cbRotationType" Margin="20,190,20,0" VerticalAlignment="Top" Grid.ColumnSpan="2">
+            <ComboBoxItem Content="Zusammenführen" Uid="merge"/>
+            <ComboBoxItem Content="Blockrotation" Uid="blockrotation"/>
+        </ComboBox>
+        <Label Content="Rotationstyp:" Margin="20,160,20,0" VerticalAlignment="Top" Grid.ColumnSpan="2"/>
+        <ComboBox x:Name="cbBlockSize" Margin="20,110,20,0" VerticalAlignment="Top" Grid.ColumnSpan="2">
+            <ComboBoxItem Content="Zusammenführen" Uid="merge"/>
+            <ComboBoxItem Content="Blockrotation" Uid="blockrotation"/>
+        </ComboBox>
+        <Label Content="Vollbackup nach Anzahl inkrmentieller Backups:" Margin="20,80,20,0" VerticalAlignment="Top" Grid.ColumnSpan="2"/>
+        <CheckBox x:Name="cbIncrements" Content="Inkrementielle Backups verwenden" Margin="20,30,20,0" VerticalAlignment="Top" Checked="cbIncrements_Checked" Unchecked="cbIncrements_Unchecked" Grid.ColumnSpan="2"/>
+        <Button Content="Übernehmen" Margin="95,325,105,0" VerticalAlignment="Top" Height="40"/>
+        <Label Content="Anzahl aufzubewahrender Blöcke:" Margin="20,240,20,0" VerticalAlignment="Top"/>
+        <Slider x:Name="slMaxElements" Margin="20,270,20,0" VerticalAlignment="Top" Minimum="1" SmallChange="1" TickPlacement="TopLeft" Value="1"/>
+
+    </Grid>
+</Window>

@@ -5,8 +5,8 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:nxmBackupGUI"
         mc:Ignorable="d"
-        Title="Job erstellen" Height="600" Width="800">
-    <Grid Loaded="Grid_Loaded">
+        Title="Job erstellen" Height="612" Width="800">
+    <Grid Loaded="Grid_Loaded" Margin="0,0,0,12">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="30*"/>
             <ColumnDefinition Width="10*"/>
@@ -30,7 +30,7 @@
             <ComboBoxItem Content="Täglich" Uid="daily"/>
             <ComboBoxItem Content="Wöchentlich" Uid="weekly"/>
         </ComboBox>
-        <Button x:Name="btAddJob" Content="Job anlegen" Grid.Column="3" Margin="62,0,62,15" VerticalAlignment="Bottom" Height="35" Click="btAddJob_Click"/>
+        <Button x:Name="btAddJob" Content="Job anlegen" Grid.Column="3" Margin="62,0,62,55" VerticalAlignment="Bottom" Height="35" Click="btAddJob_Click"/>
         <GroupBox Grid.Column="3" Header="Intervall-Details" Height="160" Margin="10,150,10,0" VerticalAlignment="Top">
             <Grid Margin="0,0,0,0">
                 <ComboBox x:Name="cbMinutes" Margin="0,10,0,0" VerticalAlignment="Top" HorizontalAlignment="Right" Width="120"/>
@@ -51,17 +51,16 @@
 
 
         </GroupBox>
-        <Label Content="Sicherungs-Ablagepfad:" Grid.Column="3" HorizontalAlignment="Left" Margin="10,420,0,0" VerticalAlignment="Top"/>
-        <TextBox x:Name="txtPath" IsEnabled="false" Grid.Column="3" Height="23" Margin="10,450,60,0" VerticalAlignment="Top"/>
-        <Button x:Name="btSelectPath" Content="..." Grid.Column="3" Margin="0,450,10,0" HorizontalAlignment="Right" Width="30" Height="23" VerticalAlignment="Top" Click="btSelectPath_Click"/>
-        <Label x:Name="lblError" Content="" Grid.Column="3" Margin="10,480,0,0" Foreground="#FFC32424" Height="26" VerticalAlignment="Top"/>
+        <Label Content="Sicherungs-Ablagepfad:" Grid.Column="3" HorizontalAlignment="Left" Margin="10,360,0,0" VerticalAlignment="Top"/>
+        <TextBox x:Name="txtPath" IsEnabled="false" Grid.Column="3" Height="23" Margin="10,390,60,0" VerticalAlignment="Top"/>
+        <Button x:Name="btSelectPath" Content="..." Grid.Column="3" Margin="0,390,10,0" HorizontalAlignment="Right" Width="30" Height="23" VerticalAlignment="Top" Click="btSelectPath_Click"/>
+        <Label x:Name="lblError" Content="" Grid.Column="3" Margin="10,0,0,10" Foreground="#FFC32424" Height="26" VerticalAlignment="Bottom"/>
         <ComboBox x:Name="cbCompression" Grid.Column="3" Margin="10,330,10,0" SelectedIndex="0" Height="22" VerticalAlignment="Top">
             <ComboBoxItem Content="Keine Kompression" Uid="nocompression"/>
             <ComboBoxItem Content="Mittlere Kompression" Uid="fastest"/>
             <ComboBoxItem Content="Starke Kompression" Uid="optimal"/>
         </ComboBox>
-        <ComboBox x:Name="cbSnapshotCount" Grid.Column="3" Margin="10,390,10,0" VerticalAlignment="Top" />
-        <Label Content="Anzahl zu speichernder Backups:" Grid.Column="3" HorizontalAlignment="Left" Margin="10,360,0,0" VerticalAlignment="Top"/>
+        <Button x:Name="btJobDetails" Content="Job-Details" Grid.Column="3" Margin="62,0,62,100" VerticalAlignment="Bottom" Height="35" Click="btJobDetails_Click"/>
 
 
     </Grid>

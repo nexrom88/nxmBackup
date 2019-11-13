@@ -57,7 +57,7 @@ namespace JobEngine
             {
                 SnapshotHandler ssHandler = new SnapshotHandler(vm.vmName);
                 ssHandler.newEvent += this.newEvent;
-                ssHandler.performFullBackupProcess(ConsistencyLevel.ApplicationAware, true, System.IO.Path.Combine(this.Job.basePath, vm.vmName), true, Job.compression, this.job.snapshotCount);
+                ssHandler.performFullBackupProcess(ConsistencyLevel.ApplicationAware, true, System.IO.Path.Combine(this.Job.basePath, vm.vmName), true, Job.compression, this.job.blockSize);
             }
 
             this.inProgress = false;

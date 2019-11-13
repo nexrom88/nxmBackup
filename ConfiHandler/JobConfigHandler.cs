@@ -36,7 +36,7 @@ namespace ConfigHandler
                     OneJob job = new OneJob();
                     job.basePath = jobsElement.ChildNodes.Item(i).Attributes.GetNamedItem("basePath").Value;
                     job.name = jobsElement.ChildNodes.Item(i).Attributes.GetNamedItem("name").Value;
-                    job.snapshotCount = uint.Parse(jobsElement.ChildNodes.Item(i).Attributes.GetNamedItem("snapshotCount").Value);
+                    job.blockSize = uint.Parse(jobsElement.ChildNodes.Item(i).Attributes.GetNamedItem("blocksize").Value);
 
                     //build compression level
                     switch (jobsElement.ChildNodes.Item(i).Attributes.GetNamedItem("name").Value)
@@ -119,7 +119,7 @@ namespace ConfigHandler
                 newElement.SetAttribute("day", job.interval.day);
                 newElement.SetAttribute("basePath", job.basePath);
                 newElement.SetAttribute("compression", job.compression.ToString().ToLower());
-                newElement.SetAttribute("snapshotCount", job.snapshotCount.ToString());
+                newElement.SetAttribute("blocksize", job.blockSize.ToString());
                 XmlElement newJob = (XmlElement)backupsElement.AppendChild(newElement);
 
                 //now build the job VMs
@@ -179,7 +179,21 @@ namespace ConfigHandler
         public List<JobVM> jobVMs;
         public string basePath;
         public System.IO.Compression.CompressionLevel compression;
-        public uint snapshotCount;
+        public uint blockSize;
+        public Rotation rotation;
+    }
+
+    //defines rotation type
+    public struct Rotation
+    {
+        public RotationType type;
+        public uint maxElementCount;
+    }
+
+    //defines rotation type
+    public enum RotationType
+    {
+        merge, blockRotation
     }
 
     //defines when to start a backup

@@ -20,6 +20,9 @@ namespace nxmBackupGUI
     public partial class AddJobWindow : Window
     {
         private bool windowReady = false;
+        private ConfigHandler.Rotation rotation = new ConfigHandler.Rotation();
+        private bool incrementalActivated = true;
+        private uint blockSize = 2;
 
         public AddJobWindow()
         {
@@ -41,13 +44,6 @@ namespace nxmBackupGUI
                 cbHours.Items.Add(i);
             }
             cbHours.SelectedIndex = 0;
-
-            //build max snapshot count for combo box
-            for (int i = 1; i < 60; i++)
-            {
-                cbSnapshotCount.Items.Add(i);
-            }
-            cbSnapshotCount.SelectedIndex = 4;
 
             //load vms
             List<Common.WMIHelper.OneVM> vms = Common.WMIHelper.listVMs();
@@ -160,7 +156,8 @@ namespace nxmBackupGUI
             ConfigHandler.OneJob job = new ConfigHandler.OneJob();
             job.basePath = txtPath.Text;
             job.name = txtJobName.Text;
-            job.snapshotCount = uint.Parse(cbSnapshotCount.Text);
+            job.blockSize = this.blockSize;
+            job.rotation = this.rotation;
 
             //build compression var
             switch (((ComboBoxItem)cbCompression.SelectedItem).Uid)
@@ -224,6 +221,31 @@ namespace nxmBackupGUI
                 System.Windows.Forms.DialogResult result = dialog.ShowDialog();
                 txtPath.Text = dialog.SelectedPath;
             }
+        }
+
+        private void btJobDetails_Click(object sender, RoutedEventArgs e)
+        {
+            JobDetailsWindow detailWindow = new JobDetailsWindow();
+            detailWindow.cbIncrements.IsChecked = this.incrementalActivated;
+            detailWindow.ShowDialog();
+
+            //read set values
+            this.incrementalActivated = (bool)detailWindow.cbIncrements.IsChecked;
+            this.blockSize = uint.Parse(detailWindow.cbBlockSize.SelectedItem.ToString()) + 1; //blocksize is +1 because blocksize contains full backup
+
+
+            switch (((ComboBoxItem)detailWindow.cbRotationType.SelectedItem).Uid)
+            {
+                case "merge":
+                    this.rotation.type = ConfigHandler.RotationType.merge;
+                    break;
+                case "blockrotation":
+                    this.rotation.type = ConfigHandler.RotationType.blockRotation;
+                    break;
+            }
+
+            this.rotation.maxElementCount = (uint)detailWindow.slMaxElements.Value;
+
         }
     }
 }
