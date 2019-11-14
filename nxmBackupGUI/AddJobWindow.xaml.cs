@@ -47,12 +47,16 @@ namespace nxmBackupGUI
 
             //load vms
             List<Common.WMIHelper.OneVM> vms = Common.WMIHelper.listVMs();
-            foreach(Common.WMIHelper.OneVM vm in vms)
+
+            if (vms != null)
             {
-                ListBoxItem lbItem = new ListBoxItem();
-                lbItem.Content = vm.name;
-                lbItem.Uid = vm.id;
-                lbAvailableVMs.Items.Add(lbItem);
+                foreach (Common.WMIHelper.OneVM vm in vms)
+                {
+                    ListBoxItem lbItem = new ListBoxItem();
+                    lbItem.Content = vm.name;
+                    lbItem.Uid = vm.id;
+                    lbAvailableVMs.Items.Add(lbItem);
+                }
             }
 
             windowReady = true;
