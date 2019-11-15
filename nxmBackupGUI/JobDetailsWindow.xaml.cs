@@ -77,5 +77,19 @@ namespace nxmBackupGUI
                     break;
             }
         }
+
+        private void cbRotationType_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            //change slider caption
+            switch (((ComboBoxItem)cbRotationType.SelectedItem).Uid)
+            {
+                case "merge":
+                    lblSlider.Content = "Anzahl aufzubewahrender Backups:";
+                    break;
+                case "blockrotation":
+                    lblSlider.Content = "Anzahl aufzubewahrender Blöcke:";
+                    break;
+            }
+        }
     }
 }
