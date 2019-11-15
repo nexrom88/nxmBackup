@@ -21,10 +21,20 @@ namespace nxmBackupGUI
     {
 
         bool windowLoaded = false;
+        bool incremental;
+        uint blockSize;
+        string rotationType;
+        uint maxElements;
 
-        public JobDetailsWindow()
+        public JobDetailsWindow(bool incremental, uint blockSize, string rotationType, uint maxElements)
         {
             InitializeComponent();
+
+            //initialize default values
+            this.incremental = incremental;
+            this.blockSize = blockSize;
+            this.rotationType = rotationType;
+            this.maxElements = maxElements;
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
@@ -32,9 +42,26 @@ namespace nxmBackupGUI
             //build block size combobox
             for (int i = 1; i <= 20; i++)
             {
-                cbBlockSize.Items.Add(i);
+                ComboBoxItem item = new ComboBoxItem();
+                item.Content = i;
+                cbBlockSize.Items.Add(item);
             }
-            cbBlockSize.SelectedIndex = 6;
+
+            //set default settings
+            cbIncrements.IsChecked = this.incremental;
+            cbBlockSize.SelectedIndex = (int)this.blockSize - 1;
+
+            for (int i = 0; i < cbRotationType.Items.Count; i++)
+            {
+                if ( ((ComboBoxItem)cbRotationType.Items[i]).Uid == this.rotationType)
+                {
+                    cbRotationType.SelectedIndex = i;
+                    break;
+                }
+            }
+
+            slMaxElements.Value = this.maxElements;
+
             windowLoaded = true;
         }
 

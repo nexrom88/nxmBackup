@@ -229,13 +229,12 @@ namespace nxmBackupGUI
 
         private void btJobDetails_Click(object sender, RoutedEventArgs e)
         {
-            JobDetailsWindow detailWindow = new JobDetailsWindow();
-            detailWindow.cbIncrements.IsChecked = this.incrementalActivated;
+            JobDetailsWindow detailWindow = new JobDetailsWindow(this.incrementalActivated, this.blockSize, this.rotation.type.ToString().ToLower(), this.rotation.maxElementCount);
             detailWindow.ShowDialog();
 
             //read set values
             this.incrementalActivated = (bool)detailWindow.cbIncrements.IsChecked;
-            this.blockSize = uint.Parse(detailWindow.cbBlockSize.SelectedItem.ToString()) + 1; //blocksize is +1 because blocksize contains full backup
+            this.blockSize = uint.Parse(((ComboBoxItem)detailWindow.cbBlockSize.SelectedItem).Content.ToString());
 
 
             switch (((ComboBoxItem)detailWindow.cbRotationType.SelectedItem).Uid)
