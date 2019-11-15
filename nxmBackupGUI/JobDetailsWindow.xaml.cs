@@ -19,6 +19,9 @@ namespace nxmBackupGUI
     /// </summary>
     public partial class JobDetailsWindow : Window
     {
+
+        bool windowLoaded = false;
+
         public JobDetailsWindow()
         {
             InitializeComponent();
@@ -31,18 +34,48 @@ namespace nxmBackupGUI
             {
                 cbBlockSize.Items.Add(i);
             }
+            cbBlockSize.SelectedIndex = 6;
+            windowLoaded = true;
         }
 
         private void cbIncrements_Checked(object sender, RoutedEventArgs e)
         {
             cbBlockSize.IsEnabled = true;
             cbRotationType.IsEnabled = true;
+            if (((ComboBoxItem)cbRotationType.SelectedItem).Uid == "blockrotation")
+            {
+                lblBlocksCaption.Content = "Anzahl aufzubewahrender Blöcke:";
+            }
         }
 
         private void cbIncrements_Unchecked(object sender, RoutedEventArgs e)
         {
             cbBlockSize.IsEnabled = false;
             cbRotationType.IsEnabled = false;
+            lblBlocksCaption.Content = "Anzahl aufzubewahrender Backups:";
+        }
+
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            this.Close();
+        }
+
+        private void cbRotationType_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (!windowLoaded)
+            {
+                return;
+            }
+
+            switch (((ComboBoxItem)cbRotationType.SelectedItem).Uid)
+            {
+                case "merge":
+                    lblBlocksCaption.Content = "Anzahl aufzubewahrender Backups:";
+                    break;
+                case "blockrotation":
+                    lblBlocksCaption.Content = "Anzahl aufzubewahrender Blöcke:";
+                    break;
+            }
         }
     }
 }
