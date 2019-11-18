@@ -38,6 +38,18 @@ namespace ConfigHandler
                     job.name = jobsElement.ChildNodes.Item(i).Attributes.GetNamedItem("name").Value;
                     job.blockSize = uint.Parse(jobsElement.ChildNodes.Item(i).Attributes.GetNamedItem("blocksize").Value);
 
+                    //build rotation structure
+                    switch (jobsElement.ChildNodes.Item(i).Attributes.GetNamedItem("rotationtype").Value)
+                    {
+                        case "merge":
+                            job.rotation.type = RotationType.merge;
+                            break;
+                        case "blockrotation":
+                            job.rotation.type = RotationType.blockRotation;
+                            break;
+                    }
+                    job.rotation.maxElementCount = uint.Parse(jobsElement.ChildNodes.Item(i).Attributes.GetNamedItem("maxelements").Value);
+
                     //build compression level
                     switch (jobsElement.ChildNodes.Item(i).Attributes.GetNamedItem("name").Value)
                     {
@@ -120,8 +132,8 @@ namespace ConfigHandler
                 newElement.SetAttribute("basePath", job.basePath);
                 newElement.SetAttribute("compression", job.compression.ToString().ToLower());
                 newElement.SetAttribute("blocksize", job.blockSize.ToString());
-                newElement.SetAttribute("maxElements", job.rotation.maxElementCount.ToString());
-                newElement.SetAttribute("rotationType", job.rotation.type.ToString());
+                newElement.SetAttribute("maxelements", job.rotation.maxElementCount.ToString());
+                newElement.SetAttribute("rotationtype", job.rotation.type.ToString());
                 XmlElement newJob = (XmlElement)backupsElement.AppendChild(newElement);
 
                 //now build the job VMs

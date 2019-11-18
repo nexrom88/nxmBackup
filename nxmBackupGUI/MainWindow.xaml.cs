@@ -34,32 +34,32 @@ namespace nxmBackupGUI
 
         private void BtStart_Click(object sender, RoutedEventArgs e)
         {
-            //Common.Job.newEventDelegate newEventDel = newEvent;
-            HyperVBackupRCT.SnapshotHandler ssHandler = new HyperVBackupRCT.SnapshotHandler(cbVMs.Items[cbVMs.SelectedIndex].ToString());
-            ssHandler.newEvent += new Common.Job.newEventDelegate(newEvent);
+            ////Common.Job.newEventDelegate newEventDel = newEvent;
+            //HyperVBackupRCT.SnapshotHandler ssHandler = new HyperVBackupRCT.SnapshotHandler(cbVMs.Items[cbVMs.SelectedIndex].ToString());
+            //ssHandler.newEvent += new Common.Job.newEventDelegate(newEvent);
 
-            System.IO.Compression.CompressionLevel compressionLevel;
+            //System.IO.Compression.CompressionLevel compressionLevel;
 
-            //read compression level
-            switch (cbCompression.SelectedIndex)
-            {
-                case 0:
-                    compressionLevel = System.IO.Compression.CompressionLevel.NoCompression;
-                    break;
-                case 1:
-                    compressionLevel = System.IO.Compression.CompressionLevel.Fastest;
-                    break;
-                case 2:
-                    compressionLevel = System.IO.Compression.CompressionLevel.Optimal;
-                    break;
-                default:
-                    compressionLevel = System.IO.Compression.CompressionLevel.NoCompression;
-                    break;
-            }
+            ////read compression level
+            //switch (cbCompression.SelectedIndex)
+            //{
+            //    case 0:
+            //        compressionLevel = System.IO.Compression.CompressionLevel.NoCompression;
+            //        break;
+            //    case 1:
+            //        compressionLevel = System.IO.Compression.CompressionLevel.Fastest;
+            //        break;
+            //    case 2:
+            //        compressionLevel = System.IO.Compression.CompressionLevel.Optimal;
+            //        break;
+            //    default:
+            //        compressionLevel = System.IO.Compression.CompressionLevel.NoCompression;
+            //        break;
+            //}
 
-            Thread snapshotThread = new Thread(() => ssHandler.performFullBackupProcess(HyperVBackupRCT.ConsistencyLevel.ApplicationAware, true, "c:\\nxm", true, compressionLevel, 0));
+            //Thread snapshotThread = new Thread(() => ssHandler.performFullBackupProcess(HyperVBackupRCT.ConsistencyLevel.ApplicationAware, true, "c:\\nxm", true, compressionLevel, 2, 5));
 
-            snapshotThread.Start();
+            //snapshotThread.Start();
 
             
         }

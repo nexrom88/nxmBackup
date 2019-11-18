@@ -23,7 +23,7 @@ namespace HyperVBackupRCT
         }
 
         //performs a full backup chain
-        public void performFullBackupProcess(ConsistencyLevel cLevel, Boolean allowSnapshotFallback, string destination, bool incremental, System.IO.Compression.CompressionLevel compressionLevel, uint maxSnapshotCount)
+        public void performFullBackupProcess(ConsistencyLevel cLevel, Boolean allowSnapshotFallback, string destination, bool incremental, System.IO.Compression.CompressionLevel compressionLevel, ConfigHandler.OneJob job)
         {
             ManagementObject snapshot = createSnapshot(cLevel, allowSnapshotFallback);
             ManagementObject refP = null;
@@ -34,9 +34,13 @@ namespace HyperVBackupRCT
             List<ConfigHandler.BackupConfigHandler.BackupInfo> chain = ConfigHandler.BackupConfigHandler.readChain(destination);
             if (incremental) //incremental backup? get latest reference point
             {
-                if (chain == null || chain.Count == 0)
+                if (chain == null || chain.Count == 0) //first backup must be full backup
                 {
                     raiseNewEvent("Inkrementielles Backup nicht möglich", false, false);
+                    refP = null; //incremental backup not possible
+                }
+                else if (getBlockSize(chain) < job.blockSize) //block size reached?
+                {
                     refP = null; //incremental backup not possible
                 }
                 else
@@ -85,13 +89,36 @@ namespace HyperVBackupRCT
             }
 
             //check whether max snapshot count is reached, then merge
-            if (maxSnapshotCount > 0 && chain.Count > maxSnapshotCount)
+            if (job.rotation.maxElementCount > 0 && chain.Count > job.rotation.maxElementCount)
             {
                 mergeOldest(destination, chain, compressionLevel);
             }
 
             raiseNewEvent("Backupvorgang erfolgreich", false, false);
 
+        }
+
+        //reads the current block size from a given backup chain
+        private uint getBlockSize (List<ConfigHandler.BackupConfigHandler.BackupInfo> chain)
+        {
+            if (chain == null)
+            {
+                return 0;
+            }
+
+            uint blockSize = 0;
+            foreach (ConfigHandler.BackupConfigHandler.BackupInfo backup in chain)
+            {
+                if (backup.type == "full") //full backup found -> reset blockSize Counter
+                {
+                    blockSize = 1;
+                }
+                else //rct backup found -> increment blockSize counter
+                {
+                    blockSize++;
+                }
+            }
+            return blockSize;
         }
 
         //merge two backups to keep max snapshot count
