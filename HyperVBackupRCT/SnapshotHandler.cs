@@ -39,7 +39,7 @@ namespace HyperVBackupRCT
                     raiseNewEvent("Inkrementielles Backup nicht möglich", false, false);
                     refP = null; //incremental backup not possible
                 }
-                else if (getBlockSize(chain) < job.blockSize) //block size reached?
+                else if (getBlockSize(chain) >= job.blockSize) //block size reached?
                 {
                     refP = null; //incremental backup not possible
                 }
