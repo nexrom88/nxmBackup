@@ -5,7 +5,7 @@
 //
 // Copyright (c) Microsoft. All rights reserved.
 
-namespace HyperVBackupRCT
+namespace Common
 {
     using System;
     using System.Globalization;

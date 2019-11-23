@@ -49,6 +49,7 @@
     <Compile Include="PrettyPrinter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="WMIHelper.cs" />
+    <Compile Include="wmiUtilities.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="classDiag.cd" />

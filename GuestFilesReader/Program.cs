@@ -23,10 +23,12 @@ namespace GuestFilesReader
         //mounts vhdx file without driveletter using powershell
         private static void mountVHD(string vhdFile)
         {
-            PowerShell PowerShellInstance = PowerShell.Create();
-            string command = "Mount-DiskImage -ImagePath '" + vhdFile + "' -NoDriveLetter\r\n";
-            PowerShellInstance.AddScript(command);
-            PowerShellInstance.Invoke();
+            //ManagementScope scope = new ManagementScope(@"root\virtualization", null);
+            //using (ManagementObject imageManagementService = WmiUtilities.GetImageManagementService(scope))
+            //using (ManagementBaseObject inParams = imageManagementService.GetMethodParameters("GetVirtualDiskChanges"))
+            //{
+            //}
+
         }
 
         //gets all current mounted drives with no drive letter

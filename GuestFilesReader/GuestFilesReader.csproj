@@ -56,5 +56,11 @@
     <None Include="App.config" />
     <None Include="packages.config" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\HyperVBackupRCT\HyperVBackupRCT.csproj">
+      <Project>{5b42d544-7e9c-4d1d-acc6-5ea30adee127}</Project>
+      <Name>HyperVBackupRCT</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

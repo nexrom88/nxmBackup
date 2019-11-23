@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Management;
 using System.Runtime.InteropServices;
+using Common;
 
 
 namespace HyperVBackupRCT
