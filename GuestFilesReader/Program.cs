@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.IO;
 using System.Management;
 using System.Management.Automation;
+using Common;
 
 namespace GuestFilesReader
 {
@@ -23,11 +24,11 @@ namespace GuestFilesReader
         //mounts vhdx file without driveletter using powershell
         private static void mountVHD(string vhdFile)
         {
-            //ManagementScope scope = new ManagementScope(@"root\virtualization", null);
-            //using (ManagementObject imageManagementService = WmiUtilities.GetImageManagementService(scope))
-            //using (ManagementBaseObject inParams = imageManagementService.GetMethodParameters("GetVirtualDiskChanges"))
-            //{
-            //}
+            ManagementScope scope = new ManagementScope(@"root\virtualization", null);
+            using (ManagementObject imageManagementService = WmiUtilities.GetImageManagementService(scope))
+            using (ManagementBaseObject inParams = imageManagementService.GetMethodParameters("AttachVirtualHardDisk"))
+            {
+            }
 
         }
 
