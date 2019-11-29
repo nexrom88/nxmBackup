@@ -90,9 +90,15 @@ namespace HyperVBackupRCT
             }
 
             //check whether max snapshot count is reached, then merge
-            if (job.rotation.maxElementCount > 0 && chain.Count > job.rotation.maxElementCount)
+            if (job.rotation.type == ConfigHandler.RotationType.merge) //RotationType = "merge"
             {
-                mergeOldest(destination, chain, compressionLevel);
+                if (job.rotation.maxElementCount > 0 && chain.Count > job.rotation.maxElementCount)
+                {
+                    mergeOldest(destination, chain, compressionLevel);
+                }
+            } else if (job.rotation.type == ConfigHandler.RotationType.blockRotation) //RotationType = "blockRotation"
+            {
+                
             }
 
             raiseNewEvent("Backupvorgang erfolgreich", false, false);

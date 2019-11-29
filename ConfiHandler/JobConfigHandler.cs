@@ -133,7 +133,7 @@ namespace ConfigHandler
                 newElement.SetAttribute("compression", job.compression.ToString().ToLower());
                 newElement.SetAttribute("blocksize", job.blockSize.ToString());
                 newElement.SetAttribute("maxelements", job.rotation.maxElementCount.ToString());
-                newElement.SetAttribute("rotationtype", job.rotation.type.ToString());
+                newElement.SetAttribute("rotationtype", job.rotation.type.ToString().ToLower());
                 XmlElement newJob = (XmlElement)backupsElement.AppendChild(newElement);
 
                 //now build the job VMs
