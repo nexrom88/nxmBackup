@@ -89,6 +89,9 @@ namespace HyperVBackupRCT
                 raiseNewEvent("erfolgreich", true, false);
             }
 
+            //read current backup chain for further processing
+            chain = ConfigHandler.BackupConfigHandler.readChain(destination);
+
             //check whether max snapshot count is reached, then merge
             if (job.rotation.type == ConfigHandler.RotationType.merge) //RotationType = "merge"
             {
@@ -99,13 +102,34 @@ namespace HyperVBackupRCT
             }
             else if (job.rotation.type == ConfigHandler.RotationType.blockRotation) //RotationType = "blockRotation"
             {
-                if (job.rotation.maxElementCount > 0 && getBlockSize(chain) > job.rotation.maxElementCount)
+                if (job.rotation.maxElementCount > 0 && getBlockCount(chain) > job.rotation.maxElementCount)
                 {
                     blockRotate(destination, chain);
                 }
             }
 
             raiseNewEvent("Backupvorgang erfolgreich", false, false);
+
+        }
+
+        //gets the block count for the given chain
+        private uint getBlockCount(List<ConfigHandler.BackupConfigHandler.BackupInfo> chain)
+        {
+            if (chain == null)
+            {
+                return 0;
+            }
+
+            uint blockCount = 0;
+            foreach (ConfigHandler.BackupConfigHandler.BackupInfo backup in chain)
+            {
+                if (backup.type == "full")
+                {
+                    blockCount++;
+                }
+            }
+
+            return blockCount;
 
         }
 
