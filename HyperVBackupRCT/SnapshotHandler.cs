@@ -96,9 +96,13 @@ namespace HyperVBackupRCT
                 {
                     mergeOldest(destination, chain, compressionLevel);
                 }
-            } else if (job.rotation.type == ConfigHandler.RotationType.blockRotation) //RotationType = "blockRotation"
+            }
+            else if (job.rotation.type == ConfigHandler.RotationType.blockRotation) //RotationType = "blockRotation"
             {
-                
+                if (job.rotation.maxElementCount > 0 && getBlockSize(chain) > job.rotation.maxElementCount)
+                {
+                    blockRotate(destination, chain);
+                }
             }
 
             raiseNewEvent("Backupvorgang erfolgreich", false, false);
@@ -126,6 +130,35 @@ namespace HyperVBackupRCT
                 }
             }
             return blockSize;
+        }
+
+
+        //performs a block rotation
+        private void blockRotate(string path, List<ConfigHandler.BackupConfigHandler.BackupInfo> chain)
+        {
+            raiseNewEvent("Rotiere Backups (Block Rotation)...", false, false);
+
+            //remove first full backup
+            ConfigHandler.BackupConfigHandler.removeBackup(path, chain[0].uuid); //remove from config
+            System.IO.File.Delete(System.IO.Path.Combine(path, chain[0].uuid + ".nxm")); //remove backup file
+
+            //remove rct backups
+            for (int i = 1; i < chain.Count; i++)
+            {
+                //when backuptype type == full => blockrotation completed
+                if (chain[i].type == "full")
+                {
+                    break;
+                }
+                else
+                {
+                    //remove rct backup
+                    ConfigHandler.BackupConfigHandler.removeBackup(path, chain[i].uuid); //remove from config
+                    System.IO.File.Delete(System.IO.Path.Combine(path, chain[i].uuid + ".nxm")); //remove backup file
+                }
+            }
+
+            raiseNewEvent("erfolgreich", true, false);
         }
 
         //merge two backups to keep max snapshot count
