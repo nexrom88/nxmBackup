@@ -45,6 +45,7 @@
   <ItemGroup>
     <Compile Include="Archive.cs" />
     <Compile Include="EventProperties.cs" />
+    <Compile Include="IArchive.cs" />
     <Compile Include="Job.cs" />
     <Compile Include="PrettyPrinter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
