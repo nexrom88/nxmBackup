@@ -10,12 +10,9 @@ namespace TestProj
     {
         static void Main(string[] args)
         {
-            Common.ZipArchive a = new Common.ZipArchive("c:\\zip\\test.zip", null);
-            a.create();
-            a.open(System.IO.Compression.ZipArchiveMode.Update);
-            a.addDirectory("c:\\Test", System.IO.Compression.CompressionLevel.Optimal);
-            Console.WriteLine("done");
-            a.close();
+            Common.IArchive arch = new Common.LZ4Archive("e:\\nxm\\abc.nxm", null);
+            arch.create();
+            arch.addFile("c:\\Win10.vhdx", "vhd", System.IO.Compression.CompressionLevel.Fastest);
         }
     }
 }
