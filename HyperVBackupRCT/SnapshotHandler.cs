@@ -220,7 +220,7 @@ namespace HyperVBackupRCT
             //create new backup container from merged backups
             Guid g = Guid.NewGuid();
             string guidFolder = g.ToString();
-            Common.Archive backupArchive = new Common.Archive(System.IO.Path.Combine(path, guidFolder + ".nxm"), null);
+            Common.ZipArchive backupArchive = new Common.ZipArchive(System.IO.Path.Combine(path, guidFolder + ".nxm"), null);
             backupArchive.create();
             backupArchive.open(System.IO.Compression.ZipArchiveMode.Create);
 
@@ -380,7 +380,7 @@ namespace HyperVBackupRCT
             string guidFolder = g.ToString();
 
             //create and open archive
-            Common.Archive archive = new Common.Archive(System.IO.Path.Combine(path, guidFolder + ".nxm"), this.newEvent);
+            Common.ZipArchive archive = new Common.ZipArchive(System.IO.Path.Combine(path, guidFolder + ".nxm"), this.newEvent);
             archive.create();
             archive.open(System.IO.Compression.ZipArchiveMode.Create);
 
@@ -470,7 +470,7 @@ namespace HyperVBackupRCT
 
 
         //performs a rct backup copy
-        private void performrctbackup(string snapshothddPath, string rctID, Common.Archive archive, System.IO.Compression.CompressionLevel compressionLevel)
+        private void performrctbackup(string snapshothddPath, string rctID, Common.ZipArchive archive, System.IO.Compression.CompressionLevel compressionLevel)
         {
             //read vhd size
             VirtualDiskHandler diskHandler = new VirtualDiskHandler(snapshothddPath);

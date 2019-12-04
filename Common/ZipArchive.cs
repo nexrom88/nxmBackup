@@ -9,14 +9,14 @@ using System.IO;
 
 namespace Common
 {
-    public class Archive
+    public class ZipArchive : IArchive
     {
         string path;
-        ZipArchive archiveStream;
+        System.IO.Compression.ZipArchive archiveStream;
         FileStream fileStream;
         private Job.newEventDelegate newEvent;
 
-        public Archive (string path, Job.newEventDelegate newEvent)
+        public ZipArchive (string path, Job.newEventDelegate newEvent)
         {
             this.newEvent = newEvent;
             this.path = path;
@@ -26,7 +26,7 @@ namespace Common
         public void create()
         {
             FileStream fileStream = new FileStream(this.path, FileMode.Create);
-            ZipArchive archiveStream = new ZipArchive(fileStream, ZipArchiveMode.Create);
+            System.IO.Compression.ZipArchive archiveStream = new System.IO.Compression.ZipArchive(fileStream, ZipArchiveMode.Create);
             archiveStream.Dispose();
             fileStream.Close();
         }
@@ -36,7 +36,7 @@ namespace Common
         {
            //open necessary streams
            this.fileStream = new FileStream(this.path, FileMode.Open);
-           this.archiveStream = new ZipArchive(fileStream, mode);          
+           this.archiveStream = new System.IO.Compression.ZipArchive(fileStream, mode);          
         }
 
         //closes the archive
@@ -73,7 +73,7 @@ namespace Common
             FileStream sourceStream = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
 
             //creaty zip entry
-            ZipArchiveEntry entry = this.archiveStream.CreateEntry(path + "/" + fileName, compressionLevel);
+            ZipArchiveEntry entry = this.archiveStream.CreateEntry(path + "/" + fileName, compressionLevel); //virtual hard disks/xyz.vhdx
             Stream outStream = entry.Open();
 
             //create buffer and read counter

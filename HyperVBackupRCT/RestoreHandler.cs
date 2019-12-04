@@ -69,7 +69,7 @@ namespace HyperVBackupRCT
                 ConfigHandler.BackupConfigHandler.BackupInfo currentBackup = restoreChain[restoreChain.Count - 1];
 
                 //open diff file
-                Common.Archive archive = new Common.Archive(System.IO.Path.Combine(basePath, currentBackup.uuid + ".nxm"), null);
+                Common.ZipArchive archive = new Common.ZipArchive(System.IO.Path.Combine(basePath, currentBackup.uuid + ".nxm"), null);
                 archive.open(System.IO.Compression.ZipArchiveMode.Read);
 
                 //iterate through all vhds
@@ -109,7 +109,7 @@ namespace HyperVBackupRCT
         public List<string> transferSnapshot(string archivePath, string destination, bool justHardDrives)
         {
             List<string> hddFiles = new List<string>();
-            Common.Archive archive = new Common.Archive(archivePath, this.newEvent);
+            Common.ZipArchive archive = new Common.ZipArchive(archivePath, this.newEvent);
             archive.open(System.IO.Compression.ZipArchiveMode.Read);
 
             //get all archive entries

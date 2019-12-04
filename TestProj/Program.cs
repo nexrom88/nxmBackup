@@ -10,7 +10,7 @@ namespace TestProj
     {
         static void Main(string[] args)
         {
-            Common.Archive a = new Common.Archive("c:\\zip\\test.zip", null);
+            Common.ZipArchive a = new Common.ZipArchive("c:\\zip\\test.zip", null);
             a.create();
             a.open(System.IO.Compression.ZipArchiveMode.Update);
             a.addDirectory("c:\\Test", System.IO.Compression.CompressionLevel.Optimal);
