@@ -22,7 +22,7 @@ namespace Common
         }
 
         //adds a whole folder to the archive
-        void IArchive.addDirectory(string folder, CompressionLevel compressionLevel)
+        public void addDirectory(string folder, CompressionLevel compressionLevel)
         {
             //list all files
             string[] entries = Directory.GetFiles(folder, "*", SearchOption.AllDirectories);
@@ -44,7 +44,7 @@ namespace Common
         }
 
         //adds a given file to the archive
-        void IArchive.addFile(string file, string path, CompressionLevel compressionLevel)
+        public void addFile(string file, string path, CompressionLevel compressionLevel)
         {
             path = path.Replace("/", "\\");
             string fileName = Path.GetFileName(file);
@@ -104,19 +104,19 @@ namespace Common
         }
 
         //not implemented here
-        void IArchive.close()
+        public void close()
         {
             return;
         }
 
         //creates the archive folder
-        void IArchive.create()
+        public void create()
         {
             System.IO.Directory.CreateDirectory(this.path);
         }
 
         //creates an archive entry and returns the compression stream
-        Stream IArchive.createAndGetFileStream(string path, CompressionLevel compressionLevel)
+        public Stream createAndGetFileStream(string path, CompressionLevel compressionLevel)
         {
             path = path.Replace("/", "\\");
 
@@ -136,7 +136,7 @@ namespace Common
         }
 
         //decompresses an entry to a given destination
-        void IArchive.getFile(string archivePath, string destinationPath)
+        public void getFile(string archivePath, string destinationPath)
         {
             string lastProgress = "";
             string fileName = Path.GetFileName(destinationPath);
@@ -184,7 +184,7 @@ namespace Common
         }
 
         //lists all archive entries
-        List<string> IArchive.listEntries()
+        public List<string> listEntries()
         {
             List<string> retVal = new List<string>();
 
@@ -204,12 +204,13 @@ namespace Common
         }
 
         //not implemented here
-        void IArchive.open(ZipArchiveMode mode)
+        public void open(ZipArchiveMode mode)
         {
             return;
         }
 
-        Stream IArchive.openAndGetFileStream(string path)
+        //opens an archive file and returns the decompression stream
+        public Stream openAndGetFileStream(string path)
         {
             throw new NotImplementedException();
         }
