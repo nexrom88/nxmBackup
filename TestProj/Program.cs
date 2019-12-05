@@ -11,7 +11,7 @@ namespace TestProj
         static void Main(string[] args)
         {
             Common.IArchive arch = new Common.LZ4Archive("e:\\nxm\\abc.nxm", null);
-            arch.addDirectory("d:\\restore", System.IO.Compression.CompressionLevel.Fastest);
+            arch.addDirectory("d:\\restore");
         }
     }
 }

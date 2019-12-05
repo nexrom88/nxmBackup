@@ -51,16 +51,13 @@ namespace ConfigHandler
                     job.rotation.maxElementCount = uint.Parse(jobsElement.ChildNodes.Item(i).Attributes.GetNamedItem("maxelements").Value);
 
                     //build compression level
-                    switch (jobsElement.ChildNodes.Item(i).Attributes.GetNamedItem("name").Value)
+                    switch (jobsElement.ChildNodes.Item(i).Attributes.GetNamedItem("compression").Value)
                     {
-                        case "nocompression":
-                            job.compression = System.IO.Compression.CompressionLevel.NoCompression;
+                        case "zip":
+                            job.compression = Compression.zip;
                             break;
-                        case "fastest":
-                            job.compression = System.IO.Compression.CompressionLevel.Fastest;
-                            break;
-                        case "optimal":
-                            job.compression = System.IO.Compression.CompressionLevel.Optimal;
+                        case "lz4":
+                            job.compression = Compression.lz4;
                             break;
                     }
 
@@ -192,9 +189,15 @@ namespace ConfigHandler
         public Interval interval;
         public List<JobVM> jobVMs;
         public string basePath;
-        public System.IO.Compression.CompressionLevel compression;
+        public Compression compression;
         public uint blockSize;
         public Rotation rotation;
+    }
+
+    //defines compression type
+    public enum Compression
+    {
+        zip, lz4
     }
 
     //defines rotation type

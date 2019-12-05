@@ -19,7 +19,7 @@ namespace HyperVBackupRCT
         //writes the diff file using cbt information
         //important: bufferSize has to by a multiple of vhd sector size
         [Obsolete]
-        public void writeDiffFile(ChangedBlock[] changedBlocks, VirtualDiskHandler diskHandler, Common.ZipArchive archive, System.IO.Compression.CompressionLevel compressionLevel, ulong bufferSize, string hddName)
+        public void writeDiffFile(ChangedBlock[] changedBlocks, VirtualDiskHandler diskHandler, Common.IArchive archive, ConfigHandler.Compression compressionType, ulong bufferSize, string hddName)
         {
 
             //calculate changed bytes count for progress calculation
@@ -36,7 +36,7 @@ namespace HyperVBackupRCT
             IntPtr diskHandle = diskHandler.getHandle();
 
             //open destination file
-            Stream outStream = archive.createAndGetFileStream(hddName + ".cb", compressionLevel);
+            Stream outStream = archive.createAndGetFileStream(hddName + ".cb");
 
             //open filestream to make it possible for readfile to read blocks (check why?)
             FileStream inputStream = new FileStream(diskHandle, FileAccess.Read, false, (int)bufferSize, true);

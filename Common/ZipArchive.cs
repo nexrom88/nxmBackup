@@ -15,6 +15,7 @@ namespace Common
         System.IO.Compression.ZipArchive archiveStream;
         FileStream fileStream;
         private Job.newEventDelegate newEvent;
+        System.IO.Compression.CompressionLevel compressionLevel = CompressionLevel.Optimal;
 
         public ZipArchive (string path, Job.newEventDelegate newEvent)
         {
@@ -47,7 +48,7 @@ namespace Common
         }
 
         //creates a new entry and returns the io-strem
-        public Stream createAndGetFileStream(string path, CompressionLevel compressionLevel)
+        public Stream createAndGetFileStream(string path)
         {
             //creaty zip entry
             ZipArchiveEntry entry = this.archiveStream.CreateEntry(path, compressionLevel);
@@ -66,7 +67,7 @@ namespace Common
 
 
         //adds a file to the archive
-        public void addFile(string file, string path, CompressionLevel compressionLevel)
+        public void addFile(string file, string path)
         {
             //extract filename first
             string fileName = Path.GetFileName(file);
@@ -119,7 +120,7 @@ namespace Common
         }
 
         //adds a whole folder to the archive
-        public void addDirectory(string folder, CompressionLevel compressionLevel)
+        public void addDirectory(string folder)
         {
             string[] entries = Directory.GetFiles(folder, "*", SearchOption.AllDirectories);
 
@@ -135,7 +136,7 @@ namespace Common
                 }
                 
                 //add file to archive
-                addFile (file, archivePath, compressionLevel);
+                addFile (file, archivePath);
             }
 
 

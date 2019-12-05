@@ -19,16 +19,16 @@ namespace Common
         void close();
 
         //creates a new entry and returns the io-strem
-        System.IO.Stream createAndGetFileStream(string path, CompressionLevel compressionLevel);
+        System.IO.Stream createAndGetFileStream(string path);
 
         //opens an entry and returns the io-stream
         System.IO.Stream openAndGetFileStream(string path);
 
         //adds a file to the archive
-        void addFile(string file, string path, CompressionLevel compressionLevel);
+        void addFile(string file, string path);
 
         //adds a whole folder to the archive
-        void addDirectory(string folder, CompressionLevel compressionLevel);
+        void addDirectory(string folder);
 
         //gets a file from the archive
         void getFile(string archivePath, string destinationPath);

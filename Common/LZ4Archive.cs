@@ -13,16 +13,19 @@ namespace Common
     {
         private string path;
         private Job.newEventDelegate newEvent;
+        private LZ4EncoderSettings encoderSettings = new LZ4EncoderSettings();
 
 
         public LZ4Archive(string path, Job.newEventDelegate newEvent)
         {
             this.path = path;
             this.newEvent = newEvent;
+
+            this.encoderSettings.CompressionLevel = K4os.Compression.LZ4.LZ4Level.L00_FAST;
         }
 
         //adds a whole folder to the archive
-        public void addDirectory(string folder, CompressionLevel compressionLevel)
+        public void addDirectory(string folder)
         {
             //list all files
             string[] entries = Directory.GetFiles(folder, "*", SearchOption.AllDirectories);
@@ -39,18 +42,18 @@ namespace Common
                 }
 
                 //add file to archive
-                addFile(file, archivePath, compressionLevel);
+                addFile(file, archivePath);
             }
         }
 
         //adds a given file to the archive
-        public void addFile(string file, string path, CompressionLevel compressionLevel)
+        public void addFile(string file, string path)
         {
             path = path.Replace("/", "\\");
             string fileName = Path.GetFileName(file);
 
             //get base io Streams
-            System.IO.FileStream baseSourceStream = new FileStream(file, FileMode.Open);
+            System.IO.FileStream baseSourceStream = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
 
             //create dest path
             System.IO.Directory.CreateDirectory(System.IO.Path.Combine(this.path, path));
@@ -59,7 +62,7 @@ namespace Common
             System.IO.FileStream baseDestStream = new FileStream(System.IO.Path.Combine(this.path, path + "\\" + fileName) , FileMode.Create);
 
             //open LZ4 stream
-            LZ4EncoderStream compressionStream = LZ4Stream.Encode(baseDestStream, null, false);
+            LZ4EncoderStream compressionStream = LZ4Stream.Encode(baseDestStream, this.encoderSettings, false);
 
             //create buffer and read counter
             byte[] buffer = new byte[4096];
@@ -116,12 +119,20 @@ namespace Common
         }
 
         //creates an archive entry and returns the compression stream
-        public Stream createAndGetFileStream(string path, CompressionLevel compressionLevel)
+        public Stream createAndGetFileStream(string path)
         {
             path = path.Replace("/", "\\");
 
             //to create directories, remove filename from path first
-            string directoriesPath = path.Substring(0, path.LastIndexOf("\\"));
+            string directoriesPath;
+            if (path.Contains("\\"))
+            {
+                directoriesPath = path.Substring(0, path.LastIndexOf("\\"));
+            }
+            else
+            {
+                directoriesPath = "";
+            }
 
             //create dest path
             System.IO.Directory.CreateDirectory(System.IO.Path.Combine(this.path, directoriesPath));
@@ -130,7 +141,7 @@ namespace Common
             System.IO.FileStream baseDestStream = new FileStream(System.IO.Path.Combine(this.path, path), FileMode.Create);
 
             //open LZ4 stream
-            LZ4EncoderStream compressionStream = LZ4Stream.Encode(baseDestStream, null, false);
+            LZ4EncoderStream compressionStream = LZ4Stream.Encode(baseDestStream, this.encoderSettings, false);
 
             return compressionStream;
         }
@@ -212,7 +223,16 @@ namespace Common
         //opens an archive file and returns the decompression stream
         public Stream openAndGetFileStream(string path)
         {
-            throw new NotImplementedException();
+            path = path.Replace("/", "\\");
+
+            //open base filestream
+            FileStream sourceStream = new FileStream(System.IO.Path.Combine(this.path, path), FileMode.Open);
+
+            //open decoder stream
+            LZ4DecoderStream compressionStream = LZ4Stream.Decode(sourceStream);
+
+            return compressionStream;
+
         }
 
         //builds a EventProperties object and raises the "newEvent" event

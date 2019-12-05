@@ -55,12 +55,12 @@
         <TextBox x:Name="txtPath" IsEnabled="false" Grid.Column="3" Height="23" Margin="10,390,60,0" VerticalAlignment="Top"/>
         <Button x:Name="btSelectPath" Content="..." Grid.Column="3" Margin="0,390,10,0" HorizontalAlignment="Right" Width="30" Height="23" VerticalAlignment="Top" Click="btSelectPath_Click"/>
         <Label x:Name="lblError" Content="" Grid.Column="3" Margin="10,0,0,10" Foreground="#FFC32424" Height="26" VerticalAlignment="Bottom"/>
-        <ComboBox x:Name="cbCompression" Grid.Column="3" Margin="10,330,10,0" SelectedIndex="0" Height="22" VerticalAlignment="Top">
-            <ComboBoxItem Content="Keine Kompression" Uid="nocompression"/>
-            <ComboBoxItem Content="Mittlere Kompression" Uid="fastest"/>
-            <ComboBoxItem Content="Starke Kompression" Uid="optimal"/>
+        <ComboBox x:Name="cbCompression" Grid.Column="3" Margin="0,330,10,0" SelectedIndex="0" Height="22" VerticalAlignment="Top" HorizontalAlignment="Right" Width="77">
+            <ComboBoxItem Content="Zip" Uid="zip"/>
+            <ComboBoxItem Content="LZ4" Uid="lz4"/>
         </ComboBox>
         <Button x:Name="btJobDetails" Content="Job-Details" Grid.Column="3" Margin="62,0,62,100" VerticalAlignment="Bottom" Height="35" Click="btJobDetails_Click"/>
+        <Label Content="Kompressionsmethode: " Grid.Column="3" Margin="10,327,0,0" VerticalAlignment="Top" HorizontalAlignment="Left" Width="136"/>
 
 
     </Grid>

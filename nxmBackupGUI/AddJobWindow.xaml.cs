@@ -166,14 +166,11 @@ namespace nxmBackupGUI
             //build compression var
             switch (((ComboBoxItem)cbCompression.SelectedItem).Uid)
             {
-                case "nocompression":
-                    job.compression = System.IO.Compression.CompressionLevel.NoCompression;
+                case "zip":
+                    job.compression = ConfigHandler.Compression.zip;
                     break;
-                case "fastest":
-                    job.compression = System.IO.Compression.CompressionLevel.Fastest;
-                    break;
-                case "optimal":
-                    job.compression = System.IO.Compression.CompressionLevel.Optimal;
+                case "lz4":
+                    job.compression = ConfigHandler.Compression.lz4;
                     break;
             }
 
