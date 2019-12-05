@@ -21,9 +21,26 @@ namespace Common
             this.newEvent = newEvent;
         }
 
+        //adds a whole folder to the archive
         void IArchive.addDirectory(string folder, CompressionLevel compressionLevel)
         {
-            throw new NotImplementedException();
+            //list all files
+            string[] entries = Directory.GetFiles(folder, "*", SearchOption.AllDirectories);
+
+            //iterate through all files
+            foreach (string file in entries)
+            {
+                //build path
+                string zipFile = file.Substring(folder.Length + 1).Replace("\\", "/");
+                string archivePath = "";
+                if (zipFile.Contains("/"))
+                {
+                    archivePath = zipFile.Substring(0, zipFile.LastIndexOf("/"));
+                }
+
+                //add file to archive
+                addFile(file, archivePath, compressionLevel);
+            }
         }
 
         //adds a given file to the archive
@@ -98,24 +115,98 @@ namespace Common
             System.IO.Directory.CreateDirectory(this.path);
         }
 
+        //creates an archive entry and returns the compression stream
         Stream IArchive.createAndGetFileStream(string path, CompressionLevel compressionLevel)
         {
-            throw new NotImplementedException();
+            path = path.Replace("/", "\\");
+
+            //to create directories, remove filename from path first
+            string directoriesPath = path.Substring(0, path.LastIndexOf("\\"));
+
+            //create dest path
+            System.IO.Directory.CreateDirectory(System.IO.Path.Combine(this.path, directoriesPath));
+
+            //create file and io stream
+            System.IO.FileStream baseDestStream = new FileStream(System.IO.Path.Combine(this.path, path), FileMode.Create);
+
+            //open LZ4 stream
+            LZ4EncoderStream compressionStream = LZ4Stream.Encode(baseDestStream, null, false);
+
+            return compressionStream;
         }
 
+        //decompresses an entry to a given destination
         void IArchive.getFile(string archivePath, string destinationPath)
         {
-            throw new NotImplementedException();
+            string lastProgress = "";
+            string fileName = Path.GetFileName(destinationPath);
+
+            string path = archivePath.Replace("/", "\\");
+
+            string sourcePath = System.IO.Path.Combine(this.path, path);
+
+            //open source file
+            System.IO.FileStream sourceStream = new FileStream(sourcePath, FileMode.Open);
+
+            //open decoder stream
+            LZ4DecoderStream compressionStream = LZ4Stream.Decode(sourceStream, 0);
+
+            Directory.CreateDirectory(Path.GetDirectoryName(destinationPath));
+            FileStream destStream = new FileStream(destinationPath, FileMode.OpenOrCreate, FileAccess.Write);
+
+            byte[] buffer = new byte[4096];
+            long totalReadBytes = 0;
+            int readBytes = -1;
+            //read source and write destination
+            while (readBytes != 0)
+            {
+                //transfer one block
+                readBytes = compressionStream.Read(buffer, 0, buffer.Length);
+                if (readBytes > 0)
+                {
+                    destStream.Write(buffer, 0, readBytes);
+                    totalReadBytes += readBytes;
+                }
+
+                //show progress
+                string progress = Common.PrettyPrinter.prettyPrintBytes(totalReadBytes);
+                if (progress != lastProgress)
+                {
+                    raiseNewEvent("Stelle wieder her: " + fileName + "... " + progress, false, true);
+                    lastProgress = progress;
+                }
+
+            }
+
+            destStream.Close();
+            compressionStream.Close();
+
         }
 
+        //lists all archive entries
         List<string> IArchive.listEntries()
         {
-            throw new NotImplementedException();
+            List<string> retVal = new List<string>();
+
+            string[] files = System.IO.Directory.GetFiles(this.path, "*", SearchOption.AllDirectories);
+
+            //iterate files
+            foreach(string file in files)
+            {
+                //remove base archive path
+                string archivePath = file.Substring(this.path.Length + 1);
+
+                archivePath = archivePath.Replace("\\", "/");
+                retVal.Add(archivePath);
+            }
+
+            return retVal;
         }
 
+        //not implemented here
         void IArchive.open(ZipArchiveMode mode)
         {
-            throw new NotImplementedException();
+            return;
         }
 
         Stream IArchive.openAndGetFileStream(string path)

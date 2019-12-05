@@ -123,10 +123,6 @@ namespace Common
         {
             string[] entries = Directory.GetFiles(folder, "*", SearchOption.AllDirectories);
 
-            //get last directory element
-            string[] splitter = folder.Split("\\".ToCharArray());
-            string topDirectory = splitter[splitter.Length - 1] + "/";
-
             //iterate through all files
             foreach(string file in entries)
             {
