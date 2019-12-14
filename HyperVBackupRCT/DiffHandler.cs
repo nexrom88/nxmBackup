@@ -139,7 +139,15 @@ namespace HyperVBackupRCT
 
                 //read data block
                 buffer = new byte[length];
-                diffStream.Read(buffer, 0, buffer.Length);
+                
+                int currentOffset = 0;
+                //read until buffer is full
+                while (length > 0)
+                {
+                    int bytesRead = diffStream.Read(buffer, currentOffset, (int)length);
+                    currentOffset += bytesRead;
+                    length -= (ulong)bytesRead;
+                }
 
                 //write block to target file
                 diskHandler.write(offset, buffer);

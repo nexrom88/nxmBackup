@@ -164,7 +164,7 @@ namespace Common
             LZ4DecoderStream compressionStream = LZ4Stream.Decode(sourceStream, 0);
 
             Directory.CreateDirectory(Path.GetDirectoryName(destinationPath));
-            FileStream destStream = new FileStream(destinationPath, FileMode.OpenOrCreate, FileAccess.Write);
+            FileStream destStream = new FileStream(destinationPath, FileMode.Create, FileAccess.Write);
 
             byte[] buffer = new byte[4096];
             long totalReadBytes = 0;
