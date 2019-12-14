@@ -141,7 +141,8 @@ namespace HyperVBackupRCT
                 buffer = new byte[length];
                 
                 int currentOffset = 0;
-                //read until buffer is full
+
+                //read until buffer is full (by using lz4 it can occur that readBytes < length)
                 while (length > 0)
                 {
                     int bytesRead = diffStream.Read(buffer, currentOffset, (int)length);
