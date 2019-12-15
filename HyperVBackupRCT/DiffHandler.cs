@@ -137,17 +137,23 @@ namespace HyperVBackupRCT
                 diffStream.Read(buffer, 0, 8);
                 length = BitConverter.ToUInt64(buffer, 0);
 
-                //read data block
-                buffer = new byte[length];
-                
-                int currentOffset = 0;
+                //read data block buffered
+                const int bufferSize = 4096;
+                buffer = new byte[bufferSize];
 
-                //read until buffer is full (by using lz4 it can occur that readBytes < length)
-                while (length > 0)
+                while (length > 0) //read blockwise until everything is read
                 {
-                    int bytesRead = diffStream.Read(buffer, currentOffset, (int)length);
-                    currentOffset += bytesRead;
-                    length -= (ulong)bytesRead;
+                    int currentOffset = 0;
+                    int bytesReadSum = 0;
+
+                    //read until buffer is full (by using lz4 it can occur that readBytes < bufferSize)
+                    while (bytesReadSum < bufferSize && length > 0)
+                    {
+                        int bytesRead = diffStream.Read(buffer, currentOffset, bufferSize);
+                        bytesReadSum += bytesRead;
+                        currentOffset += bytesRead;
+                        length -= (ulong)bytesRead;
+                    }
                 }
 
                 //write block to target file

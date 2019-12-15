@@ -157,8 +157,10 @@ namespace Common
 
             string sourcePath = System.IO.Path.Combine(this.path, path);
 
+            raiseNewEvent("Stelle wieder her: " + fileName + "... ", false, false);
+
             //open source file
-            System.IO.FileStream sourceStream = new FileStream(sourcePath, FileMode.Open);
+           System.IO.FileStream sourceStream = new FileStream(sourcePath, FileMode.Open);
 
             //open decoder stream
             LZ4DecoderStream compressionStream = LZ4Stream.Decode(sourceStream, 0);
