@@ -127,6 +127,7 @@ namespace HyperVBackupRCT
             {
                 ulong offset;
                 ulong length;
+                ulong originalLength;
 
                 //read block offset
                 buffer = new byte[8];
@@ -136,9 +137,17 @@ namespace HyperVBackupRCT
                 //read block length
                 diffStream.Read(buffer, 0, 8);
                 length = BitConverter.ToUInt64(buffer, 0);
+                originalLength = length;
 
                 //read data block buffered
-                const int bufferSize = 4096;
+                int bufferSize = 4096;
+                
+                //shrink buffer when data block is smaller than bufferSize
+                if (length < (ulong)bufferSize)
+                {
+                    bufferSize = (int)length;
+                }
+                
                 buffer = new byte[bufferSize];
 
                 while (length > 0) //read blockwise until everything is read
@@ -153,14 +162,17 @@ namespace HyperVBackupRCT
                         bytesReadSum += bytesRead;
                         currentOffset += bytesRead;
                         length -= (ulong)bytesRead;
+
+                        //add length to progress
+                        bytesRestored += bytesRead;
                     }
+
+                    //todo:
+                    //write block to target file
+                    diskHandler.write(offset + (originalLength - length), buffer);
                 }
 
-                //write block to target file
-                diskHandler.write(offset, buffer);
-
                 //show progress
-                bytesRestored += buffer.Length;
                 string progress = Common.PrettyPrinter.prettyPrintBytes(bytesRestored);
                 if(progress != lastProgress)
                 {
