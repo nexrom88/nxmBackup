@@ -127,7 +127,6 @@ namespace HyperVBackupRCT
             {
                 ulong offset;
                 ulong length;
-                ulong originalLength;
 
                 //read block offset
                 buffer = new byte[8];
@@ -137,7 +136,6 @@ namespace HyperVBackupRCT
                 //read block length
                 diffStream.Read(buffer, 0, 8);
                 length = BitConverter.ToUInt64(buffer, 0);
-                originalLength = length;
 
                 //read data block buffered
                 int bufferSize = 4096;
@@ -149,27 +147,28 @@ namespace HyperVBackupRCT
                 }
                 
                 buffer = new byte[bufferSize];
+                int bytesRead = 0;
+                ulong writeOffset = 0;
 
-                while (length > 0) //read blockwise until everything is read
+                while ((ulong)bytesRead < length) //read blockwise until everything is read
                 {
-                    int currentOffset = 0;
-                    int bytesReadSum = 0;
+                    int bytesReadBlock = 0;
 
                     //read until buffer is full (by using lz4 it can occur that readBytes < bufferSize)
-                    while (bytesReadSum < bufferSize && length > 0)
+                    while (bytesReadBlock < bufferSize)
                     {
-                        int bytesRead = diffStream.Read(buffer, currentOffset, bufferSize);
-                        bytesReadSum += bytesRead;
-                        currentOffset += bytesRead;
-                        length -= (ulong)bytesRead;
+                        int currentBytesCount = diffStream.Read(buffer, bytesReadBlock, bufferSize - bytesReadBlock);
+                        bytesReadBlock += currentBytesCount;
+                        bytesRead += currentBytesCount;
 
                         //add length to progress
-                        bytesRestored += bytesRead;
+                        bytesRestored += currentBytesCount;
                     }
 
-                    //todo:
                     //write block to target file
-                    diskHandler.write(offset + (originalLength - length), buffer);
+                    diskHandler.write(offset + writeOffset, buffer);
+                    writeOffset += (ulong)bufferSize;
+
                 }
 
                 //show progress
