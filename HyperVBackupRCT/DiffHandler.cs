@@ -137,14 +137,9 @@ namespace HyperVBackupRCT
                 diffStream.Read(buffer, 0, 8);
                 length = BitConverter.ToUInt64(buffer, 0);
 
-                //read data block buffered
-                int bufferSize = 4096;
+                //read data block buffered, has to be 2^X
+                int bufferSize = 16777216;
                 
-                //shrink buffer when data block is smaller than bufferSize
-                if (length < (ulong)bufferSize)
-                {
-                    bufferSize = (int)length;
-                }
                 
                 buffer = new byte[bufferSize];
                 int bytesRead = 0;
@@ -153,6 +148,14 @@ namespace HyperVBackupRCT
                 while ((ulong)bytesRead < length) //read blockwise until everything is read
                 {
                     int bytesReadBlock = 0;
+
+                    //shrink buffer size?
+                    if (length - (ulong)bytesRead < (ulong)bufferSize)
+                    {
+                        bufferSize = (int)(length - (ulong)bytesRead);
+                        buffer = new byte[bufferSize];
+                    }
+
 
                     //read until buffer is full (by using lz4 it can occur that readBytes < bufferSize)
                     while (bytesReadBlock < bufferSize)
@@ -169,14 +172,14 @@ namespace HyperVBackupRCT
                     diskHandler.write(offset + writeOffset, buffer);
                     writeOffset += (ulong)bufferSize;
 
-                }
+                    //show progress
+                    string progress = Common.PrettyPrinter.prettyPrintBytes(bytesRestored);
+                    if (progress != lastProgress)
+                    {
+                        raiseNewEvent("Verarbeite Inkrement... " + progress, false, true);
+                        lastProgress = progress;
+                    }
 
-                //show progress
-                string progress = Common.PrettyPrinter.prettyPrintBytes(bytesRestored);
-                if(progress != lastProgress)
-                {
-                    raiseNewEvent("Verarbeite Inkrement... " + progress, false, true);
-                    lastProgress = progress;
                 }
 
             }
