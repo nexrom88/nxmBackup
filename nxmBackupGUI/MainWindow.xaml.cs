@@ -152,7 +152,7 @@ namespace nxmBackupGUI
         {
             HyperVBackupRCT.RestoreHandler restoreHandler = new HyperVBackupRCT.RestoreHandler();
             restoreHandler.newEvent += new Common.Job.newEventDelegate(newEvent);
-            Thread restoreThread = new Thread(() => restoreHandler.performFullRestoreProcess("e:\\nxm\\Win10", "c:\\restore", "Microsoft:93257BE4-7DDF-467D-A3CB-7EE373A18319", ConfigHandler.Compression.lz4));
+            Thread restoreThread = new Thread(() => restoreHandler.performFullRestoreProcess("e:\\nxm\\CentOS8", "c:\\restore", "Microsoft:6C49908A-A32E-4A9C-AB8C-097274B405F6", ConfigHandler.Compression.zip));
             restoreThread.Start();
         }
 
