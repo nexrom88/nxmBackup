@@ -29,6 +29,9 @@ namespace HyperVBackupRCT
             ManagementObject snapshot = createSnapshot(cLevel, allowSnapshotFallback);
             ManagementObject refP = null;
 
+            //add job name and vm name to destination
+            destination = System.IO.Path.Combine(destination, job.name + "\\" + this.vmName);
+
             //create folder if it does not exist
             System.IO.Directory.CreateDirectory(destination);
 

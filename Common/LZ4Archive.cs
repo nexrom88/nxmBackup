@@ -103,7 +103,7 @@ namespace Common
             raiseNewEvent("Lese " + fileName + " - 100%", false, true);
             baseSourceStream.Close();
             compressionStream.Close();
-            baseDestStream.Close();
+            compressionStream.Dispose();
 
         }
 

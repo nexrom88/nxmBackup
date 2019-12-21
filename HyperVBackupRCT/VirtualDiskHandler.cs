@@ -40,6 +40,7 @@ namespace HyperVBackupRCT
         //write state
         private bool writeInProgress;
         private uint writeErrorCode;
+        private uint bytesWritten;
 
         private string path;
         private VirtualDiskSafeHandle diskHandle;
@@ -162,6 +163,10 @@ namespace HyperVBackupRCT
             while (this.writeInProgress)
             {
                 errCode = Marshal.GetLastWin32Error();
+                if (errCode == 87)
+                {
+                    errCode = 0;
+                }
                 System.Threading.Thread.Sleep(10);
             }
 
@@ -185,6 +190,8 @@ namespace HyperVBackupRCT
             //start read
             bool err = ReadFile(this.diskHandle, ref buffer[0], (uint)length, out bytesRead, ov.Pack(new System.Threading.IOCompletionCallback(readCompleted)));
             int errCode = Marshal.GetLastWin32Error();
+
+
             
             //wait for completion of read process
             while (this.readInProgress)
@@ -217,6 +224,7 @@ namespace HyperVBackupRCT
         {
             this.writeErrorCode = errorCode;
             this.writeInProgress = false;
+            this.bytesWritten = numBytes;
         }
 
         //converts a long to two ints
