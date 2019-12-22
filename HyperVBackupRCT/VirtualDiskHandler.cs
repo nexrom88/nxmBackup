@@ -8,7 +8,7 @@ using System.IO;
 
 namespace HyperVBackupRCT
 {
-    class VirtualDiskHandler
+    public class VirtualDiskHandler
     {
         [DllImport("kernel32.dll", SetLastError = true)]
         static unsafe extern bool WriteFile(VirtualDiskSafeHandle virtualDiskHandle, ref byte lpBuffer, uint nNumberOfBytesToWrite, out uint lpNumberOfBytesWritten, System.Threading.NativeOverlapped* lpOverlapped);
@@ -163,10 +163,6 @@ namespace HyperVBackupRCT
             while (this.writeInProgress)
             {
                 errCode = Marshal.GetLastWin32Error();
-                if (errCode == 87)
-                {
-                    errCode = 0;
-                }
                 System.Threading.Thread.Sleep(10);
             }
 

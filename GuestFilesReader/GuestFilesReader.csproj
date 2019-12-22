@@ -61,6 +61,10 @@
       <Project>{aad2cca1-182c-4bc4-beb4-6434a03675ea}</Project>
       <Name>Common</Name>
     </ProjectReference>
+    <ProjectReference Include="..\HyperVBackupRCT\HyperVBackupRCT.csproj">
+      <Project>{5b42d544-7e9c-4d1d-acc6-5ea30adee127}</Project>
+      <Name>HyperVBackupRCT</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -130,22 +130,34 @@ namespace HyperVBackupRCT
                 ulong offset;
                 ulong length;
 
+                int bytesRead = 0;
+                ulong writeOffset = 0;
+
                 //read block offset
                 buffer = new byte[8];
-                diffStream.Read(buffer, 0, 8);
+                //ensure to read 8 bytes, lz4 sometimes reads less
+                while (bytesRead < 8)
+                {
+                    bytesRead += diffStream.Read(buffer, bytesRead, 8 - bytesRead);
+                }
                 offset = BitConverter.ToUInt64(buffer, 0);
 
                 //read block length
-                diffStream.Read(buffer, 0, 8);
+                //ensure to read 8 bytes, lz4 sometimes reads less
+                bytesRead = 0;
+                while (bytesRead < 8)
+                {
+                    bytesRead += diffStream.Read(buffer, bytesRead, 8 - bytesRead);
+                }
                 length = BitConverter.ToUInt64(buffer, 0);
+
+
 
                 //read data block buffered, has to be 2^X
                 int bufferSize = 16777216;
-                
+                bytesRead = 0;
                 
                 buffer = new byte[bufferSize];
-                int bytesRead = 0;
-                ulong writeOffset = 0;
 
                 while ((ulong)bytesRead < length) //read blockwise until everything is read
                 {
@@ -203,7 +215,7 @@ namespace HyperVBackupRCT
             //iterate blocks
             while (bytesWritten < srcFile.Length)
             {
-                //still possible to fille the whole buffer?
+                //still possible to fill the whole buffer?
                 if (bytesWritten + buffer.Length <= srcFile.Length) {
                     srcFile.Read(buffer, 0, buffer.Length);
                     dstFile.Write(buffer, 0, buffer.Length);

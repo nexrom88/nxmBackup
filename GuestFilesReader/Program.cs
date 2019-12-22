@@ -8,27 +8,31 @@ using System.Management;
 using System.Management.Automation;
 using Common;
 
+
 namespace GuestFilesReader
 {
     class Program
     {
+        static HyperVBackupRCT.VirtualDiskHandler diskHandler;
+
         static void Main(string[] args)
         {
-            string vhdFile = args[0];
-            //mountVHD(vhdFile);
+            string vhdFile = "C:\\restore\\Virtual Hard Disks\\Windows 10.vhdx";
+
+            mountVHD(vhdFile);
+
             List<string> drives = getMountedDrives();
             //string[] entries = System.IO.Directory.GetFileSystemEntries(drives[0]);
-            
+
+            diskHandler.detach();
         }
 
         //mounts vhdx file without driveletter using powershell
         private static void mountVHD(string vhdFile)
         {
-            ManagementScope scope = new ManagementScope(@"root\virtualization", null);
-            using (ManagementObject imageManagementService = WmiUtilities.GetImageManagementService(scope))
-            using (ManagementBaseObject inParams = imageManagementService.GetMethodParameters("AttachVirtualHardDisk"))
-            {
-            }
+            diskHandler = new HyperVBackupRCT.VirtualDiskHandler(vhdFile);
+            diskHandler.open(HyperVBackupRCT.VirtualDiskHandler.VirtualDiskAccessMask.AttachReadOnly);
+            diskHandler.attach(HyperVBackupRCT.VirtualDiskHandler.ATTACH_VIRTUAL_DISK_FLAG.ATTACH_VIRTUAL_DISK_FLAG_NO_LOCAL_HOST | HyperVBackupRCT.VirtualDiskHandler.ATTACH_VIRTUAL_DISK_FLAG.ATTACH_VIRTUAL_DISK_FLAG_READ_ONLY);
 
         }
 
