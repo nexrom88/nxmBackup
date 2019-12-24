@@ -13,53 +13,37 @@ namespace GuestFilesReader
 {
     class Program
     {
-        static HyperVBackupRCT.VirtualDiskHandler diskHandler;
-
+        
         static void Main(string[] args)
         {
             string vhdFile = "C:\\restore\\Virtual Hard Disks\\Windows 10.vhdx";
 
-            mountVHD(vhdFile);
+            GuestFilesHandler gfHandler = new GuestFilesHandler(vhdFile);
 
-            List<string> drives = getMountedDrives();
-            //string[] entries = System.IO.Directory.GetFileSystemEntries(drives[0]);
+            List<string> drives = gfHandler.getMountedDrives();
 
-            diskHandler.detach();
-        }
+            gfHandler.mountVHD();
 
-        //mounts vhdx file without driveletter using powershell
-        private static void mountVHD(string vhdFile)
-        {
-            diskHandler = new HyperVBackupRCT.VirtualDiskHandler(vhdFile);
-            diskHandler.open(HyperVBackupRCT.VirtualDiskHandler.VirtualDiskAccessMask.AttachReadOnly);
-            diskHandler.attach(HyperVBackupRCT.VirtualDiskHandler.ATTACH_VIRTUAL_DISK_FLAG.ATTACH_VIRTUAL_DISK_FLAG_NO_DRIVE_LETTER | HyperVBackupRCT.VirtualDiskHandler.ATTACH_VIRTUAL_DISK_FLAG.ATTACH_VIRTUAL_DISK_FLAG_READ_ONLY);
+            List<string> newDrives = gfHandler.getMountedDrives();
+            List<string> mountedDrives = new List<string>();
 
-        }
-
-        //gets all current mounted drives with no drive letter
-        private static List<string> getMountedDrives()
-        {
-            List<string> drives = new List<string>();
-
-            string scopeStr = @"\\.\root\cimv2";
-
-
-            ManagementScope scope = new ManagementScope(scopeStr);
-            scope.Connect();
-
-            string queryString = "SELECT * FROM Win32_Volume WHERE DriveLetter IS NULL";
-            SelectQuery query = new SelectQuery(queryString);
-            using (ManagementObjectSearcher searcher = new ManagementObjectSearcher(scope, query))
+            foreach (string drive in newDrives)
             {
-                foreach (ManagementObject disk in searcher.Get())
+                if (!drives.Contains(drive))
                 {
-                    string mountPoint = disk["Name"].ToString();
-                    drives.Add(mountPoint);
-
+                    mountedDrives.Add(drive);
                 }
             }
-            return drives;
 
+            gfHandler.detach();
+
+            string[] entries = System.IO.Directory.GetFileSystemEntries(drives[0]);
+
+            entries = null;
         }
+
+       
+
+        
     }
 }
