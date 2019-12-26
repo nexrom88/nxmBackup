@@ -27,9 +27,9 @@ namespace GuestFilesReader
         }
 
         //gets all current mounted drives with no drive letter
-        public List<string> getMountedDrives()
+        public List<GuestVolume> getMountedDrives()
         {
-            List<string> drives = new List<string>();
+            List<GuestVolume> drives = new List<GuestVolume>();
 
             string scopeStr = @"\\.\root\cimv2";
 
@@ -43,8 +43,18 @@ namespace GuestFilesReader
             {
                 foreach (ManagementObject disk in searcher.Get())
                 {
-                    string mountPoint = disk["Name"].ToString();
-                    drives.Add(mountPoint);
+                    GuestVolume volume = new GuestVolume();
+                    volume.path = disk["Name"].ToString();
+
+                    if (disk["Label"] == null)
+                    {
+                        volume.caption = "Unbenanntes Laufwerk";
+                    }
+                    else
+                    {
+                        volume.caption = disk["Label"].ToString();
+                    }
+                    drives.Add(volume);
 
                 }
             }
@@ -58,5 +68,11 @@ namespace GuestFilesReader
             this.diskHandler.detach();
         }
 
+    }
+
+    public struct GuestVolume
+    {
+        public string path;
+        public string caption;
     }
 }
