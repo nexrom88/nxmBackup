@@ -30,6 +30,7 @@ namespace nxmBackupGUI
         public MainWindow()
         {
             InitializeComponent();
+
         }
 
         private void BtStart_Click(object sender, RoutedEventArgs e)

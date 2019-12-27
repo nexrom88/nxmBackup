@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -20,22 +21,64 @@ namespace MainGUI
     /// </summary>
     public partial class MainWindow : Window
     {
+        JobEngine.JobHandler jobHandler;
+
         public MainWindow()
         {
             InitializeComponent();
+
+            //start job engine
+            jobHandler.startJobEngine(new Common.Job.newEventDelegate(newEvent));
+
             FillDataGridJobs();
+
         }
 
         //
         private void FillDataGridJobs()
         {
-            List<Job> jobList = new List<Job>();
+            List<ConfigHandler.OneJob> jobs = ConfigHandler.JobConfigHandler.readJobs();
 
-            jobList.Add(new Job() { Name = "Job 1", Type = "täglich", CurrentStatus = "angehalten", LastRunSuccessful = false, NextRun = Convert.ToDateTime("10.12.2019"), LastRun = Convert.ToDateTime("03.12.2019") });
-            jobList.Add(new Job() { Name = "Job 2", Type = "wöchentlich", CurrentStatus = "läuft", LastRunSuccessful = false, NextRun = Convert.ToDateTime("12.12.2019"), LastRun = Convert.ToDateTime("01.12.2019") });
-            dgJobs.ItemsSource = jobList;
+            foreach (ConfigHandler.OneJob job in jobs)
+            {
+                string interval = "";
+                switch (job.interval.intervalBase)
+                {
+                    case ConfigHandler.IntervalBase.daily:
+                        interval = "täglich";
+                        break;
+                    case ConfigHandler.IntervalBase.hourly:
+                        interval = "stündlich";
+                        break;
+                    case ConfigHandler.IntervalBase.weekly:
+                        interval = "wöchentlich";
+                        break;
+                    default:
+                        interval = "";
+                        break;
+                }
+
+                dgJobs.Items.Add(new Job() { Name = job.name, Type = interval, CurrentStatus = "angehalten", LastRunSuccessful = false, NextRun = Convert.ToDateTime("10.12.2019"), LastRun = Convert.ToDateTime("03.12.2019") });
+
+            }
+
+
            
-        }   
+        }
 
+        //
+        private void btnStartJob_Click(object sender, RoutedEventArgs e)
+        {
+            // Manually trigger the selected job.
+            string name = ((Job)dgJobs.SelectedItem).Name;
+            Thread jobThread = new Thread(() => this.jobHandler.startManually(name));
+            jobThread.Start();
+        }
+
+        //
+        private void newEvent(Common.EventProperties props)
+        {
+            Console.WriteLine(props.text);
+        }
     }
 }

@@ -34,7 +34,7 @@
                                 <TextBlock HorizontalAlignment="Center" Padding="5">Löschen</TextBlock>
                             </StackPanel>
                         </Button>
-                        <Button x:Name="btnStartJob" Padding="{Binding Source={StaticResource btnPadding}}" Width="{Binding Source={StaticResource btnHeight}}" Height="{Binding Source={StaticResource btnHeight}}" Background="AliceBlue" BorderThickness="0" >
+                        <Button x:Name="btnStartJob" Padding="{Binding Source={StaticResource btnPadding}}" Width="{Binding Source={StaticResource btnHeight}}" Height="{Binding Source={StaticResource btnHeight}}" Background="AliceBlue" BorderThickness="0" Click="btnStartJob_Click" >
                             <StackPanel HorizontalAlignment="Center">
                                 <Image Source="play-button-arrowhead.png" Width="30" Height="30"/>
                                 <TextBlock HorizontalAlignment="Center" Padding="5">Starten</TextBlock>
@@ -77,6 +77,7 @@
                             <DataGridTextColumn Header="Letzter Start" Binding="{Binding LastRun}" ElementStyle="{StaticResource ColumnElementStyle}"></DataGridTextColumn>
                         </DataGrid.Columns>
                     </DataGrid>
+                    <ComboBox/>
                 </StackPanel>
                 <Border BorderThickness="0,1,0,0" BorderBrush="#FF1D90F5">
                     <Grid Height="150" MinHeight="100" Margin="0" >
