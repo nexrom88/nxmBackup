@@ -30,7 +30,7 @@ namespace GuestFilesReader
         public List<GuestVolume> getMountedDrives()
         {
             List<GuestVolume> drives = new List<GuestVolume>();
-
+            
             string scopeStr = @"\\.\root\cimv2";
 
 

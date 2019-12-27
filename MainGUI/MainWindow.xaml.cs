@@ -28,6 +28,7 @@ namespace MainGUI
             InitializeComponent();
 
             //start job engine
+            this.jobHandler = new JobEngine.JobHandler();
             jobHandler.startJobEngine(new Common.Job.newEventDelegate(newEvent));
 
             FillDataGridJobs();
