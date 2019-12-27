@@ -81,5 +81,13 @@ namespace MainGUI
         {
             Console.WriteLine(props.text);
         }
+
+        private void btnNewJob_Click(object sender, RoutedEventArgs e)
+        {
+            AddJobWindow addJobWindow = new AddJobWindow();
+            addJobWindow.ShowDialog();
+
+
+        }
     }
 }

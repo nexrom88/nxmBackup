@@ -22,7 +22,7 @@
             <StackPanel DockPanel.Dock="Top">
                 <StackPanel Name="topMenu" Orientation="Horizontal" VerticalAlignment="Top" Background="AliceBlue" Height="100">
                     <StackPanel Orientation="Horizontal">
-                        <Button x:Name="btnNewJob" Padding="{Binding Source={StaticResource btnPadding}}" Width="{Binding Source={StaticResource btnHeight}}" Height="{Binding Source={StaticResource btnHeight}}" Background="AliceBlue" BorderThickness="0">
+                        <Button x:Name="btnNewJob" Padding="{Binding Source={StaticResource btnPadding}}" Width="{Binding Source={StaticResource btnHeight}}" Height="{Binding Source={StaticResource btnHeight}}" Background="AliceBlue" BorderThickness="0" Click="btnNewJob_Click">
                             <StackPanel HorizontalAlignment="Center">
                                 <Image Source="plus-sign.png" Width="30" Height="30"/>
                                 <TextBlock HorizontalAlignment="Center" Padding="5">Neu</TextBlock>
