@@ -12,6 +12,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using System.Security.Principal;
 
 namespace GuestFilesReader
 {
@@ -27,9 +28,22 @@ namespace GuestFilesReader
             InitializeComponent();
         }
 
+        //checks whether the current user is an administrator
+        private static bool isAdministrator()
+        {
+           WindowsIdentity identity = WindowsIdentity.GetCurrent();
+           WindowsPrincipal principal = new WindowsPrincipal(identity);
+           bool isAdmin = principal.IsInRole(WindowsBuiltInRole.Administrator);
+           return isAdmin;
+        }
+
+
+
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            string vhdFile = "C:\\restore\\Virtual Hard Disks\\Windows 10.vhdx";
+            isAdministrator();
+
+            string vhdFile = "H:\\Win10.vhdx";
 
             gfHandler = new GuestFilesHandler(vhdFile);
 
@@ -79,7 +93,16 @@ namespace GuestFilesReader
         private void setPath(string path, TreeViewItem baseItem)
         {
             //build tv with folders and lb with files
-            string[] entries = System.IO.Directory.GetFileSystemEntries(path, "*", System.IO.SearchOption.TopDirectoryOnly);
+            string[] entries;
+            try
+            {
+                //try to read files and folders
+                entries = System.IO.Directory.GetFileSystemEntries(path, "*", System.IO.SearchOption.TopDirectoryOnly);
+            }
+            catch
+            {
+                entries = new string[0];
+            }
             lbFiles.Items.Clear();
 
             foreach (string entry in entries)

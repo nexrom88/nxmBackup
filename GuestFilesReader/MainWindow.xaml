@@ -19,7 +19,7 @@
 
                 <!--Defines a context menu-->
                 <ContextMenu x:Key="MyElementMenu">
-                    <MenuItem Header="Delete" Click="MenuItemDelete_Click"/>
+                    <MenuItem Header="Delete"/>
                 </ContextMenu>
 
                 <!--Sets a context menu for each ListBoxItem in the current ListBox-->
