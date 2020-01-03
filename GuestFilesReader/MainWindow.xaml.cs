@@ -21,7 +21,8 @@ namespace GuestFilesReader
     /// </summary>
     public partial class MainWindow : Window
     {
-        GuestFilesHandler gfHandler;
+        private GuestFilesHandler gfHandler;
+        private string currentPath;
 
         public MainWindow()
         {
@@ -43,7 +44,7 @@ namespace GuestFilesReader
         {
             isAdministrator();
 
-            string vhdFile = "H:\\Win10.vhdx";
+            string vhdFile = "E:\\Win10.vhdx";
 
             gfHandler = new GuestFilesHandler(vhdFile);
 
@@ -104,6 +105,8 @@ namespace GuestFilesReader
                 entries = new string[0];
             }
             lbFiles.Items.Clear();
+
+            this.currentPath = path;
 
             foreach (string entry in entries)
             {
@@ -168,6 +171,25 @@ namespace GuestFilesReader
             private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
             gfHandler.detach();
+        }
+
+        //saves a selected file to the local computer
+        private void MenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            //open path picker dialog
+            using (var dialog = new System.Windows.Forms.FolderBrowserDialog())
+            {
+                dialog.Description = "Wählen Sie einen lokalen Wiederherstellungspfad aus:";
+                System.Windows.Forms.DialogResult result = dialog.ShowDialog();
+                string targetPath = dialog.SelectedPath;
+
+                //get current path
+                ListBoxItem selectedFile = (ListBoxItem)lbFiles.SelectedItem;
+                string sourcePath = System.IO.Path.Combine(this.currentPath, selectedFile.Content.ToString());
+
+
+                
+            }
         }
     }
 }
