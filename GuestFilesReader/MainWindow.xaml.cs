@@ -23,6 +23,8 @@ namespace GuestFilesReader
     {
         private GuestFilesHandler gfHandler;
         private string currentPath;
+        private delegate void setProgressDelegate(double progress);
+        private bool restoreInProgress = false;
 
         public MainWindow()
         {
@@ -44,9 +46,12 @@ namespace GuestFilesReader
         {
             isAdministrator();
 
-            string vhdFile = "E:\\Win10.vhdx";
+            string vhdFile = "C:\\restore\\Virtual Hard Disks\\Windows 10.vhdx";
 
             gfHandler = new GuestFilesHandler(vhdFile);
+
+            //set callback for restore progress
+            gfHandler.newEvent += new Common.Job.newEventDelegate(newEvent);
 
             List<GuestVolume> drives = gfHandler.getMountedDrives();
 
@@ -176,19 +181,62 @@ namespace GuestFilesReader
         //saves a selected file to the local computer
         private void MenuItem_Click(object sender, RoutedEventArgs e)
         {
-            //open path picker dialog
-            using (var dialog = new System.Windows.Forms.FolderBrowserDialog())
+            //cancel if restore already in progress
+            if (this.restoreInProgress)
             {
-                dialog.Description = "Wählen Sie einen lokalen Wiederherstellungspfad aus:";
-                System.Windows.Forms.DialogResult result = dialog.ShowDialog();
-                string targetPath = dialog.SelectedPath;
+                return;
+            }
 
-                //get current path
-                ListBoxItem selectedFile = (ListBoxItem)lbFiles.SelectedItem;
-                string sourcePath = System.IO.Path.Combine(this.currentPath, selectedFile.Content.ToString());
+            MenuItem clickedItem = (MenuItem)e.OriginalSource;
 
+            switch (clickedItem.Uid)
+            {
+                case "saveas": //save as
+                    //open path picker dialog
+                    using (var dialog = new System.Windows.Forms.FolderBrowserDialog())
+                    {
+                        //show folder browser dialog
+                        dialog.Description = "Wählen Sie einen lokalen Wiederherstellungspfad aus:";
+                        System.Windows.Forms.DialogResult result = dialog.ShowDialog();
+                        string targetPath = dialog.SelectedPath;
 
-                
+                        //get current path
+                        ListBoxItem selectedFile = (ListBoxItem)lbFiles.SelectedItem;
+                        string sourcePath = System.IO.Path.Combine(this.currentPath, selectedFile.Content.ToString());
+
+                        string destinationPath = System.IO.Path.Combine(targetPath, selectedFile.Content.ToString());
+
+                        //start restore thread
+                        this.restoreInProgress = true;
+                        System.Threading.Thread restoreThread = new System.Threading.Thread(() => this.gfHandler.restoreFile2Local(sourcePath, destinationPath));
+                        restoreThread.Start();
+                    }
+                    break;
+            }
+        }
+
+        //progress callback
+        private void newEvent(Common.EventProperties props)
+        {
+            if (props.progress < 0.0)
+            {
+                MessageBox.Show("Wiederherstellung fehlgeschlagen:\r\n" + props.text);
+            }
+            else
+            {
+                //no error, show progress
+                pbProgress.Dispatcher.Invoke(new setProgressDelegate(setProgress), new object[] { props.progress });
+            }
+        }
+
+        //sets the current progress
+        private void setProgress(double progress)
+        {
+            pbProgress.Value = progress;
+
+            if (progress >= 100.0)
+            {
+                this.restoreInProgress = false;
             }
         }
     }

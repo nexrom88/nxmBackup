@@ -11,5 +11,6 @@ namespace Common
         public string text; //event text
         public bool setDone; //sets the last event to "done"
         public bool isUpdate; //updates the last event
+        public double progress; //optional: progress in percentage
     }
 }

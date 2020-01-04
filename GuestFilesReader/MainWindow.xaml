@@ -19,7 +19,7 @@
 
                 <!--Defines a context menu-->
                 <ContextMenu x:Key="ElementMenu">
-                    <MenuItem Header="Speichern unter" Click="MenuItem_Click"/>
+                    <MenuItem Header="Speichern unter" Click="MenuItem_Click" Uid="saveas"/>
                 </ContextMenu>
 
                 <!--Sets a context menu for each ListBoxItem in the current ListBox-->
@@ -29,9 +29,9 @@
 
             </ListBox.Resources>
         </ListBox>
-        <Grid Margin="230,0,0,30" Grid.ColumnSpan="2" Height="26" VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="552">
-            <Label Content="Ausgewähltes Laufwerk:" HorizontalAlignment="Left" Margin="10,0,0,0" VerticalAlignment="Top"/>
-            <ProgressBar Height="20" Margin="160,5,15,0" VerticalAlignment="Top"/>
+        <Grid x:Name="gridProgress" Margin="230,0,0,30" Grid.ColumnSpan="2" Height="26" VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="552">
+            <Label Content="Fortschritt:" HorizontalAlignment="Left" Margin="0,0,0,0" VerticalAlignment="Top"/>
+            <ProgressBar x:Name="pbProgress" Height="20" Margin="130,5,15,0" VerticalAlignment="Top"/>
         </Grid>
 
     </Grid>
