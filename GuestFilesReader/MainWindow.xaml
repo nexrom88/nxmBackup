@@ -13,7 +13,21 @@
         </Grid.ColumnDefinitions>
         <Label Content="Ausgewähltes Laufwerk:" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top"/>
         <ComboBox x:Name="cbVolumes" HorizontalAlignment="Left" Margin="170,10,0,0" VerticalAlignment="Top" Width="200" SelectionChanged="cbVolumes_SelectionChanged"/>
-        <TreeView x:Name="tvDirectories" Margin="10,55,0,29" HorizontalAlignment="Left" Width="200"/>
+        <TreeView x:Name="tvDirectories" Margin="10,55,0,29" HorizontalAlignment="Left" Width="200">
+            <TreeView.Resources>
+
+                <!--Defines a context menu-->
+                <ContextMenu x:Key="ElementMenu">
+                    <MenuItem Header="Ordner Speichern unter" Uid="savefolderas" Click="TreeViewMenuItem_Click"/>
+                </ContextMenu>
+
+                <!--Sets a context menu for each TreeViewItem in the current TreeView-->
+                <Style TargetType="{x:Type TreeViewItem}">
+                    <Setter Property="ContextMenu" Value="{StaticResource ElementMenu}"/>
+                </Style>
+
+            </TreeView.Resources>
+        </TreeView>
         <ListBox x:Name="lbFiles" Margin="230,55,10,70" Grid.ColumnSpan="2">
             <ListBox.Resources>
 
@@ -30,8 +44,8 @@
             </ListBox.Resources>
         </ListBox>
         <Grid x:Name="gridProgress" Margin="230,0,0,30" Grid.ColumnSpan="2" Height="26" VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="552">
-            <Label Content="Fortschritt:" HorizontalAlignment="Left" Margin="0,0,0,0" VerticalAlignment="Top"/>
-            <ProgressBar x:Name="pbProgress" Height="20" Margin="130,5,15,0" VerticalAlignment="Top"/>
+            <Label x:Name="lblProgress" Content="Fortschritt:" HorizontalAlignment="Left" Margin="0,0,0,0" VerticalAlignment="Top"/>
+            <ProgressBar x:Name="pbProgress" Height="20" Margin="180,5,15,0" VerticalAlignment="Top" ValueChanged="pbProgress_ValueChanged"/>
         </Grid>
 
     </Grid>

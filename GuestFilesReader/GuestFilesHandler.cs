@@ -71,7 +71,50 @@ namespace GuestFilesReader
         }
 
         //performs the restore of a single file to local storage
-        public void restoreFile2Local(string source, string destination)
+        public void restoreFiles2Local(List<string> files, string destination, string basePath)
+        {
+
+            //raise first event for setting elements count
+            Common.EventProperties props = new Common.EventProperties();
+            props.elementsCount = (uint)files.Count;
+            props.currentElement = 0;
+            props.progress = 0.0;
+            newEvent(props);
+
+            uint restoredFiles = 0;
+
+            //iterate all files
+            foreach (string file in files)
+            {
+                //create folder
+                string folder = file.Substring(0, file.LastIndexOf("\\"));
+                folder = folder.Replace(basePath, "");
+
+                //create folder
+                System.IO.Directory.CreateDirectory(destination + "\\" + folder);
+
+                restoreFile2Local(file, destination + "\\" + folder + "\\" + file.Substring(file.LastIndexOf("\\")), false);
+
+                restoredFiles++;
+
+                //raise event for setting current elements count
+                props.elementsCount = (uint)files.Count;
+                props.currentElement = restoredFiles;
+                props.progress = 0.0;
+                newEvent(props);
+            }
+
+            //raise event for indicating end of restore
+            props.elementsCount = (uint)files.Count;
+            props.currentElement = (uint)files.Count;
+            props.progress = 100.0;
+            props.setDone = true;
+            newEvent(props);
+        }
+
+
+        //performs the restore of a single file to local storage
+        public void restoreFile2Local(string source, string destination, bool standalone)
         {
             Common.EventProperties props = new Common.EventProperties();
 
@@ -114,6 +157,15 @@ namespace GuestFilesReader
                     
                 }
 
+                //set progress to done
+                props.progress = 100.0;
+                if (standalone)
+                {
+                    props.setDone = true;
+                }
+                this.newEvent(props);
+
+
                 //transfer completed
                 sourceStream.Close();
                 destinationStream.Close();
@@ -123,6 +175,10 @@ namespace GuestFilesReader
                 //io exception
                 props.progress = -1.0f; //-1.0f for error
                 props.text = ex.ToString();
+                if (standalone)
+                {
+                    props.setDone = true;
+                }
                 this.newEvent(props);
                 return;
             }
