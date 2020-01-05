@@ -24,6 +24,7 @@ namespace GuestFilesReader
         private GuestFilesHandler gfHandler;
         private string currentPath;
         private delegate void setProgressDelegate(double progress);
+        private delegate void setLabelDelegate(string text);
         private bool restoreInProgress = false;
 
         public MainWindow()
@@ -208,7 +209,9 @@ namespace GuestFilesReader
 
                         //start restore thread
                         this.restoreInProgress = true;
-                        System.Threading.Thread restoreThread = new System.Threading.Thread(() => this.gfHandler.restoreFile2Local(sourcePath, destinationPath));
+                        gridProgress.Visibility = Visibility.Visible;
+
+                        System.Threading.Thread restoreThread = new System.Threading.Thread(() => this.gfHandler.restoreFile2Local(sourcePath, destinationPath, true));
                         restoreThread.Start();
                     }
                     break;
@@ -226,6 +229,22 @@ namespace GuestFilesReader
             {
                 //no error, show progress
                 pbProgress.Dispatcher.Invoke(new setProgressDelegate(setProgress), new object[] { props.progress });
+
+                //refresh label if necessary
+                if (props.elementsCount > 0)
+                {
+                    lblProgress.Dispatcher.Invoke(new setLabelDelegate(setLabel), new object[] { "Fortschritt (Datei " + props.currentElement + " von " + props.elementsCount + "):" });
+                }
+                else
+                {
+                    lblProgress.Dispatcher.Invoke(new setLabelDelegate(setLabel), new object[] { "Fortschritt (Datei 1 von 1):" });
+                }
+            }
+
+            //restore done?
+            if (props.setDone)
+            {
+                this.restoreInProgress = false;
             }
         }
 
@@ -233,11 +252,106 @@ namespace GuestFilesReader
         private void setProgress(double progress)
         {
             pbProgress.Value = progress;
+        }
 
-            if (progress >= 100.0)
+        //sets the current progress label
+        private void setLabel(string text)
+        {
+            lblProgress.Content = text;
+        }
+
+        private void TreeViewMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            //cancel if restore already in progress
+            if (this.restoreInProgress)
             {
-                this.restoreInProgress = false;
+                return;
             }
+
+            MenuItem clickedItem = (MenuItem)e.OriginalSource;
+
+            switch (clickedItem.Uid)
+            {
+                case "savefolderas": //save as
+                    //open path picker dialog
+                    using (var dialog = new System.Windows.Forms.FolderBrowserDialog())
+                    {
+                        //get clicked TreeViewItem
+                        MenuItem mnu = (MenuItem)(sender);
+                        TreeViewItem selectedFolder = ((ContextMenu)mnu.Parent).PlacementTarget as TreeViewItem;
+
+                        //get current path
+                        string sourcePath = System.IO.Path.Combine(this.currentPath, selectedFolder.Header.ToString());
+
+                        //set waiting mouse cursor
+                        Mouse.OverrideCursor = System.Windows.Input.Cursors.Wait;
+
+                        //count files within folder
+                        List<string> files = getFiles(sourcePath);
+
+                        //reset default mouse cursor
+                        Mouse.OverrideCursor = System.Windows.Input.Cursors.Arrow;
+
+                        if (MessageBox.Show("Dieses Verzeichnis enthält " + files.Count + " Dateien.\r\nSollen diese lokal wiederhergestellt werden?", "Verzeichniswiederherstellung", MessageBoxButton.YesNo) != MessageBoxResult.Yes)
+                        {
+                            //user canceled restore
+                            return;
+                        }
+
+                        //show folder browser dialog
+                        dialog.Description = "Wählen Sie einen lokalen Wiederherstellungspfad aus:";
+                        System.Windows.Forms.DialogResult result = dialog.ShowDialog();
+                        string targetPath = dialog.SelectedPath;
+
+                        
+
+                        string destinationPath = System.IO.Path.Combine(targetPath, selectedFolder.Header.ToString());
+
+                        System.IO.Directory.CreateDirectory(destinationPath);
+
+                        //start restore thread
+                        this.restoreInProgress = true;
+                        gridProgress.Visibility = Visibility.Visible;
+
+                        System.Threading.Thread restoreThread = new System.Threading.Thread(() => this.gfHandler.restoreFiles2Local(files, destinationPath, sourcePath));
+                        restoreThread.Start();
+                    }
+                    break;
+            }
+        }
+
+        //gets the files within a given folder recursively
+        List<string> getFiles(string directory)
+        {
+            try
+            {
+
+                List<string> files = new List<string>();
+
+                //get folders
+                string[] folders = System.IO.Directory.GetDirectories(directory, "*", System.IO.SearchOption.TopDirectoryOnly);
+
+                //iterate folders
+                foreach (string folder in folders)
+                {
+                    files.AddRange(getFiles(folder));
+                }
+
+                //get and add files
+                files.AddRange(System.IO.Directory.GetFiles(directory, "*", System.IO.SearchOption.TopDirectoryOnly));
+
+                return files;
+
+            }
+            catch (Exception ex) //return empty list when error occurs
+            {
+                return new List<string>();
+            }
+        }
+
+        private void pbProgress_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+
         }
     }
 }

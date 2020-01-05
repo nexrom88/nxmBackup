@@ -12,5 +12,9 @@ namespace Common
         public bool setDone; //sets the last event to "done"
         public bool isUpdate; //updates the last event
         public double progress; //optional: progress in percentage
+
+        //optional: current element (e.g. restore item 5/10)
+        public uint elementsCount;
+        public uint currentElement;
     }
 }
