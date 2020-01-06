@@ -71,52 +71,43 @@ namespace GuestFilesReader
         }
 
         //performs the restore of a single file to local storage
-        public void restoreFiles2Local(List<string> files, string destination, string basePath)
+        public void restoreFiles2Local(List<string> files, string destination, string baseSourcePath)
         {
 
-            //raise first event for setting elements count
+            //prepare EventProperties for progress events
             Common.EventProperties props = new Common.EventProperties();
             props.elementsCount = (uint)files.Count;
-            props.currentElement = 0;
+            props.currentElement = 1;
             props.progress = 0.0;
-            newEvent(props);
-
-            uint restoredFiles = 0;
 
             //iterate all files
             foreach (string file in files)
             {
                 //create folder
                 string folder = file.Substring(0, file.LastIndexOf("\\"));
-                folder = folder.Replace(basePath, "");
+                folder = folder.Replace(baseSourcePath, "");
 
                 //create folder
                 System.IO.Directory.CreateDirectory(destination + "\\" + folder);
 
-                restoreFile2Local(file, destination + "\\" + folder + "\\" + file.Substring(file.LastIndexOf("\\")), false);
+                restoreFile2Local(file, destination + "\\" + folder + "\\" + file.Substring(file.LastIndexOf("\\")), props);
 
-                restoredFiles++;
+                props.currentElement++;
 
-                //raise event for setting current elements count
-                props.elementsCount = (uint)files.Count;
-                props.currentElement = restoredFiles;
-                props.progress = 0.0;
-                newEvent(props);
+                
             }
 
-            //raise event for indicating end of restore
-            props.elementsCount = (uint)files.Count;
-            props.currentElement = (uint)files.Count;
-            props.progress = 100.0;
+            //raise event for indication restore completion
+            props.currentElement--;
             props.setDone = true;
             newEvent(props);
+
         }
 
 
         //performs the restore of a single file to local storage
-        public void restoreFile2Local(string source, string destination, bool standalone)
+        private void restoreFile2Local(string source, string destination, Common.EventProperties props)
         {
-            Common.EventProperties props = new Common.EventProperties();
 
             //open both streams
             try
@@ -157,14 +148,6 @@ namespace GuestFilesReader
                     
                 }
 
-                //set progress to done
-                props.progress = 100.0;
-                if (standalone)
-                {
-                    props.setDone = true;
-                }
-                this.newEvent(props);
-
 
                 //transfer completed
                 sourceStream.Close();
@@ -175,10 +158,6 @@ namespace GuestFilesReader
                 //io exception
                 props.progress = -1.0f; //-1.0f for error
                 props.text = ex.ToString();
-                if (standalone)
-                {
-                    props.setDone = true;
-                }
                 this.newEvent(props);
                 return;
             }

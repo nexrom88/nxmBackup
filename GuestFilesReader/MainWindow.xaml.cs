@@ -25,6 +25,7 @@ namespace GuestFilesReader
         private string currentPath;
         private delegate void setProgressDelegate(double progress);
         private delegate void setLabelDelegate(string text);
+        private delegate void hideGridDelegate();
         private bool restoreInProgress = false;
 
         public MainWindow()
@@ -45,7 +46,9 @@ namespace GuestFilesReader
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            isAdministrator();
+
+            //hide progress grid
+            gridProgress.Visibility = Visibility.Hidden;
 
             string vhdFile = "C:\\restore\\Virtual Hard Disks\\Windows 10.vhdx";
 
@@ -135,7 +138,7 @@ namespace GuestFilesReader
                     TreeViewItem newItem = new TreeViewItem();
                     newItem.Header = folderName;
                     newItem.Uid = entry;
-                    newItem.Expanded += TreeViewItem_Expanded;
+                    newItem.Expanded += TreeViewItem_OpenPath;
                     
                     //add entry to an existing node?
                     if (baseItem != null)
@@ -168,9 +171,21 @@ namespace GuestFilesReader
         }
 
         //treeview item expanded
-        private void TreeViewItem_Expanded(object sender, RoutedEventArgs e)
+        private void TreeViewItem_OpenPath(object sender, RoutedEventArgs e)
         {
             TreeViewItem item = (TreeViewItem)(e.OriginalSource);
+            TreeViewItem senderItem = (TreeViewItem)sender;
+
+            //just go on when sender == item. Expand Event gets raised for every parent item in TreeView
+            if (senderItem != item)
+            {
+                return;
+            }
+
+
+            //remove subfolders
+            item.Items.Clear();
+
             setPath(item.Uid, item);
         }
 
@@ -205,13 +220,15 @@ namespace GuestFilesReader
                         ListBoxItem selectedFile = (ListBoxItem)lbFiles.SelectedItem;
                         string sourcePath = System.IO.Path.Combine(this.currentPath, selectedFile.Content.ToString());
 
-                        string destinationPath = System.IO.Path.Combine(targetPath, selectedFile.Content.ToString());
-
                         //start restore thread
                         this.restoreInProgress = true;
                         gridProgress.Visibility = Visibility.Visible;
 
-                        System.Threading.Thread restoreThread = new System.Threading.Thread(() => this.gfHandler.restoreFile2Local(sourcePath, destinationPath, true));
+
+                        //build 1-entry List for restore function
+                        List<string> files = new List<string>();
+                        files.Add(sourcePath);
+                        System.Threading.Thread restoreThread = new System.Threading.Thread(() => this.gfHandler.restoreFiles2Local(files, targetPath, this.currentPath));
                         restoreThread.Start();
                     }
                     break;
@@ -230,21 +247,18 @@ namespace GuestFilesReader
                 //no error, show progress
                 pbProgress.Dispatcher.Invoke(new setProgressDelegate(setProgress), new object[] { props.progress });
 
-                //refresh label if necessary
-                if (props.elementsCount > 0)
-                {
-                    lblProgress.Dispatcher.Invoke(new setLabelDelegate(setLabel), new object[] { "Fortschritt (Datei " + props.currentElement + " von " + props.elementsCount + "):" });
-                }
-                else
-                {
-                    lblProgress.Dispatcher.Invoke(new setLabelDelegate(setLabel), new object[] { "Fortschritt (Datei 1 von 1):" });
-                }
+                //refresh label
+                lblProgress.Dispatcher.Invoke(new setLabelDelegate(setLabel), new object[] { "Fortschritt (Datei " + props.currentElement + " von " + props.elementsCount + "):" });
+              
             }
 
             //restore done?
             if (props.setDone)
             {
                 this.restoreInProgress = false;
+
+                //hide progress grid
+                gridProgress.Dispatcher.Invoke(new hideGridDelegate(hideGridView), new object[] { });
             }
         }
 
@@ -258,6 +272,12 @@ namespace GuestFilesReader
         private void setLabel(string text)
         {
             lblProgress.Content = text;
+        }
+
+        //hides the grid view
+        private void hideGridView()
+        {
+            gridProgress.Visibility = Visibility.Hidden;
         }
 
         private void TreeViewMenuItem_Click(object sender, RoutedEventArgs e)
@@ -281,7 +301,7 @@ namespace GuestFilesReader
                         TreeViewItem selectedFolder = ((ContextMenu)mnu.Parent).PlacementTarget as TreeViewItem;
 
                         //get current path
-                        string sourcePath = System.IO.Path.Combine(this.currentPath, selectedFolder.Header.ToString());
+                        string sourcePath = selectedFolder.Uid;
 
                         //set waiting mouse cursor
                         Mouse.OverrideCursor = System.Windows.Input.Cursors.Wait;
