@@ -7,9 +7,11 @@ using System.Threading.Tasks;
 
 namespace Common
 {
-    public class DBConnection
+    public class DBConnection : IDisposable
     {
         private string server, database, user, password;
+
+        private SqlConnection connection;
 
         public DBConnection(string server, string database, string user, string password)
         {
@@ -17,65 +19,98 @@ namespace Common
             this.database = database;
             this.user = user;
             this.password = password;
+
+            //start SQL Server connection
+            //build connection string
+            string connectionString = $"Server={this.server};Database={this.database};User Id={this.user};Password={this.password};";
+            this.connection = new SqlConnection(connectionString);
+
+            //open DB connection
+            connection.Open();
+        }
+
+        //opens a transaction
+        public SqlTransaction beginTransaction()
+        {
+            return connection.BeginTransaction();
+        }
+
+        //commits a transaction
+        public void commitTransaction(SqlTransaction transaction)
+        {
+            transaction.Commit();
+        }
+
+        //performs a rollback for the given transaction
+        public void rollbackTransaction(SqlTransaction transaction)
+        {
+            transaction.Rollback();
         }
 
         //sends a sql query
-        public List<Dictionary<string, string>> singleQuery(string query, Dictionary<string, string> parameters)
+        public List<Dictionary<string, string>> doQuery(string query, Dictionary<string, string> parameters, SqlTransaction transaction)
         {
-            //build connection string
-            string connectionString = $"Server={this.server};Database={this.database};User Id={this.user};Password={this.password};";
+            SqlCommand command;
 
-
-            //start sql connection
-            using (SqlConnection connection = new SqlConnection(connectionString))
+            if (transaction == null)
             {
-                SqlCommand command = new SqlCommand(query, connection);
-
-                //add all query parameters
-                if (parameters != null)
-                {
-                    foreach (string key in parameters.Keys)
-                    {
-                        command.Parameters.AddWithValue(key, parameters[key]);
-                    }
-                }
-                
-                //open DB connection
-                connection.Open();
-                
-                
-                SqlDataReader reader = command.ExecuteReader();
-
-                //retVal is a list of dictionaries
-                List<Dictionary<string, string>> result = new List<Dictionary<string, string>>();
-
-                try
-                {
-                    //iterate through all results
-                    while (reader.HasRows && reader.Read())
-                    {
-                        Dictionary<string, string> resultRow = new Dictionary<string, string>();
-                        //read all columns
-                        for (int i = 0; i < reader.FieldCount; i++)
-                        {
-                            string columnName = reader.GetName(i);
-                            resultRow.Add(columnName, reader[columnName].ToString().Trim()); ;
-                        }
-
-                        //add dictionary to result list
-                        result.Add(resultRow);
-
-                    }
-                }
-                finally
-                {
-                    // Always call close when done reading
-                    reader.Close();
-                    connection.Close();
-                }
-                return result;
+                //query without transaction
+                command = new SqlCommand(query, connection);
+            }
+            else
+            {
+                //query within transaction
+                command = new SqlCommand(query, connection, transaction);
             }
 
+            //add all query parameters
+            if (parameters != null)
+            {
+                foreach (string key in parameters.Keys)
+                {
+                    command.Parameters.AddWithValue(key, parameters[key]);
+                }
+            }
+                                
+                
+            SqlDataReader reader = command.ExecuteReader();
+
+            //retVal is a list of dictionaries
+            List<Dictionary<string, string>> result = new List<Dictionary<string, string>>();
+
+            try
+            {
+                //iterate through all results
+                while (reader.HasRows && reader.Read())
+                {
+                    Dictionary<string, string> resultRow = new Dictionary<string, string>();
+                    //read all columns
+                    for (int i = 0; i < reader.FieldCount; i++)
+                    {
+                        string columnName = reader.GetName(i);
+                        resultRow.Add(columnName, reader[columnName].ToString().Trim()); ;
+                    }
+
+                    //add dictionary to result list
+                    result.Add(resultRow);
+
+                }
+            }
+            finally
+            {
+                // Always call close when done reading
+                reader.Close();
+            }
+            return result;
+
+
+        }
+
+        //closes the db connection
+        public void Dispose()
+        {
+            this.connection.Close();
+            this.connection.Dispose();
         }
     }
 }
