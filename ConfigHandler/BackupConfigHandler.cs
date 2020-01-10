@@ -31,7 +31,7 @@ namespace ConfigHandler
                 //generate BackupChain node
                 XmlElement chainElement = doc.CreateElement(string.Empty, "BackupChain", string.Empty);
                 bodyElement.AppendChild(chainElement);
-                
+
 
                 doc.Save(Path.Combine(basePath, "config.xml"));
             }
@@ -88,10 +88,10 @@ namespace ConfigHandler
             for (int i = 0; i < backupsElement.ChildNodes.Count; i++)
             {
                 //found item to be deleted?
-                if(backupsElement.ChildNodes.Item(i).Attributes.GetNamedItem("uuid").Value == uuid)
+                if (backupsElement.ChildNodes.Item(i).Attributes.GetNamedItem("uuid").Value == uuid)
                 {
                     backupsElement.RemoveChild(backupsElement.ChildNodes.Item(i));
-                }                                
+                }
             }
 
             //write changed xml
@@ -118,7 +118,7 @@ namespace ConfigHandler
             //open VMBackup
             XmlElement rootElement = (XmlElement)xml.SelectSingleNode("VMBackup");
             XmlElement backupsElement = (XmlElement)rootElement.SelectSingleNode("BackupChain");
-            
+
             //iterate through all backups
             for (int i = 0; i < backupsElement.ChildNodes.Count; i++)
             {

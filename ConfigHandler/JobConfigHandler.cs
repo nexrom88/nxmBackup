@@ -3,6 +3,7 @@ using System.Xml;
 using System.IO;
 using System.Collections.Generic;
 using System.Text;
+using System.Data.SqlClient;
 
 namespace ConfigHandler
 {
@@ -11,7 +12,8 @@ namespace ConfigHandler
         private static Object lockObj = new object();
 
         //reads and returns all jobs
-        public static List<OneJob> readJobs() {
+        public static List<OneJob> readJobs()
+        {
             lock (lockObj)
             {
                 //create the xml if it doesn't exist
@@ -103,51 +105,79 @@ namespace ConfigHandler
         }
 
         //adds a job to the job list
-        public static void addJob (OneJob job)
+        public static void addJob(OneJob job)
         {
-            lock (lockObj)
+
+            //open DB connection
+            using (Common.DBConnection connection = new Common.DBConnection())
             {
-                //create the xml if it doesn't exist
-                createXML();
+                string intervalString = job.interval.intervalBase.ToString();
 
-                //file exists, open it
-                FileStream baseStream = new FileStream("jobs.xml", FileMode.Open, FileAccess.ReadWrite);
-                XmlDocument xml = new XmlDocument();
-                xml.Load(baseStream);
-                baseStream.Close();
+                //add job details to params dictionary
+                Dictionary<string, string> oneParam = new Dictionary<string, string>();
+                oneParam.Add("name", job.name);
+                oneParam.Add("interval", intervalString);
+                oneParam.Add("minute", job.interval.minute);
+                oneParam.Add("hour", job.interval.hour);
+                oneParam.Add("day", job.interval.day);
+                oneParam.Add("basePath", job.basePath);
+                oneParam.Add("compression", job.compression.ToString().ToLower());
+                oneParam.Add("blocksize", job.blockSize.ToString());
+                oneParam.Add("maxelements", job.rotation.maxElementCount.ToString());
+                oneParam.Add("rotationtype", job.rotation.type.ToString().ToLower());
 
-                //add a job entry
-                string intervalString = job.interval.intervalBase.ToString();                
-                XmlElement rootElement = (XmlElement)xml.SelectSingleNode("VMJobs");
-                XmlElement backupsElement = (XmlElement)rootElement.SelectSingleNode("Jobs");
-                XmlElement newElement = xml.CreateElement(String.Empty, "Job", String.Empty);
-                newElement.SetAttribute("name", job.name);
-                newElement.SetAttribute("interval", intervalString);
-                newElement.SetAttribute("minute", job.interval.minute);
-                newElement.SetAttribute("hour", job.interval.hour);
-                newElement.SetAttribute("day", job.interval.day);
-                newElement.SetAttribute("basePath", job.basePath);
-                newElement.SetAttribute("compression", job.compression.ToString().ToLower());
-                newElement.SetAttribute("blocksize", job.blockSize.ToString());
-                newElement.SetAttribute("maxelements", job.rotation.maxElementCount.ToString());
-                newElement.SetAttribute("rotationtype", job.rotation.type.ToString().ToLower());
-                XmlElement newJob = (XmlElement)backupsElement.AppendChild(newElement);
+                //start DB transaction
+                SqlTransaction transaction = connection.beginTransaction();
 
-                //now build the job VMs
-                foreach(JobVM vm in job.jobVMs)
-                {
-                    XmlElement newVM = xml.CreateElement(String.Empty, "VM", String.Empty);
-                    newVM.SetAttribute("vmID", vm.vmID);
-                    newVM.SetAttribute("vmName", vm.vmName);
-                    newJob.AppendChild(newVM);
+                createJobVMRelation(job, connection, transaction);
+            }
+
+
+
+            ////now build the job VMs
+            //foreach(JobVM vm in job.jobVMs)
+            //{
+            //    XmlElement newVM = xml.CreateElement(String.Empty, "VM", String.Empty);
+            //    newVM.SetAttribute("vmID", vm.vmID);
+            //    newVM.SetAttribute("vmName", vm.vmName);
+            //    newJob.AppendChild(newVM);
+            //}
+
+            ////save the xml file
+            //baseStream = new FileStream("jobs.xml", FileMode.Create, FileAccess.ReadWrite);
+            //xml.Save(baseStream);
+            //baseStream.Close();
+
+
+        }
+
+        //creates a job-vms relation
+        private void createJobVMRelation(OneJob job, int jobid, Common.DBConnection connection, SqlTransaction transaction)
+        {
+            //iterate through all vms
+            foreach (JobVM vm in job.jobVMs)
+            {
+                //check whether vm already exists
+                Dictionary<string, string> parameters = new Dictionary<string, string>();
+                parameters.Add("id", vm.vmID);
+                List<Dictionary<string, string>> result = connection.doQuery("SELECT COUNT(*) AS count From VMs WHERE id=@id", parameters, transaction);
+
+                //does vm already exist in DB?
+                if (int.Parse(result[0]["count"]) == 0){
+                    //vm does not exist
+                    parameters = new Dictionary<string, string>();
+                    parameters.Add("id", vm.vmID);
+                    parameters.Add("name", vm.vmName);
+                    connection.doQuery("INSERT INTO VMs(id, name) VALUES (@id, @name)", parameters, transaction);
                 }
 
-                //save the xml file
-                baseStream = new FileStream("jobs.xml", FileMode.Create, FileAccess.ReadWrite);
-                xml.Save(baseStream);
-                baseStream.Close();
-
+                //vm exists now, now create relation
+                parameters = new Dictionary<string, string>();
+                parameters.Add("jobid", jobid.ToString());
+                parameters.Add("vmname", vm.vmID);
+                connection.doQuery("INSERT INTO JobVMRelation(id, name) VALUES (@jobid, @vmid)", parameters, transaction);
             }
+
         }
 
         //creates the jobs.xml file if it doesn't exist

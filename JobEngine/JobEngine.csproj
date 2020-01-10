@@ -5,7 +5,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ConfiHandler\ConfigHandler.csproj" />
     <ProjectReference Include="..\HyperVBackupRCT\HyperVBackupRCT.csproj" />
   </ItemGroup>
 

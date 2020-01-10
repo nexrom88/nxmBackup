@@ -55,10 +55,6 @@
       <Project>{aad2cca1-182c-4bc4-beb4-6434a03675ea}</Project>
       <Name>Common</Name>
     </ProjectReference>
-    <ProjectReference Include="..\ConfiHandler\ConfigHandler.csproj">
-      <Project>{388b2e7d-2ea0-4635-b00e-d7e42f2ae045}</Project>
-      <Name>ConfigHandler</Name>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
