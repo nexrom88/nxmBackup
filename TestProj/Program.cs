@@ -11,19 +11,9 @@ namespace TestProj
     {
         static void Main(string[] args)
         {
-            Common.DBConnection conn = new Common.DBConnection(".\\SQLEXPRESS", "nxmBackup", "nxm", "test123");
+            Common.DBConnection conn = new Common.DBConnection();
 
-            SqlTransaction transaction = conn.beginTransaction();
-
-            for (int i = 0; i < 10; i++)
-            {
-                Dictionary<string, string> parameters = new Dictionary<string, string>();
-                parameters.Add("@name", "TestJob" + i.ToString());
-
-                List<Dictionary<string, string>> retVal = conn.doQuery("INSERT INTO compression (name) VALUES (@name)", parameters, transaction);
-            }
-
-            transaction.Rollback();
+            List<Dictionary<string, string>> retVal = conn.doQuery("SELECT Count(*) AS count FROM compression", null, null);
 
             conn.Dispose();
 

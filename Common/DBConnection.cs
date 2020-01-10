@@ -9,17 +9,15 @@ namespace Common
 {
     public class DBConnection : IDisposable
     {
-        private string server, database, user, password;
+        private string server = ".\\SQLEXPRESS";
+        private string database = "nxmBackup";
+        private string user = "nxm";
+        private string password = "test123";
 
         private SqlConnection connection;
 
-        public DBConnection(string server, string database, string user, string password)
+        public DBConnection()
         {
-            this.server = server;
-            this.database = database;
-            this.user = user;
-            this.password = password;
-
             //start SQL Server connection
             //build connection string
             string connectionString = $"Server={this.server};Database={this.database};User Id={this.user};Password={this.password};";
