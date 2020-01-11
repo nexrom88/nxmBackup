@@ -113,46 +113,52 @@ namespace ConfigHandler
             {
                 string intervalString = job.interval.intervalBase.ToString();
 
-                //add job details to params dictionary
-                Dictionary<string, string> oneParam = new Dictionary<string, string>();
-                oneParam.Add("name", job.name);
-                oneParam.Add("interval", intervalString);
-                oneParam.Add("minute", job.interval.minute);
-                oneParam.Add("hour", job.interval.hour);
-                oneParam.Add("day", job.interval.day);
-                oneParam.Add("basePath", job.basePath);
-                oneParam.Add("compression", job.compression.ToString().ToLower());
-                oneParam.Add("blocksize", job.blockSize.ToString());
-                oneParam.Add("maxelements", job.rotation.maxElementCount.ToString());
-                oneParam.Add("rotationtype", job.rotation.type.ToString().ToLower());
+                Dictionary<string, string> parameters = new Dictionary<string, string>();
 
                 //start DB transaction
                 SqlTransaction transaction = connection.beginTransaction();
 
-                createJobVMRelation(job, connection, transaction);
+                List<Dictionary<string, string>> values;
+
+                //get compression id
+                parameters.Add("name", job.compression.ToString().ToLower());
+                values = connection.doQuery("SELECT id FROM compression WHERE name=@name", parameters, transaction);
+                string compressionID = values[0]["id"];
+
+                parameters = new Dictionary<string, string>();
+                //get rotationtype ID
+                parameters.Add("name", job.rotation.type.ToString().ToLower());
+                values = connection.doQuery("SELECT id FROM RotationType WHERE name=@name", parameters, transaction);
+                string rotationID = values[0]["id"];
+
+
+                //create job entry
+                parameters = new Dictionary<string, string>();
+                parameters.Add("name", job.name);
+                parameters.Add("interval", intervalString);
+                parameters.Add("minute", job.interval.minute);
+                parameters.Add("hour", job.interval.hour);
+                parameters.Add("day", job.interval.day);
+                parameters.Add("basepath", job.basePath);
+                parameters.Add("compressionID", compressionID);
+                parameters.Add("blocksize", job.blockSize.ToString());
+                parameters.Add("maxelements", job.rotation.maxElementCount.ToString());
+                parameters.Add("rotationtypeID", rotationID);
+
+                values = connection.doQuery("INSERT INTO Jobs (name, interval, minute, hour, day, basepath, compressionID, blocksize, maxelements, rotationtypeID) VALUES(@name, @interval, @minute, @hour, @day, @basepath, @compressionID, @blocksize, @maxelements, @rotationtypeID); SELECT SCOPE_IDENTITY() AS id;", parameters, transaction);
+
+                string jobID = values[0]["id"];
+
+                createJobVMRelation(job, jobID, connection, transaction);
+
+                //commit transaction
+                transaction.Commit();
             }
-
-
-
-            ////now build the job VMs
-            //foreach(JobVM vm in job.jobVMs)
-            //{
-            //    XmlElement newVM = xml.CreateElement(String.Empty, "VM", String.Empty);
-            //    newVM.SetAttribute("vmID", vm.vmID);
-            //    newVM.SetAttribute("vmName", vm.vmName);
-            //    newJob.AppendChild(newVM);
-            //}
-
-            ////save the xml file
-            //baseStream = new FileStream("jobs.xml", FileMode.Create, FileAccess.ReadWrite);
-            //xml.Save(baseStream);
-            //baseStream.Close();
-
 
         }
 
         //creates a job-vms relation
-        private void createJobVMRelation(OneJob job, int jobid, Common.DBConnection connection, SqlTransaction transaction)
+        private static void createJobVMRelation(OneJob job, string jobID, Common.DBConnection connection, SqlTransaction transaction)
         {
             //iterate through all vms
             foreach (JobVM vm in job.jobVMs)
@@ -168,14 +174,14 @@ namespace ConfigHandler
                     parameters = new Dictionary<string, string>();
                     parameters.Add("id", vm.vmID);
                     parameters.Add("name", vm.vmName);
-                    connection.doQuery("INSERT INTO VMs(id, name) VALUES (@id, @name)", parameters, transaction);
+                    connection.doQuery("INSERT INTO VMs(id, name) VALUES (@id, @name); SELECT SCOPE_IDENTITY() AS id;", parameters, transaction);
                 }
 
                 //vm exists now, now create relation
                 parameters = new Dictionary<string, string>();
-                parameters.Add("jobid", jobid.ToString());
-                parameters.Add("vmname", vm.vmID);
-                connection.doQuery("INSERT INTO JobVMRelation(id, name) VALUES (@jobid, @vmid)", parameters, transaction);
+                parameters.Add("jobid", jobID);
+                parameters.Add("vmid", vm.vmID);
+                connection.doQuery("INSERT INTO JobVMRelation(jobid, vmid) VALUES (@jobid, @vmid)", parameters, transaction);
             }
 
         }
