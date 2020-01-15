@@ -14,58 +14,48 @@ namespace ConfigHandler
         //reads and returns all jobs
         public static List<OneJob> readJobs()
         {
-            lock (lockObj)
+            List<OneJob> retVal = new List<OneJob>();
+
+            //open DB connection
+            using (Common.DBConnection connection = new Common.DBConnection())
             {
-                //create the xml if it doesn't exist
-                createXML();
-
-                List<OneJob> jobs = new List<OneJob>();
-
-                //open xml
-                FileStream baseStream = new FileStream("jobs.xml", FileMode.Open, FileAccess.ReadWrite);
-                XmlDocument xml = new XmlDocument();
-                xml.Load(baseStream);
-                baseStream.Close();
-
-                //open VMBackup
-                XmlElement rootElement = (XmlElement)xml.SelectSingleNode("VMJobs");
-                XmlElement jobsElement = (XmlElement)rootElement.SelectSingleNode("Jobs");
-
-                //iterate through all Jobs
-                for (int i = 0; i < jobsElement.ChildNodes.Count; i++)
+                List<Dictionary<string,string>> jobs = connection.doQuery("SELECT Jobs.id, Jobs.name, Jobs.basepath, Jobs.maxelements, Jobs.blocksize, Jobs.day, Jobs.hour, Jobs.minute, Jobs.interval, Compression.name AS compressionname, RotationType.name AS rotationname FROM Jobs INNER JOIN Compression ON Jobs.compressionID=Compression.id INNER JOIN RotationType ON Jobs.rotationtypeID=RotationType.id", null, null);
+            
+                //iterate through all jobs
+                foreach(Dictionary<string,string> job in jobs)
                 {
                     //build structure
-                    OneJob job = new OneJob();
-                    job.basePath = jobsElement.ChildNodes.Item(i).Attributes.GetNamedItem("basePath").Value;
-                    job.name = jobsElement.ChildNodes.Item(i).Attributes.GetNamedItem("name").Value;
-                    job.blockSize = uint.Parse(jobsElement.ChildNodes.Item(i).Attributes.GetNamedItem("blocksize").Value);
+                    OneJob newJob = new OneJob();
+                    newJob.basePath = job["basepath"];
+                    newJob.name = job["name"];
+                    newJob.blockSize = uint.Parse(job["blocksize"]);
 
                     //build rotation structure
-                    switch (jobsElement.ChildNodes.Item(i).Attributes.GetNamedItem("rotationtype").Value)
+                    switch (job["rotationname"])
                     {
                         case "merge":
-                            job.rotation.type = RotationType.merge;
+                            newJob.rotation.type = RotationType.merge;
                             break;
                         case "blockrotation":
-                            job.rotation.type = RotationType.blockRotation;
+                            newJob.rotation.type = RotationType.blockRotation;
                             break;
                     }
-                    job.rotation.maxElementCount = uint.Parse(jobsElement.ChildNodes.Item(i).Attributes.GetNamedItem("maxelements").Value);
+                    newJob.rotation.maxElementCount = uint.Parse(job["maxelements"]);
 
                     //build compression level
-                    switch (jobsElement.ChildNodes.Item(i).Attributes.GetNamedItem("compression").Value)
+                    switch (job["compressionname"])
                     {
                         case "zip":
-                            job.compression = Compression.zip;
+                            newJob.compression = Compression.zip;
                             break;
                         case "lz4":
-                            job.compression = Compression.lz4;
+                            newJob.compression = Compression.lz4;
                             break;
                     }
 
                     //build interval structure
                     Interval interval = new Interval();
-                    switch (jobsElement.ChildNodes.Item(i).Attributes.GetNamedItem("interval").Value)
+                    switch (job["interval"])
                     {
                         case "hourly":
                             interval.intervalBase = IntervalBase.hourly;
@@ -77,31 +67,33 @@ namespace ConfigHandler
                             interval.intervalBase = IntervalBase.weekly;
                             break;
                     }
-                    interval.day = jobsElement.ChildNodes.Item(i).Attributes.GetNamedItem("day").Value;
-                    interval.minute = jobsElement.ChildNodes.Item(i).Attributes.GetNamedItem("minute").Value;
-                    interval.hour = jobsElement.ChildNodes.Item(i).Attributes.GetNamedItem("hour").Value;
-                    job.interval = interval;
+                    interval.day = job["day"];
+                    interval.minute = job["minute"];
+                    interval.hour = job["hour"];
+                    newJob.interval = interval;
 
-                    //build vms structure
-                    List<JobVM> vms = new List<JobVM>();
-                    XmlElement currentJobElement = (XmlElement)jobsElement.ChildNodes.Item(i);
-                    for (int j = 0; j < currentJobElement.ChildNodes.Count; j++)
+                    //query VMs
+                    Dictionary<string, string> paramaters = new Dictionary<string, string>();
+                    paramaters.Add("jobid", job["id"]);
+                    List<Dictionary<string, string>> vms = connection.doQuery("SELECT VMs.id, VMs.name FROM VMs INNER JOIN JobVMRelation ON JobVMRelation.jobid=@jobid AND JobVMRelation.vmid=VMs.id", paramaters, null);
+                    newJob.jobVMs = new List<JobVM>();
+
+                    //iterate through all vms
+                    foreach(Dictionary<string,string> vm in vms)
                     {
-                        JobVM vm = new JobVM();
-                        //just use node if it is a "VM" type
-                        if (currentJobElement.ChildNodes.Item(j).Name == "VM")
-                        {
-                            vm.vmID = currentJobElement.ChildNodes.Item(j).Attributes.GetNamedItem("vmID").Value;
-                            vm.vmName = currentJobElement.ChildNodes.Item(j).Attributes.GetNamedItem("vmName").Value;
-                        }
-                        vms.Add(vm);
+                        JobVM newVM = new JobVM();
+                        newVM.vmID = vm["id"];
+                        newVM.vmName = vm["name"];
+                        newJob.jobVMs.Add(newVM);
                     }
-                    job.jobVMs = vms;
-                    jobs.Add(job);
-                }
-                return jobs;
 
-            }
+                    retVal.Add(newJob);
+
+                }
+
+                return retVal;
+
+            }            
         }
 
         //adds a job to the job list
@@ -186,36 +178,7 @@ namespace ConfigHandler
 
         }
 
-        //creates the jobs.xml file if it doesn't exist
-        private static void createXML()
-        {
-            //check whether config file already exists
-            if (!File.Exists("jobs.xml"))
-            {
-                XmlDocument doc = new XmlDocument();
-
-                //(1) the xml declaration is recommended, but not mandatory
-                XmlDeclaration xmlDeclaration = doc.CreateXmlDeclaration("1.0", "UTF-8", null);
-                XmlElement root = doc.DocumentElement;
-                doc.InsertBefore(xmlDeclaration, root);
-
-                //generate root node
-                XmlElement bodyElement = doc.CreateElement(string.Empty, "VMJobs", string.Empty);
-                bodyElement.SetAttribute("version", "1.0");
-                doc.AppendChild(bodyElement);
-
-                //generate attributes node
-                XmlElement attrElement = doc.CreateElement(string.Empty, "Attributes", string.Empty);
-                bodyElement.AppendChild(attrElement);
-
-                //generate BackupChain node
-                XmlElement chainElement = doc.CreateElement(string.Empty, "Jobs", string.Empty);
-                bodyElement.AppendChild(chainElement);
-
-
-                doc.Save(Path.Combine("jobs.xml"));
-            }
-        }
+        
     }
 
     //represents one job within jobs.xml
