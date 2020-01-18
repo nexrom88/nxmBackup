@@ -129,8 +129,7 @@ namespace HyperVBackupRCT
             {
                 ulong offset;
                 ulong length;
-
-                int bytesRead = 0;
+                ulong bytesRead = 0;
                 ulong writeOffset = 0;
 
                 //read block offset
@@ -138,7 +137,7 @@ namespace HyperVBackupRCT
                 //ensure to read 8 bytes, lz4 sometimes reads less
                 while (bytesRead < 8)
                 {
-                    bytesRead += diffStream.Read(buffer, bytesRead, 8 - bytesRead);
+                    bytesRead += (ulong)diffStream.Read(buffer, (int)bytesRead, 8 - (int)bytesRead);
                 }
                 offset = BitConverter.ToUInt64(buffer, 0);
 
@@ -147,7 +146,7 @@ namespace HyperVBackupRCT
                 bytesRead = 0;
                 while (bytesRead < 8)
                 {
-                    bytesRead += diffStream.Read(buffer, bytesRead, 8 - bytesRead);
+                    bytesRead += (ulong)diffStream.Read(buffer, (int)bytesRead, 8 - (int)bytesRead);
                 }
                 length = BitConverter.ToUInt64(buffer, 0);
 
@@ -176,7 +175,7 @@ namespace HyperVBackupRCT
                     {
                         int currentBytesCount = diffStream.Read(buffer, bytesReadBlock, bufferSize - bytesReadBlock);
                         bytesReadBlock += currentBytesCount;
-                        bytesRead += currentBytesCount;
+                        bytesRead += (ulong)currentBytesCount;
 
                         //add length to progress
                         bytesRestored += currentBytesCount;
