@@ -182,11 +182,14 @@ namespace MainGUI
                 case "hourly":
                     jobInterval.intervalBase = ConfigHandler.IntervalBase.hourly;
                     jobInterval.minute = cbMinutes.Text;
+                    jobInterval.day = "";
+                    jobInterval.hour = "";
                     break;
                 case "daily":
                     jobInterval.intervalBase = ConfigHandler.IntervalBase.daily;
                     jobInterval.minute = cbMinutes.Text;
                     jobInterval.hour = cbHours.Text;
+                    jobInterval.day = "";
                     break;
                 case "weekly":
                     jobInterval.intervalBase = ConfigHandler.IntervalBase.weekly;

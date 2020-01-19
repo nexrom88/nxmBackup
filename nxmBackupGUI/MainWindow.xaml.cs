@@ -129,7 +129,7 @@ namespace nxmBackupGUI
             foreach(ConfigHandler.OneJob job in jobs)
             {
                 ComboBoxItem item = new ComboBoxItem();
-                item.Content = job.name;
+                item.Content = job.Name;
                 cbJobs.Items.Add(item);
             }
             if(cbJobs.Items.Count > 0)
