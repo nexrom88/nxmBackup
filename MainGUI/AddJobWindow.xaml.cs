@@ -144,7 +144,7 @@ namespace MainGUI
             bool nameFound = false;
             foreach(ConfigHandler.OneJob j in jobs)
             {
-                if (j.name.ToLower() == txtJobName.Text.ToLower())
+                if (j.Name.ToLower() == txtJobName.Text.ToLower())
                 {
                     nameFound = true;
                     break;
@@ -158,19 +158,19 @@ namespace MainGUI
 
             //build job structure
             ConfigHandler.OneJob job = new ConfigHandler.OneJob();
-            job.basePath = txtPath.Text;
-            job.name = txtJobName.Text;
-            job.blockSize = this.blockSize;
-            job.rotation = this.rotation;
+            job.BasePath = txtPath.Text;
+            job.Name = txtJobName.Text;
+            job.BlockSize = this.blockSize;
+            job.Rotation = this.rotation;
 
             //build compression var
             switch (((ComboBoxItem)cbCompression.SelectedItem).Uid)
             {
                 case "zip":
-                    job.compression = ConfigHandler.Compression.zip;
+                    job.Compression = ConfigHandler.Compression.zip;
                     break;
                 case "lz4":
-                    job.compression = ConfigHandler.Compression.lz4;
+                    job.Compression = ConfigHandler.Compression.lz4;
                     break;
             }
 
@@ -182,11 +182,14 @@ namespace MainGUI
                 case "hourly":
                     jobInterval.intervalBase = ConfigHandler.IntervalBase.hourly;
                     jobInterval.minute = cbMinutes.Text;
+                    jobInterval.day = "";
+                    jobInterval.hour = "";
                     break;
                 case "daily":
                     jobInterval.intervalBase = ConfigHandler.IntervalBase.daily;
                     jobInterval.minute = cbMinutes.Text;
                     jobInterval.hour = cbHours.Text;
+                    jobInterval.day = "";
                     break;
                 case "weekly":
                     jobInterval.intervalBase = ConfigHandler.IntervalBase.weekly;
@@ -195,7 +198,7 @@ namespace MainGUI
                     jobInterval.day = cbDays.Text;
                     break;
             }
-            job.interval = jobInterval;
+            job.Interval = jobInterval;
 
             //build vm structure
             List<ConfigHandler.JobVM> jobVMs = new List<ConfigHandler.JobVM>();
@@ -206,7 +209,7 @@ namespace MainGUI
                 jobVM.vmID = vm.Uid;
                 jobVMs.Add(jobVM);
             }
-            job.jobVMs = jobVMs;
+            job.JobVMs = jobVMs;
 
             ConfigHandler.JobConfigHandler.addJob(job);
             this.Close();

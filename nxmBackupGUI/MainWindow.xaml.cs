@@ -129,7 +129,7 @@ namespace nxmBackupGUI
             foreach(ConfigHandler.OneJob job in jobs)
             {
                 ComboBoxItem item = new ComboBoxItem();
-                item.Content = job.name;
+                item.Content = job.Name;
                 cbJobs.Items.Add(item);
             }
             if(cbJobs.Items.Count > 0)
@@ -153,7 +153,7 @@ namespace nxmBackupGUI
         {
             HyperVBackupRCT.RestoreHandler restoreHandler = new HyperVBackupRCT.RestoreHandler();
             restoreHandler.newEvent += new Common.Job.newEventDelegate(newEvent);
-            Thread restoreThread = new Thread(() => restoreHandler.performFullRestoreProcess(@"E:\nxm\CentOS8 Job\CentOS8", @"c:\restore", "Microsoft:36A234A7-C618-4E39-8CAF-6B78E228F9CF", ConfigHandler.Compression.lz4));
+            Thread restoreThread = new Thread(() => restoreHandler.performFullRestoreProcess(@"C:\Users\Administrator\Desktop\nxm\Win10 Sicherung\Test\Win10", @"c:\restore", "Microsoft:963FD620-CCD0-4546-9F6A-C28BE11B2761", ConfigHandler.Compression.lz4));
             restoreThread.Start();
         }
 

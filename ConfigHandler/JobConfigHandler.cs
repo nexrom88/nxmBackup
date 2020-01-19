@@ -4,6 +4,8 @@ using System.IO;
 using System.Collections.Generic;
 using System.Text;
 using System.Data.SqlClient;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 namespace ConfigHandler
 {
@@ -19,37 +21,42 @@ namespace ConfigHandler
             //open DB connection
             using (Common.DBConnection connection = new Common.DBConnection())
             {
-                List<Dictionary<string,string>> jobs = connection.doQuery("SELECT Jobs.id, Jobs.name, Jobs.basepath, Jobs.maxelements, Jobs.blocksize, Jobs.day, Jobs.hour, Jobs.minute, Jobs.interval, Compression.name AS compressionname, RotationType.name AS rotationname FROM Jobs INNER JOIN Compression ON Jobs.compressionID=Compression.id INNER JOIN RotationType ON Jobs.rotationtypeID=RotationType.id", null, null);
+                List<Dictionary<string,string>> jobs = connection.doQuery("SELECT Jobs.id, Jobs.name, Jobs.isRunning, Jobs.basepath, Jobs.maxelements, Jobs.blocksize, Jobs.day, Jobs.hour, Jobs.minute, Jobs.interval, Compression.name AS compressionname, RotationType.name AS rotationname FROM Jobs INNER JOIN Compression ON Jobs.compressionID=Compression.id INNER JOIN RotationType ON Jobs.rotationtypeID=RotationType.id", null, null);
             
                 //iterate through all jobs
                 foreach(Dictionary<string,string> job in jobs)
                 {
                     //build structure
                     OneJob newJob = new OneJob();
-                    newJob.basePath = job["basepath"];
-                    newJob.name = job["name"];
-                    newJob.blockSize = uint.Parse(job["blocksize"]);
+                    newJob.DbId = int.Parse(job["id"]);
+                    newJob.BasePath = job["basepath"]; 
+                    newJob.Name = job["name"];
+                    newJob.BlockSize = uint.Parse(job["blocksize"]);
+                    newJob.IsRunning = bool.Parse(job["isRunning"]);
 
+                    var rota = new Rotation();
                     //build rotation structure
                     switch (job["rotationname"])
                     {
-                        case "merge":
-                            newJob.rotation.type = RotationType.merge;
+                        case "merge":                           
+                            rota.type = RotationType.merge; 
                             break;
                         case "blockrotation":
-                            newJob.rotation.type = RotationType.blockRotation;
+                            rota.type = RotationType.blockRotation;
                             break;
                     }
-                    newJob.rotation.maxElementCount = uint.Parse(job["maxelements"]);
+
+                    rota.maxElementCount = uint.Parse(job["maxelements"]);
+                    newJob.Rotation = rota;
 
                     //build compression level
                     switch (job["compressionname"])
                     {
                         case "zip":
-                            newJob.compression = Compression.zip;
+                            newJob.Compression = Compression.zip;
                             break;
                         case "lz4":
-                            newJob.compression = Compression.lz4;
+                            newJob.Compression = Compression.lz4;
                             break;
                     }
 
@@ -70,13 +77,13 @@ namespace ConfigHandler
                     interval.day = job["day"];
                     interval.minute = job["minute"];
                     interval.hour = job["hour"];
-                    newJob.interval = interval;
+                    newJob.Interval = interval;
 
                     //query VMs
                     Dictionary<string, string> paramaters = new Dictionary<string, string>();
                     paramaters.Add("jobid", job["id"]);
                     List<Dictionary<string, string>> vms = connection.doQuery("SELECT VMs.id, VMs.name FROM VMs INNER JOIN JobVMRelation ON JobVMRelation.jobid=@jobid AND JobVMRelation.vmid=VMs.id", paramaters, null);
-                    newJob.jobVMs = new List<JobVM>();
+                    newJob.JobVMs = new List<JobVM>();
 
                     //iterate through all vms
                     foreach(Dictionary<string,string> vm in vms)
@@ -84,7 +91,7 @@ namespace ConfigHandler
                         JobVM newVM = new JobVM();
                         newVM.vmID = vm["id"];
                         newVM.vmName = vm["name"];
-                        newJob.jobVMs.Add(newVM);
+                        newJob.JobVMs.Add(newVM);
                     }
 
                     retVal.Add(newJob);
@@ -103,7 +110,7 @@ namespace ConfigHandler
             //open DB connection
             using (Common.DBConnection connection = new Common.DBConnection())
             {
-                string intervalString = job.interval.intervalBase.ToString();
+                string intervalString = job.Interval.intervalBase.ToString();
 
                 Dictionary<string, string> parameters = new Dictionary<string, string>();
 
@@ -113,28 +120,28 @@ namespace ConfigHandler
                 List<Dictionary<string, string>> values;
 
                 //get compression id
-                parameters.Add("name", job.compression.ToString().ToLower());
+                parameters.Add("name", job.Compression.ToString().ToLower());
                 values = connection.doQuery("SELECT id FROM compression WHERE name=@name", parameters, transaction);
                 string compressionID = values[0]["id"];
 
                 parameters = new Dictionary<string, string>();
                 //get rotationtype ID
-                parameters.Add("name", job.rotation.type.ToString().ToLower());
+                parameters.Add("name", job.Rotation.type.ToString().ToLower());
                 values = connection.doQuery("SELECT id FROM RotationType WHERE name=@name", parameters, transaction);
                 string rotationID = values[0]["id"];
 
 
                 //create job entry
                 parameters = new Dictionary<string, string>();
-                parameters.Add("name", job.name);
+                parameters.Add("name", job.Name);
                 parameters.Add("interval", intervalString);
-                parameters.Add("minute", job.interval.minute);
-                parameters.Add("hour", job.interval.hour);
-                parameters.Add("day", job.interval.day);
-                parameters.Add("basepath", job.basePath);
+                parameters.Add("minute", job.Interval.minute);
+                parameters.Add("hour", job.Interval.hour);
+                parameters.Add("day", job.Interval.day);
+                parameters.Add("basepath", job.BasePath);
                 parameters.Add("compressionID", compressionID);
-                parameters.Add("blocksize", job.blockSize.ToString());
-                parameters.Add("maxelements", job.rotation.maxElementCount.ToString());
+                parameters.Add("blocksize", job.BlockSize.ToString());
+                parameters.Add("maxelements", job.Rotation.maxElementCount.ToString());
                 parameters.Add("rotationtypeID", rotationID);
 
                 values = connection.doQuery("INSERT INTO Jobs (name, interval, minute, hour, day, basepath, compressionID, blocksize, maxelements, rotationtypeID) VALUES(@name, @interval, @minute, @hour, @day, @basepath, @compressionID, @blocksize, @maxelements, @rotationtypeID); SELECT SCOPE_IDENTITY() AS id;", parameters, transaction);
@@ -153,7 +160,7 @@ namespace ConfigHandler
         private static void createJobVMRelation(OneJob job, string jobID, Common.DBConnection connection, SqlTransaction transaction)
         {
             //iterate through all vms
-            foreach (JobVM vm in job.jobVMs)
+            foreach (JobVM vm in job.JobVMs)
             {
                 //check whether vm already exists
                 Dictionary<string, string> parameters = new Dictionary<string, string>();
@@ -178,19 +185,80 @@ namespace ConfigHandler
 
         }
 
-        
+        // Check if job is running.
+        public static bool isJobRunning(int jobId)
+        {
+            using (Common.DBConnection connection = new Common.DBConnection())
+            {
+                Dictionary<string, string> parameters = new Dictionary<string, string>();
+                parameters.Add("jobId", jobId.ToString());
+                List<Dictionary<string, string>> result = connection.doQuery("SELECT isRunning FROM Jobs WHERE id=@jobId", parameters, null);
+                if (result != null && result.Count > 0 && result[0]["id"] != "") return bool.Parse(result[0]["id"]);
+                else return false;
+            }
+        }
+
+       
     }
 
+
+    // Structures:
+
     //represents one job within jobs.xml
-    public struct OneJob
+    public struct OneJob: System.ComponentModel.INotifyPropertyChanged
     {
-        public string name;
-        public Interval interval;
-        public List<JobVM> jobVMs;
-        public string basePath;
-        public Compression compression;
-        public uint blockSize;
-        public Rotation rotation;
+        private int dbId;
+        private string name;
+        private Interval interval;
+        private List<JobVM> jobVMs;
+        private string basePath;
+        private Compression compression;
+        private uint blockSize;
+        private Rotation rotation;
+        private bool isRunning;
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        public string Name { get => name; set => name = value; }
+        public Interval Interval { get => interval; set => interval = value; }
+        public List<JobVM> JobVMs { get => jobVMs; set => jobVMs = value; }
+        public string BasePath { get => basePath; set => basePath = value; }
+        public Compression Compression { get => compression; set => compression = value; }
+        public uint BlockSize { get => blockSize; set => blockSize = value; }
+        public Rotation Rotation { get => rotation; set => rotation = value; }
+        public bool IsRunning { get => isRunning; set => isRunning = value; }
+        public int DbId { get => dbId; set => dbId = value; }
+        public string IntervalBaseForGUI {
+            get 
+            {
+                switch (interval.intervalBase) 
+                {
+                    case ConfigHandler.IntervalBase.daily:
+                        return "täglich";
+                    case ConfigHandler.IntervalBase.hourly:
+                        return "stündlich";
+                    case ConfigHandler.IntervalBase.weekly:
+                        return "wöchentlich";
+                    default:
+                        return "default";
+                }
+            } 
+        }
+        public string IsRunningForGUI
+        {
+            get
+            {
+                switch (isRunning)
+
+                {
+                    case true:
+                        return "läuft";
+                    case false:
+                        return "angehalten";
+                    default:
+                        return "default";                }
+            }
+        }
     }
 
     //defines compression type

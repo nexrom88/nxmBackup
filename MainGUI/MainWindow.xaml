@@ -22,7 +22,7 @@
             <StackPanel DockPanel.Dock="Top">
                 <StackPanel Name="topMenu" Orientation="Horizontal" VerticalAlignment="Top" Background="AliceBlue" Height="100">
                     <StackPanel Orientation="Horizontal">
-                        <Button x:Name="btnNewJob" Padding="{Binding Source={StaticResource btnPadding}}" Width="{Binding Source={StaticResource btnHeight}}" Height="{Binding Source={StaticResource btnHeight}}" Background="AliceBlue" BorderThickness="0" Click="btnNewJob_Click">
+                        <Button x:Name="focus" Padding="{Binding Source={StaticResource btnPadding}}" Width="{Binding Source={StaticResource btnHeight}}" Height="{Binding Source={StaticResource btnHeight}}" Background="AliceBlue" BorderThickness="0" Click="btnNewJob_Click">
                             <StackPanel HorizontalAlignment="Center">
                                 <Image Source="plus-sign.png" Width="30" Height="30"/>
                                 <TextBlock HorizontalAlignment="Center" Padding="5">Neu</TextBlock>
@@ -58,7 +58,7 @@
                                 <TextBlock HorizontalAlignment="Center" Padding="5">Einstellungen</TextBlock>
                             </StackPanel>
                         </Button>
-                        <Button x:Name="btnRefresh" Padding="{Binding Source={StaticResource btnPadding}}" Width="{Binding Source={StaticResource btnHeight}}" Height="{Binding Source={StaticResource btnHeight}}" Background="AliceBlue" BorderThickness="0">
+                        <Button x:Name="btnRefresh" Padding="{Binding Source={StaticResource btnPadding}}" Width="{Binding Source={StaticResource btnHeight}}" Height="{Binding Source={StaticResource btnHeight}}" Background="AliceBlue" BorderThickness="0" Click="btnRefresh_Click">
                             <StackPanel HorizontalAlignment="Center">
                                 <Image Source="circular-arrows.png" Width="30" Height="30"/>
                                 <TextBlock HorizontalAlignment="Center" Padding="5">Refresh</TextBlock>
@@ -67,16 +67,18 @@
                     </StackPanel>
                 </StackPanel>
                 <StackPanel DockPanel.Dock="Left">
-                    <DataGrid Name="dgJobs" MinHeight="50" AutoGenerateColumns="False" Padding="0" GridLinesVisibility="None" HeadersVisibility="Column" IsReadOnly="True" Height="150" BorderThickness="0">
-                        <DataGrid.Columns>
-                            <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="*" ElementStyle="{StaticResource ColumnElementStyle}"></DataGridTextColumn>
-                            <DataGridTextColumn Header="Typ" Binding="{Binding Type}" ElementStyle="{StaticResource ColumnElementStyle}"></DataGridTextColumn>
-                            <DataGridTextColumn Header="Status" Binding="{Binding CurrentStatus}" ElementStyle="{StaticResource ColumnElementStyle}"></DataGridTextColumn>
-                            <DataGridTextColumn Header="Letzte Ausführung" Binding="{Binding LastRunSuccessful}" ElementStyle="{StaticResource ColumnElementStyle}"></DataGridTextColumn>
-                            <DataGridTextColumn Header="Nächster Start" Binding="{Binding NextRun}" ElementStyle="{StaticResource ColumnElementStyle}"></DataGridTextColumn>
-                            <DataGridTextColumn Header="Letzter Start" Binding="{Binding LastRun}" ElementStyle="{StaticResource ColumnElementStyle}"></DataGridTextColumn>
-                        </DataGrid.Columns>
-                    </DataGrid>
+                    <ListView Name="lvJobs" MinHeight="50" Padding="0"  Height="150" BorderThickness="0">
+                        <ListView.View>
+                            <GridView>
+                                <GridViewColumn Header="Name" DisplayMemberBinding="{Binding Name}"></GridViewColumn>
+                                <GridViewColumn Header="Typ" DisplayMemberBinding="{Binding IntervalBaseForGUI}"></GridViewColumn>
+                                <GridViewColumn Header="Status" DisplayMemberBinding="{Binding IsRunningForGUI}"></GridViewColumn>
+                                <GridViewColumn Header="Letzte Ausführung"></GridViewColumn>
+                                <GridViewColumn Header="Nächster Start"></GridViewColumn>
+                                <GridViewColumn Header="Letzter Start"></GridViewColumn>
+                            </GridView>
+                        </ListView.View>
+                    </ListView>
                     <ComboBox/>
                 </StackPanel>
                 <Border BorderThickness="0,1,0,0" BorderBrush="#FF1D90F5">

@@ -53,11 +53,11 @@ namespace JobEngine
             this.inProgress = true;
 
             //iterate vms within the current job
-            foreach (ConfigHandler.JobVM vm in this.Job.jobVMs)
+            foreach (ConfigHandler.JobVM vm in this.Job.JobVMs)
             {
                 SnapshotHandler ssHandler = new SnapshotHandler(vm.vmName);
                 ssHandler.newEvent += this.newEvent;
-                ssHandler.performFullBackupProcess(ConsistencyLevel.ApplicationAware, true, this.Job.basePath, true, this.job);
+                ssHandler.performFullBackupProcess(ConsistencyLevel.ApplicationAware, true, this.Job.BasePath, true, this.job);
             }
 
             this.inProgress = false;
@@ -68,18 +68,18 @@ namespace JobEngine
         {
             DateTime now = DateTime.Now;
 
-            switch (this.Job.interval.intervalBase)
+            switch (this.Job.Interval.intervalBase)
             {
                 case ConfigHandler.IntervalBase.hourly: //hourly backup due?
-                    return now.Minute == int.Parse(this.Job.interval.minute);
+                    return now.Minute == int.Parse(this.Job.Interval.minute);
 
                 case ConfigHandler.IntervalBase.daily: //daily backup due?
-                    return now.Minute == int.Parse(this.Job.interval.minute) && now.Hour == int.Parse(this.Job.interval.hour);
+                    return now.Minute == int.Parse(this.Job.Interval.minute) && now.Hour == int.Parse(this.Job.Interval.hour);
 
                 case ConfigHandler.IntervalBase.weekly: //weekly backup due?
-                    if(now.Minute == int.Parse(this.Job.interval.minute) && now.Hour == int.Parse(this.Job.interval.hour))
+                    if(now.Minute == int.Parse(this.Job.Interval.minute) && now.Hour == int.Parse(this.Job.Interval.hour))
                     {
-                        return now.DayOfWeek.ToString().ToLower() == this.Job.interval.day;
+                        return now.DayOfWeek.ToString().ToLower() == this.Job.Interval.day;
                     }
                     return false;
             }
