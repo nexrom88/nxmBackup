@@ -31,7 +31,7 @@ namespace JobEngine
             //search for job object
             foreach (JobTimer job in this.jobTimers)
             {
-                if (job.Job.name == jobName)
+                if (job.Job.Name == jobName)
                 {
                     job.startJob(true);
                 }

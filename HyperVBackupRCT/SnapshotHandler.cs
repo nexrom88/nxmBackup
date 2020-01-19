@@ -30,7 +30,7 @@ namespace HyperVBackupRCT
             ManagementObject refP = null;
 
             //add job name and vm name to destination
-            destination = System.IO.Path.Combine(destination, job.name + "\\" + this.vmName);
+            destination = System.IO.Path.Combine(destination, job.Name + "\\" + this.vmName);
 
             //create folder if it does not exist
             System.IO.Directory.CreateDirectory(destination);
@@ -43,7 +43,7 @@ namespace HyperVBackupRCT
                     raiseNewEvent("Inkrementielles Backup nicht möglich", false, false);
                     refP = null; //incremental backup not possible
                 }
-                else if (getBlockSize(chain) >= job.blockSize) //block size reached?
+                else if (getBlockSize(chain) >= job.BlockSize) //block size reached?
                 {
                     refP = null; //incremental backup not possible
                 }
@@ -63,7 +63,7 @@ namespace HyperVBackupRCT
             }
 
             //export the snapshot
-            export(destination, snapshot, refP, job.compression);
+            export(destination, snapshot, refP, job.Compression);
 
             //read current backup chain for further processing
             chain = ConfigHandler.BackupConfigHandler.readChain(destination);
@@ -96,16 +96,16 @@ namespace HyperVBackupRCT
             chain = ConfigHandler.BackupConfigHandler.readChain(destination);
 
             //check whether max snapshot count is reached, then merge
-            if (job.rotation.type == ConfigHandler.RotationType.merge) //RotationType = "merge"
+            if (job.Rotation.type == ConfigHandler.RotationType.merge) //RotationType = "merge"
             {
-                if (job.rotation.maxElementCount > 0 && chain.Count > job.rotation.maxElementCount)
+                if (job.Rotation.maxElementCount > 0 && chain.Count > job.Rotation.maxElementCount)
                 {
-                    mergeOldest(destination, chain, job.compression);
+                    mergeOldest(destination, chain, job.Compression);
                 }
             }
-            else if (job.rotation.type == ConfigHandler.RotationType.blockRotation) //RotationType = "blockRotation"
+            else if (job.Rotation.type == ConfigHandler.RotationType.blockRotation) //RotationType = "blockRotation"
             {
-                if (job.rotation.maxElementCount > 0 && getBlockCount(chain) > job.rotation.maxElementCount)
+                if (job.Rotation.maxElementCount > 0 && getBlockCount(chain) > job.Rotation.maxElementCount)
                 {
                     blockRotate(destination, chain);
                 }
