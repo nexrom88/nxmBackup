@@ -70,9 +70,9 @@
                     <ListView Name="lvJobs" MinHeight="50" Padding="0"  Height="150" BorderThickness="0">
                         <ListView.View>
                             <GridView>
-                                <GridViewColumn Header="Name"></GridViewColumn>
-                                <GridViewColumn Header="Typ"></GridViewColumn>
-                                <GridViewColumn Header="Status"></GridViewColumn>
+                                <GridViewColumn Header="Name" DisplayMemberBinding="{Binding Name}"></GridViewColumn>
+                                <GridViewColumn Header="Typ" DisplayMemberBinding="{Binding IntervalBaseForGUI}"></GridViewColumn>
+                                <GridViewColumn Header="Status" DisplayMemberBinding="{Binding IsRunningForGUI}"></GridViewColumn>
                                 <GridViewColumn Header="Letzte Ausführung"></GridViewColumn>
                                 <GridViewColumn Header="Nächster Start"></GridViewColumn>
                                 <GridViewColumn Header="Letzter Start"></GridViewColumn>

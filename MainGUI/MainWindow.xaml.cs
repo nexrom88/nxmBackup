@@ -25,29 +25,38 @@ namespace MainGUI
     {
         JobEngine.JobHandler jobHandler;
         List<ConfigHandler.OneJob> jobs = new List<ConfigHandler.OneJob>();
-
+        ObservableCollection<ConfigHandler.OneJob> jobsObservable = new ObservableCollection<ConfigHandler.OneJob>();
         public MainWindow()
         {
             InitializeComponent();
 
+            initJobs();
+            
+            FillListViewJobs();
+
+            StartTimerForJobStatusCheck();
+
+        }
+
+        //init jobs
+        private void initJobs()
+        {
             //start job engine
             this.jobHandler = new JobEngine.JobHandler();
             jobHandler.startJobEngine(new Common.Job.newEventDelegate(newEvent));
             jobs = ConfigHandler.JobConfigHandler.readJobs();
- 
-            FillListViewJobs();
-            StartTimerForJobStatusCheck();
 
+            //build observable job list for GUI
+            foreach (ConfigHandler.OneJob job in jobs)
+            {
+                this.jobsObservable.Add(job);
+            }
         }
 
         //
         private void FillListViewJobs()
         {
-            foreach (ConfigHandler.OneJob job in jobs)
-            {
-                ListViewItem item = new ListViewItem(); item.sub
-                lvJobs.Items.Add($"{job.Name},{job.IntervalBaseForGUI}");
-            }
+            lvJobs.ItemsSource = this.jobsObservable;
 
         }
 
@@ -90,9 +99,9 @@ namespace MainGUI
 
         private void btnRefresh_Click(object sender, RoutedEventArgs e)
         {
-            var Name = jobs[0];
+            var Name = jobsObservable[0];
             Name.Name = "Penis";
-            jobs[0] = Name;
+            jobsObservable[0] = Name;
 
         }
     }
