@@ -26,15 +26,14 @@ namespace MainGUI
         JobEngine.JobHandler jobHandler;
         List<ConfigHandler.OneJob> jobs = new List<ConfigHandler.OneJob>();
         ObservableCollection<ConfigHandler.OneJob> jobsObservable = new ObservableCollection<ConfigHandler.OneJob>();
+
         public MainWindow()
         {
             InitializeComponent();
 
             initJobs();
             
-            FillListViewJobs();
-
-            StartTimerForJobStatusCheck();
+            fillListViewJobs();
 
         }
 
@@ -46,6 +45,8 @@ namespace MainGUI
             jobHandler.startJobEngine(new Common.Job.newEventDelegate(newEvent));
             jobs = ConfigHandler.JobConfigHandler.readJobs();
 
+            jobsObservable.Clear();
+
             //build observable job list for GUI
             foreach (ConfigHandler.OneJob job in jobs)
             {
@@ -54,7 +55,7 @@ namespace MainGUI
         }
 
         //
-        private void FillListViewJobs()
+        private void fillListViewJobs()
         {
             lvJobs.ItemsSource = this.jobsObservable;
 
@@ -79,30 +80,23 @@ namespace MainGUI
         {
             AddJobWindow addJobWindow = new AddJobWindow();
             addJobWindow.ShowDialog();
-
-
-        }
-
-        //
-        private void StartTimerForJobStatusCheck()
-        {
-            System.Timers.Timer t1 = new System.Timers.Timer();
-            t1.Interval = 5000;
-            t1.Elapsed += new ElapsedEventHandler(JobStatusTimerEvent);
-            t1.Start();
-        }
-
-        private void JobStatusTimerEvent(object sender, EventArgs e)
-        {
-
+            initJobs();
         }
 
         private void btnRefresh_Click(object sender, RoutedEventArgs e)
         {
-            var Name = jobsObservable[0];
-            Name.Name = "Penis";
-            jobsObservable[0] = Name;
+           
+        }
 
+        private void btnDeleteJob_Click(object sender, RoutedEventArgs e)
+        {
+            if (lvJobs.SelectedIndex != -1)
+            {
+                ConfigHandler.OneJob job = this.jobsObservable[lvJobs.SelectedIndex];
+                bool result = ConfigHandler.JobConfigHandler.deleteJob(job.DbId);
+                if (!result) Common.ErrorHandler.writeToLog("job delete failed", new System.Diagnostics.StackTrace());
+                initJobs();
+            }
         }
     }
 }

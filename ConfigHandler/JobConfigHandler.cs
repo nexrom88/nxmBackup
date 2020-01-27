@@ -21,15 +21,15 @@ namespace ConfigHandler
             //open DB connection
             using (Common.DBConnection connection = new Common.DBConnection())
             {
-                List<Dictionary<string,string>> jobs = connection.doQuery("SELECT Jobs.id, Jobs.name, Jobs.isRunning, Jobs.basepath, Jobs.maxelements, Jobs.blocksize, Jobs.day, Jobs.hour, Jobs.minute, Jobs.interval, Compression.name AS compressionname, RotationType.name AS rotationname FROM Jobs INNER JOIN Compression ON Jobs.compressionID=Compression.id INNER JOIN RotationType ON Jobs.rotationtypeID=RotationType.id", null, null);
-            
+                List<Dictionary<string, string>> jobs = connection.doQuery("SELECT Jobs.id, Jobs.name, Jobs.isRunning, Jobs.basepath, Jobs.maxelements, Jobs.blocksize, Jobs.day, Jobs.hour, Jobs.minute, Jobs.interval, Compression.name AS compressionname, RotationType.name AS rotationname FROM Jobs INNER JOIN Compression ON Jobs.compressionID=Compression.id INNER JOIN RotationType ON Jobs.rotationtypeID=RotationType.id", null, null);
+
                 //iterate through all jobs
-                foreach(Dictionary<string,string> job in jobs)
+                foreach (Dictionary<string, string> job in jobs)
                 {
                     //build structure
                     OneJob newJob = new OneJob();
                     newJob.DbId = int.Parse(job["id"]);
-                    newJob.BasePath = job["basepath"]; 
+                    newJob.BasePath = job["basepath"];
                     newJob.Name = job["name"];
                     newJob.BlockSize = uint.Parse(job["blocksize"]);
                     newJob.IsRunning = bool.Parse(job["isRunning"]);
@@ -38,8 +38,8 @@ namespace ConfigHandler
                     //build rotation structure
                     switch (job["rotationname"])
                     {
-                        case "merge":                           
-                            rota.type = RotationType.merge; 
+                        case "merge":
+                            rota.type = RotationType.merge;
                             break;
                         case "blockrotation":
                             rota.type = RotationType.blockRotation;
@@ -86,7 +86,7 @@ namespace ConfigHandler
                     newJob.JobVMs = new List<JobVM>();
 
                     //iterate through all vms
-                    foreach(Dictionary<string,string> vm in vms)
+                    foreach (Dictionary<string, string> vm in vms)
                     {
                         JobVM newVM = new JobVM();
                         newVM.vmID = vm["id"];
@@ -100,7 +100,7 @@ namespace ConfigHandler
 
                 return retVal;
 
-            }            
+            }
         }
 
         //adds a job to the job list
@@ -168,7 +168,8 @@ namespace ConfigHandler
                 List<Dictionary<string, string>> result = connection.doQuery("SELECT COUNT(*) AS count From VMs WHERE id=@id", parameters, transaction);
 
                 //does vm already exist in DB?
-                if (int.Parse(result[0]["count"]) == 0){
+                if (int.Parse(result[0]["count"]) == 0)
+                {
                     //vm does not exist
                     parameters = new Dictionary<string, string>();
                     parameters.Add("id", vm.vmID);
@@ -198,9 +199,20 @@ namespace ConfigHandler
             }
         }
 
-       
-    }
+        // Delete job.
+        public static bool deleteJob(int jobDBId)
+        {
+            using (Common.DBConnection connection = new Common.DBConnection())
+            {
+                Dictionary<string, string> parameters = new Dictionary<string, string>();
 
+                parameters.Add("id", jobDBId.ToString());
+                var result = connection.doOperation("DELETE FROM jobs WHERE id=@id", parameters, null);
+                return result != 0;
+            }
+        }
+
+    }
 
     // Structures:
 
