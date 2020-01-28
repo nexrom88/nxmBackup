@@ -11,11 +11,8 @@ namespace TestProj
     {
         static void Main(string[] args)
         {
-            Common.DBConnection conn = new Common.DBConnection();
-
-            List<Dictionary<string, string>> retVal = conn.doQuery("SELECT Count(*) AS count FROM compression", null, null);
-
-            conn.Dispose();
+            MFUserMode.MFUserModeWrapper wrapper = new MFUserMode.MFUserModeWrapper();
+            wrapper.connectToMF();
 
         }
     }
