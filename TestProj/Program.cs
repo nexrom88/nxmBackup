@@ -11,8 +11,8 @@ namespace TestProj
     {
         static void Main(string[] args)
         {
-            MFUserMode.MFUserModeWrapper wrapper = new MFUserMode.MFUserModeWrapper();
-            wrapper.connectToMF();
+            //MFUserMode.MFUserModeWrapper wrapper = new MFUserMode.MFUserModeWrapper();
+            //wrapper.connectToMF();
 
         }
     }
