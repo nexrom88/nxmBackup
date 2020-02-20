@@ -26,12 +26,12 @@ namespace JobEngine
         }
 
         //manually starts a given job
-        public void startManually(string jobName)
+        public void startManually(int dbId)
         {
             //search for job object
             foreach (JobTimer job in this.jobTimers)
             {
-                if (job.Job.Name == jobName)
+                if (job.Job.DbId == dbId)
                 {
                     job.startJob(true);
                 }

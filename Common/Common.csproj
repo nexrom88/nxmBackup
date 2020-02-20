@@ -65,9 +65,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DataBase\DBQueries.cs" />
     <Compile Include="ErrorHandler.cs" />
     <Compile Include="LZ4Archive.cs" />
-    <Compile Include="DBConnection.cs" />
+    <Compile Include="DataBase\DBConnection.cs" />
     <Compile Include="ZipArchive.cs" />
     <Compile Include="EventProperties.cs" />
     <Compile Include="IArchive.cs" />

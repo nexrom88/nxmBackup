@@ -173,9 +173,9 @@ namespace nxmBackupGUI
         private void btStartJob_Click(object sender, RoutedEventArgs e)
         {
             //manually trigger the selected job
-            string name = cbJobs.Text;
-            Thread jobThread = new Thread(() => this.jobHandler.startManually(name));
-            jobThread.Start();
+            //string name = cbJobs.Text;
+            //Thread jobThread = new Thread(() => this.jobHandler.startManually(name));
+            //jobThread.Start();
         }
     }
 }

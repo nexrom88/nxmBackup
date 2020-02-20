@@ -65,8 +65,9 @@ namespace MainGUI
         private void btnStartJob_Click(object sender, RoutedEventArgs e)
         {
             // Manually trigger the selected job.
-            string name = ((Job)lvJobs.SelectedItem).Name;
-            Thread jobThread = new Thread(() => this.jobHandler.startManually(name));
+            int dbId = ((ConfigHandler.OneJob)lvJobs.SelectedItem).DbId;
+
+            Thread jobThread = new Thread(() => this.jobHandler.startManually(dbId));
             jobThread.Start();
         }
 

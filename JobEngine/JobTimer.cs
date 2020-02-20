@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Windows.Forms;
 using ConfigHandler;
 using HyperVBackupRCT;
 
@@ -27,36 +28,24 @@ namespace JobEngine
         }
 
         //starts the job
-        public void startJob(bool force)
+        public void startJob(bool userInitiated)
         {
-
-            //just check "job due" when it is not forced
-            if (!force)
-            {
-                //exit if it is not already time for the job            
-                if (!isDue())
-                {
-                    return;
-                }
-            }
-
             //check whether job is still in progress
             if (this.inProgress)
             {
-                Common.EventProperties props = new Common.EventProperties();
-                props.text = "Skipping";
-
-                this.newEvent(props);
+                if (userInitiated)
+                {
+                    MessageBox.Show("Job wird bereits ausgeführt.");
+                }
                 return;
             }
 
             this.inProgress = true;
 
             //iterate vms within the current job
-            foreach (ConfigHandler.JobVM vm in this.Job.JobVMs)
+            foreach (JobVM vm in this.Job.JobVMs)
             {
-                SnapshotHandler ssHandler = new SnapshotHandler(vm.vmName);
-                ssHandler.newEvent += this.newEvent;
+                SnapshotHandler ssHandler = new SnapshotHandler(vm.vmName);                
                 ssHandler.performFullBackupProcess(ConsistencyLevel.ApplicationAware, true, this.Job.BasePath, true, this.job);
             }
 

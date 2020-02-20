@@ -73,9 +73,9 @@
                                 <GridViewColumn Header="Name" DisplayMemberBinding="{Binding Name}"></GridViewColumn>
                                 <GridViewColumn Header="Typ" DisplayMemberBinding="{Binding IntervalBaseForGUI}"></GridViewColumn>
                                 <GridViewColumn Header="Status" DisplayMemberBinding="{Binding IsRunningForGUI}"></GridViewColumn>
-                                <GridViewColumn Header="Letzte Ausführung"></GridViewColumn>
-                                <GridViewColumn Header="Nächster Start"></GridViewColumn>
+                                <GridViewColumn Header="Letzte Status"></GridViewColumn>                                
                                 <GridViewColumn Header="Letzter Start"></GridViewColumn>
+                                <GridViewColumn Header="Nächster Start"></GridViewColumn>
                             </GridView>
                         </ListView.View>
                     </ListView>

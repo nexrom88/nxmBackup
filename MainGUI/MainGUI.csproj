@@ -129,7 +129,7 @@
       <Name>ConfigHandler</Name>
     </ProjectReference>
     <ProjectReference Include="..\JobEngine\JobEngine.csproj">
-      <Project>{9774c037-216f-45a1-beaa-11be67659995}</Project>
+      <Project>{10038c72-b913-463f-a5fe-111b4c885207}</Project>
       <Name>JobEngine</Name>
     </ProjectReference>
   </ItemGroup>

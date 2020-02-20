@@ -46,7 +46,7 @@ namespace Common
         }
 
         //sends a sql query
-        public List<Dictionary<string, string>> doQuery(string query, Dictionary<string, string> parameters, SqlTransaction transaction)
+        public List<Dictionary<string, string>> doReadQuery(string query, Dictionary<string, string> parameters, SqlTransaction transaction)
         {
             SqlCommand command;
 
@@ -103,7 +103,7 @@ namespace Common
         }
 
         // Do operation.
-        public int doOperation(string query, Dictionary<string, string> parameters, SqlTransaction transaction)
+        public int doWriteQuery(string query, Dictionary<string, string> parameters, SqlTransaction transaction)
         {
             SqlCommand command;
 

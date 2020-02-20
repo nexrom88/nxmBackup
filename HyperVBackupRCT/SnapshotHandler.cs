@@ -17,6 +17,7 @@ namespace HyperVBackupRCT
         private const UInt16 SnapshotTypeFull = 2;
         private string vmName;
         public event Common.Job.newEventDelegate newEvent;
+        private string jobExecutionId = "";
 
         public SnapshotHandler(string vmName)
         {
@@ -26,6 +27,8 @@ namespace HyperVBackupRCT
         //performs a full backup chain
         public void performFullBackupProcess(ConsistencyLevel cLevel, Boolean allowSnapshotFallback, string destination, bool incremental, ConfigHandler.OneJob job)
         {
+            this.jobExecutionId = DBQueries.AddJobExecution(job.DbId.ToString());
+            
             ManagementObject snapshot = createSnapshot(cLevel, allowSnapshotFallback);
             ManagementObject refP = null;
 
@@ -36,12 +39,15 @@ namespace HyperVBackupRCT
             System.IO.Directory.CreateDirectory(destination);
 
             List<ConfigHandler.BackupConfigHandler.BackupInfo> chain = ConfigHandler.BackupConfigHandler.readChain(destination);
-            if (incremental) //incremental backup? get latest reference point
+            // Incremental backup? get latest reference point.
+            if (incremental) 
             {
-                if (chain == null || chain.Count == 0) //first backup must be full backup
+                // First backup must be full backup.
+                if (chain == null || chain.Count == 0) 
                 {
                     raiseNewEvent("Inkrementielles Backup nicht möglich", false, false);
-                    refP = null; //incremental backup not possible
+                    // Incremental backup not possible.
+                    refP = null; 
                 }
                 else if (getBlockSize(chain) >= job.BlockSize) //block size reached?
                 {
@@ -267,10 +273,10 @@ namespace HyperVBackupRCT
         public ManagementObject createSnapshot(ConsistencyLevel cLevel, Boolean allowSnapshotFallback)
         {
             ManagementScope scope = new ManagementScope("\\\\localhost\\root\\virtualization\\v2", null);
-            raiseNewEvent("Initialisiere Umgebung...", false, false);
+            DBQueries.AddEvent("Initialisiere Umgebung...", this.jobExecutionId, this.vmName);
 
             // Get the management service and the VM object.
-            using (ManagementObject vm = WmiUtilities.GetVirtualMachine(vmName, scope))
+            using (ManagementObject vm = WmiUtilities.GetVirtualMachine(this.vmName, scope))
             using (ManagementObject service = WmiUtilities.GetVirtualMachineSnapshotService(scope))
             using (ManagementObject settings = WmiUtilities.GetVirtualMachineSnapshotSettings(scope))
             using (ManagementBaseObject inParams = service.GetMethodParameters("CreateSnapshot"))
@@ -293,9 +299,7 @@ namespace HyperVBackupRCT
                     //wait for the snapshot to be created
                     try
                     {
-
                         WmiUtilities.ValidateOutput(outParams, scope);
-
                     }
                     catch (Exception ex)
                     {
@@ -326,7 +330,6 @@ namespace HyperVBackupRCT
                         snapshot = (System.Management.ManagementObject)iterator.Current;
                     }
                     return snapshot;
-
                 }
             }
         }
@@ -336,7 +339,7 @@ namespace HyperVBackupRCT
         public ManagementObject convertToReferencePoint(ManagementObject snapshot)
         {
             ManagementScope scope = new ManagementScope("\\\\localhost\\root\\virtualization\\v2", null);
-            raiseNewEvent("Referenzpunkt wird erzeugt...", false, false);
+            DBQueries.AddEvent("Referenzpunkt wird erzeugt...", this.jobExecutionId, this.vmName);
 
             using (ManagementObject settings = WmiUtilities.GetVirtualMachineSnapshotService(scope))
             using (ManagementObject service = WmiUtilities.GetVirtualMachineSnapshotService(scope))
@@ -376,7 +379,7 @@ namespace HyperVBackupRCT
             string basePath = path;
             string backupType = "";
 
-            raiseNewEvent("Erzeuge Einträge...", false, false);
+            DBQueries.AddEvent("Erzeuge Einträge...", this.jobExecutionId, this.vmName);
 
             //generate random guid path and append it to the path var
             Guid g = Guid.NewGuid();
