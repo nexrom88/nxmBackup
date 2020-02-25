@@ -143,7 +143,7 @@ namespace Common
 
             //open LZ4 stream
             LZ4EncoderStream compressionStream = LZ4Stream.Encode(baseDestStream, this.encoderSettings, false);
-
+            
             return compressionStream;
         }
 

@@ -10,17 +10,29 @@ namespace BlockCompression
 {
     public class LZ4BlockStream : System.IO.Stream, IDisposable
     {
+        private LZ4EncoderSettings encoderSettings = new LZ4EncoderSettings();
+        MemoryStream mStream = new MemoryStream();
+        LZ4EncoderStream compressionStream;
+        LZ4DecoderStream decompressionStream;
+
         private System.IO.FileStream fileStream;
         private AccessMode mode;
-        private ulong decompressedBlockSize = 1000000; // = 1MB
+
 
         //needed for write
-        private ulong totalUncompressedByteCount = 0;
+        private ulong totalDecompressedByteCount = 0;
         private ulong decompressedByteCountWithinBlock = 0;
+        private ulong decompressedBlockSize = 1000000; // = 1MB
+
+        //need for read
+        private ulong position = 0;
+        private ulong decompressedFileSize = 0;
+
 
 
         public LZ4BlockStream(System.IO.FileStream filestream, AccessMode mode)
         {
+            this.encoderSettings.CompressionLevel = K4os.Compression.LZ4.LZ4Level.L00_FAST;
             this.fileStream = filestream;
             this.mode = mode;
 
@@ -38,7 +50,77 @@ namespace BlockCompression
                 //write  "decompressed block size"
                 byte[] blockSizeBytes = BitConverter.GetBytes(this.decompressedBlockSize);
                 this.fileStream.Write(blockSizeBytes, 0, 8);
+
+                //write first block dummies
+                for (int i = 0; i < 16; i++)
+                {
+                    this.fileStream.WriteByte(0);
+                }
+
+                //open compression stream
+                this.compressionStream = LZ4Stream.Encode(this.mStream, this.encoderSettings, false);
+
+            }else if (this.mode == AccessMode.read) //if read mode: read file header
+            {
+                byte[] buffer = new byte[8];
+                this.fileStream.Read(buffer, 0, 8);
+                this.decompressedFileSize = BitConverter.ToUInt64(buffer, 0);
+
+                this.fileStream.Read(buffer, 0, 8);
+                this.decompressedBlockSize = BitConverter.ToUInt64(buffer, 0);
             }
+        }
+
+        //starts new block and closes the old one
+        private void startNewBlock()
+        {
+            closeBlock();
+
+            //write "decompressed file byte offset" for the new block
+            byte[] buffer = BitConverter.GetBytes(this.totalDecompressedByteCount);
+            this.fileStream.Write(buffer, 0, 8);
+
+            //write dummy for "compressed block size"
+            for (int i = 0; i < 8; i++)
+            {
+                this.fileStream.WriteByte(0);
+            }
+
+            //reset block values an memory stream
+            this.decompressedByteCountWithinBlock = 0;
+            this.mStream = new MemoryStream();
+            this.compressionStream = LZ4Stream.Encode(this.mStream, this.encoderSettings, false);
+        }
+
+        //closes the current block
+        private void closeBlock()
+        {
+            //close compression stream
+            compressionStream.Close();
+
+            //is this block empty? Then remove the new block header
+            if (this.decompressedByteCountWithinBlock == 0)
+            {
+                mStream.SetLength (mStream.Length - 16);
+                return;
+            }
+
+
+            //close block by filling the 8 byte block header (compressed block size)
+
+            //go back 8 bytes
+            this.fileStream.Seek(-8, SeekOrigin.Current);
+
+            //write "compressed block size"
+            byte[] buffer = BitConverter.GetBytes(this.mStream.Length);
+            this.fileStream.Write(buffer, 0, 8);
+
+            //go back to file head
+            this.fileStream.Seek(0, SeekOrigin.End);
+
+            //write memory stream to file
+            this.mStream.Position = 0;
+            this.mStream.CopyTo(this.fileStream);
         }
 
         //write header to file and dispose
@@ -47,9 +129,17 @@ namespace BlockCompression
             //write "decompressed file size" if in write mode
             if (this.mode == AccessMode.write)
             {
+                closeBlock();
                 this.fileStream.Seek(0, SeekOrigin.Begin);
-                byte[] buffer = BitConverter.GetBytes(this.totalUncompressedByteCount);
+                byte[] buffer = BitConverter.GetBytes(this.totalDecompressedByteCount);
                 this.fileStream.Write(buffer, 0, 8);
+            }
+            else if (this.mode == AccessMode.read) // read mode
+            {
+                if (this.decompressionStream != null)
+                {
+                    this.decompressionStream.Close();
+                }
             }
             this.fileStream.Close();
             Dispose(true);
@@ -90,7 +180,75 @@ namespace BlockCompression
 
         public override int Read(byte[] buffer, int offset, int count)
         {
-            throw new NotImplementedException();
+            //search the "starting" block:
+            //read current block header
+            this.fileStream.Position = 0;
+            byte[] headerData = new byte[8];
+            ulong decompressedFileByteOffset = 0;
+            ulong compressedBlockSize = 0;
+            this.mStream = new MemoryStream();
+            ulong totalUncompressedBytesRead = 0;
+            byte[] tempData = new byte[(ulong)count + this.decompressedBlockSize];
+            ulong startDiffOffset = 0;
+
+            while (decompressedFileByteOffset + this.decompressedBlockSize < (ulong)this.Position)
+            {
+                //jump to next block
+                this.fileStream.Seek((long)compressedBlockSize, SeekOrigin.Current);
+
+                this.fileStream.Read(headerData, 0, 8);
+                decompressedFileByteOffset = BitConverter.ToUInt64(headerData, 0);
+
+                this.fileStream.Read(headerData, 0, 8);
+                compressedBlockSize = BitConverter.ToUInt64(headerData, 0);
+            }
+
+            startDiffOffset = (ulong)this.Position - decompressedFileByteOffset;
+
+            //header must be read again within "for". Jump back
+            this.fileStream.Seek(-16, SeekOrigin.Current);
+
+            //"starting" block found:
+
+            //decompress block
+                        
+            //read all necessary blocks 
+            for (double i = 0; i< Math.Ceiling((double)this.decompressedBlockSize / (double)count) + 1; i++)
+            {
+                //read header
+                this.fileStream.Read(headerData, 0, 8);
+                decompressedFileByteOffset = BitConverter.ToUInt64(headerData, 0);
+
+                this.fileStream.Read(headerData, 0, 8);
+                compressedBlockSize = BitConverter.ToUInt64(headerData, 0);
+
+                //init decompression stream
+                this.decompressionStream = LZ4Stream.Decode(this.fileStream, 0, false);
+
+
+                ulong readBlockBytes = 0;
+                
+                //read one block
+                while (readBlockBytes < compressedBlockSize)
+                {
+                    ulong dataRead = (ulong)this.decompressionStream.Read(tempData, 0 + (int)totalUncompressedBytesRead, (int)(compressedBlockSize - readBlockBytes));
+                    readBlockBytes += dataRead;
+                    this.Position += (long)dataRead;
+                    totalUncompressedBytesRead += dataRead;
+                }
+
+                this.decompressionStream.Close();
+
+            }
+
+            //build byte[] to return
+            for (ulong i = 0; i < (ulong)count; i++)
+            {
+                buffer[(ulong)offset + i] = tempData[startDiffOffset + i;
+            }
+
+            return count;
+
         }
 
         public override long Seek(long offset, SeekOrigin origin)
@@ -103,10 +261,46 @@ namespace BlockCompression
             throw new NotImplementedException();
         }
 
-        //writes te given buffer (uncompressed) to the destination file (compressed)
+        //writes the given buffer (uncompressed) to the destination file (compressed)
         public override void Write(byte[] buffer, int offset, int count)
         {
-            throw new NotImplementedException();
+            
+            
+            //just write when in "write mode"
+            if (this.mode != AccessMode.write)
+            {
+                return;
+            }
+
+            //write bytes/blocks until count == 0
+            while (count > 0)
+            {
+                
+                //can write all bytes at once?
+                if (this.decompressedBlockSize - this.decompressedByteCountWithinBlock > (ulong)count)
+                {
+                    compressionStream.Write(buffer, offset, count);
+                    compressionStream.Flush();
+                    offset += count;
+                    this.decompressedByteCountWithinBlock += (ulong)count;
+                    this.totalDecompressedByteCount += (ulong)count;
+                    count = 0;
+                }
+                else
+                {
+                    //remaining bytes are more than remaining bytes within block
+                    ulong bytesRemainingWithinBlock = this.decompressedBlockSize - this.decompressedByteCountWithinBlock;
+                    compressionStream.Write(buffer, offset, (int)bytesRemainingWithinBlock);
+                    offset += (int)bytesRemainingWithinBlock;
+                    count -= (int)bytesRemainingWithinBlock;
+                    this.decompressedByteCountWithinBlock += bytesRemainingWithinBlock;
+                    this.totalDecompressedByteCount += bytesRemainingWithinBlock;
+
+                    //close block and start a new one
+                    startNewBlock();
+                }
+            }
+
         }
     }
 

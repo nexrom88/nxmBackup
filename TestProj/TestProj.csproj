@@ -51,6 +51,10 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\BlockCompression\BlockCompression.csproj">
+      <Project>{d45ebe54-b547-44be-926a-f9c8fc02e268}</Project>
+      <Name>BlockCompression</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Common\Common.csproj">
       <Project>{aad2cca1-182c-4bc4-beb4-6434a03675ea}</Project>
       <Name>Common</Name>
