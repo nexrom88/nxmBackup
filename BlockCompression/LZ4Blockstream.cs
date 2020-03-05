@@ -189,7 +189,7 @@ namespace BlockCompression
             ulong totalUncompressedBytesRead = 0;
             byte[] tempData = new byte[(ulong)count + this.decompressedBlockSize];
             ulong startDiffOffset = 0;
-            MemoryStream destMemoryStream = new MemoryStream((int)this.decompressedBlockSize);
+            MemoryStream destMemoryStream = new MemoryStream((int)this.decompressedFileSize);
 
             //read first block header
             this.fileStream.Read(headerData, 0, 8);
@@ -200,13 +200,21 @@ namespace BlockCompression
 
             while (decompressedFileByteOffset + this.decompressedBlockSize < (ulong)this.Position)
             {
+                
                 //jump to next block
                 this.fileStream.Seek((long)compressedBlockSize, SeekOrigin.Current);
 
-                this.fileStream.Read(headerData, 0, 8);
+                //no forward seek possible? eof!
+                if (this.fileStream.Read(headerData, 0, 8) == 0)
+                {
+                    return 0; //eof
+                }
                 decompressedFileByteOffset = BitConverter.ToUInt64(headerData, 0);
 
-                this.fileStream.Read(headerData, 0, 8);
+                if (this.fileStream.Read(headerData, 0, 8) == 0)
+                {
+                    return 0;
+                }
                 compressedBlockSize = BitConverter.ToUInt64(headerData, 0);
             }
 
@@ -225,6 +233,12 @@ namespace BlockCompression
             for (double i = 0; i< Math.Ceiling((double)count / (double)this.decompressedBlockSize) + 1; i++)
             {
                 //read complete block here within for:
+
+                //check if this is the block "after the last block (not readable)"
+                if (this.fileStream.Position == this.fileStream.Length)
+                {
+                    continue;
+                }
 
                 //read header
                 this.fileStream.Read(headerData, 0, 8);
@@ -251,7 +265,6 @@ namespace BlockCompression
                 {
                     dataRead = (long)this.decompressionStream.Read(destBuffer, 0, destBuffer.Length);
                     destMemoryStream.Write(destBuffer, 0, (int)dataRead);
-                    this.Position += (long)dataRead;
                     totalUncompressedBytesRead += (ulong)dataRead;
                 }
 
@@ -259,13 +272,14 @@ namespace BlockCompression
 
             }
 
+            destMemoryStream.Position = (long)(startDiffOffset);
             //build byte[] to return
             for (ulong i = 0; i < (ulong)count; i++)
             {
-                destMemoryStream.Position = (long)(startDiffOffset + i);
                 buffer[(ulong)offset + i] =  (byte)destMemoryStream.ReadByte();
             }
 
+            this.Position += (long)count;
             return count;
 
         }

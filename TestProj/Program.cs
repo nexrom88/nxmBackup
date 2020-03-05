@@ -37,7 +37,7 @@ namespace TestProj
             int readBytes = -1;
             while (readBytes != 0)
             {
-                byte[] buffer = new byte[512];
+                byte[] buffer = new byte[1024];
                 readBytes = bs.Read(buffer, 0, buffer.Length);
                 target.Write(buffer, 0, readBytes);
             }
