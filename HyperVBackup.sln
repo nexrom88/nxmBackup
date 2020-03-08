@@ -21,6 +21,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConfigHandler", "ConfigHand
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlockCompression", "BlockCompression\BlockCompression.csproj", "{D45EBE54-B547-44BE-926A-F9C8FC02E268}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "nxmMFUserMode", "MFUserMode\nxmMFUserMode.csproj", "{093DB339-8F66-4A3D-A9CA-D82122444046}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -215,6 +217,26 @@ Global
 		{D45EBE54-B547-44BE-926A-F9C8FC02E268}.Release|x64.Build.0 = Release|Any CPU
 		{D45EBE54-B547-44BE-926A-F9C8FC02E268}.Release|x86.ActiveCfg = Release|Any CPU
 		{D45EBE54-B547-44BE-926A-F9C8FC02E268}.Release|x86.Build.0 = Release|Any CPU
+		{093DB339-8F66-4A3D-A9CA-D82122444046}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{093DB339-8F66-4A3D-A9CA-D82122444046}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{093DB339-8F66-4A3D-A9CA-D82122444046}.Debug|ARM.ActiveCfg = Debug|Any CPU
+		{093DB339-8F66-4A3D-A9CA-D82122444046}.Debug|ARM.Build.0 = Debug|Any CPU
+		{093DB339-8F66-4A3D-A9CA-D82122444046}.Debug|ARM64.ActiveCfg = Debug|Any CPU
+		{093DB339-8F66-4A3D-A9CA-D82122444046}.Debug|ARM64.Build.0 = Debug|Any CPU
+		{093DB339-8F66-4A3D-A9CA-D82122444046}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{093DB339-8F66-4A3D-A9CA-D82122444046}.Debug|x64.Build.0 = Debug|Any CPU
+		{093DB339-8F66-4A3D-A9CA-D82122444046}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{093DB339-8F66-4A3D-A9CA-D82122444046}.Debug|x86.Build.0 = Debug|Any CPU
+		{093DB339-8F66-4A3D-A9CA-D82122444046}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{093DB339-8F66-4A3D-A9CA-D82122444046}.Release|Any CPU.Build.0 = Release|Any CPU
+		{093DB339-8F66-4A3D-A9CA-D82122444046}.Release|ARM.ActiveCfg = Release|Any CPU
+		{093DB339-8F66-4A3D-A9CA-D82122444046}.Release|ARM.Build.0 = Release|Any CPU
+		{093DB339-8F66-4A3D-A9CA-D82122444046}.Release|ARM64.ActiveCfg = Release|Any CPU
+		{093DB339-8F66-4A3D-A9CA-D82122444046}.Release|ARM64.Build.0 = Release|Any CPU
+		{093DB339-8F66-4A3D-A9CA-D82122444046}.Release|x64.ActiveCfg = Release|Any CPU
+		{093DB339-8F66-4A3D-A9CA-D82122444046}.Release|x64.Build.0 = Release|Any CPU
+		{093DB339-8F66-4A3D-A9CA-D82122444046}.Release|x86.ActiveCfg = Release|Any CPU
+		{093DB339-8F66-4A3D-A9CA-D82122444046}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -22,7 +22,7 @@ namespace BlockCompression
         //needed for write
         private ulong totalDecompressedByteCount = 0;
         private ulong decompressedByteCountWithinBlock = 0;
-        private ulong decompressedBlockSize = 1000000; // = 1MB
+        private ulong decompressedBlockSize = 10000; // = 1MB
 
         //need for read
         private ulong position = 0;
@@ -272,16 +272,14 @@ namespace BlockCompression
 
             }
 
-            destMemoryStream.Position = (long)(startDiffOffset);
-            //build byte[] to return
-            for (ulong i = 0; i < (ulong)count; i++)
-            {
-                buffer[(ulong)offset + i] =  (byte)destMemoryStream.ReadByte();
-            }
-
             this.Position += (long)count;
-            return count;
 
+            destMemoryStream.Position = (long)(startDiffOffset);
+            
+
+            //write bytes to buffer[] and return read bytes
+            return destMemoryStream.Read(buffer, offset, count);
+            
         }
 
         public override long Seek(long offset, SeekOrigin origin)
