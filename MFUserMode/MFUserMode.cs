@@ -4,10 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace nxmMFUserMode
+namespace MFUserMode
 {
     using System.Runtime.InteropServices;
-    class Program
+    class MFUserMode
     {
 
         // Constant buffer size
@@ -47,7 +47,8 @@ namespace nxmMFUserMode
             int dwReplyBufferSize);
 
 
-        static void Main(string[] args)
+        //starts the connection to kernel Mode driver
+        public void connectToKM()
         {
             IntPtr handle = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(IntPtr)));
             uint result = FilterConnectCommunicationPort("\\nxmQueryPort", 0, IntPtr.Zero, 0, IntPtr.Zero,  out handle);
@@ -66,7 +67,7 @@ namespace nxmMFUserMode
 
 
         //reads one message
-        public unsafe static void readMessages(IntPtr handle)
+        public unsafe void readMessages(IntPtr handle)
         {
             DATA_RECEIVE dataReceive = new DATA_RECEIVE();
 

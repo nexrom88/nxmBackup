@@ -21,7 +21,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConfigHandler", "ConfigHand
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlockCompression", "BlockCompression\BlockCompression.csproj", "{D45EBE54-B547-44BE-926A-F9C8FC02E268}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "nxmMFUserMode", "MFUserMode\nxmMFUserMode.csproj", "{093DB339-8F66-4A3D-A9CA-D82122444046}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MFUserMode", "MFUserMode\MFUserMode.csproj", "{093DB339-8F66-4A3D-A9CA-D82122444046}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
