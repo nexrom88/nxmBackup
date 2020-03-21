@@ -11,7 +11,7 @@ namespace BlockCompression
     public class LZ4BlockStream : System.IO.Stream, IDisposable
     {
         private LZ4EncoderSettings encoderSettings = new LZ4EncoderSettings();
-        MemoryStream mStream = new MemoryStream();
+        MemoryStream mStream;
         LZ4EncoderStream compressionStream;
         LZ4DecoderStream decompressionStream;
 
@@ -35,6 +35,7 @@ namespace BlockCompression
             this.encoderSettings.CompressionLevel = K4os.Compression.LZ4.LZ4Level.L00_FAST;
             this.fileStream = filestream;
             this.mode = mode;
+            this.mStream = new MemoryStream((int)this.decompressedBlockSize);
 
             //if "write-mode" then create new file and fill the first 2 X 8 header bytes
             if (this.mode == AccessMode.write)
@@ -58,7 +59,7 @@ namespace BlockCompression
                 }
 
                 //open compression stream
-                this.compressionStream = LZ4Stream.Encode(this.mStream, this.encoderSettings, false);
+                this.compressionStream = LZ4Stream.Encode(this.mStream, this.encoderSettings, true);
 
             }else if (this.mode == AccessMode.read) //if read mode: read file header
             {
@@ -68,6 +69,8 @@ namespace BlockCompression
 
                 this.fileStream.Read(buffer, 0, 8);
                 this.decompressedBlockSize = BitConverter.ToUInt64(buffer, 0);
+
+                
             }
         }
 
@@ -89,19 +92,19 @@ namespace BlockCompression
             //reset block values an memory stream
             this.decompressedByteCountWithinBlock = 0;
             this.mStream = new MemoryStream();
-            this.compressionStream = LZ4Stream.Encode(this.mStream, this.encoderSettings, false);
+            this.compressionStream = LZ4Stream.Encode(this.mStream, this.encoderSettings, true);
         }
 
         //closes the current block
         private void closeBlock()
         {
-            //close compression stream
+            //close compression stream 
             compressionStream.Close();
 
             //is this block empty? Then remove the new block header
             if (this.decompressedByteCountWithinBlock == 0)
             {
-                mStream.SetLength (mStream.Length - 16);
+                this.fileStream.SetLength (this.fileStream.Length - 16);
                 return;
             }
 
@@ -189,7 +192,7 @@ namespace BlockCompression
             ulong totalUncompressedBytesRead = 0;
             byte[] tempData = new byte[(ulong)count + this.decompressedBlockSize];
             ulong startDiffOffset = 0;
-            MemoryStream destMemoryStream = new MemoryStream((int)this.decompressedFileSize);
+            MemoryStream destMemoryStream;
 
             //read first block header
             this.fileStream.Read(headerData, 0, 8);
@@ -228,9 +231,12 @@ namespace BlockCompression
             //"starting" block found:
 
             //decompress block
-                        
+
             //read all necessary blocks 
-            for (double i = 0; i< Math.Ceiling((double)count / (double)this.decompressedBlockSize) + 1; i++)
+            double blocksToRead = Math.Ceiling((double)count / (double)this.decompressedBlockSize) + 1;
+            destMemoryStream = new MemoryStream((int)(this.decompressedBlockSize * blocksToRead));
+
+            for (double i = 0; i< blocksToRead ; i++)
             {
                 //read complete block here within for:
 
@@ -251,6 +257,7 @@ namespace BlockCompression
                 //fill memory stream with compressed block data
                 byte[] compData = new byte[compressedBlockSize];
                 this.fileStream.Read(compData, 0, (int)compressedBlockSize);
+                this.mStream.Dispose();
                 this.mStream = new MemoryStream(compData);
 
                 //init decompression stream
@@ -282,9 +289,23 @@ namespace BlockCompression
             
         }
 
+        //set the current position within the compressed file
         public override long Seek(long offset, SeekOrigin origin)
         {
-            throw new NotImplementedException();
+            switch (origin)
+            {
+                case SeekOrigin.Begin:
+                    this.position = (ulong)offset;
+                    break;
+                case SeekOrigin.Current:
+                    this.position += (ulong)offset;
+                    break;
+                case SeekOrigin.End:
+                    this.position = this.decompressedFileSize + (ulong)offset;
+                    break;
+            }
+
+            return (long)this.position;
         }
 
         public override void SetLength(long value)

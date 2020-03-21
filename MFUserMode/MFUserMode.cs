@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.IO;
 
 namespace MFUserMode
 {
@@ -47,21 +48,29 @@ namespace MFUserMode
             int dwReplyBufferSize);
 
 
+        //source stream (usually seekable decompression stream)
+        private Stream sourceStream;
+
+
+        public MFUserMode(Stream sourceStream)
+        {
+            this.sourceStream = sourceStream;
+        }
+
         //starts the connection to kernel Mode driver
-        public void connectToKM()
+        public IntPtr connectToKM()
         {
             IntPtr handle = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(IntPtr)));
             uint result = FilterConnectCommunicationPort("\\nxmQueryPort", 0, IntPtr.Zero, 0, IntPtr.Zero,  out handle);
 
             if (result != 0)
             {
-                return;
+                return IntPtr.Zero;
             }
-
-            while (true)
+            else
             {
-                readMessages(handle);
-            }
+                return handle;
+            }           
 
         }
 
@@ -99,7 +108,6 @@ namespace MFUserMode
             Console.WriteLine(offset + "||" + length);
 
             data = new byte[length];
-            System.IO.FileStream sourceStream = System.IO.File.OpenRead("c:\\source.mp3");
             sourceStream.Seek(offset, System.IO.SeekOrigin.Begin);
             sourceStream.Read(data, 0, (int)length);
             sourceStream.Close();

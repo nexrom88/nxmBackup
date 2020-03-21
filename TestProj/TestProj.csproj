@@ -59,6 +59,10 @@
       <Project>{aad2cca1-182c-4bc4-beb4-6434a03675ea}</Project>
       <Name>Common</Name>
     </ProjectReference>
+    <ProjectReference Include="..\MFUserMode\MFUserMode.csproj">
+      <Project>{093db339-8f66-4a3d-a9ca-d82122444046}</Project>
+      <Name>MFUserMode</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
