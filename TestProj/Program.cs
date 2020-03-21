@@ -14,7 +14,7 @@ namespace TestProj
             //System.IO.FileStream target = new System.IO.FileStream("c:\\target\\comp.lz4", System.IO.FileMode.Create, System.IO.FileAccess.ReadWrite);
             //BlockCompression.LZ4BlockStream bs = new BlockCompression.LZ4BlockStream(target, BlockCompression.AccessMode.write);
 
-            //System.IO.FileStream source = new System.IO.FileStream("c:\\target\\source.mp3", System.IO.FileMode.Open, System.IO.FileAccess.Read);
+            //System.IO.FileStream source = new System.IO.FileStream("c:\\users\\admin\\Downloads\\centos.iso", System.IO.FileMode.Open, System.IO.FileAccess.Read);
 
             //int readBytes = -1;
             //while (readBytes != 0)
@@ -32,7 +32,7 @@ namespace TestProj
             System.IO.FileStream source = new System.IO.FileStream("c:\\target\\comp.lz4", System.IO.FileMode.Open, System.IO.FileAccess.Read);
             BlockCompression.LZ4BlockStream bs = new BlockCompression.LZ4BlockStream(source, BlockCompression.AccessMode.read);
 
-            System.IO.FileStream target = new System.IO.FileStream("c:\\target\\dest.mp3", System.IO.FileMode.Create, System.IO.FileAccess.Write);
+            System.IO.FileStream target = new System.IO.FileStream("c:\\target\\dest.iso", System.IO.FileMode.Create, System.IO.FileAccess.Write);
 
             int readBytes = -1;
             while (readBytes != 0)

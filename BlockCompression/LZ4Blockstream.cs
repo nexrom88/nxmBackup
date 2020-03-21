@@ -22,7 +22,7 @@ namespace BlockCompression
         //needed for write
         private ulong totalDecompressedByteCount = 0;
         private ulong decompressedByteCountWithinBlock = 0;
-        private ulong decompressedBlockSize = 10000; // = 1MB
+        private ulong decompressedBlockSize = 1000000; // = 1MB
 
         //need for read
         private ulong position = 0;
