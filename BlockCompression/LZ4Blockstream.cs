@@ -10,7 +10,6 @@ namespace BlockCompression
 {
     public class LZ4BlockStream : System.IO.Stream, IDisposable
     {
-        private LZ4EncoderSettings encoderSettings = new LZ4EncoderSettings();
         MemoryStream mStream;
         LZ4EncoderStream compressionStream;
         LZ4DecoderStream decompressionStream;
@@ -20,9 +19,10 @@ namespace BlockCompression
 
 
         //needed for write
+        private LZ4EncoderSettings encoderSettings = new LZ4EncoderSettings();
         private ulong totalDecompressedByteCount = 0;
         private ulong decompressedByteCountWithinBlock = 0;
-        private ulong decompressedBlockSize = 1000000; // = 1MB
+        private ulong decompressedBlockSize = 5000000; // = 5MB
 
         //need for read
         private ulong position = 0;

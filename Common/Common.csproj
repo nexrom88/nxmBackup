@@ -80,5 +80,11 @@
     <None Include="classDiag.cd" />
     <None Include="packages.config" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\BlockCompression\BlockCompression.csproj">
+      <Project>{d45ebe54-b547-44be-926a-f9c8fc02e268}</Project>
+      <Name>BlockCompression</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

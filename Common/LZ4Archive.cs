@@ -13,7 +13,6 @@ namespace Common
     {
         private string path;
         private Job.newEventDelegate newEvent;
-        private LZ4EncoderSettings encoderSettings = new LZ4EncoderSettings();
 
 
         public LZ4Archive(string path, Job.newEventDelegate newEvent)
@@ -21,7 +20,6 @@ namespace Common
             this.path = path;
             this.newEvent = newEvent;
 
-            this.encoderSettings.CompressionLevel = K4os.Compression.LZ4.LZ4Level.L00_FAST;
         }
 
         //adds a whole folder to the archive
@@ -62,7 +60,7 @@ namespace Common
             System.IO.FileStream baseDestStream = new FileStream(System.IO.Path.Combine(this.path, path + "\\" + fileName) , FileMode.Create);
 
             //open LZ4 stream
-            LZ4EncoderStream compressionStream = LZ4Stream.Encode(baseDestStream, this.encoderSettings, false);
+            BlockCompression.LZ4BlockStream compressionStream = new BlockCompression.LZ4BlockStream(baseDestStream, BlockCompression.AccessMode.write);
 
             //create buffer and read counter
             byte[] buffer = new byte[4096];
@@ -101,9 +99,8 @@ namespace Common
 
             //transfer completed
             raiseNewEvent("Lese " + fileName + " - 100%", false, true);
-            baseSourceStream.Close();
-            compressionStream.Close();
             compressionStream.Dispose();
+            baseSourceStream.Close();
 
         }
 
@@ -142,7 +139,7 @@ namespace Common
             System.IO.FileStream baseDestStream = new FileStream(System.IO.Path.Combine(this.path, path), FileMode.Create);
 
             //open LZ4 stream
-            LZ4EncoderStream compressionStream = LZ4Stream.Encode(baseDestStream, this.encoderSettings, false);
+            BlockCompression.LZ4BlockStream compressionStream = new BlockCompression.LZ4BlockStream(baseDestStream, BlockCompression.AccessMode.write);
             
             return compressionStream;
         }
