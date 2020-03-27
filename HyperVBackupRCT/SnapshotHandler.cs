@@ -484,7 +484,7 @@ namespace HyperVBackupRCT
                 parentiid = (string)rctBase["InstanceId"];
             }
 
-            ConfigHandler.BackupConfigHandler.addBackup(basePath, guidFolder, backupType, (string)refP["InstanceId"], parentiid, false);
+            ConfigHandler.BackupConfigHandler.addBackup(basePath, guidFolder, backupType, (string)refP["InstanceId"], parentiid, false); 
 
         }
 
