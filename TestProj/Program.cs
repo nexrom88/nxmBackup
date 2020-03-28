@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Data.SqlClient;
+using HyperVBackupRCT;
 
 namespace TestProj
 {
@@ -11,7 +12,10 @@ namespace TestProj
     {
         static void Main(string[] args)
         {
-            MFUserMode.MountHandler.startMountProcess("c:\\target\\comp.lz4", "c:\\target\\mount.iso");
+            RestoreHandler restHandler = new RestoreHandler();
+            restHandler.performGuestFilesRestore(@"H:\nxm\Win10\Windows 10", "Microsoft:7D9F7CE2-09DF-436C-B1CE-0B0168187F09");
+
+            //MFUserMode.MountHandler.startMountProcess("c:\\target\\comp.lz4", "c:\\target\\mount.iso");
 
 
             //System.IO.FileStream target = new System.IO.FileStream("c:\\target\\comp.lz4", System.IO.FileMode.Create, System.IO.FileAccess.ReadWrite);
