@@ -52,12 +52,11 @@
   <ItemGroup>
     <Compile Include="ChangedBlock.cs" />
     <Compile Include="DiffHandler.cs" />
-    <Compile Include="RestoreHandler.cs" />
+    <Compile Include="FullRestoreHandler.cs" />
     <Compile Include="SnapshotHandler.cs" />
     <Compile Include="ConsistencyLevel.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="VirtualDiskHandler.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
@@ -71,6 +70,14 @@
     <ProjectReference Include="..\ConfigHandler\ConfigHandler.csproj">
       <Project>{8764aaa1-7e10-4aa7-b2a2-b0932a79ece0}</Project>
       <Name>ConfigHandler</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\GuestFilesReader\GuestFilesReader.csproj">
+      <Project>{41dfac29-15cd-4c2d-8939-ed3f42d60ad9}</Project>
+      <Name>GuestFilesReader</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\MFUserMode\MFUserMode.csproj">
+      <Project>{093db339-8f66-4a3d-a9ca-d82122444046}</Project>
+      <Name>MFUserMode</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

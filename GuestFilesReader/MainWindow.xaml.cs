@@ -19,7 +19,7 @@ namespace GuestFilesReader
     /// <summary>
     /// Interaktionslogik für MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : Window
+    public partial class FLRWindow : Window
     {
         private GuestFilesHandler gfHandler;
         private string currentPath;
@@ -27,8 +27,11 @@ namespace GuestFilesReader
         private delegate void setLabelDelegate(string text);
         private delegate void hideGridDelegate();
         private bool restoreInProgress = false;
+        private string vhdPath;
 
-        public MainWindow()
+        public string VhdPath {set => vhdPath = value; }
+
+        public FLRWindow()
         {
             InitializeComponent();
         }
@@ -50,9 +53,8 @@ namespace GuestFilesReader
             //hide progress grid
             gridProgress.Visibility = Visibility.Hidden;
 
-            string vhdFile = "C:\\restore\\Virtual Hard Disks\\Windows 10.vhdx";
 
-            gfHandler = new GuestFilesHandler(vhdFile);
+            gfHandler = new GuestFilesHandler(this.vhdPath);
 
             //set callback for restore progress
             gfHandler.newEvent += new Common.Job.newEventDelegate(newEvent);

@@ -21,6 +21,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -67,6 +68,7 @@
   <ItemGroup>
     <Compile Include="LZ4Archive.cs" />
     <Compile Include="DBConnection.cs" />
+    <Compile Include="VirtualDiskHandler.cs" />
     <Compile Include="ZipArchive.cs" />
     <Compile Include="EventProperties.cs" />
     <Compile Include="IArchive.cs" />

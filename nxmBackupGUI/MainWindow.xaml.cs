@@ -151,10 +151,12 @@ namespace nxmBackupGUI
 
         private void BtRestore_Click(object sender, RoutedEventArgs e)
         {
-            HyperVBackupRCT.RestoreHandler restoreHandler = new HyperVBackupRCT.RestoreHandler();
-            restoreHandler.newEvent += new Common.Job.newEventDelegate(newEvent);
-            Thread restoreThread = new Thread(() => restoreHandler.performFullRestoreProcess(@"C:\Users\Administrator\Desktop\nxm\Win10 Sicherung\Test\Win10", @"c:\restore", "Microsoft:963FD620-CCD0-4546-9F6A-C28BE11B2761", ConfigHandler.Compression.lz4));
-            restoreThread.Start();
+            GuestFilesReader.FileLevelRestoreHandler rHandler = new GuestFilesReader.FileLevelRestoreHandler();
+            rHandler.performGuestFilesRestore(@"E:\nxm\Win10\Windows 10", "Microsoft:7D9F7CE2-09DF-436C-B1CE-0B0168187F09", ConfigHandler.Compression.lz4);
+           
+            //restoreHandler.newEvent += new Common.Job.newEventDelegate(newEvent);
+            //Thread restoreThread = new Thread(() => restoreHandler.performFullRestoreProcess(@"C:\Users\Administrator\Desktop\nxm\Win10 Sicherung\Test\Win10", @"c:\restore", "Microsoft:963FD620-CCD0-4546-9F6A-C28BE11B2761", ConfigHandler.Compression.lz4));
+            //restoreThread.Start();
         }
 
         private void btAddJob_Click(object sender, RoutedEventArgs e)

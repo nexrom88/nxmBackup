@@ -21,6 +21,7 @@ namespace MFUserMode
             sourceStream.Dispose();
 
             //build dummy dest file
+            System.IO.Directory.CreateDirectory(System.IO.Path.GetDirectoryName(destDummyFile));
             System.IO.FileStream destStream = new System.IO.FileStream(destDummyFile, System.IO.FileMode.Create, System.IO.FileAccess.Write);
             destStream.SetLength((long)decompressedFileSize);
             destStream.Close();

@@ -11,7 +11,7 @@ namespace GuestFilesReader
     public class GuestFilesHandler
     {
         private string vhdPath;
-        private HyperVBackupRCT.VirtualDiskHandler diskHandler;
+        private Common.VirtualDiskHandler diskHandler;
         public event Common.Job.newEventDelegate newEvent;
 
         public GuestFilesHandler(string vhdPath)
@@ -22,9 +22,9 @@ namespace GuestFilesReader
         //mounts vhdx file without driveletter
         public void mountVHD()
         {
-            diskHandler = new HyperVBackupRCT.VirtualDiskHandler(this.vhdPath);
-            diskHandler.open(HyperVBackupRCT.VirtualDiskHandler.VirtualDiskAccessMask.AttachReadOnly);
-            diskHandler.attach(HyperVBackupRCT.VirtualDiskHandler.ATTACH_VIRTUAL_DISK_FLAG.ATTACH_VIRTUAL_DISK_FLAG_NO_DRIVE_LETTER | HyperVBackupRCT.VirtualDiskHandler.ATTACH_VIRTUAL_DISK_FLAG.ATTACH_VIRTUAL_DISK_FLAG_READ_ONLY);
+            diskHandler = new Common.VirtualDiskHandler(this.vhdPath);
+            diskHandler.open(Common.VirtualDiskHandler.VirtualDiskAccessMask.AttachReadOnly);
+            diskHandler.attach(Common.VirtualDiskHandler.ATTACH_VIRTUAL_DISK_FLAG.ATTACH_VIRTUAL_DISK_FLAG_NO_DRIVE_LETTER | Common.VirtualDiskHandler.ATTACH_VIRTUAL_DISK_FLAG.ATTACH_VIRTUAL_DISK_FLAG_READ_ONLY);
 
         }
 

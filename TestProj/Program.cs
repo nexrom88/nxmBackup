@@ -12,8 +12,8 @@ namespace TestProj
     {
         static void Main(string[] args)
         {
-            RestoreHandler restHandler = new RestoreHandler();
-            restHandler.performGuestFilesRestore(@"H:\nxm\Win10\Windows 10", "Microsoft:7D9F7CE2-09DF-436C-B1CE-0B0168187F09");
+            //FullRestoreHandler restHandler = new FullRestoreHandler();
+            //restHandler.performGuestFilesRestore(@"E:\nxm\Win10\Windows 10", "Microsoft:7D9F7CE2-09DF-436C-B1CE-0B0168187F09", ConfigHandler.Compression.lz4);
 
             //MFUserMode.MountHandler.startMountProcess("c:\\target\\comp.lz4", "c:\\target\\mount.iso");
 

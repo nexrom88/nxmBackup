@@ -206,7 +206,7 @@ namespace HyperVBackupRCT
 
             raiseNewEvent("Rotiere Backups (Schritt 1 von 5)...", false, false);
 
-            RestoreHandler restHandler = new RestoreHandler();
+            FullRestoreHandler restHandler = new FullRestoreHandler();
 
             //perform restore to staging directory (including merge with second backup)
             restHandler.performFullRestoreProcess(path, System.IO.Path.Combine(path, "staging"), chain[1].instanceID, compressionType);
