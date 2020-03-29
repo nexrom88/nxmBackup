@@ -9,8 +9,11 @@ namespace MFUserMode
     public class MountHandler
     {
 
+        private MFUserMode kmConnection;
+        private bool isReady;
+
         //starts the mount process
-        public static void startMountProcess (string sourceFile, string destDummyFile)
+        public void startMountProcess (string sourceFile, string destDummyFile)
         {
             //open source file and read "decompressed file size" (first 8 bytes)
             System.IO.FileStream sourceStream = new System.IO.FileStream(sourceFile, System.IO.FileMode.Open, System.IO.FileAccess.Read);
@@ -31,13 +34,20 @@ namespace MFUserMode
             sourceStream = new System.IO.FileStream(sourceFile, System.IO.FileMode.Open, System.IO.FileAccess.Read);
             BlockCompression.LZ4BlockStream blockStream = new BlockCompression.LZ4BlockStream(sourceStream, BlockCompression.AccessMode.read);
 
-            MFUserMode mfum = new MFUserMode(blockStream);
-            IntPtr handle = mfum.connectToKM();
-
-            while (handle != IntPtr.Zero)
+            this.kmConnection = new MFUserMode(blockStream);
+            if (this.kmConnection.connectToKM())
             {
-                mfum.readMessages(handle);
+                for (; ; )
+                {
+                    this.kmConnection.readMessages();
+                }
             }
+        }
+
+        //stops the mount process
+        public void stopMountProcess()
+        {
+            this.kmConnection.closeConnection();
         }
     }
 }

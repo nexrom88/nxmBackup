@@ -24,6 +24,9 @@ namespace MFUserMode
             out IntPtr hPort
        );
 
+        [DllImport("kernel32.dll", SetLastError = true)]
+        static extern bool CloseHandle(IntPtr hHandle);
+
         [DllImport("fltlib")]
         static extern unsafe uint FilterSendMessage(
             IntPtr hPort,
@@ -51,6 +54,9 @@ namespace MFUserMode
         //source stream (usually seekable decompression stream)
         private Stream sourceStream;
 
+        //the handle to the km connection
+        private IntPtr handle;
+
 
         public MFUserMode(Stream sourceStream)
         {
@@ -58,25 +64,23 @@ namespace MFUserMode
         }
 
         //starts the connection to kernel Mode driver
-        public IntPtr connectToKM()
+        public bool connectToKM()
         {
-            IntPtr handle = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(IntPtr)));
+            this.handle = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(IntPtr)));
             uint result = FilterConnectCommunicationPort("\\nxmQueryPort", 0, IntPtr.Zero, 0, IntPtr.Zero,  out handle);
 
-            if (result != 0)
-            {
-                return IntPtr.Zero;
-            }
-            else
-            {
-                return handle;
-            }           
+            return result == 0;        
 
         }
 
+        //close the km connection
+        public void closeConnection()
+        {
+            CloseHandle(this.handle);
+        }
 
         //reads one message
-        public unsafe void readMessages(IntPtr handle)
+        public unsafe void readMessages()
         {
             DATA_RECEIVE dataReceive = new DATA_RECEIVE();
 
@@ -85,7 +89,7 @@ namespace MFUserMode
 
 
 
-            uint status = FilterGetMessage(handle, ref dataReceive.messageHeader, dataSize, IntPtr.Zero);
+            uint status = FilterGetMessage(this.handle, ref dataReceive.messageHeader, dataSize, IntPtr.Zero);
 
             if (status != 0)
             {
@@ -124,7 +128,7 @@ namespace MFUserMode
 
             int size = sizeof(FILTER_REPLY_MESSAGE);
 
-            status = FilterReplyMessage(handle, ref reply, size);
+            status = FilterReplyMessage(this.handle, ref reply, size);
 
         }
 

@@ -63,7 +63,9 @@ namespace GuestFilesReader
             string[] entries = System.IO.Directory.GetFiles(vmBasePath, "*.vhdx");
 
             //todo: just use first hdd to mount
-            Thread mountThread = new Thread(() => MFUserMode.MountHandler.startMountProcess(System.IO.Path.Combine(vmBasePath, entries[0]), "e:\\target\\mount.vhdx"));
+            MFUserMode.MountHandler mountHandler = new MFUserMode.MountHandler();
+
+            Thread mountThread = new Thread(() => mountHandler.startMountProcess(System.IO.Path.Combine(vmBasePath, entries[0]), "e:\\target\\mount.vhdx"));
             mountThread.Start();
 
             Thread.Sleep(1000);
