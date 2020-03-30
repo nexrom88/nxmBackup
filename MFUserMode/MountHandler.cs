@@ -11,6 +11,7 @@ namespace MFUserMode
 
         private MFUserMode kmConnection;
         private bool isReady;
+        private System.IO.FileStream destStream;
 
         //starts the mount process
         public void startMountProcess (string sourceFile, string destDummyFile)
@@ -25,10 +26,10 @@ namespace MFUserMode
 
             //build dummy dest file
             System.IO.Directory.CreateDirectory(System.IO.Path.GetDirectoryName(destDummyFile));
-            System.IO.FileStream destStream = new System.IO.FileStream(destDummyFile, System.IO.FileMode.Create, System.IO.FileAccess.Write);
-            destStream.SetLength((long)decompressedFileSize);
-            destStream.Close();
-            destStream.Dispose();
+            this.destStream = new System.IO.FileStream(destDummyFile, System.IO.FileMode.Create, System.IO.FileAccess.Write);
+            this.destStream.SetLength((long)decompressedFileSize);
+            this.destStream.Close();
+            this.destStream.Dispose();
 
             //connect to MF Kernel Mode
             sourceStream = new System.IO.FileStream(sourceFile, System.IO.FileMode.Open, System.IO.FileAccess.Read);

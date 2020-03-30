@@ -76,6 +76,7 @@ namespace GuestFilesReader
             h.ShowDialog();
 
             mountThread.Abort();
+            mountHandler.stopMountProcess();
 
 
         }
