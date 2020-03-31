@@ -46,7 +46,7 @@ namespace Common
         }
 
         //sends a sql query
-        public List<Dictionary<string, string>> doQuery(string query, Dictionary<string, string> parameters, SqlTransaction transaction)
+        public List<Dictionary<string, string>> doReadQuery(string query, Dictionary<string, string> parameters, SqlTransaction transaction)
         {
             SqlCommand command;
 
@@ -69,8 +69,8 @@ namespace Common
                     command.Parameters.AddWithValue(key, parameters[key]);
                 }
             }
-                                
-                
+
+
             SqlDataReader reader = command.ExecuteReader();
 
             //retVal is a list of dictionaries
@@ -100,8 +100,34 @@ namespace Common
                 reader.Close();
             }
             return result;
+        }
 
+        // Do operation.
+        public int doWriteQuery(string query, Dictionary<string, string> parameters, SqlTransaction transaction)
+        {
+            SqlCommand command;
 
+            if (transaction == null)
+            {
+                //query without transaction
+                command = new SqlCommand(query, connection);
+            }
+            else
+            {
+                //query within transaction
+                command = new SqlCommand(query, connection, transaction);
+            }
+
+            //add all query parameters
+            if (parameters != null)
+            {
+                foreach (string key in parameters.Keys)
+                {
+                    command.Parameters.AddWithValue(key, parameters[key]);
+                }
+            }
+
+            return command.ExecuteNonQuery();
         }
 
         //closes the db connection

@@ -21,15 +21,15 @@ namespace ConfigHandler
             //open DB connection
             using (Common.DBConnection connection = new Common.DBConnection())
             {
-                List<Dictionary<string,string>> jobs = connection.doQuery("SELECT Jobs.id, Jobs.name, Jobs.isRunning, Jobs.basepath, Jobs.maxelements, Jobs.blocksize, Jobs.day, Jobs.hour, Jobs.minute, Jobs.interval, Compression.name AS compressionname, RotationType.name AS rotationname FROM Jobs INNER JOIN Compression ON Jobs.compressionID=Compression.id INNER JOIN RotationType ON Jobs.rotationtypeID=RotationType.id", null, null);
-            
+                List<Dictionary<string, string>> jobs = connection.doReadQuery("SELECT Jobs.id, Jobs.name, Jobs.isRunning, Jobs.basepath, Jobs.maxelements, Jobs.blocksize, Jobs.day, Jobs.hour, Jobs.minute, Jobs.interval, Compression.name AS compressionname, RotationType.name AS rotationname FROM Jobs INNER JOIN Compression ON Jobs.compressionID=Compression.id INNER JOIN RotationType ON Jobs.rotationtypeID=RotationType.id", null, null);
+
                 //iterate through all jobs
-                foreach(Dictionary<string,string> job in jobs)
+                foreach (Dictionary<string, string> job in jobs)
                 {
                     //build structure
                     OneJob newJob = new OneJob();
                     newJob.DbId = int.Parse(job["id"]);
-                    newJob.BasePath = job["basepath"]; 
+                    newJob.BasePath = job["basepath"];
                     newJob.Name = job["name"];
                     newJob.BlockSize = uint.Parse(job["blocksize"]);
                     newJob.IsRunning = bool.Parse(job["isRunning"]);
@@ -38,8 +38,8 @@ namespace ConfigHandler
                     //build rotation structure
                     switch (job["rotationname"])
                     {
-                        case "merge":                           
-                            rota.type = RotationType.merge; 
+                        case "merge":
+                            rota.type = RotationType.merge;
                             break;
                         case "blockrotation":
                             rota.type = RotationType.blockRotation;
@@ -82,11 +82,11 @@ namespace ConfigHandler
                     //query VMs
                     Dictionary<string, string> paramaters = new Dictionary<string, string>();
                     paramaters.Add("jobid", job["id"]);
-                    List<Dictionary<string, string>> vms = connection.doQuery("SELECT VMs.id, VMs.name FROM VMs INNER JOIN JobVMRelation ON JobVMRelation.jobid=@jobid AND JobVMRelation.vmid=VMs.id", paramaters, null);
+                    List<Dictionary<string, string>> vms = connection.doReadQuery("SELECT VMs.id, VMs.name FROM VMs INNER JOIN JobVMRelation ON JobVMRelation.jobid=@jobid AND JobVMRelation.vmid=VMs.id", paramaters, null);
                     newJob.JobVMs = new List<JobVM>();
 
                     //iterate through all vms
-                    foreach(Dictionary<string,string> vm in vms)
+                    foreach (Dictionary<string, string> vm in vms)
                     {
                         JobVM newVM = new JobVM();
                         newVM.vmID = vm["id"];
@@ -100,7 +100,7 @@ namespace ConfigHandler
 
                 return retVal;
 
-            }            
+            }
         }
 
         //adds a job to the job list
@@ -121,13 +121,13 @@ namespace ConfigHandler
 
                 //get compression id
                 parameters.Add("name", job.Compression.ToString().ToLower());
-                values = connection.doQuery("SELECT id FROM compression WHERE name=@name", parameters, transaction);
+                values = connection.doReadQuery("SELECT id FROM compression WHERE name=@name", parameters, transaction);
                 string compressionID = values[0]["id"];
 
                 parameters = new Dictionary<string, string>();
                 //get rotationtype ID
                 parameters.Add("name", job.Rotation.type.ToString().ToLower());
-                values = connection.doQuery("SELECT id FROM RotationType WHERE name=@name", parameters, transaction);
+                values = connection.doReadQuery("SELECT id FROM RotationType WHERE name=@name", parameters, transaction);
                 string rotationID = values[0]["id"];
 
 
@@ -144,7 +144,7 @@ namespace ConfigHandler
                 parameters.Add("maxelements", job.Rotation.maxElementCount.ToString());
                 parameters.Add("rotationtypeID", rotationID);
 
-                values = connection.doQuery("INSERT INTO Jobs (name, interval, minute, hour, day, basepath, compressionID, blocksize, maxelements, rotationtypeID) VALUES(@name, @interval, @minute, @hour, @day, @basepath, @compressionID, @blocksize, @maxelements, @rotationtypeID); SELECT SCOPE_IDENTITY() AS id;", parameters, transaction);
+                values = connection.doReadQuery("INSERT INTO Jobs (name, interval, minute, hour, day, basepath, compressionID, blocksize, maxelements, rotationtypeID) VALUES(@name, @interval, @minute, @hour, @day, @basepath, @compressionID, @blocksize, @maxelements, @rotationtypeID); SELECT SCOPE_IDENTITY() AS id;", parameters, transaction);
 
                 string jobID = values[0]["id"];
 
@@ -165,22 +165,23 @@ namespace ConfigHandler
                 //check whether vm already exists
                 Dictionary<string, string> parameters = new Dictionary<string, string>();
                 parameters.Add("id", vm.vmID);
-                List<Dictionary<string, string>> result = connection.doQuery("SELECT COUNT(*) AS count From VMs WHERE id=@id", parameters, transaction);
+                List<Dictionary<string, string>> result = connection.doReadQuery("SELECT COUNT(*) AS count From VMs WHERE id=@id", parameters, transaction);
 
                 //does vm already exist in DB?
-                if (int.Parse(result[0]["count"]) == 0){
+                if (int.Parse(result[0]["count"]) == 0)
+                {
                     //vm does not exist
                     parameters = new Dictionary<string, string>();
                     parameters.Add("id", vm.vmID);
                     parameters.Add("name", vm.vmName);
-                    connection.doQuery("INSERT INTO VMs(id, name) VALUES (@id, @name); SELECT SCOPE_IDENTITY() AS id;", parameters, transaction);
+                    connection.doReadQuery("INSERT INTO VMs(id, name) VALUES (@id, @name); SELECT SCOPE_IDENTITY() AS id;", parameters, transaction);
                 }
 
                 //vm exists now, now create relation
                 parameters = new Dictionary<string, string>();
                 parameters.Add("jobid", jobID);
                 parameters.Add("vmid", vm.vmID);
-                connection.doQuery("INSERT INTO JobVMRelation(jobid, vmid) VALUES (@jobid, @vmid)", parameters, transaction);
+                connection.doReadQuery("INSERT INTO JobVMRelation(jobid, vmid) VALUES (@jobid, @vmid)", parameters, transaction);
             }
 
         }
@@ -192,20 +193,31 @@ namespace ConfigHandler
             {
                 Dictionary<string, string> parameters = new Dictionary<string, string>();
                 parameters.Add("jobId", jobId.ToString());
-                List<Dictionary<string, string>> result = connection.doQuery("SELECT isRunning FROM Jobs WHERE id=@jobId", parameters, null);
+                List<Dictionary<string, string>> result = connection.doReadQuery("SELECT isRunning FROM Jobs WHERE id=@jobId", parameters, null);
                 if (result != null && result.Count > 0 && result[0]["id"] != "") return bool.Parse(result[0]["id"]);
                 else return false;
             }
         }
 
-       
-    }
+        // Delete job.
+        public static bool deleteJob(int jobDBId)
+        {
+            using (Common.DBConnection connection = new Common.DBConnection())
+            {
+                Dictionary<string, string> parameters = new Dictionary<string, string>();
 
+                parameters.Add("id", jobDBId.ToString());
+                var result = connection.doWriteQuery("DELETE FROM jobs WHERE id=@id", parameters, null);
+                return result != 0;
+            }
+        }
+
+    }
 
     // Structures:
 
     //represents one job within jobs.xml
-    public struct OneJob: System.ComponentModel.INotifyPropertyChanged
+    public struct OneJob : System.ComponentModel.INotifyPropertyChanged
     {
         private int dbId;
         private string name;
@@ -228,10 +240,11 @@ namespace ConfigHandler
         public Rotation Rotation { get => rotation; set => rotation = value; }
         public bool IsRunning { get => isRunning; set => isRunning = value; }
         public int DbId { get => dbId; set => dbId = value; }
-        public string IntervalBaseForGUI {
-            get 
+        public string IntervalBaseForGUI
+        {
+            get
             {
-                switch (interval.intervalBase) 
+                switch (interval.intervalBase)
                 {
                     case ConfigHandler.IntervalBase.daily:
                         return "täglich";
@@ -242,7 +255,7 @@ namespace ConfigHandler
                     default:
                         return "default";
                 }
-            } 
+            }
         }
         public string IsRunningForGUI
         {
@@ -256,7 +269,8 @@ namespace ConfigHandler
                     case false:
                         return "angehalten";
                     default:
-                        return "default";                }
+                        return "default";
+                }
             }
         }
     }

@@ -12,10 +12,11 @@ namespace JobEngine
         public void startJobEngine(Common.Job.newEventDelegate eventDel)
         {
             //read all jobs
-            List <ConfigHandler.OneJob> jobs = ConfigHandler.JobConfigHandler.readJobs();
+            List<ConfigHandler.OneJob> jobs = ConfigHandler.JobConfigHandler.readJobs();
 
             //create one timer for each job
-            foreach (ConfigHandler.OneJob job in jobs) {
+            foreach (ConfigHandler.OneJob job in jobs)
+            {
                 JobTimer timer = new JobTimer(job, eventDel);
                 this.jobTimers.Add(timer);
                 System.Timers.Timer t = new System.Timers.Timer(60000);
@@ -26,12 +27,12 @@ namespace JobEngine
         }
 
         //manually starts a given job
-        public void startManually(string jobName)
+        public void startManually(int dbId)
         {
             //search for job object
             foreach (JobTimer job in this.jobTimers)
             {
-                if (job.Job.Name == jobName)
+                if (job.Job.DbId == dbId)
                 {
                     job.startJob(true);
                 }
