@@ -10,12 +10,10 @@ namespace JobEngine
     {
         private ConfigHandler.OneJob job;
         private bool inProgress = false;
-        private Common.Job.newEventDelegate newEvent;
 
-        public JobTimer(ConfigHandler.OneJob job, Common.Job.newEventDelegate newEvent)
+        public JobTimer(ConfigHandler.OneJob job)
         {
             this.Job = job;
-            this.newEvent = newEvent;
         }
 
         public OneJob Job { get => job; set => job = value; }
@@ -23,11 +21,14 @@ namespace JobEngine
         //gets raised frequently
         public void tick(object sender, System.Timers.ElapsedEventArgs e)
         {
-            startJob(false);
+            //get execution ID
+            int executionId = Common.DBQueries.AddJobExecution(job.DbId.ToString());
+
+            startJob(false, executionId);
         }
 
         //starts the job
-        public void startJob(bool force)
+        public void startJob(bool force, int executionId)
         {
 
             //just check "job due" when it is not forced
@@ -46,7 +47,7 @@ namespace JobEngine
                 Common.EventProperties props = new Common.EventProperties();
                 props.text = "Skipping";
 
-                this.newEvent(props);
+
                 return;
             }
 
@@ -55,9 +56,8 @@ namespace JobEngine
             //iterate vms within the current job
             foreach (ConfigHandler.JobVM vm in this.Job.JobVMs)
             {
-                SnapshotHandler ssHandler = new SnapshotHandler(vm.vmName);
-                ssHandler.newEvent += this.newEvent;
-                ssHandler.performFullBackupProcess(ConsistencyLevel.ApplicationAware, true, this.Job.BasePath, true, this.job);
+                SnapshotHandler ssHandler = new SnapshotHandler(vm.vmName, executionId);
+                ssHandler.performFullBackupProcess(ConsistencyLevel.ApplicationAware, true, true, this.job);
             }
 
             this.inProgress = false;

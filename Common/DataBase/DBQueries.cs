@@ -9,7 +9,7 @@ namespace Common
     public class DBQueries
     {
         // Adds a new job execution before performing backup process.
-        public static string AddJobExecution(string jobId)
+        public static int AddJobExecution(string jobId)
         {
             try
             {
@@ -33,29 +33,64 @@ namespace Common
                         throw new Exception("Error during insert operation (no insert id)");
                     }
 
-                    return jobExecutionIds[0]["id"];
+                    return int.Parse(jobExecutionIds[0]["id"]);
                 }
             }
             catch (Exception exp)
             {
                 ErrorHandler.writeToLog(exp.ToString(), new System.Diagnostics.StackTrace());
-                return null;
+                return -1;
             }
         }
 
         // Adds events to db while performing backup process.
-        public static void AddEvent(string text, string jobExecutionId, string vmName)
+        public static int AddEvent(Common.EventProperties eventProperties, string vmName)
+        {
+            //check whether the given event is an update
+            if (eventProperties.isUpdate)
+            {
+                UpdateEvent(eventProperties, vmName);
+                return -1;
+            }
+
+            //not an update: do insert
+            try
+            {
+                using (DBConnection dbConn = new DBConnection())
+                {
+                    List<Dictionary<string, string>> jobExecutionEventIds = dbConn.doReadQuery("INSERT INTO JobExecutionEvents (vmId, info, jobExecutionId) VALUES (@vmId, @info, @jobExecutionId);SELECT SCOPE_IDENTITY() AS id;",
+                        new Dictionary<string, string>() { { "vmId", vmName }, { "info", eventProperties.text }, { "jobExecutionId", eventProperties.jobExecutionId.ToString()} }, null);
+
+                    if (jobExecutionEventIds.Count == 0)
+                    {
+                        throw new Exception("Error during insert operation (affectedRows != 1)");
+                    }
+                    else
+                    {
+                        return int.Parse(jobExecutionEventIds[0]["id"]);
+                    }
+                }
+            }
+            catch (Exception exp)
+            {
+                ErrorHandler.writeToLog(exp.ToString(), new System.Diagnostics.StackTrace());
+                return -1;
+            }
+        }
+
+        // Updates an existing event (e.g. progress) while performing backup process.
+        public static void UpdateEvent(Common.EventProperties eventProperties, string vmName)
         {
             try
             {
                 using (DBConnection dbConn = new DBConnection())
                 {
-                    int affectedRows = dbConn.doWriteQuery("INSERT INTO JobExecutionEvents (vmId, info, jobExecutionId) VALUES (@vmId, @info, @jobExecutionId);",
-                        new Dictionary<string, string>() { { "vmId", vmName }, { "info", text }, { "jobExecutionId", jobExecutionId } }, null);
+                    int affectedRows = dbConn.doWriteQuery("UPDATE JobExecutionEvents SET info=@info WHERE id=@id;",
+                        new Dictionary<string, string>() { { "info", eventProperties.text }, { "id", eventProperties.eventIdToUpdate.ToString() } }, null);
 
-                    if (affectedRows != 1)
+                    if (affectedRows == 0)
                     {
-                        throw new Exception("Error during insert operation (affectedRows != 1)");
+                        throw new Exception("Error during event update operation (affectedRows != 1)");
                     }
                 }
             }

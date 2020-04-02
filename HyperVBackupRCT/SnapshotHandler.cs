@@ -17,15 +17,18 @@ namespace HyperVBackupRCT
         private const UInt16 SnapshotTypeFull = 2;
         private string vmName;
         public event Common.Job.newEventDelegate newEvent;
+        private int executionId;
 
-        public SnapshotHandler(string vmName)
+        public SnapshotHandler(string vmName, int executionId)
         {
             this.vmName = vmName;
+            this.executionId = executionId;
         }
 
         //performs a full backup chain
-        public void performFullBackupProcess(ConsistencyLevel cLevel, Boolean allowSnapshotFallback, string destination, bool incremental, ConfigHandler.OneJob job)
+        public void performFullBackupProcess(ConsistencyLevel cLevel, Boolean allowSnapshotFallback, bool incremental, ConfigHandler.OneJob job)
         {
+            string destination = job.BasePath;
             ManagementObject snapshot = createSnapshot(cLevel, allowSnapshotFallback);
             ManagementObject refP = null;
 
@@ -710,16 +713,17 @@ namespace HyperVBackupRCT
         }
 
         //builds a EventProperties object and raises the "newEvent" event
-        public void raiseNewEvent(string text, bool setDone, bool isUpdate)
+        public int raiseNewEvent(string text, bool setDone, bool isUpdate, int eventIdToUpdate)
         {
             Common.EventProperties props = new Common.EventProperties();
             props.text = text;
             props.setDone = setDone;
             props.isUpdate = isUpdate;
-            if (this.newEvent != null)
-            {
-                this.newEvent(props);
-            }
+            props.eventIdToUpdate = eventIdToUpdate;
+            props.jobExecutionId = this.executionId;
+
+            return Common.DBQueries.AddEvent(props, this.vmName);
+
         }
 
 

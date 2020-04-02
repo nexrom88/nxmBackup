@@ -9,7 +9,7 @@ namespace JobEngine
         private List<JobTimer> jobTimers = new List<JobTimer>();
 
         //starts the job engine
-        public void startJobEngine(Common.Job.newEventDelegate eventDel)
+        public void startJobEngine()
         {
             //read all jobs
             List<ConfigHandler.OneJob> jobs = ConfigHandler.JobConfigHandler.readJobs();
@@ -17,7 +17,7 @@ namespace JobEngine
             //create one timer for each job
             foreach (ConfigHandler.OneJob job in jobs)
             {
-                JobTimer timer = new JobTimer(job, eventDel);
+                JobTimer timer = new JobTimer(job);
                 this.jobTimers.Add(timer);
                 System.Timers.Timer t = new System.Timers.Timer(60000);
                 t.Elapsed += timer.tick;
@@ -27,14 +27,14 @@ namespace JobEngine
         }
 
         //manually starts a given job
-        public void startManually(int dbId)
+        public void startManually(int dbId, int executionId)
         {
             //search for job object
             foreach (JobTimer job in this.jobTimers)
             {
                 if (job.Job.DbId == dbId)
                 {
-                    job.startJob(true);
+                    job.startJob(true, executionId);
                 }
             }
         }

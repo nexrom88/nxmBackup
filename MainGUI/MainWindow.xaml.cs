@@ -67,7 +67,11 @@ namespace MainGUI
             // Manually trigger the selected job.
             int dbId = ((ConfigHandler.OneJob)lvJobs.SelectedItem).DbId;
 
-            Thread jobThread = new Thread(() => this.jobHandler.startManually(dbId));
+            //get a job execution id
+            int executionId = Common.DBQueries.AddJobExecution(dbId.ToString());
+
+
+            Thread jobThread = new Thread(() => this.jobHandler.startManually(dbId, executionId));
             jobThread.Start();
         }
 
