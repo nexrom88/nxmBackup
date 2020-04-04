@@ -42,7 +42,7 @@ namespace MainGUI
         {
             //start job engine
             this.jobHandler = new JobEngine.JobHandler();
-            jobHandler.startJobEngine(new Common.Job.newEventDelegate(newEvent));
+            jobHandler.startJobEngine();
             jobs = ConfigHandler.JobConfigHandler.readJobs();
 
             jobsObservable.Clear();
@@ -73,12 +73,6 @@ namespace MainGUI
 
             Thread jobThread = new Thread(() => this.jobHandler.startManually(dbId, executionId));
             jobThread.Start();
-        }
-
-        //
-        private void newEvent(Common.EventProperties props)
-        {
-            Console.WriteLine(props.text);
         }
 
         private void btnNewJob_Click(object sender, RoutedEventArgs e)
