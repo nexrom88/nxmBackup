@@ -21,14 +21,12 @@ namespace JobEngine
         //gets raised frequently
         public void tick(object sender, System.Timers.ElapsedEventArgs e)
         {
-            //get execution ID
-            int executionId = Common.DBQueries.AddJobExecution(job.DbId.ToString());
-
-            startJob(false, executionId);
+         
+            startJob(false);
         }
 
         //starts the job
-        public void startJob(bool force, int executionId)
+        public void startJob(bool force)
         {
 
             //just check "job due" when it is not forced
@@ -52,6 +50,9 @@ namespace JobEngine
             }
 
             this.inProgress = true;
+
+            //get new execution ID
+            int executionId = Common.DBQueries.AddJobExecution(job.DbId.ToString());
 
             //iterate vms within the current job
             foreach (ConfigHandler.JobVM vm in this.Job.JobVMs)
