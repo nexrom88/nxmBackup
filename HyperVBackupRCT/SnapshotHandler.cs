@@ -15,14 +15,14 @@ namespace HyperVBackupRCT
     {
         private const UInt16 SnapshotTypeRecovery = 32768;
         private const UInt16 SnapshotTypeFull = 2;
-        private string vmName;
+        private string vmId;
         public event Common.Job.newEventDelegate newEvent;
         private int executionId;
         private const int NO_RELATED_EVENT = -1;
 
-        public SnapshotHandler(string vmName, int executionId)
+        public SnapshotHandler(string vmId, int executionId)
         {
-            this.vmName = vmName;
+            this.vmId = vmId;
             this.executionId = executionId;
         }
 
@@ -34,7 +34,7 @@ namespace HyperVBackupRCT
             ManagementObject refP = null;
 
             //add job name and vm name to destination
-            destination = System.IO.Path.Combine(destination, job.Name + "\\" + this.vmName);
+            destination = System.IO.Path.Combine(destination, job.Name + "\\" + this.vmId);
 
             //create folder if it does not exist
             System.IO.Directory.CreateDirectory(destination);
@@ -275,7 +275,7 @@ namespace HyperVBackupRCT
             int eventId = raiseNewEvent("Initialisiere Umgebung...", false, false, NO_RELATED_EVENT);
 
             // Get the management service and the VM object.
-            using (ManagementObject vm = WmiUtilities.GetVirtualMachine(vmName, scope))
+            using (ManagementObject vm = WmiUtilities.GetVirtualMachine(vmId, scope))
             using (ManagementObject service = WmiUtilities.GetVirtualMachineSnapshotService(scope))
             using (ManagementObject settings = WmiUtilities.GetVirtualMachineSnapshotSettings(scope))
             using (ManagementBaseObject inParams = service.GetMethodParameters("CreateSnapshot"))
@@ -562,7 +562,7 @@ namespace HyperVBackupRCT
             ManagementScope scope = new ManagementScope("\\\\localhost\\root\\virtualization\\v2", null);
 
             // Get the necessary wmi objects
-            using (ManagementObject vm = WmiUtilities.GetVirtualMachine(vmName, scope))
+            using (ManagementObject vm = WmiUtilities.GetVirtualMachine(vmId, scope))
             {
                 //get all snapshots
                 var iterator = vm.GetRelationships("Msvm_SnapshotOfVirtualSystem").GetEnumerator();
@@ -616,7 +616,7 @@ namespace HyperVBackupRCT
             ManagementScope scope = new ManagementScope("\\\\localhost\\root\\virtualization\\v2", null);
 
             // Get the necessary wmi objects
-            using (ManagementObject vm = WmiUtilities.GetVirtualMachine(vmName, scope))
+            using (ManagementObject vm = WmiUtilities.GetVirtualMachine(vmId, scope))
             {
                 //get all reference points
                 var iterator = vm.GetRelationships("Msvm_ReferencePointOfVirtualSystem").GetEnumerator();
@@ -678,7 +678,7 @@ namespace HyperVBackupRCT
             ManagementScope scope = new ManagementScope("\\\\localhost\\root\\virtualization\\v2", null);
 
             // Get the management service and the VM object.
-            using (ManagementObject vm = WmiUtilities.GetVirtualMachine(vmName, scope))
+            using (ManagementObject vm = WmiUtilities.GetVirtualMachine(vmId, scope))
             using (ManagementObject service = WmiUtilities.GetVirtualMachineSnapshotService(scope))
             using (ManagementObject settings = WmiUtilities.GetVirtualMachineSnapshotSettings(scope))
             using (ManagementBaseObject inParams = service.GetMethodParameters("DestroySnapshotTree"))
@@ -724,7 +724,7 @@ namespace HyperVBackupRCT
             props.eventIdToUpdate = relatedEventId;
             props.jobExecutionId = this.executionId;
 
-            return Common.DBQueries.AddEvent(props, this.vmName);
+            return Common.DBQueries.AddEvent(props, this.vmId);
 
         }
 

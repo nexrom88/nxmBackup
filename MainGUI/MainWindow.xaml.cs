@@ -69,7 +69,7 @@ namespace MainGUI
 
             Thread jobThread = new Thread(() => this.jobHandler.startManually(dbId));
             jobThread.Start();
-        }
+        } 
 
         private void btnNewJob_Click(object sender, RoutedEventArgs e)
         {

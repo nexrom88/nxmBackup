@@ -99,5 +99,27 @@ namespace Common
                 ErrorHandler.writeToLog(exp.ToString(), new System.Diagnostics.StackTrace());
             }
         }
+
+        // sets the given event to done
+        public static void SetDoneEvent(Common.EventProperties eventProperties, string vmName)
+        {
+            try
+            {
+                using (DBConnection dbConn = new DBConnection())
+                {
+                    int affectedRows = dbConn.doWriteQuery("UPDATE JobExecutionEvents SET info=@info WHERE id=@id;",
+                        new Dictionary<string, string>() { { "info", eventProperties.text }, { "id", eventProperties.eventIdToUpdate.ToString() } }, null);
+
+                    if (affectedRows == 0)
+                    {
+                        throw new Exception("Error during event update operation (affectedRows != 1)");
+                    }
+                }
+            }
+            catch (Exception exp)
+            {
+                ErrorHandler.writeToLog(exp.ToString(), new System.Diagnostics.StackTrace());
+            }
+        }
     }
 }

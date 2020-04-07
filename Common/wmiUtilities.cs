@@ -312,7 +312,7 @@ namespace Common
         /// <summary>
         /// Gets the first virtual machine object of the given class with the given name.
         /// </summary>
-        /// <param name="name">The name of the virtual machine to retrieve the path for.</param>
+        /// <param name="id">The name of the virtual machine to retrieve the path for.</param>
         /// <param name="className">The class of virtual machine to search for.</param>
         /// <param name="scope">The ManagementScope to use to connect to WMI.</param>
         /// <returns>The instance representing the virtual machine.</returns>
@@ -323,7 +323,7 @@ namespace Common
             ManagementScope scope)
         {
             string vmQueryWql = string.Format(CultureInfo.InvariantCulture,
-                "SELECT * FROM {0} WHERE ElementName=\"{1}\"", className, name);
+                "SELECT * FROM {0} WHERE Name=\"{1}\"", className, name);
 
             SelectQuery vmQuery = new SelectQuery(vmQueryWql);
 

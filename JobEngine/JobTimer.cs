@@ -57,7 +57,7 @@ namespace JobEngine
             //iterate vms within the current job
             foreach (ConfigHandler.JobVM vm in this.Job.JobVMs)
             {
-                SnapshotHandler ssHandler = new SnapshotHandler(vm.vmName, executionId);
+                SnapshotHandler ssHandler = new SnapshotHandler(vm.vmID, executionId);
                 ssHandler.performFullBackupProcess(ConsistencyLevel.ApplicationAware, true, true, this.job);
             }
 

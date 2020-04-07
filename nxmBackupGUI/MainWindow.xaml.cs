@@ -144,7 +144,7 @@ namespace nxmBackupGUI
         private void BtCleanUp_Click(object sender, RoutedEventArgs e)
         {
             Common.Job.newEventDelegate newEventDel = newEvent;
-            HyperVBackupRCT.SnapshotHandler ssHandler = new HyperVBackupRCT.SnapshotHandler(cbVMs.Items[cbVMs.SelectedIndex].ToString());
+            HyperVBackupRCT.SnapshotHandler ssHandler = new HyperVBackupRCT.SnapshotHandler(cbVMs.Items[cbVMs.SelectedIndex].ToString(), 0);
             ssHandler.newEvent += new Common.Job.newEventDelegate(newEvent);
             ssHandler.cleanUp();
         }
@@ -168,7 +168,7 @@ namespace nxmBackupGUI
         private void btStartJobs_Click(object sender, RoutedEventArgs e)
         {
             //start job engine
-            jobHandler.startJobEngine(new Common.Job.newEventDelegate(newEvent));
+            jobHandler.startJobEngine();
             btStartJobs.IsEnabled = false;
         }
 
