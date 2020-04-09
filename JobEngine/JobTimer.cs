@@ -52,7 +52,7 @@ namespace JobEngine
             this.inProgress = true;
 
             //get new execution ID
-            int executionId = Common.DBQueries.AddJobExecution(job.DbId.ToString());
+            int executionId = Common.DBQueries.addJobExecution(job.DbId.ToString());
 
             //iterate vms within the current job
             foreach (ConfigHandler.JobVM vm in this.Job.JobVMs)

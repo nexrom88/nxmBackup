@@ -9,7 +9,7 @@ namespace Common
     public class DBQueries
     {
         // Adds a new job execution before performing backup process.
-        public static int AddJobExecution(string jobId)
+        public static int addJobExecution(string jobId)
         {
             try
             {
@@ -44,12 +44,19 @@ namespace Common
         }
 
         // Adds events to db while performing backup process.
-        public static int AddEvent(Common.EventProperties eventProperties, string vmName)
+        public static int addEvent(Common.EventProperties eventProperties, string vmName)
         {
             //check whether the given event is an update
             if (eventProperties.isUpdate)
             {
-                UpdateEvent(eventProperties, vmName);
+                updateEvent(eventProperties, vmName);
+                return -1;
+            }
+
+            //check whether the given event is "setDone" event
+            if (eventProperties.setDone)
+            {
+                setDoneEvent(eventProperties, vmName);
                 return -1;
             }
 
@@ -79,7 +86,7 @@ namespace Common
         }
 
         // Updates an existing event (e.g. progress) while performing backup process.
-        public static void UpdateEvent(Common.EventProperties eventProperties, string vmName)
+        public static void updateEvent(Common.EventProperties eventProperties, string vmName)
         {
             try
             {
@@ -101,13 +108,13 @@ namespace Common
         }
 
         // sets the given event to done
-        public static void SetDoneEvent(Common.EventProperties eventProperties, string vmName)
+        public static void setDoneEvent(Common.EventProperties eventProperties, string vmName)
         {
             try
             {
                 using (DBConnection dbConn = new DBConnection())
                 {
-                    int affectedRows = dbConn.doWriteQuery("UPDATE JobExecutionEvents SET info=@info WHERE id=@id;",
+                    int affectedRows = dbConn.doWriteQuery("UPDATE JobExecutionEvents SET info=concat(info,@info) WHERE id=@id;",
                         new Dictionary<string, string>() { { "info", eventProperties.text }, { "id", eventProperties.eventIdToUpdate.ToString() } }, null);
 
                     if (affectedRows == 0)
@@ -119,6 +126,46 @@ namespace Common
             catch (Exception exp)
             {
                 ErrorHandler.writeToLog(exp.ToString(), new System.Diagnostics.StackTrace());
+            }
+        }
+
+        //gets all events for a given job
+        public static List<Dictionary<string,string>> getEvents (string jobId)
+        {
+            //not an update: do insert
+            try
+            {
+                using (DBConnection dbConn = new DBConnection())
+                {
+                    //get jobExecutions first
+                    List<Dictionary<string, string>> jobExecutions = dbConn.doReadQuery("SELECT max(id) id FROM JobExecutions WHERE jobId = @jobId;",
+                        new Dictionary<string, string>() { { "jobId", jobId } }, null);
+
+                    //check if executionId is available
+                    string jobExecutionId = jobExecutions[0]["id"];
+                    if (jobExecutionId == "" || jobExecutionId == "null")
+                    {
+                        return new List<Dictionary<string, string>>();
+                    }
+
+
+                    List<Dictionary<string, string>> jobExecutionEventIds = dbConn.doReadQuery("SELECT vmId, timeStamp, info FROM JobExecutionEvents WHERE jobExecutionId = @jobExecutionId;",
+                        new Dictionary<string, string>() { { "jobExecutionId", jobExecutionId } }, null);
+
+                    if (jobExecutionEventIds.Count == 0)
+                    {
+                        throw new Exception("Error during insert operation (affectedRows != 1)");
+                    }
+                    else
+                    {
+                        return jobExecutionEventIds;
+                    }
+                }
+            }
+            catch (Exception exp)
+            {
+                ErrorHandler.writeToLog(exp.ToString(), new System.Diagnostics.StackTrace());
+                return new List<Dictionary<string, string>>();
             }
         }
     }

@@ -23,9 +23,13 @@ namespace MainGUI
     /// </summary>
     public partial class MainWindow : Window
     {
+        private delegate void UpdateEvents(List<Dictionary<string,string>> events);
         JobEngine.JobHandler jobHandler;
         List<ConfigHandler.OneJob> jobs = new List<ConfigHandler.OneJob>();
         ObservableCollection<ConfigHandler.OneJob> jobsObservable = new ObservableCollection<ConfigHandler.OneJob>();
+        System.Threading.Timer eventRefreshTimer;
+        int selectedJobId = -1;
+        string selectedVMId = "";
 
         public MainWindow()
         {
@@ -52,6 +56,8 @@ namespace MainGUI
             {
                 this.jobsObservable.Add(job);
             }
+
+
         }
 
         //
@@ -93,5 +99,67 @@ namespace MainGUI
                 initJobs();
             }
         }
+
+        //gets triggered when a job gets selected
+        private void lvJobs_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            //start event refresh timer if not laready done
+            if (this.eventRefreshTimer == null)
+            {
+                this.eventRefreshTimer = new System.Threading.Timer(_ => loadEvents(), null, 3000, 3000);
+            }
+
+            //clear list
+            lvVMs.Items.Clear();
+
+            int dbId = ((ConfigHandler.OneJob)lvJobs.SelectedItem).DbId;
+            
+            ConfigHandler.OneJob currentJob = (ConfigHandler.OneJob)lvJobs.SelectedItem;
+            List<ConfigHandler.JobVM> vms = currentJob.JobVMs;
+
+            //iterate through all vms
+            foreach(ConfigHandler.JobVM vm in vms)
+            {
+                ListViewItem newItem = new ListViewItem();
+                newItem.Content = vm.vmName;
+                newItem.Tag = vm.vmID;
+                lvVMs.Items.Add(newItem);
+            }
+
+            this.selectedJobId = dbId;
+        }
+
+        //callback for refreshing job events
+        private void loadEvents()
+        {
+            //just load events if a job is selected
+            if (this.selectedJobId > -1)
+            {
+                List<Dictionary<string, string>> events = Common.DBQueries.getEvents(this.selectedJobId.ToString());
+
+                lvEvents.Dispatcher.Invoke(new UpdateEvents(this.UpdateEventList), new object[] { events });
+
+            }
+        }
+
+        //gets triggered when the VM selection changes
+        private void lvVMs_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            this.selectedVMId = ((ListViewItem)lvVMs.SelectedItem).Tag.ToString();
+        }
+
+        //updates the event ListView within GUI thread
+        private void UpdateEventList(List<Dictionary<string, string>> events)
+        {
+            lvEvents.Items.Clear();
+            foreach (Dictionary<string, string> oneEvent in events)
+            {
+                if (oneEvent["vmId"] == this.selectedVMId)
+                {
+                    lvEvents.Items.Add(oneEvent["info"]);
+                }
+            }
+        }
+
     }
 }

@@ -724,7 +724,7 @@ namespace HyperVBackupRCT
             props.eventIdToUpdate = relatedEventId;
             props.jobExecutionId = this.executionId;
 
-            return Common.DBQueries.AddEvent(props, this.vmId);
+            return Common.DBQueries.addEvent(props, this.vmId);
 
         }
 
