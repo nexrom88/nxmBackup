@@ -155,7 +155,7 @@ namespace Common
                     }
 
 
-                    List<Dictionary<string, string>> jobExecutionEventIds = dbConn.doReadQuery("SELECT vmId, timeStamp, info FROM JobExecutionEvents WHERE jobExecutionId = @jobExecutionId;",
+                    List<Dictionary<string, string>> jobExecutionEventIds = dbConn.doReadQuery("SELECT vmId, timeStamp, info, EventStatus.text AS status FROM JobExecutionEvents INNER JOIN EventStatus ON EventStatus.id = JobExecutionEvents.status WHERE jobExecutionId = @jobExecutionId;",
                         new Dictionary<string, string>() { { "jobExecutionId", jobExecutionId } }, null);
 
                     if (jobExecutionEventIds.Count == 0)

@@ -8,15 +8,18 @@ namespace HyperVBackupRCT
 {
     public class FullRestoreHandler
     {
+        private Common.EventHandler eventHandler;
+        private const int NO_RELATED_EVENT = -1;
 
-        public event Common.Job.newEventDelegate newEvent;
-
-              
+        public FullRestoreHandler(Common.EventHandler eventHandler)
+        {
+            this.eventHandler = eventHandler;
+        }
 
         //performs a full restore process
         public void performFullRestoreProcess(string basePath, string destPath, string instanceID, ConfigHandler.Compression compressionType)
         {
-            raiseNewEvent("Analysiere Backups...", false, false);
+            int relatedEventId = this.eventHandler.raiseNewEvent("Analysiere Backups...", false, false, NO_RELATED_EVENT, Common.EventStatus.inProgress);
 
             //get full backup chain
             List<ConfigHandler.BackupConfigHandler.BackupInfo> backupChain = ConfigHandler.BackupConfigHandler.readChain(basePath);
@@ -27,8 +30,8 @@ namespace HyperVBackupRCT
             //target backup found?
             if (targetBackup.instanceID != instanceID)
             {
-                raiseNewEvent("fehlgeschlagen", true, false);
-                raiseNewEvent("Ziel-Backup kann nicht gefunden werden", false, false);
+                this.eventHandler.raiseNewEvent("fehlgeschlagen", true, false, relatedEventId, Common.EventStatus.error);
+                this.eventHandler.raiseNewEvent("Ziel-Backup kann nicht gefunden werden", false, false, NO_RELATED_EVENT, Common.EventStatus.error);
                 return; //not found, no restore
             }
 
@@ -56,7 +59,7 @@ namespace HyperVBackupRCT
                 }
             }
 
-            raiseNewEvent("erfolgreich", true, false);
+            this.eventHandler.raiseNewEvent("erfolgreich", true, false, relatedEventId, Common.EventStatus.successful);
 
             //copy full backup to destination and get vhdx files
             List<string> hddFiles = transferSnapshot(System.IO.Path.Combine(basePath, restoreChain[restoreChain.Count - 1].uuid + ".nxm"), destPath, false, compressionType);
@@ -65,7 +68,7 @@ namespace HyperVBackupRCT
             restoreChain.RemoveAt(restoreChain.Count - 1);
 
             //iterate through all incremental backups
-            DiffHandler diffRestore = new DiffHandler(this.newEvent);
+            DiffHandler diffRestore = new DiffHandler(this.eventHandler);
             while (restoreChain.Count > 0)
             {
                 ConfigHandler.BackupConfigHandler.BackupInfo currentBackup = restoreChain[restoreChain.Count - 1];
@@ -103,7 +106,7 @@ namespace HyperVBackupRCT
                 //remove current diff
                 restoreChain.RemoveAt(restoreChain.Count - 1);
             }
-            raiseNewEvent("Wiederherstellung erfolgreich", false, false);
+            this.eventHandler.raiseNewEvent("Wiederherstellung erfolgreich", false, false, NO_RELATED_EVENT, Common.EventStatus.successful);
 
         }
 
@@ -132,13 +135,13 @@ namespace HyperVBackupRCT
             switch (compressionType)
             {
                 case ConfigHandler.Compression.zip:
-                    archive = new Common.ZipArchive(archivePath, this.newEvent);
+                    archive = new Common.ZipArchive(archivePath, this.eventHandler);
                     break;
                 case ConfigHandler.Compression.lz4:
-                    archive = new Common.LZ4Archive(archivePath, this.newEvent);
+                    archive = new Common.LZ4Archive(archivePath, this.eventHandler);
                     break;
                 default: //default fallback => zip
-                    archive = new Common.ZipArchive(archivePath, this.newEvent);
+                    archive = new Common.ZipArchive(archivePath, this.eventHandler);
                     break;
             }
 
@@ -179,18 +182,6 @@ namespace HyperVBackupRCT
             return hddFiles;
         }
 
-        //builds a EventProperties object and raises the "newEvent" event
-        public void raiseNewEvent(string text, bool setDone, bool isUpdate)
-        {
-            Common.EventProperties props = new Common.EventProperties();
-            props.text = text;
-            props.setDone = setDone;
-            props.isUpdate = isUpdate;
-            if (this.newEvent != null)
-            {
-                this.newEvent(props);
-            }
-        }
 
     }
 }

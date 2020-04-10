@@ -143,15 +143,13 @@ namespace nxmBackupGUI
 
         private void BtCleanUp_Click(object sender, RoutedEventArgs e)
         {
-            Common.Job.newEventDelegate newEventDel = newEvent;
             HyperVBackupRCT.SnapshotHandler ssHandler = new HyperVBackupRCT.SnapshotHandler(cbVMs.Items[cbVMs.SelectedIndex].ToString(), 0);
-            ssHandler.newEvent += new Common.Job.newEventDelegate(newEvent);
             ssHandler.cleanUp();
         }
 
         private void BtRestore_Click(object sender, RoutedEventArgs e)
         {
-            GuestFilesReader.FileLevelRestoreHandler rHandler = new GuestFilesReader.FileLevelRestoreHandler();
+            GuestFilesReader.FileLevelRestoreHandler rHandler = new GuestFilesReader.FileLevelRestoreHandler(new Common.EventHandler("", -1));
             rHandler.performGuestFilesRestore(@"E:\nxm\Win10\Windows 10", "Microsoft:CE38D039-BCB1-4745-A4C2-B03085E75BE6", ConfigHandler.Compression.lz4);
            
             //restoreHandler.newEvent += new Common.Job.newEventDelegate(newEvent);

@@ -12,7 +12,6 @@ namespace GuestFilesReader
     {
         private string vhdPath;
         private Common.VirtualDiskHandler diskHandler;
-        public event Common.Job.newEventDelegate newEvent;
 
         public GuestFilesHandler(string vhdPath)
         {
@@ -100,7 +99,6 @@ namespace GuestFilesReader
             //raise event for indication restore completion
             props.currentElement--;
             props.setDone = true;
-            newEvent(props);
 
         }
 
@@ -142,7 +140,6 @@ namespace GuestFilesReader
                     if (currentProgress != lastProgress)
                     {
                         props.progress = currentProgress;
-                        this.newEvent(props);
                         lastProgress = currentProgress;
                     }
                     
@@ -158,7 +155,6 @@ namespace GuestFilesReader
                 //io exception
                 props.progress = -1.0f; //-1.0f for error
                 props.text = ex.ToString();
-                this.newEvent(props);
                 return;
             }
         }

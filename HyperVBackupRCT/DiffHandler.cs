@@ -11,6 +11,7 @@ namespace HyperVBackupRCT
     class DiffHandler
     {
         private Common.EventHandler eventHandler;
+        private const int NO_RELATED_EVENT = -1;
 
         public DiffHandler(Common.EventHandler eventHandler)
         {
@@ -31,7 +32,7 @@ namespace HyperVBackupRCT
             {
                 totalBytesCount += bl.length;
             }
-            raiseNewEvent("Erstelle Inkrement - 0%", false, false);
+            int relatedEventId = this.eventHandler.raiseNewEvent("Erstelle Inkrement - 0%", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
 
             //fetch disk file handle
             IntPtr diskHandle = diskHandler.getHandle();
@@ -84,13 +85,13 @@ namespace HyperVBackupRCT
                     //new progress?
                     if (lastPercentage != percentage)
                     {
-                        raiseNewEvent("Erstelle Inkrement - " + percentage + "%", false, true);
+                        this.eventHandler.raiseNewEvent("Erstelle Inkrement - " + percentage + "%", false, true, relatedEventId, EventStatus.inProgress);
                         lastPercentage = percentage;
                     }
                 }
             }
 
-            raiseNewEvent("Erstelle Inkrement - 100%", false, true);
+            this.eventHandler.raiseNewEvent("Erstelle Inkrement - 100%", false, true, relatedEventId, EventStatus.successful);
 
             //close destination stream
             GC.KeepAlive(inputStream);
@@ -104,7 +105,7 @@ namespace HyperVBackupRCT
         //merges a rct diff file with a vhdx
         public void merge(Stream diffStream, string destinationSnapshot)
         {
-            raiseNewEvent("Verarbeite Inkrement...", false, false);
+            int relatedEventId = this.eventHandler.raiseNewEvent("Verarbeite Inkrement...", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
 
             //open file streams
             VirtualDiskHandler diskHandler = new VirtualDiskHandler(destinationSnapshot);
@@ -190,13 +191,14 @@ namespace HyperVBackupRCT
                     string progress = Common.PrettyPrinter.prettyPrintBytes(bytesRestored);
                     if (progress != lastProgress)
                     {
-                        raiseNewEvent("Verarbeite Inkrement... " + progress, false, true);
+                        this.eventHandler.raiseNewEvent("Verarbeite Inkrement... " + progress, false, true, NO_RELATED_EVENT, EventStatus.inProgress);
                         lastProgress = progress;
                     }
 
                 }
 
             }
+            this.eventHandler.raiseNewEvent("Verarbeite Inkrement... erfolgreich", false, true, NO_RELATED_EVENT, EventStatus.successful);
             GC.KeepAlive(snapshotStream);
             diskHandler.detach();
             diskHandler.close();

@@ -133,5 +133,17 @@
       <Name>JobEngine</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Graphics\error.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Graphics\inProgress.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Graphics\success.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Graphics\warning.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

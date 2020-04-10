@@ -212,7 +212,7 @@ namespace HyperVBackupRCT
             int eventId;
             eventId = this.eventHandler.raiseNewEvent("Rotiere Backups (Schritt 1 von 5)...", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
 
-            FullRestoreHandler restHandler = new FullRestoreHandler();
+            FullRestoreHandler restHandler = new FullRestoreHandler(this.eventHandler);
 
             //perform restore to staging directory (including merge with second backup)
             restHandler.performFullRestoreProcess(path, System.IO.Path.Combine(path, "staging"), chain[1].instanceID, compressionType);
@@ -541,7 +541,7 @@ namespace HyperVBackupRCT
                     }
 
                     //write backup output
-                    DiffHandler diffWriter = new DiffHandler(this.newEvent);
+                    DiffHandler diffWriter = new DiffHandler(this.eventHandler);
 
                     diffWriter.writeDiffFile(changedBlocks, diskHandler, archive, compressionType, bufferSize, System.IO.Path.GetFileName(snapshothddPath));
 

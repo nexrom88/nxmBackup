@@ -56,8 +56,6 @@ namespace GuestFilesReader
 
             gfHandler = new GuestFilesHandler(this.vhdPath);
 
-            //set callback for restore progress
-            gfHandler.newEvent += new Common.Job.newEventDelegate(newEvent);
 
             List<GuestVolume> drives = gfHandler.getMountedDrives();
 

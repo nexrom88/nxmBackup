@@ -156,9 +156,36 @@ namespace MainGUI
             {
                 if (oneEvent["vmId"] == this.selectedVMId)
                 {
-                    lvEvents.Items.Add(oneEvent["info"]);
+                    EventListEntry ele = new EventListEntry();
+                    ele.Text = oneEvent["info"];
+
+                    //select icon
+                    switch (oneEvent["status"])
+                    {
+                        case "successful":
+                            ele.Icon = "Graphics/success.png";
+                            break;
+                        case "inProgress":
+                            ele.Icon = "Graphics/inProgress.png";
+                            break;
+                        case "error":
+                            ele.Icon = "Graphics/error.png";
+                            break;
+                        case "warning":
+                            ele.Icon = "Graphics/warning.png";
+                            break;
+                    }
+                    
+
+                    lvEvents.Items.Add(ele);
                 }
             }
+        }
+
+        private class EventListEntry
+        {
+            public string Icon { get; set; }
+            public string Text { get; set; }
         }
 
     }
