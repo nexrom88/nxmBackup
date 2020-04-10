@@ -12,13 +12,14 @@ namespace Common
     public class LZ4Archive : IArchive
     {
         private string path;
-        private Job.newEventDelegate newEvent;
+        private Common.EventHandler eventHandler;
+        private const int NO_RELATED_EVENT = -1;
 
 
-        public LZ4Archive(string path, Job.newEventDelegate newEvent)
+        public LZ4Archive(string path,Common.EventHandler eventHandler)
         {
             this.path = path;
-            this.newEvent = newEvent;
+            this.eventHandler = eventHandler;
 
         }
 
@@ -67,7 +68,7 @@ namespace Common
             long bytesRemaining = baseSourceStream.Length;
             int lastPercentage = -1;
 
-            raiseNewEvent("Lese " + fileName + " - 0%", false, false);
+            int relatedEventId = this.eventHandler.raiseNewEvent("Lese " + fileName + " - 0%", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
 
             while (bytesRemaining > 0)//still bytes to read?
             {
@@ -91,14 +92,14 @@ namespace Common
                 //progress changed?
                 if (lastPercentage != (int)percentage)
                 {
-                    raiseNewEvent("Lese " + fileName + " - " + (int)percentage + "%", false, true);
+                    this.eventHandler.raiseNewEvent("Lese " + fileName + " - " + (int)percentage + "%", false, true, relatedEventId, EventStatus.inProgress);
                     lastPercentage = (int)percentage;
                 }
 
             }
 
             //transfer completed
-            raiseNewEvent("Lese " + fileName + " - 100%", false, true);
+            this.eventHandler.raiseNewEvent("Lese " + fileName + " - 100%", false, true, relatedEventId, EventStatus.successful);
             compressionStream.Dispose();
             baseSourceStream.Close();
 
@@ -154,7 +155,7 @@ namespace Common
 
             string sourcePath = System.IO.Path.Combine(this.path, path);
 
-            raiseNewEvent("Stelle wieder her: " + fileName + "... ", false, false);
+            int relatedEventId = this.eventHandler.raiseNewEvent("Stelle wieder her: " + fileName + "... ", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
 
             //open source file
            System.IO.FileStream sourceStream = new FileStream(sourcePath, FileMode.Open);
@@ -183,12 +184,13 @@ namespace Common
                 string progress = Common.PrettyPrinter.prettyPrintBytes(totalReadBytes);
                 if (progress != lastProgress)
                 {
-                    raiseNewEvent("Stelle wieder her: " + fileName + "... " + progress, false, true);
+                    this.eventHandler.raiseNewEvent("Stelle wieder her: " + fileName + "... " + progress, false, true, relatedEventId, EventStatus.inProgress);
                     lastProgress = progress;
                 }
 
             }
 
+            this.eventHandler.raiseNewEvent("Stelle wieder her: " + fileName + "... erfolgreich", false, true, relatedEventId, EventStatus.successful);
             destStream.Close();
             compressionStream.Close();
             sourceStream.Close();
@@ -236,18 +238,5 @@ namespace Common
 
         }
 
-        //builds a EventProperties object and raises the "newEvent" event
-        public void raiseNewEvent(string text, bool setDone, bool isUpdate)
-        {
-            Common.EventProperties props = new Common.EventProperties();
-            props.text = text;
-            props.setDone = setDone;
-            props.isUpdate = isUpdate;
-
-            if (this.newEvent != null)
-            {
-                this.newEvent(props);
-            }
-        }
     }
 }

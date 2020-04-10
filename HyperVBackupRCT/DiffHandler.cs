@@ -10,11 +10,11 @@ namespace HyperVBackupRCT
 {
     class DiffHandler
     {
-        private Common.Job.newEventDelegate newEvent;
+        private Common.EventHandler eventHandler;
 
-        public DiffHandler(Common.Job.newEventDelegate newEventDelegate)
+        public DiffHandler(Common.EventHandler eventHandler)
         {
-            this.newEvent = newEventDelegate;
+            this.eventHandler = eventHandler;
         }
 
         //writes the diff file using cbt information
@@ -236,19 +236,6 @@ namespace HyperVBackupRCT
 
         }
 
-        //builds an EventProperties object and raises the "newEvent" event
-        public void raiseNewEvent(string text, bool setDone, bool isUpdate)
-        {
-            Common.EventProperties props = new Common.EventProperties();
-            props.text = text;
-            props.setDone = setDone;
-            props.isUpdate = isUpdate;
-
-            if (this.newEvent != null)
-            {
-                this.newEvent(props);
-            }
-        }
 
     }
 }

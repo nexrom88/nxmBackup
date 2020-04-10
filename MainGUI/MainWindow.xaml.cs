@@ -95,7 +95,7 @@ namespace MainGUI
             {
                 ConfigHandler.OneJob job = this.jobsObservable[lvJobs.SelectedIndex];
                 bool result = ConfigHandler.JobConfigHandler.deleteJob(job.DbId);
-                if (!result) Common.ErrorHandler.writeToLog("job delete failed", new System.Diagnostics.StackTrace());
+                if (!result) Common.EventHandler.writeToLog("job delete failed", new System.Diagnostics.StackTrace());
                 initJobs();
             }
         }

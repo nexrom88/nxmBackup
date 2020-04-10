@@ -11,6 +11,7 @@ namespace Common
         public int jobExecutionId; //job execution ID
         public string text; //event text
         public bool setDone; //sets the last event to "done"
+        public string eventStatus; //sets the event status (see DB table EventStatus for valid values)
         public bool isUpdate; //updates the last event
         public int eventIdToUpdate; //when isUpdate this value specifies the event to be updated
         public double progress; //optional: progress in percentage
@@ -18,5 +19,10 @@ namespace Common
         //optional: current element (e.g. restore item 5/10)
         public uint elementsCount;
         public uint currentElement;
+    }
+
+    public enum EventStatus
+    {
+        warning, error, inProgress, successful
     }
 }

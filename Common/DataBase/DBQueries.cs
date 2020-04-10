@@ -38,7 +38,7 @@ namespace Common
             }
             catch (Exception exp)
             {
-                ErrorHandler.writeToLog(exp.ToString(), new System.Diagnostics.StackTrace());
+                EventHandler.writeToLog(exp.ToString(), new System.Diagnostics.StackTrace());
                 return -1;
             }
         }
@@ -46,6 +46,12 @@ namespace Common
         // Adds events to db while performing backup process.
         public static int addEvent(Common.EventProperties eventProperties, string vmName)
         {
+            //if eventStatus is not set, use "inProgress"
+            if (eventProperties.eventStatus == "")
+            {
+                eventProperties.eventStatus = "inProgress";
+            }
+
             //check whether the given event is an update
             if (eventProperties.isUpdate)
             {
@@ -65,8 +71,8 @@ namespace Common
             {
                 using (DBConnection dbConn = new DBConnection())
                 {
-                    List<Dictionary<string, string>> jobExecutionEventIds = dbConn.doReadQuery("INSERT INTO JobExecutionEvents (vmId, info, jobExecutionId) VALUES (@vmId, @info, @jobExecutionId);SELECT SCOPE_IDENTITY() AS id;",
-                        new Dictionary<string, string>() { { "vmId", vmName }, { "info", eventProperties.text }, { "jobExecutionId", eventProperties.jobExecutionId.ToString()} }, null);
+                    List<Dictionary<string, string>> jobExecutionEventIds = dbConn.doReadQuery("INSERT INTO JobExecutionEvents (vmId, info, jobExecutionId, status) VALUES (@vmId, @info, @jobExecutionId, (SELECT id FROM EventStatus WHERE text= @status));SELECT SCOPE_IDENTITY() AS id;",
+                        new Dictionary<string, string>() { { "vmId", vmName }, { "info", eventProperties.text }, { "jobExecutionId", eventProperties.jobExecutionId.ToString()}, {"status", eventProperties.eventStatus} }, null);
 
                     if (jobExecutionEventIds.Count == 0)
                     {
@@ -80,7 +86,7 @@ namespace Common
             }
             catch (Exception exp)
             {
-                ErrorHandler.writeToLog(exp.ToString(), new System.Diagnostics.StackTrace());
+                EventHandler.writeToLog(exp.ToString(), new System.Diagnostics.StackTrace());
                 return -1;
             }
         }
@@ -92,8 +98,8 @@ namespace Common
             {
                 using (DBConnection dbConn = new DBConnection())
                 {
-                    int affectedRows = dbConn.doWriteQuery("UPDATE JobExecutionEvents SET info=@info WHERE id=@id;",
-                        new Dictionary<string, string>() { { "info", eventProperties.text }, { "id", eventProperties.eventIdToUpdate.ToString() } }, null);
+                    int affectedRows = dbConn.doWriteQuery("UPDATE JobExecutionEvents SET info=@info, status=(SELECT id FROM EventStatus WHERE text= @status) WHERE id=@id;",
+                        new Dictionary<string, string>() { { "info", eventProperties.text }, { "id", eventProperties.eventIdToUpdate.ToString() }, { "status", eventProperties.eventStatus } }, null);
 
                     if (affectedRows == 0)
                     {
@@ -103,7 +109,7 @@ namespace Common
             }
             catch (Exception exp)
             {
-                ErrorHandler.writeToLog(exp.ToString(), new System.Diagnostics.StackTrace());
+                EventHandler.writeToLog(exp.ToString(), new System.Diagnostics.StackTrace());
             }
         }
 
@@ -114,8 +120,8 @@ namespace Common
             {
                 using (DBConnection dbConn = new DBConnection())
                 {
-                    int affectedRows = dbConn.doWriteQuery("UPDATE JobExecutionEvents SET info=concat(info,@info) WHERE id=@id;",
-                        new Dictionary<string, string>() { { "info", eventProperties.text }, { "id", eventProperties.eventIdToUpdate.ToString() } }, null);
+                    int affectedRows = dbConn.doWriteQuery("UPDATE JobExecutionEvents SET info=concat(info,@info), status=(SELECT id FROM EventStatus WHERE text= @status)  WHERE id=@id;",
+                        new Dictionary<string, string>() { { "info", eventProperties.text }, { "id", eventProperties.eventIdToUpdate.ToString() }, { "status", eventProperties.eventStatus } }, null);
 
                     if (affectedRows == 0)
                     {
@@ -125,7 +131,7 @@ namespace Common
             }
             catch (Exception exp)
             {
-                ErrorHandler.writeToLog(exp.ToString(), new System.Diagnostics.StackTrace());
+                EventHandler.writeToLog(exp.ToString(), new System.Diagnostics.StackTrace());
             }
         }
 
@@ -164,7 +170,7 @@ namespace Common
             }
             catch (Exception exp)
             {
-                ErrorHandler.writeToLog(exp.ToString(), new System.Diagnostics.StackTrace());
+                EventHandler.writeToLog(exp.ToString(), new System.Diagnostics.StackTrace());
                 return new List<Dictionary<string, string>>();
             }
         }

@@ -14,12 +14,13 @@ namespace Common
         string path;
         System.IO.Compression.ZipArchive archiveStream;
         FileStream fileStream;
-        private Job.newEventDelegate newEvent;
+        private Common.EventHandler eventHandler;
         System.IO.Compression.CompressionLevel compressionLevel = CompressionLevel.Optimal;
+        private const int NO_RELATED_EVENT = -1;
 
-        public ZipArchive (string path, Job.newEventDelegate newEvent)
+        public ZipArchive (string path, Common.EventHandler eventHandler)
         {
-            this.newEvent = newEvent;
+            this.eventHandler = eventHandler;
             this.path = path;
         }
 
@@ -82,7 +83,8 @@ namespace Common
             long bytesRemaining = sourceStream.Length;
             int lastPercentage = -1;
 
-            raiseNewEvent("Lese " + fileName + " - 0%", false, false);
+            int relatedEventId = this.eventHandler.raiseNewEvent("Lese " + fileName + " - 0%", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
+
 
             while (bytesRemaining > 0)//still bytes to read?
             {
@@ -106,14 +108,14 @@ namespace Common
                 //progress changed?
                 if (lastPercentage != (int)percentage)
                 {
-                    raiseNewEvent("Lese " + fileName + " - " + (int)percentage + "%", false, true);
+                    this.eventHandler.raiseNewEvent("Lese " + fileName + " - " + (int)percentage + "%", false, true, relatedEventId, EventStatus.inProgress);
                     lastPercentage = (int)percentage;
                 }
                 
             }
 
             //transfer completed
-            raiseNewEvent("Lese " + fileName + " - 100%", false, true);
+            this.eventHandler.raiseNewEvent("Lese " + fileName + " - 100%", false, true, relatedEventId, EventStatus.successful);
             outStream.Close();
             sourceStream.Close();
 
@@ -147,7 +149,7 @@ namespace Common
         {
             ZipArchiveEntry entry = this.archiveStream.GetEntry(archivePath);
             string fileName = Path.GetFileName(destinationPath);
-            raiseNewEvent("Stelle wieder her: " + fileName + "... 0.0KB", false, false);
+            int relatedEventId = this.eventHandler.raiseNewEvent("Stelle wieder her: " + fileName + "... 0.0KB", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
             string lastProgress = "";
 
             //open streams
@@ -173,12 +175,13 @@ namespace Common
                 string progress = Common.PrettyPrinter.prettyPrintBytes(totalReadBytes);
                 if (progress != lastProgress)
                 {
-                    raiseNewEvent("Stelle wieder her: " + fileName + "... " + progress, false, true);
+                    this.eventHandler.raiseNewEvent("Stelle wieder her: " + fileName + "... " + progress, false, true, relatedEventId, EventStatus.inProgress);
                     lastProgress = progress;
                 }
 
 
             }
+            this.eventHandler.raiseNewEvent("Stelle wieder her: " + fileName + "... erfolgreich", false, true, relatedEventId, EventStatus.successful);
             destStream.Close();
             sourceStream.Close();
 
@@ -208,20 +211,6 @@ namespace Common
             if (entry != null)
             {
                 entry.Delete();
-            }
-        }
-
-        //builds a EventProperties object and raises the "newEvent" event
-        public void raiseNewEvent(string text, bool setDone, bool isUpdate)
-        {
-            Common.EventProperties props = new Common.EventProperties();
-            props.text = text;
-            props.setDone = setDone;
-            props.isUpdate = isUpdate;
-
-            if (this.newEvent != null)
-            {
-                this.newEvent(props);
             }
         }
 

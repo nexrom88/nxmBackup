@@ -16,14 +16,15 @@ namespace HyperVBackupRCT
         private const UInt16 SnapshotTypeRecovery = 32768;
         private const UInt16 SnapshotTypeFull = 2;
         private string vmId;
-        public event Common.Job.newEventDelegate newEvent;
         private int executionId;
         private const int NO_RELATED_EVENT = -1;
+        private Common.EventHandler eventHandler;
 
         public SnapshotHandler(string vmId, int executionId)
         {
             this.vmId = vmId;
             this.executionId = executionId;
+            this.eventHandler = new Common.EventHandler(vmId, executionId);
         }
 
         //performs a full backup chain
@@ -44,7 +45,7 @@ namespace HyperVBackupRCT
             {
                 if (chain == null || chain.Count == 0) //first backup must be full backup
                 {
-                    raiseNewEvent("Inkrementielles Backup nicht möglich", false, false, NO_RELATED_EVENT);
+                    this.eventHandler.raiseNewEvent("Inkrementielles Backup nicht möglich", false, false, NO_RELATED_EVENT, EventStatus.warning);
                     refP = null; //incremental backup not possible
                 }
                 else if (getBlockSize(chain) >= job.BlockSize) //block size reached?
@@ -75,7 +76,7 @@ namespace HyperVBackupRCT
             //if full backup, delete unnecessary reference points
             if (refP == null)
             {
-                int eventId = raiseNewEvent("Entferne alte Referenz Punkte...", false, false, NO_RELATED_EVENT);
+                int eventId = this.eventHandler.raiseNewEvent("Entferne alte Referenz Punkte...", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
                 //remove current (last) backup
                 chain.RemoveAt(chain.Count - 1);
                 List<ManagementObject> refPs = getReferencePoints();
@@ -93,7 +94,7 @@ namespace HyperVBackupRCT
                         }
                     }
                 }
-                raiseNewEvent("erfolgreich", true, false, eventId);
+                this.eventHandler.raiseNewEvent("erfolgreich", true, false, eventId, EventStatus.successful);
             }
 
             //read current backup chain for further processing
@@ -115,7 +116,7 @@ namespace HyperVBackupRCT
                 }
             }
 
-            raiseNewEvent("Backupvorgang erfolgreich", false, false, NO_RELATED_EVENT);
+            this.eventHandler.raiseNewEvent("Backupvorgang erfolgreich", false, false, NO_RELATED_EVENT, EventStatus.successful);
 
         }
 
@@ -167,7 +168,7 @@ namespace HyperVBackupRCT
         //performs a block rotation
         private void blockRotate(string path, List<ConfigHandler.BackupConfigHandler.BackupInfo> chain)
         {
-            int eventID = raiseNewEvent("Rotiere Backups (Block Rotation)...", false, false, NO_RELATED_EVENT);
+            int eventID = this.eventHandler.raiseNewEvent("Rotiere Backups (Block Rotation)...", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
 
             //remove first full backup
             ConfigHandler.BackupConfigHandler.removeBackup(path, chain[0].uuid); //remove from config
@@ -189,7 +190,7 @@ namespace HyperVBackupRCT
                 }
             }
 
-            raiseNewEvent("erfolgreich", true, false, eventID);
+            this.eventHandler.raiseNewEvent("erfolgreich", true, false, eventID, EventStatus.successful);
         }
 
         //merge two backups to keep max snapshot count
@@ -209,15 +210,15 @@ namespace HyperVBackupRCT
             System.IO.Directory.CreateDirectory(System.IO.Path.Combine(path, "staging"));
 
             int eventId;
-            eventId = raiseNewEvent("Rotiere Backups (Schritt 1 von 5)...", false, false, NO_RELATED_EVENT);
+            eventId = this.eventHandler.raiseNewEvent("Rotiere Backups (Schritt 1 von 5)...", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
 
             FullRestoreHandler restHandler = new FullRestoreHandler();
 
             //perform restore to staging directory (including merge with second backup)
             restHandler.performFullRestoreProcess(path, System.IO.Path.Combine(path, "staging"), chain[1].instanceID, compressionType);
 
-            raiseNewEvent("erfolgreich", true, false, eventId);
-            eventId = raiseNewEvent("Rotiere Backups (Schritt 2 von 5)...", false, false, NO_RELATED_EVENT);
+            this.eventHandler.raiseNewEvent("erfolgreich", true, false, eventId, EventStatus.successful);
+            eventId = this.eventHandler.raiseNewEvent("Rotiere Backups (Schritt 2 von 5)...", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
 
             //remove first and second backup from backup chain
             ConfigHandler.BackupConfigHandler.removeBackup(path, chain[0].uuid); //remove from config
@@ -232,21 +233,21 @@ namespace HyperVBackupRCT
             backupArchive.create();
             backupArchive.open(System.IO.Compression.ZipArchiveMode.Create);
 
-            raiseNewEvent("erfolgreich", true, false, eventId);
-            eventId = raiseNewEvent("Rotiere Backups (Schritt 3 von 5)...", false, false, NO_RELATED_EVENT);
+            this.eventHandler.raiseNewEvent("erfolgreich", true, false, eventId, EventStatus.successful);
+            eventId = this.eventHandler.raiseNewEvent("Rotiere Backups (Schritt 3 von 5)...", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
 
             //add whole staging directory to the container archive
             backupArchive.addDirectory(System.IO.Path.Combine(path, "staging"));
             backupArchive.close();
 
-            raiseNewEvent("erfolgreich", true, false, eventId);
-            eventId = raiseNewEvent("Rotiere Backups (Schritt 4 von 5)...", false, false, NO_RELATED_EVENT);
+            this.eventHandler.raiseNewEvent("erfolgreich", true, false, eventId, EventStatus.successful);
+            eventId = this.eventHandler.raiseNewEvent("Rotiere Backups (Schritt 4 von 5)...", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
 
             //create entry to backup chain
             ConfigHandler.BackupConfigHandler.addBackup(path, guidFolder, "full", chain[1].instanceID, "", true);
 
-            raiseNewEvent("erfolgreich", true, false, eventId);
-            eventId = raiseNewEvent("Rotiere Backups (Schritt 5 von 5)...", false, false, NO_RELATED_EVENT);
+            this.eventHandler.raiseNewEvent("erfolgreich", true, false, eventId, EventStatus.successful);
+            eventId = this.eventHandler.raiseNewEvent("Rotiere Backups (Schritt 5 von 5)...", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
 
             //remove reference point
             List<ManagementObject> refPs = getReferencePoints();
@@ -263,7 +264,7 @@ namespace HyperVBackupRCT
             //remove staging folder
             System.IO.Directory.Delete(System.IO.Path.Combine(path, "staging"), true);
 
-            raiseNewEvent("erfolgreich", true, false, eventId);
+            this.eventHandler.raiseNewEvent("erfolgreich", true, false, eventId, EventStatus.successful);
 
 
         }
@@ -272,7 +273,7 @@ namespace HyperVBackupRCT
         public ManagementObject createSnapshot(ConsistencyLevel cLevel, Boolean allowSnapshotFallback)
         {
             ManagementScope scope = new ManagementScope("\\\\localhost\\root\\virtualization\\v2", null);
-            int eventId = raiseNewEvent("Initialisiere Umgebung...", false, false, NO_RELATED_EVENT);
+            int eventId = this.eventHandler.raiseNewEvent("Initialisiere Umgebung...", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
 
             // Get the management service and the VM object.
             using (ManagementObject vm = WmiUtilities.GetVirtualMachine(vmId, scope))
@@ -287,8 +288,8 @@ namespace HyperVBackupRCT
                 inParams["SnapshotSettings"] = settings.GetText(TextFormat.WmiDtd20);
                 inParams["SnapshotType"] = SnapshotTypeRecovery;
 
-                raiseNewEvent("erfolgreich", true, false, eventId);
-                eventId = raiseNewEvent("Erzeuge Recovery Snapshot...", false, false, NO_RELATED_EVENT);
+                this.eventHandler.raiseNewEvent("erfolgreich", true, false, eventId, EventStatus.successful);
+                eventId = this.eventHandler.raiseNewEvent("Erzeuge Recovery Snapshot...", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
 
                 using (ManagementBaseObject outParams = service.InvokeMethod(
                     "CreateSnapshot",
@@ -307,8 +308,8 @@ namespace HyperVBackupRCT
                         //snapshot fallback possible and allowed?
                         if (cLevel == ConsistencyLevel.ApplicationAware && allowSnapshotFallback)
                         {
-                            raiseNewEvent("fehlgeschlagen", true, false, eventId);
-                            raiseNewEvent("'Application Aware Processing' steht nicht zur Verfügung. Versuche Fallback.", false, false, NO_RELATED_EVENT);
+                            this.eventHandler.raiseNewEvent("fehlgeschlagen", true, false, eventId, EventStatus.error);
+                            this.eventHandler.raiseNewEvent("'Application Aware Processing' steht nicht zur Verfügung. Versuche Fallback.", false, false, NO_RELATED_EVENT, EventStatus.successful);
                             return createSnapshot(ConsistencyLevel.CrashConsistent, false);
                         }
                         else
@@ -318,7 +319,7 @@ namespace HyperVBackupRCT
                         }
                     }
 
-                    raiseNewEvent("erfolgreich", true, false, eventId);
+                    this.eventHandler.raiseNewEvent("erfolgreich", true, false, eventId, EventStatus.successful);
 
                     //get the job and the snapshot object
                     ManagementObject job = new ManagementObject((string)outParams["job"]);
@@ -341,7 +342,7 @@ namespace HyperVBackupRCT
         public ManagementObject convertToReferencePoint(ManagementObject snapshot)
         {
             ManagementScope scope = new ManagementScope("\\\\localhost\\root\\virtualization\\v2", null);
-            int eventId = raiseNewEvent("Referenzpunkt wird erzeugt...", false, false, NO_RELATED_EVENT);
+            int eventId = this.eventHandler.raiseNewEvent("Referenzpunkt wird erzeugt...", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
 
             using (ManagementObject settings = WmiUtilities.GetVirtualMachineSnapshotService(scope))
             using (ManagementObject service = WmiUtilities.GetVirtualMachineSnapshotService(scope))
@@ -368,7 +369,7 @@ namespace HyperVBackupRCT
                     {
                         refSnapshot = (System.Management.ManagementObject)iterator.Current;
                     }
-                    raiseNewEvent("erfolgreich", true, false, eventId);
+                    this.eventHandler.raiseNewEvent("erfolgreich", true, false, eventId, EventStatus.successful);
                     return refSnapshot;
                 }
             }
@@ -381,7 +382,7 @@ namespace HyperVBackupRCT
             string basePath = path;
             string backupType = "";
 
-            int eventId = raiseNewEvent("Erzeuge Einträge...", false, false, NO_RELATED_EVENT);
+            int eventId = this.eventHandler.raiseNewEvent("Erzeuge Einträge...", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
 
             //generate random guid path and append it to the path var
             Guid g = Guid.NewGuid();
@@ -393,13 +394,13 @@ namespace HyperVBackupRCT
             switch (compressionType)
             {
                 case ConfigHandler.Compression.zip:
-                    archive = new Common.ZipArchive(System.IO.Path.Combine(path, guidFolder + ".nxm"), this.newEvent);
+                    archive = new Common.ZipArchive(System.IO.Path.Combine(path, guidFolder + ".nxm"), this.eventHandler);
                     break;
                 case ConfigHandler.Compression.lz4:
-                    archive = new Common.LZ4Archive(System.IO.Path.Combine(path, guidFolder + ".nxm"), this.newEvent);
+                    archive = new Common.LZ4Archive(System.IO.Path.Combine(path, guidFolder + ".nxm"), this.eventHandler);
                     break;
                 default: //default fallback to zip algorithm
-                    archive = new Common.ZipArchive(System.IO.Path.Combine(path, guidFolder + ".nxm"), this.newEvent);
+                    archive = new Common.ZipArchive(System.IO.Path.Combine(path, guidFolder + ".nxm"), this.eventHandler);
                     break;
             }
             
@@ -409,7 +410,7 @@ namespace HyperVBackupRCT
             
             bool hasHDD = false;
 
-            raiseNewEvent("erfolgreich", true, false, eventId);
+            this.eventHandler.raiseNewEvent("erfolgreich", true, false, eventId, EventStatus.successful);
 
             //iterate hdds
             var iterator = currentSnapshot.GetRelated("Msvm_StorageAllocationSettingData").GetEnumerator();
@@ -439,7 +440,7 @@ namespace HyperVBackupRCT
                     //just raise event by first iteration
                     if(hddCounter == 0)
                     {
-                        raiseNewEvent("Beginne Vollbackup", false, false, NO_RELATED_EVENT);
+                        this.eventHandler.raiseNewEvent("Beginne Vollbackup", false, false, NO_RELATED_EVENT, EventStatus.successful);
                     }
                     //write to the archive
                     archive.addFile(hddPath[0], "Virtual Hard Disks");
@@ -451,7 +452,7 @@ namespace HyperVBackupRCT
                     //just raise event by first iteration
                     if (hddCounter == 0)
                     {
-                        raiseNewEvent("Beginne inkrementielles Backup", false, false, NO_RELATED_EVENT);
+                        this.eventHandler.raiseNewEvent("Beginne inkrementielles Backup", false, false, NO_RELATED_EVENT, EventStatus.successful);
                     }
                     
                     //do a rct backup copy
@@ -714,19 +715,7 @@ namespace HyperVBackupRCT
             Console.WriteLine("done cleanup");
         }
 
-        //builds a EventProperties object and raises the "newEvent" event
-        public int raiseNewEvent(string text, bool setDone, bool isUpdate, int relatedEventId)
-        {
-            Common.EventProperties props = new Common.EventProperties();
-            props.text = text;
-            props.setDone = setDone;
-            props.isUpdate = isUpdate;
-            props.eventIdToUpdate = relatedEventId;
-            props.jobExecutionId = this.executionId;
 
-            return Common.DBQueries.addEvent(props, this.vmId);
-
-        }
 
 
     }
