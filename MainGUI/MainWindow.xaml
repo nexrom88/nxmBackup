@@ -58,10 +58,10 @@
                                 <TextBlock HorizontalAlignment="Center" Padding="5">Einstellungen</TextBlock>
                             </StackPanel>
                         </Button>
-                        <Button x:Name="btnRefresh" Padding="{Binding Source={StaticResource btnPadding}}" Width="{Binding Source={StaticResource btnHeight}}" Height="{Binding Source={StaticResource btnHeight}}" Background="AliceBlue" BorderThickness="0" Click="btnRefresh_Click">
+                        <Button x:Name="btnRestore" Padding="{Binding Source={StaticResource btnPadding}}" Width="{Binding Source={StaticResource btnHeight}}" Height="{Binding Source={StaticResource btnHeight}}" Background="AliceBlue" BorderThickness="0" Click="btnRestore_Click">
                             <StackPanel HorizontalAlignment="Center">
                                 <Image Source="circular-arrows.png" Width="30" Height="30"/>
-                                <TextBlock HorizontalAlignment="Center" Padding="5">Refresh</TextBlock>
+                                <TextBlock HorizontalAlignment="Center" Padding="5">Restore</TextBlock>
                             </StackPanel>
                         </Button>
                     </StackPanel>

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MainGUI.SubGUIs;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -84,9 +85,10 @@ namespace MainGUI
             initJobs();
         }
 
-        private void btnRefresh_Click(object sender, RoutedEventArgs e)
+        private void btnRestore_Click(object sender, RoutedEventArgs e)
         {
-
+            RestoreOptions restoreOptionsWindows = new RestoreOptions((ConfigHandler.OneJob)lvJobs.SelectedItem);
+            restoreOptionsWindows.ShowDialog();
         }
 
         private void btnDeleteJob_Click(object sender, RoutedEventArgs e)

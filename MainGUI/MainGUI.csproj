@@ -34,6 +34,10 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject>
+    </StartupObject>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Data" />
@@ -56,11 +60,14 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Page Include="AddJobWindow.xaml">
+    <Compile Include="SubGUIs\RestoreOptions.xaml.cs">
+      <DependentUpon>RestoreOptions.xaml</DependentUpon>
+    </Compile>
+    <Page Include="SubGUIs\AddJobWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="JobDetailsWindow.xaml">
+    <Page Include="SubGUIs\JobDetailsWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
@@ -68,7 +75,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Compile Include="AddJobWindow.xaml.cs">
+    <Compile Include="SubGUIs\AddJobWindow.xaml.cs">
       <DependentUpon>AddJobWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="App.xaml.cs">
@@ -76,13 +83,17 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Job.cs" />
-    <Compile Include="JobDetailsWindow.xaml.cs">
+    <Compile Include="SubGUIs\JobDetailsWindow.xaml.cs">
       <DependentUpon>JobDetailsWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Page Include="SubGUIs\RestoreOptions.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs">
