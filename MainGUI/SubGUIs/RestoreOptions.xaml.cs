@@ -20,6 +20,7 @@ namespace MainGUI.SubGUIs
     public partial class RestoreOptions : Window
     {
         private ConfigHandler.OneJob job;
+        List<RestorePointForGUI> restorePoints;
 
         public RestoreOptions(ConfigHandler.OneJob job)
         {
@@ -36,8 +37,46 @@ namespace MainGUI.SubGUIs
             }
 
             //load restore points
-            List<ConfigHandler.BackupConfigHandler.BackupInfo> backups = ConfigHandler.BackupConfigHandler.readChain(this.job.BasePath + "\\" + this.job.Name + "\\" + ((ComboBoxItem)cbVMs.SelectedItem).Tag.ToString());
-            backups = null;
+            //build source path
+            string sourcePath = this.job.BasePath + "\\" + this.job.Name + "\\" + ((ComboBoxItem)cbVMs.SelectedItem).Tag.ToString();
+            if (!System.IO.Directory.Exists(sourcePath))
+            {
+                MessageBox.Show("Backups können nicht geladen werden!", "Fehler beim Laden", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            //read backup chain
+            List<ConfigHandler.BackupConfigHandler.BackupInfo> backups = ConfigHandler.BackupConfigHandler.readChain(sourcePath);
+
+            this.restorePoints = new List<RestorePointForGUI>();
+            //fill backup list
+            foreach(ConfigHandler.BackupConfigHandler.BackupInfo backup in backups)
+            {
+                string timeStamp = DateTime.ParseExact(backup.timeStamp, "yyyyMMddHHmmssfff", null).ToString("dd.MM.yyy HH:mm");
+                RestorePointForGUI restorePoint = new RestorePointForGUI();
+                restorePoint.Date = timeStamp;
+                restorePoint.InstanceId = backup.instanceID;
+                
+                switch (backup.type)
+                {
+                    case "full":
+                        restorePoint.Type = "Vollsicherung";
+                        break;
+                    case "rct":
+                        restorePoint.Type = "Inkrementiell";
+                        break;
+                }
+                
+                restorePoints.Add(restorePoint);
+            }
+
+            lvRestorePoints.ItemsSource = restorePoints;
+
+            //select first item if possible
+            if (lvRestorePoints.Items.Count > 0)
+            {
+                lvRestorePoints.SelectedIndex = 0;
+            }
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
@@ -51,6 +90,32 @@ namespace MainGUI.SubGUIs
                 cbVMs.Items.Add(newItem);
             }
             cbVMs.SelectedIndex = 0;
+        }
+
+
+        //start restore process
+        private void btStartRestore_Click(object sender, RoutedEventArgs e)
+        {
+            if (cbVMs.SelectedItem == null)
+            {
+                return;
+            }
+
+            //get selected restorepoint
+            RestorePointForGUI restorePoint = (RestorePointForGUI)lvRestorePoints.SelectedItem;
+            GuestFilesReader.FileLevelRestoreHandler flrHandler = new GuestFilesReader.FileLevelRestoreHandler();
+
+            string sourcePath = this.job.BasePath + "\\" + this.job.Name + "\\" + ((ComboBoxItem)cbVMs.SelectedItem).Tag.ToString();
+            flrHandler.performGuestFilesRestore(sourcePath, restorePoint.InstanceId, this.job.Compression);
+            
+        }
+
+        //backup structure for listview
+        private class RestorePointForGUI
+        {
+            public string Date { get; set; }
+            public string Type { get; set; }
+            public string InstanceId { get; set; }
         }
     }
 }

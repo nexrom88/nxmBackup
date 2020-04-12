@@ -11,20 +11,12 @@ namespace GuestFilesReader
     public class FileLevelRestoreHandler
     {
         private const int NO_RELATED_EVENT = -1;
-        private Common.EventHandler eventHandler;
 
 
-        public FileLevelRestoreHandler(Common.EventHandler eventHandler)
-        {
-            this.eventHandler = eventHandler;
-        }
 
         //performs a guest files restore
         public void performGuestFilesRestore(string basePath, string instanceID, ConfigHandler.Compression compressionType)
         {
-            int relatedEventId;
-            relatedEventId = this.eventHandler.raiseNewEvent("Analysiere Backups...", false, false, NO_RELATED_EVENT, Common.EventStatus.inProgress);
-
             //get full backup chain
             List<ConfigHandler.BackupConfigHandler.BackupInfo> backupChain = ConfigHandler.BackupConfigHandler.readChain(basePath);
 
@@ -34,8 +26,6 @@ namespace GuestFilesReader
             //target backup found?
             if (targetBackup.instanceID != instanceID)
             {
-                this.eventHandler.raiseNewEvent("fehlgeschlagen", true, false, relatedEventId, Common.EventStatus.error);
-                this.eventHandler.raiseNewEvent("Ziel-Backup kann nicht gefunden werden", false, false, NO_RELATED_EVENT, EventStatus.error);
                 return; //not found, no restore
             }
 
@@ -63,7 +53,6 @@ namespace GuestFilesReader
                 }
             }
 
-            this.eventHandler.raiseNewEvent("erfolgreich", true, false, relatedEventId, EventStatus.successful);
 
             string vmBasePath = System.IO.Path.Combine(basePath, restoreChain[restoreChain.Count - 1].uuid + ".nxm\\" + "Virtual Hard Disks");
 
@@ -74,14 +63,15 @@ namespace GuestFilesReader
             //todo: just use first hdd to mount
             MFUserMode.MountHandler mountHandler = new MFUserMode.MountHandler();
 
-            Thread mountThread = new Thread(() => mountHandler.startMountProcess(System.IO.Path.Combine(vmBasePath, entries[0]), "e:\\target\\mount.vhdx"));
+            string mountPath = "c:\\target\\mount.vhdx";
+            Thread mountThread = new Thread(() => mountHandler.startMountProcess(System.IO.Path.Combine(vmBasePath, entries[0]), mountPath));
             mountThread.Start();
 
             Thread.Sleep(1000);
 
             //start restore window
             FLRWindow h = new FLRWindow();
-            h.VhdPath = "e:\\target\\mount.vhdx";
+            h.VhdPath = mountPath;
             h.ShowDialog();
 
             mountThread.Abort();

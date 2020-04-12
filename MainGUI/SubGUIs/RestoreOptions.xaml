@@ -9,14 +9,14 @@
     <Grid>
         <Label Content="Restore-Typ:" HorizontalAlignment="Left" Margin="0,20,0,0" VerticalAlignment="Top"/>
         <ComboBox Margin="100,20,20,0" VerticalAlignment="Top" SelectionChanged="ComboBox_SelectionChanged" SelectedIndex="0">
-            <ComboBoxItem Content="Komplette VM Wiederherstellung"/>
-            <ComboBoxItem Content="Einzeldateien Wiederherstellen"/>
+            <ComboBoxItem Tag="complete" Content="Komplette VM Wiederherstellung"/>
+            <ComboBoxItem Tag="flr" Content="Einzeldateien Wiederherstellen"/>
         </ComboBox>
         <StackPanel Height="3" Margin="0,80,0,0" VerticalAlignment="Top" Background="Black"/>
 
         <Label Content="Quell-VM:" HorizontalAlignment="Left" Margin="0,100,0,0" VerticalAlignment="Top"/>
         <ComboBox Name="cbVMs" Margin="100,100,20,0" VerticalAlignment="Top" SelectionChanged="ComboBox_SelectionChanged" SelectedIndex="0">
-            
+
         </ComboBox>
 
         <StackPanel Height="3" Margin="0,140,0,0" VerticalAlignment="Top" Background="Black"/>
@@ -31,6 +31,7 @@
                 </GridView>
             </ListView.View>
         </ListView>
+        <Button Name="btStartRestore" Content="Wiederherstellung beginnen" Margin="0,0,0,20" Width="180" HorizontalAlignment="Center" Height="50" VerticalAlignment="Bottom" Click="btStartRestore_Click"/>
 
 
     </Grid>
