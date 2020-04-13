@@ -109,7 +109,6 @@ namespace MFUserMode
             long offset = BitConverter.ToInt64(data, 0);
             long length = BitConverter.ToInt64(data, 8);
 
-            Console.WriteLine(offset + "||" + length);
 
             data = new byte[length];
             sourceStream.Seek(offset, System.IO.SeekOrigin.Begin);

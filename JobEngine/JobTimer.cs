@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using ConfigHandler;
 using HyperVBackupRCT;
+using Common;
 
 namespace JobEngine
 {
@@ -42,9 +43,6 @@ namespace JobEngine
             //check whether job is still in progress
             if (this.inProgress)
             {
-                Common.EventProperties props = new Common.EventProperties();
-                props.text = "Skipping";
-
 
                 return;
             }
@@ -52,10 +50,10 @@ namespace JobEngine
             this.inProgress = true;
 
             //get new execution ID
-            int executionId = Common.DBQueries.addJobExecution(job.DbId.ToString());
+            int executionId = Common.DBQueries.addJobExecution(job.DbId.ToString(), "backup");
 
             //iterate vms within the current job
-            foreach (ConfigHandler.JobVM vm in this.Job.JobVMs)
+            foreach (JobVM vm in this.Job.JobVMs)
             {
                 SnapshotHandler ssHandler = new SnapshotHandler(vm.vmID, executionId);
                 ssHandler.performFullBackupProcess(ConsistencyLevel.ApplicationAware, true, true, this.job);
@@ -71,13 +69,13 @@ namespace JobEngine
 
             switch (this.Job.Interval.intervalBase)
             {
-                case ConfigHandler.IntervalBase.hourly: //hourly backup due?
+                case IntervalBase.hourly: //hourly backup due?
                     return now.Minute == int.Parse(this.Job.Interval.minute);
 
-                case ConfigHandler.IntervalBase.daily: //daily backup due?
+                case IntervalBase.daily: //daily backup due?
                     return now.Minute == int.Parse(this.Job.Interval.minute) && now.Hour == int.Parse(this.Job.Interval.hour);
 
-                case ConfigHandler.IntervalBase.weekly: //weekly backup due?
+                case IntervalBase.weekly: //weekly backup due?
                     if(now.Minute == int.Parse(this.Job.Interval.minute) && now.Hour == int.Parse(this.Job.Interval.hour))
                     {
                         return now.DayOfWeek.ToString().ToLower() == this.Job.Interval.day;

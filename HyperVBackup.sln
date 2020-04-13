@@ -15,7 +15,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JobEngine", "JobEngine\JobE
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MainGUI", "MainGUI\MainGUI.csproj", "{F95DD897-DEA1-4BCD-972F-A1EBC757FDFD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GuestFilesReader", "GuestFilesReader\GuestFilesReader.csproj", "{41DFAC29-15CD-4C2D-8939-ED3F42D60AD9}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RestoreHelper", "GuestFilesReader\RestoreHelper.csproj", "{41DFAC29-15CD-4C2D-8939-ED3F42D60AD9}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConfigHandler", "ConfigHandler\ConfigHandler.csproj", "{8764AAA1-7E10-4AA7-B2A2-B0932A79ECE0}"
 EndProject

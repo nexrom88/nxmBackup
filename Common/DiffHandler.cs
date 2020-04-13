@@ -4,11 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.IO;
-using Common;
 
-namespace HyperVBackupRCT
+namespace Common
 {
-    class DiffHandler
+    public class DiffHandler
     {
         private Common.EventHandler eventHandler;
         private const int NO_RELATED_EVENT = -1;
@@ -21,7 +20,7 @@ namespace HyperVBackupRCT
         //writes the diff file using cbt information
         //important: bufferSize has to by a multiple of vhd sector size
         [Obsolete]
-        public void writeDiffFile(ChangedBlock[] changedBlocks, VirtualDiskHandler diskHandler, Common.IArchive archive, ConfigHandler.Compression compressionType, ulong bufferSize, string hddName)
+        public void writeDiffFile(ChangedBlock[] changedBlocks, VirtualDiskHandler diskHandler, Common.IArchive archive, Compression compressionType, ulong bufferSize, string hddName)
         {
 
             //calculate changed bytes count for progress calculation

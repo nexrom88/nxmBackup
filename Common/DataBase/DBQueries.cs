@@ -9,14 +9,14 @@ namespace Common
     public class DBQueries
     {
         // Adds a new job execution before performing backup process.
-        public static int addJobExecution(string jobId)
+        public static int addJobExecution(string jobId, string type)
         {
             try
             {
                 using (DBConnection dbConn = new DBConnection())
                 {
-                    List<Dictionary<string, string>> jobExecutionIds = dbConn.doReadQuery("INSERT INTO JobExecutions (jobId, isRunning, transferRate, alreadyRead, alreadyWritten, successful, warnings, errors) " +
-                        "VALUES(@jobId, @isRunning, @transferRate, @alreadyRead, @alreadyWritten, @successful, @warnings, @errors);SELECT SCOPE_IDENTITY() AS id;",
+                    List<Dictionary<string, string>> jobExecutionIds = dbConn.doReadQuery("INSERT INTO JobExecutions (jobId, isRunning, transferRate, alreadyRead, alreadyWritten, successful, warnings, errors, type) " +
+                        "VALUES(@jobId, @isRunning, @transferRate, @alreadyRead, @alreadyWritten, @successful, @warnings, @errors, @type);SELECT SCOPE_IDENTITY() AS id;",
                         new Dictionary<string, string>() {
                             { "jobId", jobId },
                             { "isRunning", "1" },
@@ -25,7 +25,8 @@ namespace Common
                             { "alreadyWritten", "0" },
                             { "successful", "0" },
                             { "warnings", "0" },
-                            { "errors", "0" }
+                            { "errors", "0" },
+                            { "type", type }
                         }, null);
 
                     if (jobExecutionIds.Count != 1)
@@ -136,7 +137,7 @@ namespace Common
         }
 
         //gets all events for a given job
-        public static List<Dictionary<string,string>> getEvents (string jobId)
+        public static List<Dictionary<string,string>> getEvents (string jobId, string type)
         {
             //not an update: do insert
             try
@@ -144,8 +145,8 @@ namespace Common
                 using (DBConnection dbConn = new DBConnection())
                 {
                     //get jobExecutions first
-                    List<Dictionary<string, string>> jobExecutions = dbConn.doReadQuery("SELECT max(id) id FROM JobExecutions WHERE jobId = @jobId;",
-                        new Dictionary<string, string>() { { "jobId", jobId } }, null);
+                    List<Dictionary<string, string>> jobExecutions = dbConn.doReadQuery("SELECT max(id) id FROM JobExecutions WHERE jobId = @jobId AND type = @type;",
+                        new Dictionary<string, string>() { { "jobId", jobId }, {"type", type } }, null);
 
                     //check if executionId is available
                     string jobExecutionId = jobExecutions[0]["id"];

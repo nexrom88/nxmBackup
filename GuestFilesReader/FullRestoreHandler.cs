@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace HyperVBackupRCT
+namespace RestoreHelper
 {
     public class FullRestoreHandler
     {
@@ -17,7 +17,7 @@ namespace HyperVBackupRCT
         }
 
         //performs a full restore process
-        public void performFullRestoreProcess(string basePath, string destPath, string instanceID, ConfigHandler.Compression compressionType)
+        public void performFullRestoreProcess(string basePath, string destPath, string instanceID, Common.Compression compressionType)
         {
             int relatedEventId = this.eventHandler.raiseNewEvent("Analysiere Backups...", false, false, NO_RELATED_EVENT, Common.EventStatus.inProgress);
 
@@ -68,7 +68,7 @@ namespace HyperVBackupRCT
             restoreChain.RemoveAt(restoreChain.Count - 1);
 
             //iterate through all incremental backups
-            DiffHandler diffRestore = new DiffHandler(this.eventHandler);
+            Common.DiffHandler diffRestore = new Common.DiffHandler(this.eventHandler);
             while (restoreChain.Count > 0)
             {
                 ConfigHandler.BackupConfigHandler.BackupInfo currentBackup = restoreChain[restoreChain.Count - 1];
@@ -78,10 +78,10 @@ namespace HyperVBackupRCT
 
                 switch (compressionType)
                 {
-                    case ConfigHandler.Compression.zip:
+                    case Common.Compression.zip:
                         archive = new Common.ZipArchive(System.IO.Path.Combine(basePath, currentBackup.uuid + ".nxm"), null);
                         break;
-                    case ConfigHandler.Compression.lz4:
+                    case Common.Compression.lz4:
                         archive = new Common.LZ4Archive(System.IO.Path.Combine(basePath, currentBackup.uuid + ".nxm"), null);
                         break;
                     default: //default fallback => zip
@@ -126,7 +126,7 @@ namespace HyperVBackupRCT
         }
 
         //copys a file (full backup vhd) from an archive to destination and returns all vhdx files
-        public List<string> transferSnapshot(string archivePath, string destination, bool justHardDrives, ConfigHandler.Compression compressionType)
+        public List<string> transferSnapshot(string archivePath, string destination, bool justHardDrives, Common.Compression compressionType)
         {
             List<string> hddFiles = new List<string>();
 
@@ -134,10 +134,10 @@ namespace HyperVBackupRCT
 
             switch (compressionType)
             {
-                case ConfigHandler.Compression.zip:
+                case Common.Compression.zip:
                     archive = new Common.ZipArchive(archivePath, this.eventHandler);
                     break;
-                case ConfigHandler.Compression.lz4:
+                case Common.Compression.lz4:
                     archive = new Common.LZ4Archive(archivePath, this.eventHandler);
                     break;
                 default: //default fallback => zip

@@ -101,14 +101,14 @@ namespace HyperVBackupRCT
             chain = ConfigHandler.BackupConfigHandler.readChain(destination);
 
             //check whether max snapshot count is reached, then merge
-            if (job.Rotation.type == ConfigHandler.RotationType.merge) //RotationType = "merge"
+            if (job.Rotation.type == RotationType.merge) //RotationType = "merge"
             {
                 if (job.Rotation.maxElementCount > 0 && chain.Count > job.Rotation.maxElementCount)
                 {
                     mergeOldest(destination, chain, job.Compression);
                 }
             }
-            else if (job.Rotation.type == ConfigHandler.RotationType.blockRotation) //RotationType = "blockRotation"
+            else if (job.Rotation.type == RotationType.blockRotation) //RotationType = "blockRotation"
             {
                 if (job.Rotation.maxElementCount > 0 && getBlockCount(chain) > job.Rotation.maxElementCount)
                 {
@@ -194,7 +194,7 @@ namespace HyperVBackupRCT
         }
 
         //merge two backups to keep max snapshot count
-        private void mergeOldest(string path, List<ConfigHandler.BackupConfigHandler.BackupInfo> chain, ConfigHandler.Compression compressionType)
+        private void mergeOldest(string path, List<ConfigHandler.BackupConfigHandler.BackupInfo> chain, Compression compressionType)
         {
             //when the first two backups are "full" backups then the first one can just be deleted
             if (chain[0].type == "full" && chain[1].type == "full")
@@ -212,7 +212,7 @@ namespace HyperVBackupRCT
             int eventId;
             eventId = this.eventHandler.raiseNewEvent("Rotiere Backups (Schritt 1 von 5)...", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
 
-            FullRestoreHandler restHandler = new FullRestoreHandler(this.eventHandler);
+            RestoreHelper.FullRestoreHandler restHandler = new RestoreHelper.FullRestoreHandler(this.eventHandler);
 
             //perform restore to staging directory (including merge with second backup)
             restHandler.performFullRestoreProcess(path, System.IO.Path.Combine(path, "staging"), chain[1].instanceID, compressionType);
@@ -377,7 +377,7 @@ namespace HyperVBackupRCT
         }
 
         //exports a snapshot
-        public void export(string path, ManagementObject currentSnapshot, ManagementObject rctBase, ConfigHandler.Compression compressionType)
+        public void export(string path, ManagementObject currentSnapshot, ManagementObject rctBase, Compression compressionType)
         {
             string basePath = path;
             string backupType = "";
@@ -393,10 +393,10 @@ namespace HyperVBackupRCT
             
             switch (compressionType)
             {
-                case ConfigHandler.Compression.zip:
+                case Compression.zip:
                     archive = new Common.ZipArchive(System.IO.Path.Combine(path, guidFolder + ".nxm"), this.eventHandler);
                     break;
-                case ConfigHandler.Compression.lz4:
+                case Compression.lz4:
                     archive = new Common.LZ4Archive(System.IO.Path.Combine(path, guidFolder + ".nxm"), this.eventHandler);
                     break;
                 default: //default fallback to zip algorithm
@@ -493,7 +493,7 @@ namespace HyperVBackupRCT
 
 
         //performs a rct backup copy
-        private void performrctbackup(string snapshothddPath, string rctID, Common.IArchive archive, ConfigHandler.Compression compressionType)
+        private void performrctbackup(string snapshothddPath, string rctID, Common.IArchive archive, Compression compressionType)
         {
             //read vhd size
             VirtualDiskHandler diskHandler = new VirtualDiskHandler(snapshothddPath);

@@ -139,9 +139,9 @@
       <Project>{8764aaa1-7e10-4aa7-b2a2-b0932a79ece0}</Project>
       <Name>ConfigHandler</Name>
     </ProjectReference>
-    <ProjectReference Include="..\GuestFilesReader\GuestFilesReader.csproj">
+    <ProjectReference Include="..\GuestFilesReader\RestoreHelper.csproj">
       <Project>{41dfac29-15cd-4c2d-8939-ed3f42d60ad9}</Project>
-      <Name>GuestFilesReader</Name>
+      <Name>RestoreHelper</Name>
     </ProjectReference>
     <ProjectReference Include="..\JobEngine\JobEngine.csproj">
       <Project>{9774c037-216f-45a1-beaa-11be67659995}</Project>

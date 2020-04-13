@@ -66,10 +66,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ChangedBlock.cs" />
     <Compile Include="DataBase\DBQueries.cs" />
+    <Compile Include="DiffHandler.cs" />
     <Compile Include="EventHandler.cs" />
     <Compile Include="LZ4Archive.cs" />
     <Compile Include="DataBase\DBConnection.cs" />
+    <Compile Include="Structs.cs" />
     <Compile Include="VirtualDiskHandler.cs" />
     <Compile Include="ZipArchive.cs" />
     <Compile Include="EventProperties.cs" />

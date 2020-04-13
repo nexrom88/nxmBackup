@@ -14,7 +14,7 @@ namespace MFUserMode
         private System.IO.FileStream destStream;
 
         //starts the mount process
-        public void startMountProcess (string sourceFile, string destDummyFile)
+        public void startMountProcess (string sourceFile, string destDummyFile, ref mountState mountState)
         {
             //open source file and read "decompressed file size" (first 8 bytes)
             System.IO.FileStream sourceStream = new System.IO.FileStream(sourceFile, System.IO.FileMode.Open, System.IO.FileAccess.Read);
@@ -38,10 +38,16 @@ namespace MFUserMode
             this.kmConnection = new MFUserMode(blockStream);
             if (this.kmConnection.connectToKM())
             {
+                mountState = mountState.connected;
+
                 for (; ; )
                 {
                     this.kmConnection.readMessages();
                 }
+            }
+            else
+            {
+                mountState = mountState.error;
             }
         }
 
@@ -50,5 +56,15 @@ namespace MFUserMode
         {
             this.kmConnection.closeConnection();
         }
+    
+        public enum mountState
+        {
+            pending,
+            connected,
+            error
+        }
+
     }
+
+
 }

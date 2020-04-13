@@ -1,0 +1,49 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Common
+{
+    //defines compression type
+    public enum Compression
+    {
+        zip, lz4
+    }
+
+    //defines rotation type
+    public struct Rotation
+    {
+        public RotationType type;
+        public uint maxElementCount;
+    }
+
+    //defines rotation type
+    public enum RotationType
+    {
+        merge, blockRotation
+    }
+
+    //defines when to start a backup
+    public enum IntervalBase
+    {
+        hourly, daily, weekly
+    }
+
+    //defines the interval details
+    public struct Interval
+    {
+        public IntervalBase intervalBase;
+        public string minute;
+        public string hour;
+        public string day;
+    }
+
+    //defines one VM within a job
+    public struct JobVM
+    {
+        public string vmID;
+        public string vmName;
+    }
+}

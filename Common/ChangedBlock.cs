@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.IO;
 
-namespace HyperVBackupRCT
+namespace Common
 {
     public struct ChangedBlock
     {

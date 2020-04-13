@@ -117,10 +117,10 @@ namespace MainGUI
             int dbId = ((ConfigHandler.OneJob)lvJobs.SelectedItem).DbId;
             
             ConfigHandler.OneJob currentJob = (ConfigHandler.OneJob)lvJobs.SelectedItem;
-            List<ConfigHandler.JobVM> vms = currentJob.JobVMs;
+            List<Common.JobVM> vms = currentJob.JobVMs;
 
             //iterate through all vms
-            foreach(ConfigHandler.JobVM vm in vms)
+            foreach(Common.JobVM vm in vms)
             {
                 ListViewItem newItem = new ListViewItem();
                 newItem.Content = vm.vmName;
@@ -137,7 +137,7 @@ namespace MainGUI
             //just load events if a job is selected
             if (this.selectedJobId > -1)
             {
-                List<Dictionary<string, string>> events = Common.DBQueries.getEvents(this.selectedJobId.ToString());
+                List<Dictionary<string, string>> events = Common.DBQueries.getEvents(this.selectedJobId.ToString(), "backup");
 
                 lvEvents.Dispatcher.Invoke(new UpdateEvents(this.UpdateEventList), new object[] { events });
 

@@ -14,7 +14,7 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Security.Principal;
 
-namespace GuestFilesReader
+namespace RestoreHelper
 {
     /// <summary>
     /// Interaktionslogik für MainWindow.xaml
@@ -228,6 +228,7 @@ namespace GuestFilesReader
                         //build 1-entry List for restore function
                         List<string> files = new List<string>();
                         files.Add(sourcePath);
+                        this.gfHandler.progressEvent += newEvent;
                         System.Threading.Thread restoreThread = new System.Threading.Thread(() => this.gfHandler.restoreFiles2Local(files, targetPath, this.currentPath));
                         restoreThread.Start();
                     }
@@ -238,9 +239,9 @@ namespace GuestFilesReader
         //progress callback
         private void newEvent(Common.EventProperties props)
         {
-            if (props.progress < 0.0)
+            if (props.progress < 0)
             {
-                MessageBox.Show("Wiederherstellung fehlgeschlagen:\r\n" + props.text);
+                MessageBox.Show("Wiederherstellung fehlgeschlagen\r\n");
             }
             else
             {

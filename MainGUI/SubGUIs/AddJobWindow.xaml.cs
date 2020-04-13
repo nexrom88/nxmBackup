@@ -20,7 +20,7 @@ namespace MainGUI
     public partial class AddJobWindow : Window
     {
         private bool windowReady = false;
-        private ConfigHandler.Rotation rotation = new ConfigHandler.Rotation();
+        private Common.Rotation rotation = new Common.Rotation();
         private bool incrementalActivated = true;
         private uint blockSize = 2;
 
@@ -167,32 +167,32 @@ namespace MainGUI
             switch (((ComboBoxItem)cbCompression.SelectedItem).Uid)
             {
                 case "zip":
-                    job.Compression = ConfigHandler.Compression.zip;
+                    job.Compression = Common.Compression.zip;
                     break;
                 case "lz4":
-                    job.Compression = ConfigHandler.Compression.lz4;
+                    job.Compression = Common.Compression.lz4;
                     break;
             }
 
             //build interval structure
             ComboBoxItem cbI = (ComboBoxItem)cbInterval.SelectedItem;
-            ConfigHandler.Interval jobInterval = new ConfigHandler.Interval();
+            Common.Interval jobInterval = new Common.Interval();
             switch (cbI.Uid)
             {
                 case "hourly":
-                    jobInterval.intervalBase = ConfigHandler.IntervalBase.hourly;
+                    jobInterval.intervalBase = Common.IntervalBase.hourly;
                     jobInterval.minute = cbMinutes.Text;
                     jobInterval.day = "";
                     jobInterval.hour = "";
                     break;
                 case "daily":
-                    jobInterval.intervalBase = ConfigHandler.IntervalBase.daily;
+                    jobInterval.intervalBase = Common.IntervalBase.daily;
                     jobInterval.minute = cbMinutes.Text;
                     jobInterval.hour = cbHours.Text;
                     jobInterval.day = "";
                     break;
                 case "weekly":
-                    jobInterval.intervalBase = ConfigHandler.IntervalBase.weekly;
+                    jobInterval.intervalBase = Common.IntervalBase.weekly;
                     jobInterval.minute = cbMinutes.Text;
                     jobInterval.hour = cbHours.Text;
                     jobInterval.day = cbDays.Text;
@@ -201,10 +201,10 @@ namespace MainGUI
             job.Interval = jobInterval;
 
             //build vm structure
-            List<ConfigHandler.JobVM> jobVMs = new List<ConfigHandler.JobVM>();
+            List<Common.JobVM> jobVMs = new List<Common.JobVM>();
             foreach (ListBoxItem vm in lbSelectedVMs.Items)
             {
-                ConfigHandler.JobVM jobVM = new ConfigHandler.JobVM();
+                Common.JobVM jobVM = new Common.JobVM();
                 jobVM.vmName = (string)vm.Content;
                 jobVM.vmID = vm.Uid;
                 jobVMs.Add(jobVM);
@@ -240,10 +240,10 @@ namespace MainGUI
             switch (((ComboBoxItem)detailWindow.cbRotationType.SelectedItem).Uid)
             {
                 case "merge":
-                    this.rotation.type = ConfigHandler.RotationType.merge;
+                    this.rotation.type = Common.RotationType.merge;
                     break;
                 case "blockrotation":
-                    this.rotation.type = ConfigHandler.RotationType.blockRotation;
+                    this.rotation.type = Common.RotationType.blockRotation;
                     break;
             }
 

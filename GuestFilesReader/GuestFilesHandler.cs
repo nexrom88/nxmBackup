@@ -6,12 +6,14 @@ using System.Threading.Tasks;
 using System.Management;
 using System.IO;
 
-namespace GuestFilesReader
+namespace RestoreHelper
 {
     public class GuestFilesHandler
     {
         private string vhdPath;
         private Common.VirtualDiskHandler diskHandler;
+        public delegate void restoreProgressDelegate(Common.EventProperties props);
+        public event restoreProgressDelegate progressEvent;
 
         public GuestFilesHandler(string vhdPath)
         {
@@ -99,7 +101,7 @@ namespace GuestFilesReader
             //raise event for indication restore completion
             props.currentElement--;
             props.setDone = true;
-
+            this.progressEvent(props);
         }
 
 
@@ -141,6 +143,7 @@ namespace GuestFilesReader
                     {
                         props.progress = currentProgress;
                         lastProgress = currentProgress;
+                        this.progressEvent(props);
                     }
                     
                 }
@@ -155,6 +158,7 @@ namespace GuestFilesReader
                 //io exception
                 props.progress = -1.0f; //-1.0f for error
                 props.text = ex.ToString();
+                this.progressEvent(props);
                 return;
             }
         }

@@ -5,17 +5,17 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Threading;
 using Common;
+using System.Windows;
 
-namespace GuestFilesReader
+namespace RestoreHelper
 {
     public class FileLevelRestoreHandler
     {
         private const int NO_RELATED_EVENT = -1;
 
 
-
         //performs a guest files restore
-        public void performGuestFilesRestore(string basePath, string instanceID, ConfigHandler.Compression compressionType)
+        public void performGuestFilesRestore(string basePath, string instanceID, Compression compressionType)
         {
             //get full backup chain
             List<ConfigHandler.BackupConfigHandler.BackupInfo> backupChain = ConfigHandler.BackupConfigHandler.readChain(basePath);
@@ -49,7 +49,7 @@ namespace GuestFilesReader
                 else
                 {
                     //valid element found
-                    restoreChain.Add(restoreElement);
+                    restoreChain.Add(restoreElement); 
                 }
             }
 
@@ -64,10 +64,22 @@ namespace GuestFilesReader
             MFUserMode.MountHandler mountHandler = new MFUserMode.MountHandler();
 
             string mountPath = "c:\\target\\mount.vhdx";
-            Thread mountThread = new Thread(() => mountHandler.startMountProcess(System.IO.Path.Combine(vmBasePath, entries[0]), mountPath));
+            MFUserMode.MountHandler.mountState mountState = MFUserMode.MountHandler.mountState.pending;
+            Thread mountThread = new Thread(() => mountHandler.startMountProcess(System.IO.Path.Combine(vmBasePath, entries[0]), mountPath, ref mountState));
             mountThread.Start();
 
-            Thread.Sleep(1000);
+            //wait for mounting process
+            while (mountState == MFUserMode.MountHandler.mountState.pending)
+            {
+                Thread.Sleep(200);
+            }
+
+            //error while mounting
+            if (mountState == MFUserMode.MountHandler.mountState.error)
+            {
+                MessageBox.Show("Backup konnte nicht eingehängt werden", "Restore Fehler", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
 
             //start restore window
             FLRWindow h = new FLRWindow();

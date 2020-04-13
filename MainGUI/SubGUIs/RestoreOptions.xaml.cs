@@ -82,7 +82,7 @@ namespace MainGUI.SubGUIs
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             //load vms within the given job
-            foreach (ConfigHandler.JobVM vm in this.job.JobVMs)
+            foreach (Common.JobVM vm in this.job.JobVMs)
             {
                 ComboBoxItem newItem = new ComboBoxItem();
                 newItem.Content = vm.vmName;
@@ -103,10 +103,26 @@ namespace MainGUI.SubGUIs
 
             //get selected restorepoint
             RestorePointForGUI restorePoint = (RestorePointForGUI)lvRestorePoints.SelectedItem;
-            GuestFilesReader.FileLevelRestoreHandler flrHandler = new GuestFilesReader.FileLevelRestoreHandler();
+            
 
             string sourcePath = this.job.BasePath + "\\" + this.job.Name + "\\" + ((ComboBoxItem)cbVMs.SelectedItem).Tag.ToString();
-            flrHandler.performGuestFilesRestore(sourcePath, restorePoint.InstanceId, this.job.Compression);
+
+            //get requested restore type
+            string restoreType = ((ComboBoxItem)cbRestoreType.SelectedItem).Tag.ToString();
+
+            switch (restoreType)
+            {
+                case "full":
+                    
+                    //performFullRestoreProcess(string basePath, string destPath, string instanceID, ConfigHandler.Compression compressionType)
+                    break;
+                case "flr":
+                    RestoreHelper.FileLevelRestoreHandler flrHandler = new RestoreHelper.FileLevelRestoreHandler();
+                    flrHandler.performGuestFilesRestore(sourcePath, restorePoint.InstanceId, this.job.Compression);
+                    break;
+            }
+
+            
             
         }
 
