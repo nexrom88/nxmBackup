@@ -158,22 +158,23 @@ namespace Common
             int relatedEventId = this.eventHandler.raiseNewEvent("Stelle wieder her: " + fileName + "... ", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
 
             //open source file
-           System.IO.FileStream sourceStream = new FileStream(sourcePath, FileMode.Open);
+            System.IO.FileStream sourceStream = new FileStream(sourcePath, FileMode.Open);
 
             //open decoder stream
-            LZ4DecoderStream compressionStream = LZ4Stream.Decode(sourceStream, 0);
+            BlockCompression.LZ4BlockStream blockCompressionStream = new BlockCompression.LZ4BlockStream(sourceStream, BlockCompression.AccessMode.read);
+            //LZ4DecoderStream compressionStream = LZ4Stream.Decode(sourceStream, 0);
 
             Directory.CreateDirectory(Path.GetDirectoryName(destinationPath));
             FileStream destStream = new FileStream(destinationPath, FileMode.Create, FileAccess.Write);
 
-            byte[] buffer = new byte[4096];
+            byte[] buffer = new byte[2000000];
             long totalReadBytes = 0;
             int readBytes = -1;
             //read source and write destination
             while (readBytes != 0)
             {
                 //transfer one block
-                readBytes = compressionStream.Read(buffer, 0, buffer.Length);
+                readBytes = blockCompressionStream.Read(buffer, 0, buffer.Length);
                 if (readBytes > 0)
                 {
                     destStream.Write(buffer, 0, readBytes);
@@ -192,7 +193,7 @@ namespace Common
 
             this.eventHandler.raiseNewEvent("Stelle wieder her: " + fileName + "... erfolgreich", false, true, relatedEventId, EventStatus.successful);
             destStream.Close();
-            compressionStream.Close();
+            blockCompressionStream.Close();
             sourceStream.Close();
 
         }
@@ -232,9 +233,9 @@ namespace Common
             FileStream sourceStream = new FileStream(System.IO.Path.Combine(this.path, path), FileMode.Open);
 
             //open decoder stream
-            LZ4DecoderStream compressionStream = LZ4Stream.Decode(sourceStream);
+            BlockCompression.LZ4BlockStream blockCompressionStream = new BlockCompression.LZ4BlockStream(sourceStream, BlockCompression.AccessMode.read);
 
-            return compressionStream;
+            return blockCompressionStream;
 
         }
 

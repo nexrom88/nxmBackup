@@ -210,7 +210,7 @@ namespace BlockCompression
                 //no forward seek possible? eof!
                 if (this.fileStream.Read(headerData, 0, 8) == 0)
                 {
-                    return 0; //eof
+                     return 0; //eof
                 }
                 decompressedFileByteOffset = BitConverter.ToUInt64(headerData, 0);
 
@@ -279,13 +279,13 @@ namespace BlockCompression
 
             }
 
-            this.Position += (long)count;
-
             destMemoryStream.Position = (long)(startDiffOffset);
             
 
             //write bytes to buffer[] and return read bytes
-            return destMemoryStream.Read(buffer, offset, count);
+            int bytesdecompressed = destMemoryStream.Read(buffer, offset, count);
+            this.Position += (long)bytesdecompressed;
+            return bytesdecompressed;
             
         }
 

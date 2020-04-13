@@ -113,8 +113,9 @@ namespace MainGUI.SubGUIs
             switch (restoreType)
             {
                 case "full":
-                    
-                    //performFullRestoreProcess(string basePath, string destPath, string instanceID, ConfigHandler.Compression compressionType)
+                    int jobExecutionId = Common.DBQueries.addJobExecution(this.job.DbId.ToString(), "restore");
+                    RestoreHelper.FullRestoreHandler restoreHandler = new RestoreHelper.FullRestoreHandler(new Common.EventHandler(((ComboBoxItem)cbVMs.SelectedItem).Tag.ToString(), jobExecutionId));
+                    restoreHandler.performFullRestoreProcess(sourcePath, "c:\\target", restorePoint.InstanceId, this.job.Compression);
                     break;
                 case "flr":
                     RestoreHelper.FileLevelRestoreHandler flrHandler = new RestoreHelper.FileLevelRestoreHandler();
