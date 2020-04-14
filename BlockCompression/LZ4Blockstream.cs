@@ -29,13 +29,12 @@ namespace BlockCompression
         private ulong decompressedFileSize = 0;
 
 
-
         public LZ4BlockStream(System.IO.FileStream filestream, AccessMode mode)
         {
             this.encoderSettings.CompressionLevel = K4os.Compression.LZ4.LZ4Level.L00_FAST;
             this.fileStream = filestream;
             this.mode = mode;
-            this.mStream = new MemoryStream((int)this.decompressedBlockSize);
+            this.mStream = new MemoryStream((int)this.DecompressedBlockSize);
 
             //if "write-mode" then create new file and fill the first 2 X 8 header bytes
             if (this.mode == AccessMode.write)
@@ -49,7 +48,7 @@ namespace BlockCompression
                 }
 
                 //write  "decompressed block size"
-                byte[] blockSizeBytes = BitConverter.GetBytes(this.decompressedBlockSize);
+                byte[] blockSizeBytes = BitConverter.GetBytes(this.DecompressedBlockSize);
                 this.fileStream.Write(blockSizeBytes, 0, 8);
 
                 //write first block dummies
@@ -68,7 +67,7 @@ namespace BlockCompression
                 this.decompressedFileSize = BitConverter.ToUInt64(buffer, 0);
 
                 this.fileStream.Read(buffer, 0, 8);
-                this.decompressedBlockSize = BitConverter.ToUInt64(buffer, 0);
+                this.DecompressedBlockSize = BitConverter.ToUInt64(buffer, 0);
 
                 
             }
@@ -175,6 +174,7 @@ namespace BlockCompression
         public override long Length => throw new NotImplementedException();
 
         public override long Position { get => (long)this.position; set => this.position = (ulong)value; }
+        public ulong DecompressedBlockSize { get => decompressedBlockSize; set => decompressedBlockSize = value; }
 
         public override void Flush()
         {
@@ -190,7 +190,7 @@ namespace BlockCompression
             ulong decompressedFileByteOffset = 0;
             ulong compressedBlockSize = 0;
             ulong totalUncompressedBytesRead = 0;
-            byte[] tempData = new byte[(ulong)count + this.decompressedBlockSize];
+            byte[] tempData = new byte[(ulong)count + this.DecompressedBlockSize];
             ulong startDiffOffset = 0;
             MemoryStream destMemoryStream;
 
@@ -201,7 +201,7 @@ namespace BlockCompression
             this.fileStream.Read(headerData, 0, 8);
             compressedBlockSize = BitConverter.ToUInt64(headerData, 0);
 
-            while (decompressedFileByteOffset + this.decompressedBlockSize < (ulong)this.Position)
+            while (decompressedFileByteOffset + this.DecompressedBlockSize < (ulong)this.Position)
             {
                 
                 //jump to next block
@@ -233,8 +233,8 @@ namespace BlockCompression
             //decompress block
 
             //read all necessary blocks 
-            double blocksToRead = Math.Ceiling((double)count / (double)this.decompressedBlockSize) + 1;
-            destMemoryStream = new MemoryStream((int)(this.decompressedBlockSize * blocksToRead));
+            double blocksToRead = Math.Ceiling((double)count / (double)this.DecompressedBlockSize) + 1;
+            destMemoryStream = new MemoryStream((int)(this.DecompressedBlockSize * blocksToRead));
 
             for (double i = 0; i< blocksToRead ; i++)
             {
@@ -329,7 +329,7 @@ namespace BlockCompression
             {
                 
                 //can write all bytes at once?
-                if (this.decompressedBlockSize - this.decompressedByteCountWithinBlock > (ulong)count)
+                if (this.DecompressedBlockSize - this.decompressedByteCountWithinBlock > (ulong)count)
                 {
                     compressionStream.Write(buffer, offset, count);
                     compressionStream.Flush();
@@ -341,7 +341,7 @@ namespace BlockCompression
                 else
                 {
                     //remaining bytes are more than remaining bytes within block
-                    ulong bytesRemainingWithinBlock = this.decompressedBlockSize - this.decompressedByteCountWithinBlock;
+                    ulong bytesRemainingWithinBlock = this.DecompressedBlockSize - this.decompressedByteCountWithinBlock;
                     compressionStream.Write(buffer, offset, (int)bytesRemainingWithinBlock);
                     offset += (int)bytesRemainingWithinBlock;
                     count -= (int)bytesRemainingWithinBlock;

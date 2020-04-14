@@ -167,7 +167,7 @@ namespace Common
             Directory.CreateDirectory(Path.GetDirectoryName(destinationPath));
             FileStream destStream = new FileStream(destinationPath, FileMode.Create, FileAccess.Write);
 
-            byte[] buffer = new byte[2000000];
+            byte[] buffer = new byte[blockCompressionStream.];
             long totalReadBytes = 0;
             int readBytes = -1;
             //read source and write destination

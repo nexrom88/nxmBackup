@@ -94,7 +94,7 @@ namespace Common
 
             //close destination stream
             GC.KeepAlive(inputStream);
-            outStream.Close();
+            outStream.Dispose();
             inputStream.Close();
 
         }
