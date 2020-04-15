@@ -150,7 +150,7 @@ namespace BlockCompression
         //closes the file
         public new void Close()
         {
-            this.Dispose();
+            Dispose();
         }
 
 
