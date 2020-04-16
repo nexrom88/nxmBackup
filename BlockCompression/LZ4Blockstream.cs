@@ -144,13 +144,13 @@ namespace BlockCompression
                 }
             }
             this.fileStream.Close();
-            Dispose(true);
+            base.Dispose(true);
         }
 
         //closes the file
         public new void Close()
         {
-            Dispose();
+            this.Dispose();
         }
 
 
