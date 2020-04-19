@@ -28,9 +28,14 @@ namespace BlockCompression
         private ulong position = 0;
         private ulong decompressedFileSize = 0;
 
+        //used for block caching
+        private ulong maxBlocksInCache = 100;
+        List<CacheEntry> cache = new List<CacheEntry>();
+        public bool CachingMode { get; set; }
 
         public LZ4BlockStream(System.IO.FileStream filestream, AccessMode mode)
         {
+            this.CachingMode = false;
             this.encoderSettings.CompressionLevel = K4os.Compression.LZ4.LZ4Level.L00_FAST;
             this.fileStream = filestream;
             this.mode = mode;
@@ -253,30 +258,60 @@ namespace BlockCompression
                 this.fileStream.Read(headerData, 0, 8);
                 compressedBlockSize = BitConverter.ToUInt64(headerData, 0);
 
-
-                //fill memory stream with compressed block data
-                byte[] compData = new byte[compressedBlockSize];
-                this.fileStream.Read(compData, 0, (int)compressedBlockSize);
-                this.mStream.Dispose();
-                this.mStream = new MemoryStream(compData);
-
-                //init decompression stream
-                this.decompressionStream = LZ4Stream.Decode(this.mStream, 0, false);
-
-   
-                byte[] destBuffer = new byte[4096];
-                long dataRead = -1;
-
-                //read one block
-                while (dataRead != 0)
+                byte[] cacheBlock = null;
+                //check whether block exists within cache
+                if (this.CachingMode)
                 {
-                    dataRead = (long)this.decompressionStream.Read(destBuffer, 0, destBuffer.Length);
-                    destMemoryStream.Write(destBuffer, 0, (int)dataRead);
-                    totalUncompressedBytesRead += (ulong)dataRead;
+                    cacheBlock = getBlockFromCache(decompressedFileByteOffset);
                 }
 
-                this.decompressionStream.Close();
+                //within cache?
+                if (cacheBlock == null) //cache miss
+                {
+                    //fill memory stream with compressed block data
+                    byte[] compData = new byte[compressedBlockSize];
+                    this.fileStream.Read(compData, 0, (int)compressedBlockSize);
+                    this.mStream.Dispose();
+                    this.mStream = new MemoryStream(compData);
 
+                    //init decompression stream
+                    this.decompressionStream = LZ4Stream.Decode(this.mStream, 0, false);
+
+
+                    byte[] destBuffer = new byte[4096];
+                    int dataRead = -1;
+
+                    //read one block
+                    int blockUncompressedBytesRead = 0;
+                    cacheBlock = new byte[this.decompressedBlockSize];
+                    while (dataRead != 0)
+                    {
+                        dataRead = this.decompressionStream.Read(destBuffer, 0, destBuffer.Length);
+                        destMemoryStream.Write(destBuffer, 0, (int)dataRead);
+                        totalUncompressedBytesRead += (ulong)dataRead;
+
+                        //add data to cache block
+                        destMemoryStream.Seek(dataRead * -1, SeekOrigin.Current);
+                        destMemoryStream.Read(cacheBlock, blockUncompressedBytesRead, dataRead);
+
+                        blockUncompressedBytesRead += dataRead;
+
+                    }
+
+                    if (this.CachingMode)
+                    {
+                        addBlockToCache(decompressedFileByteOffset, compressedBlockSize, cacheBlock);
+                    }
+                    
+                    this.decompressionStream.Close();
+                }
+                else //cache match
+                {
+                    destMemoryStream.Write(cacheBlock, 0, cacheBlock.Length);
+
+                    //jump to next block
+                    this.fileStream.Seek((long)compressedBlockSize, SeekOrigin.Current);
+                }
             }
 
             destMemoryStream.Position = (long)(startDiffOffset);
@@ -288,6 +323,51 @@ namespace BlockCompression
             return bytesdecompressed;
             
         }
+
+        //adds a new block to cache
+        private void addBlockToCache(ulong decompressedFileByteOffset, ulong compressedBlockSize, byte[] data)
+        {
+            CacheEntry newEntry = new CacheEntry();
+            newEntry.decompressedBlockData = data;
+
+            BlockHeader newBlockHeader = new BlockHeader();
+            newBlockHeader.compressedBlockSize = compressedBlockSize;
+            newBlockHeader.decompressedFileByteOffset = decompressedFileByteOffset;
+
+            newEntry.blockHeader = newBlockHeader;
+
+            this.cache.Insert(0, newEntry);
+
+            //check if cache exceeds size limit
+            if ((ulong)cache.Count > this.maxBlocksInCache)
+            {
+                this.cache.RemoveAt(this.cache.Count - 1);
+            }
+        }
+
+        //checks whether given block is within cache and returns the decompressed block
+        private byte[] getBlockFromCache(ulong decompressedFileByteOffset)
+        {
+            byte[] decompressedBlock = null;
+            //iterate through all cache blocks
+            for (int i = 0; i < this.cache.Count; i++)
+            {
+                CacheEntry entry = this.cache[i];
+                if (entry.blockHeader.decompressedFileByteOffset == decompressedFileByteOffset)
+                {
+                    //cache match
+                    decompressedBlock = entry.decompressedBlockData;
+
+                    //move current cache block to top
+                    this.cache.RemoveAt(i);
+                    this.cache.Insert(0, entry);
+                    break;
+                }
+            }
+
+            return decompressedBlock;
+        }
+
 
         //set the current position within the compressed file
         public override long Seek(long offset, SeekOrigin origin)
@@ -359,6 +439,20 @@ namespace BlockCompression
     public enum AccessMode
     {
         write, read
+    }
+
+    //one cache entry
+    public struct CacheEntry
+    {
+        public BlockHeader blockHeader;
+        public byte[] decompressedBlockData;
+    }
+
+    //block header for one cache entry
+    public struct BlockHeader
+    {
+        public ulong decompressedFileByteOffset;
+        public ulong compressedBlockSize;
     }
 }
 

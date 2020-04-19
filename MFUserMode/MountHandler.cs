@@ -34,6 +34,7 @@ namespace MFUserMode
             //connect to MF Kernel Mode
             sourceStream = new System.IO.FileStream(sourceFile, System.IO.FileMode.Open, System.IO.FileAccess.Read);
             BlockCompression.LZ4BlockStream blockStream = new BlockCompression.LZ4BlockStream(sourceStream, BlockCompression.AccessMode.read);
+            blockStream.CachingMode = true;
 
             this.kmConnection = new MFUserMode(blockStream);
             if (this.kmConnection.connectToKM())
