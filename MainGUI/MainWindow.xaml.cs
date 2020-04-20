@@ -105,6 +105,19 @@ namespace MainGUI
         //gets triggered when a job gets selected
         private void lvJobs_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            //a job is selected?
+            if (lvJobs.SelectedItem == null)
+            {
+                this.selectedJobId = -1;
+                //nothing selected, stop timer if necessary
+                if (this.eventRefreshTimer != null)
+                {
+                    this.eventRefreshTimer.Change(Timeout.Infinite, Timeout.Infinite);
+                    this.eventRefreshTimer.Dispose();
+                    this.eventRefreshTimer = null;
+                }
+            }
+            
             //start event refresh timer if not laready done
             if (this.eventRefreshTimer == null)
             {

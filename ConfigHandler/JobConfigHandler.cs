@@ -22,7 +22,7 @@ namespace ConfigHandler
             //open DB connection
             using (Common.DBConnection connection = new Common.DBConnection())
             {
-                List<Dictionary<string, string>> jobs = connection.doReadQuery("SELECT Jobs.id, Jobs.name, Jobs.isRunning, Jobs.basepath, Jobs.maxelements, Jobs.blocksize, Jobs.day, Jobs.hour, Jobs.minute, Jobs.interval, Compression.name AS compressionname, RotationType.name AS rotationname FROM Jobs INNER JOIN Compression ON Jobs.compressionID=Compression.id INNER JOIN RotationType ON Jobs.rotationtypeID=RotationType.id", null, null);
+                List<Dictionary<string, string>> jobs = connection.doReadQuery("SELECT Jobs.id, Jobs.name, Jobs.isRunning, Jobs.basepath, Jobs.maxelements, Jobs.blocksize, Jobs.day, Jobs.hour, Jobs.minute, Jobs.interval, Compression.name AS compressionname, RotationType.name AS rotationname FROM Jobs INNER JOIN Compression ON Jobs.compressionID=Compression.id INNER JOIN RotationType ON Jobs.rotationtypeID=RotationType.id WHERE Jobs.deleted=0", null, null);
 
                 //iterate through all jobs
                 foreach (Dictionary<string, string> job in jobs)
@@ -203,14 +203,7 @@ namespace ConfigHandler
         // Delete job.
         public static bool deleteJob(int jobDBId)
         {
-            using (Common.DBConnection connection = new Common.DBConnection())
-            {
-                Dictionary<string, string> parameters = new Dictionary<string, string>();
-
-                parameters.Add("id", jobDBId.ToString());
-                var result = connection.doWriteQuery("DELETE FROM jobs WHERE id=@id", parameters, null);
-                return result != 0;
-            }
+            return Common.DBQueries.deleteJob(jobDBId);
         }
 
     }

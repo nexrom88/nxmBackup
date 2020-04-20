@@ -29,7 +29,7 @@ namespace BlockCompression
         private ulong decompressedFileSize = 0;
 
         //used for block caching
-        private ulong maxBlocksInCache = 100;
+        private ulong maxBlocksInCache = 30;
         List<CacheEntry> cache = new List<CacheEntry>();
         public bool CachingMode { get; set; }
 

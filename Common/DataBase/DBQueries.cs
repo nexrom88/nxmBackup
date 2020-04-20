@@ -175,5 +175,24 @@ namespace Common
                 return new List<Dictionary<string, string>>();
             }
         }
+
+        //deletes a given job (set deleted flag)
+        public static bool deleteJob(int jobDBId)
+        {
+            try
+            {
+                using (DBConnection dbConn = new DBConnection())
+                {
+
+                    int affectedRows = dbConn.doWriteQuery("UPDATE Jobs SET deleted=1 WHERE id=@id", new Dictionary<string, string>() { { "id", jobDBId.ToString() } }, null);
+                    return affectedRows == 1;
+
+                }
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+        }
     }
 }
