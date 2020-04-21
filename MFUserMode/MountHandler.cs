@@ -10,16 +10,21 @@ namespace MFUserMode
     {
 
         private MFUserMode kmConnection;
-        private bool isReady;
+        private bool processStopped = false;
         private System.IO.FileStream destStream;
+        private string destDummyFile;
+        System.IO.FileStream sourceStream;
+        BlockCompression.LZ4BlockStream blockStream;
 
         //starts the mount process
         public void startMountProcess (string sourceFile, string destDummyFile, ref mountState mountState)
         {
+            this.destDummyFile = destDummyFile;
+
             //open source file and read "decompressed file size" (first 8 bytes)
-            System.IO.FileStream sourceStream = new System.IO.FileStream(sourceFile, System.IO.FileMode.Open, System.IO.FileAccess.Read);
+            this.sourceStream = new System.IO.FileStream(sourceFile, System.IO.FileMode.Open, System.IO.FileAccess.Read);
             byte[] buffer = new byte[8];
-            sourceStream.Read(buffer, 0, 8);
+            this.sourceStream.Read(buffer, 0, 8);
             ulong decompressedFileSize = BitConverter.ToUInt64(buffer, 0);
             sourceStream.Close();
             sourceStream.Dispose();
@@ -32,16 +37,16 @@ namespace MFUserMode
             this.destStream.Dispose();
 
             //connect to MF Kernel Mode
-            sourceStream = new System.IO.FileStream(sourceFile, System.IO.FileMode.Open, System.IO.FileAccess.Read);
-            BlockCompression.LZ4BlockStream blockStream = new BlockCompression.LZ4BlockStream(sourceStream, BlockCompression.AccessMode.read);
-            blockStream.CachingMode = true;
+            this.sourceStream = new System.IO.FileStream(sourceFile, System.IO.FileMode.Open, System.IO.FileAccess.Read);
+            this.blockStream = new BlockCompression.LZ4BlockStream(sourceStream, BlockCompression.AccessMode.read);
+            this.blockStream.CachingMode = true;
 
             this.kmConnection = new MFUserMode(blockStream);
             if (this.kmConnection.connectToKM())
             {
                 mountState = mountState.connected;
 
-                for (; ; )
+                while (!this.processStopped)
                 {
                     this.kmConnection.readMessages();
                 }
@@ -55,7 +60,11 @@ namespace MFUserMode
         //stops the mount process
         public void stopMountProcess()
         {
+            this.processStopped = true;
+            this.blockStream.Close();
+            this.sourceStream.Close();
             this.kmConnection.closeConnection();
+            System.IO.File.Delete(this.destDummyFile);
         }
     
         public enum mountState
