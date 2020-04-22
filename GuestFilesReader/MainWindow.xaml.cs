@@ -13,6 +13,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Security.Principal;
+using System.Threading;
 
 namespace RestoreHelper
 {
@@ -28,6 +29,9 @@ namespace RestoreHelper
         private delegate void hideGridDelegate();
         private bool restoreInProgress = false;
         private string vhdPath;
+
+        private delegate void addVolumesDelegate(List<VolumeItem> items);
+        private delegate void setLoadingStateDelegate(bool loading);
 
         public string VhdPath {set => vhdPath = value; }
 
@@ -49,11 +53,19 @@ namespace RestoreHelper
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
+            imgLoading.Visibility = Visibility.Visible;
+
+            Thread initThread = new Thread(() => init());
+            initThread.Start();
 
             //hide progress grid
             gridProgress.Visibility = Visibility.Hidden;
 
+        }
 
+        //inits the file browser
+        private void init()
+        {
             gfHandler = new GuestFilesHandler(this.vhdPath);
 
 
@@ -63,6 +75,7 @@ namespace RestoreHelper
 
             List<GuestVolume> newDrives = gfHandler.getMountedDrives();
             List<GuestVolume> mountedDrives = new List<GuestVolume>();
+            List<VolumeItem> cbItems = new List<VolumeItem>();
 
             foreach (GuestVolume drive in newDrives)
             {
@@ -82,21 +95,50 @@ namespace RestoreHelper
                     mountedDrives.Add(drive);
 
                     //add to combobox
-                    ComboBoxItem cbItem = new ComboBoxItem();
-                    cbItem.Uid = drive.path;
-                    cbItem.Content = drive.caption;
-                    cbVolumes.Items.Add(cbItem);
+                    VolumeItem cbItem = new VolumeItem();
+                    cbItem.uid = drive.path;
+                    cbItem.name = drive.caption;
+                    cbItems.Add(cbItem);
                 }
 
             }
-            
+
+            //add items to ComboBox
+            cbVolumes.Dispatcher.Invoke(new addVolumesDelegate(addVolumes), new object[] { cbItems });
+
+
+            imgLoading.Dispatcher.Invoke(new setLoadingStateDelegate(setLoadingState), new object[] { false });
+        }
+
+        //sets the window loading state
+        private void setLoadingState(bool loading)
+        {
+            if (loading)
+            {
+                imgLoading.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                imgLoading.Visibility = Visibility.Hidden;
+            }
+        }
+
+        //adds a volumes to ComboBox
+        private void addVolumes(List<VolumeItem> items)
+        {
+            foreach (VolumeItem item in items)
+            {
+                ComboBoxItem cbItem = new ComboBoxItem();
+                cbItem.Uid = item.uid;
+                cbItem.Content = item.name;
+                cbVolumes.Items.Add(cbItem);
+            }
+
             //select first item if available
             if (cbVolumes.Items.Count > 0)
             {
                 cbVolumes.SelectedIndex = 0;
             }
-
-
         }
 
         //sets the view to a given path
@@ -370,9 +412,16 @@ namespace RestoreHelper
             }
         }
 
+
         private void pbProgress_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
 
+        }
+
+        private struct VolumeItem
+        {
+            public string name;
+            public string uid;
         }
     }
 }
