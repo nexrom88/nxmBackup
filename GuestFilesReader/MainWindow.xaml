@@ -8,6 +8,7 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800" Loaded="Window_Loaded" Closing="Window_Closing">
     <Grid>
+        <Grid Name="grdFileBrowser">
         <Label Content="Ausgewähltes Laufwerk:" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top"/>
         <ComboBox x:Name="cbVolumes" HorizontalAlignment="Left" Margin="170,10,0,0" VerticalAlignment="Top" Width="200" SelectionChanged="cbVolumes_SelectionChanged"/>
         <TreeView x:Name="tvDirectories" Margin="10,55,0,29" HorizontalAlignment="Left" Width="200">
@@ -44,7 +45,10 @@
             <Label x:Name="lblProgress" Content="Fortschritt:" HorizontalAlignment="Left" Margin="0,0,0,0" VerticalAlignment="Top"/>
             <ProgressBar x:Name="pbProgress" Height="20" Margin="180,5,15,0" VerticalAlignment="Top" ValueChanged="pbProgress_ValueChanged"/>
         </Grid>
-        <Image x:Name="imgLoading" gif:ImageBehavior.AnimatedSource="loading.gif" Margin="0,0,0,0" VerticalAlignment="Top"/>
-
+        </Grid>
+        <Grid Name="grdLoading">
+            <Image x:Name="imgLoading" Margin="0,0,0,0" VerticalAlignment="Top"/>
+        </Grid>
     </Grid>
+    
 </Window>

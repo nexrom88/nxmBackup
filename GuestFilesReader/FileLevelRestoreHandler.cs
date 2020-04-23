@@ -65,7 +65,7 @@ namespace RestoreHelper
 
             string mountPath = "c:\\target\\mount.vhdx";
             MFUserMode.MountHandler.mountState mountState = MFUserMode.MountHandler.mountState.pending;
-            Thread mountThread = new Thread(() => mountHandler.startMountProcess(System.IO.Path.Combine(vmBasePath, entries[0]), mountPath, ref mountState));
+            Thread mountThread = new Thread(() => mountHandler.startMfHandling(System.IO.Path.Combine(vmBasePath, entries[0]), mountPath, ref mountState));
             mountThread.Start();
 
             //wait for mounting process
@@ -87,7 +87,7 @@ namespace RestoreHelper
             h.ShowDialog();
 
             mountThread.Abort();
-            mountHandler.stopMountProcess();
+            mountHandler.stopMfHandling();
 
 
         }

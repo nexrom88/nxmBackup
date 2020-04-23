@@ -17,7 +17,7 @@ namespace MFUserMode
         BlockCompression.LZ4BlockStream blockStream;
 
         //starts the mount process
-        public void startMountProcess (string sourceFile, string destDummyFile, ref mountState mountState)
+        public void startMfHandling (string sourceFile, string destDummyFile, ref mountState mountState)
         {
             this.destDummyFile = destDummyFile;
 
@@ -58,7 +58,7 @@ namespace MFUserMode
         }
 
         //stops the mount process
-        public void stopMountProcess()
+        public void stopMfHandling()
         {
             this.processStopped = true;
             this.blockStream.Close();

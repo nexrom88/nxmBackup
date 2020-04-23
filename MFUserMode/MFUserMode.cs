@@ -7,6 +7,7 @@ using System.IO;
 
 namespace MFUserMode
 {
+    using System.ComponentModel;
     using System.Runtime.InteropServices;
     class MFUserMode
     {
@@ -57,6 +58,7 @@ namespace MFUserMode
         //the handle to the km connection
         private IntPtr handle;
 
+        FileStream logStream = new FileStream("c:\\target\\log.txt", FileMode.Create, FileAccess.Write);
 
         public MFUserMode(Stream sourceStream)
         {
@@ -77,6 +79,7 @@ namespace MFUserMode
         public void closeConnection()
         {
             CloseHandle(this.handle);
+            this.logStream.Close();
         }
 
         //reads one message
@@ -109,6 +112,10 @@ namespace MFUserMode
             long offset = BitConverter.ToInt64(data, 0);
             long length = BitConverter.ToInt64(data, 8);
 
+            string output = "offset: " + offset + " length: " + length + "\n";
+            System.Text.ASCIIEncoding enc = new System.Text.ASCIIEncoding();
+            byte[] buffer = enc.GetBytes(output);
+            this.logStream.Write(buffer, 0, buffer.Length);
 
             data = new byte[length];
             sourceStream.Seek(offset, System.IO.SeekOrigin.Begin);

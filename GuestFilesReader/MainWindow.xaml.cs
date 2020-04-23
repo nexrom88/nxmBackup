@@ -14,6 +14,7 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Security.Principal;
 using System.Threading;
+using WpfAnimatedGif;
 
 namespace RestoreHelper
 {
@@ -50,10 +51,25 @@ namespace RestoreHelper
         }
 
 
+        //sets the loading anim
+        private void setLoadingAnim()
+        {
+            var image = new BitmapImage();
+            image.BeginInit();
+            image.UriSource = new Uri(@"gfx\loading.gif", UriKind.Relative);
+            image.EndInit();
+            ImageBehavior.SetAnimatedSource(imgLoading, image);
+
+        }
+
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             imgLoading.Visibility = Visibility.Visible;
+
+            setLoadingState(true);
+            setLoadingAnim();
+
 
             Thread initThread = new Thread(() => init());
             initThread.Start();
@@ -115,11 +131,13 @@ namespace RestoreHelper
         {
             if (loading)
             {
-                imgLoading.Visibility = Visibility.Visible;
+                grdFileBrowser.Visibility = Visibility.Hidden;
+                grdLoading.Visibility = Visibility.Visible;
             }
             else
             {
-                imgLoading.Visibility = Visibility.Hidden;
+                grdFileBrowser.Visibility = Visibility.Visible;
+                grdLoading.Visibility = Visibility.Hidden;
             }
         }
 

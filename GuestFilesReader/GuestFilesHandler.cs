@@ -66,9 +66,11 @@ namespace RestoreHelper
         }
 
         //detaches the vhd
-        public void detach()
+        public bool detach()
         {
             this.diskHandler.detach();
+            this.diskHandler.close();
+            return true;
         }
 
         //performs the restore of a single file to local storage
