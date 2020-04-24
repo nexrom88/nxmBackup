@@ -24,6 +24,12 @@ namespace ConfigHandler
             {
                 List<Dictionary<string, string>> jobs = connection.doReadQuery("SELECT Jobs.id, Jobs.name, Jobs.isRunning, Jobs.basepath, Jobs.maxelements, Jobs.blocksize, Jobs.day, Jobs.hour, Jobs.minute, Jobs.interval, Compression.name AS compressionname, RotationType.name AS rotationname FROM Jobs INNER JOIN Compression ON Jobs.compressionID=Compression.id INNER JOIN RotationType ON Jobs.rotationtypeID=RotationType.id WHERE Jobs.deleted=0", null, null);
 
+                //check that jobs != null
+                if (jobs == null) //DB error
+                {
+                    return null;
+                }
+
                 //iterate through all jobs
                 foreach (Dictionary<string, string> job in jobs)
                 {

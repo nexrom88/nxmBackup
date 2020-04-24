@@ -9,10 +9,15 @@ namespace JobEngine
         private List<JobTimer> jobTimers = new List<JobTimer>();
 
         //starts the job engine
-        public void startJobEngine()
+        public bool startJobEngine()
         {
             //read all jobs
             List<ConfigHandler.OneJob> jobs = ConfigHandler.JobConfigHandler.readJobs();
+
+            if (jobs == null) //DB error occured
+            {
+                return false;
+            }
 
             //create one timer for each job
             foreach (ConfigHandler.OneJob job in jobs)
@@ -23,6 +28,7 @@ namespace JobEngine
                 t.Elapsed += timer.tick;
                 t.Start();
             }
+            return true;
 
         }
 

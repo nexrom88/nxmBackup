@@ -47,7 +47,15 @@ namespace MainGUI
         {
             //start job engine
             this.jobHandler = new JobEngine.JobHandler();
-            jobHandler.startJobEngine();
+            
+            if (!jobHandler.startJobEngine())
+            {
+                //db error occured while starting job engine
+                MessageBox.Show("Jobsystem kann nicht geladen werden. Datenbankfehler.", "Datenbankfehler", MessageBoxButton.OK, MessageBoxImage.Error);
+                this.Close();
+                return;
+            }
+
             jobs = ConfigHandler.JobConfigHandler.readJobs();
 
             jobsObservable.Clear();
