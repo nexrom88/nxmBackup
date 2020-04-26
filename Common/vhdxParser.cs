@@ -23,7 +23,91 @@ namespace Common
             }
         }
 
-        //get the BAT byte offset
+        //reads blockSize from MetadataTable
+        public UInt32 getBlockSize(MetadataTable metadataTable)
+        {
+            UInt32 offset = 0;
+            UInt32 length = 0;
+            foreach (MetadataTableEntry entry in metadataTable.entries)
+            {
+                if (entry.itemID[0] == 0x37)
+                {
+                    offset = entry.offset;
+                    length = entry.length;
+                }
+            }
+
+            //jump to destination
+            this.sourceStream.Seek(offset, SeekOrigin.Current);
+
+            //read block size
+            byte[] buffer = new byte[8];
+            this.sourceStream.Read(buffer, 0, 8);
+
+            return BitConverter.ToUInt32(buffer, 0);
+        }
+
+        //parses the metadata region
+        public MetadataTable parseMetadataTable(RegionTable table)
+        {
+            MetadataTable metadataTable = new MetadataTable();
+            metadataTable.entries = new List<MetadataTableEntry>();
+            UInt64 metadataTableOffset = 0;
+            UInt32 metadataTableLength = 0;
+
+            //read offset and length for BAT table
+            foreach (RegionTableEntry entry in table.entries)
+            {
+                if (entry.guid[0] == 0x06)
+                {
+                    metadataTableOffset = entry.fileOffset;
+                    metadataTableLength = entry.length;
+                    break;
+                }
+            }
+
+            //jump to first BAT entry
+            this.sourceStream.Seek((long)metadataTableOffset, SeekOrigin.Begin);
+            byte[] buffer = new byte[metadataTableLength];
+            this.sourceStream.Read(buffer, 0, buffer.Length);
+
+            MetadataTableHeader metadataTableHeader = new MetadataTableHeader();
+
+            //read signature
+            metadataTableHeader.signature = Encoding.UTF8.GetString(buffer, 0, 8);
+
+            //read reserved
+            metadataTableHeader.reserved = BitConverter.ToUInt16(buffer, 8);
+
+            //read entry count
+            metadataTableHeader.entryCount = BitConverter.ToUInt16(buffer, 10);
+
+            UInt32 entryOffset = 32;
+            //iterate through all entries
+            for (int i = 0; i < metadataTableHeader.entryCount; i++)
+            {
+                MetadataTableEntry entry = new MetadataTableEntry();
+
+                //read itemID
+                entry.itemID = new byte[16];
+                Array.Copy(buffer, entryOffset, entry.itemID, 0, 16);
+
+                //read offset
+                entry.offset = BitConverter.ToUInt32(buffer, (int)entryOffset + 16) + (uint)metadataTableOffset; //add metadataTableOffset to get offset from beginning of file
+
+                //read length
+                entry.length = BitConverter.ToUInt32(buffer, (int)entryOffset + 20);
+
+                metadataTable.entries.Add(entry);
+
+                entryOffset += 32;
+            }
+
+            return metadataTable;
+        }
+
+
+        //parses the BAT table
         public BATTable parseBATTable(RegionTable table)
         {
             BATTable batTable = new BATTable();
@@ -176,5 +260,31 @@ namespace Common
         public UInt32 payload;
     }
 
+    public struct MetadataTable
+    {
+        public MetadataTableHeader header;
+        public List<MetadataTableEntry> entries;
+    }
+
+    public struct MetadataTableHeader
+    {
+        public string signature;
+        public UInt16 reserved;
+        public UInt16 entryCount;
+        public byte[] reserved2;
+    }
+
+    public struct MetadataTableEntry
+    {
+        public byte[] itemID;
+        public UInt32 offset;
+        public UInt32 length;
+    }
+
+    public struct FileParametersTable
+    {
+        public UInt32 blockSize;
+        public UInt32 reserved;
+    }
 
 }

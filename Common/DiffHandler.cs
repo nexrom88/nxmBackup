@@ -248,4 +248,10 @@ namespace Common
 //one block:
 //ulong = 8 bytes = changed block offset
 //ulong = 8 bytes = changed block length
+
+//uint = 4 bytes = vhdx block offsets count
+//ulong = 8 bytes = vhdx block offset 1
+//ulong = 8 bytes = vhdx block offset 2
+//...
+
 //data block (size = changed block length)
