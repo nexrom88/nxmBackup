@@ -73,6 +73,7 @@
     <Compile Include="LZ4Archive.cs" />
     <Compile Include="DataBase\DBConnection.cs" />
     <Compile Include="Structs.cs" />
+    <Compile Include="vhdxParser.cs" />
     <Compile Include="VirtualDiskHandler.cs" />
     <Compile Include="ZipArchive.cs" />
     <Compile Include="EventProperties.cs" />
