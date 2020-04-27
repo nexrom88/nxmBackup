@@ -712,7 +712,6 @@ namespace HyperVBackupRCT
                 this.removeReferencePoint(snapshot);
             }
 
-            Console.WriteLine("done cleanup");
         }
 
 

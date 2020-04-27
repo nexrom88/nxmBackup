@@ -149,8 +149,6 @@ namespace nxmBackupGUI
 
         private void BtRestore_Click(object sender, RoutedEventArgs e)
         {
-            GuestFilesReader.FileLevelRestoreHandler rHandler = new GuestFilesReader.FileLevelRestoreHandler(new Common.EventHandler("", -1));
-            rHandler.performGuestFilesRestore(@"E:\nxm\Win10\Windows 10", "Microsoft:CE38D039-BCB1-4745-A4C2-B03085E75BE6", ConfigHandler.Compression.lz4);
            
             //restoreHandler.newEvent += new Common.Job.newEventDelegate(newEvent);
             //Thread restoreThread = new Thread(() => restoreHandler.performFullRestoreProcess(@"C:\Users\Administrator\Desktop\nxm\Win10 Sicherung\Test\Win10", @"c:\restore", "Microsoft:963FD620-CCD0-4546-9F6A-C28BE11B2761", ConfigHandler.Compression.lz4));
@@ -159,8 +157,7 @@ namespace nxmBackupGUI
 
         private void btAddJob_Click(object sender, RoutedEventArgs e)
         {
-            AddJobWindow addJobWindow = new AddJobWindow();
-            addJobWindow.ShowDialog();
+           
         }
 
         private void btStartJobs_Click(object sender, RoutedEventArgs e)
