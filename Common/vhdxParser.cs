@@ -38,7 +38,7 @@ namespace Common
             }
 
             //jump to destination
-            this.sourceStream.Seek(offset, SeekOrigin.Current);
+            this.sourceStream.Seek(offset, SeekOrigin.Begin);
 
             //read block size
             byte[] buffer = new byte[8];
