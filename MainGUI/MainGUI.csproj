@@ -34,6 +34,10 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject>
+    </StartupObject>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Data" />
@@ -56,11 +60,14 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Page Include="AddJobWindow.xaml">
+    <Compile Include="SubGUIs\RestoreOptions.xaml.cs">
+      <DependentUpon>RestoreOptions.xaml</DependentUpon>
+    </Compile>
+    <Page Include="SubGUIs\AddJobWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="JobDetailsWindow.xaml">
+    <Page Include="SubGUIs\JobDetailsWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
@@ -68,7 +75,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Compile Include="AddJobWindow.xaml.cs">
+    <Compile Include="SubGUIs\AddJobWindow.xaml.cs">
       <DependentUpon>AddJobWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="App.xaml.cs">
@@ -76,13 +83,17 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Job.cs" />
-    <Compile Include="JobDetailsWindow.xaml.cs">
+    <Compile Include="SubGUIs\JobDetailsWindow.xaml.cs">
       <DependentUpon>JobDetailsWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Page Include="SubGUIs\RestoreOptions.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs">
@@ -128,10 +139,26 @@
       <Project>{8764aaa1-7e10-4aa7-b2a2-b0932a79ece0}</Project>
       <Name>ConfigHandler</Name>
     </ProjectReference>
+    <ProjectReference Include="..\GuestFilesReader\RestoreHelper.csproj">
+      <Project>{41dfac29-15cd-4c2d-8939-ed3f42d60ad9}</Project>
+      <Name>RestoreHelper</Name>
+    </ProjectReference>
     <ProjectReference Include="..\JobEngine\JobEngine.csproj">
       <Project>{10038c72-b913-463f-a5fe-111b4c885207}</Project>
       <Name>JobEngine</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Graphics\error.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Graphics\inProgress.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Graphics\success.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Graphics\warning.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

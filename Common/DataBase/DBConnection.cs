@@ -48,58 +48,67 @@ namespace Common
         //sends a sql query
         public List<Dictionary<string, string>> doReadQuery(string query, Dictionary<string, string> parameters, SqlTransaction transaction)
         {
-            SqlCommand command;
-
-            if (transaction == null)
-            {
-                //query without transaction
-                command = new SqlCommand(query, connection);
-            }
-            else
-            {
-                //query within transaction
-                command = new SqlCommand(query, connection, transaction);
-            }
-
-            //add all query parameters
-            if (parameters != null)
-            {
-                foreach (string key in parameters.Keys)
-                {
-                    command.Parameters.AddWithValue(key, parameters[key]);
-                }
-            }
-                                
-                
-            SqlDataReader reader = command.ExecuteReader();
-
-            //retVal is a list of dictionaries
-            List<Dictionary<string, string>> result = new List<Dictionary<string, string>>();
-
             try
             {
-                //iterate through all results
-                while (reader.HasRows && reader.Read())
+
+
+                SqlCommand command;
+
+                if (transaction == null)
                 {
-                    Dictionary<string, string> resultRow = new Dictionary<string, string>();
-                    //read all columns
-                    for (int i = 0; i < reader.FieldCount; i++)
-                    {
-                        string columnName = reader.GetName(i);
-                        resultRow.Add(columnName, reader[columnName].ToString().Trim()); ;
-                    }
-
-                    //add dictionary to result list
-                    result.Add(resultRow);
-
+                    //query without transaction
+                    command = new SqlCommand(query, connection);
                 }
-            }
-            finally
+                else
+                {
+                    //query within transaction
+                    command = new SqlCommand(query, connection, transaction);
+                }
+
+                //add all query parameters
+                if (parameters != null)
+                {
+                    foreach (string key in parameters.Keys)
+                    {
+                        command.Parameters.AddWithValue(key, parameters[key]);
+                    }
+                }
+
+
+                SqlDataReader reader = command.ExecuteReader();
+
+                //retVal is a list of dictionaries
+                List<Dictionary<string, string>> result = new List<Dictionary<string, string>>();
+
+                try
+                {
+                    //iterate through all results
+                    while (reader.HasRows && reader.Read())
+                    {
+                        Dictionary<string, string> resultRow = new Dictionary<string, string>();
+                        //read all columns
+                        for (int i = 0; i < reader.FieldCount; i++)
+                        {
+                            string columnName = reader.GetName(i);
+                            resultRow.Add(columnName, reader[columnName].ToString().Trim()); ;
+                        }
+
+                        //add dictionary to result list
+                        result.Add(resultRow);
+
+                    }
+                }
+                finally
+                {
+                    // Always call close when done reading
+                    reader.Close();
+                }
+                return result;
+            }catch(Exception ex)
             {
-                // Always call close when done reading
-                reader.Close();
+                EventHandler.writeToLog(ex.ToString(), new System.Diagnostics.StackTrace());
+                return null;
             }
-            return result;
         }
 
         // Do operation.

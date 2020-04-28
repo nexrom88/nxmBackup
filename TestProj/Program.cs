@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Data.SqlClient;
+using HyperVBackupRCT;
 
 namespace TestProj
 {
@@ -11,12 +12,13 @@ namespace TestProj
     {
         static void Main(string[] args)
         {
-            Common.DBConnection conn = new Common.DBConnection();
-
-            List<Dictionary<string, string>> retVal = conn.doQuery("SELECT Count(*) AS count FROM compression", null, null);
-
-            conn.Dispose();
-
+            eventStatus a = eventStatus.successful;
+            Console.WriteLine(a.ToString());
+            Console.ReadLine();
+        }
+        public enum eventStatus
+        {
+            warning, error, inProgress, successful
         }
     }
 }

@@ -4,10 +4,10 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{5B42D544-7E9C-4D1D-ACC6-5EA30ADEE127}</ProjectGuid>
+    <ProjectGuid>{093DB339-8F66-4A3D-A9CA-D82122444046}</ProjectGuid>
     <OutputType>Library</OutputType>
-    <RootNamespace>HyperVBackupRCT</RootNamespace>
-    <AssemblyName>HyperVBackupRCT</AssemblyName>
+    <RootNamespace>MFUserMode</RootNamespace>
+    <AssemblyName>MFUserMode</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
@@ -40,8 +40,6 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
-    <Reference Include="System.IO.Compression" />
-    <Reference Include="System.Management" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -50,31 +48,19 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="SnapshotHandler.cs" />
-    <Compile Include="ConsistencyLevel.cs" />
-    <Compile Include="Program.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="MFUserMode.cs" />
+    <Compile Include="MountHandler.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
-    <None Include="classDiag.cd" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Common\Common.csproj">
-      <Project>{aad2cca1-182c-4bc4-beb4-6434a03675ea}</Project>
-      <Name>Common</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ConfigHandler\ConfigHandler.csproj">
-      <Project>{8764aaa1-7e10-4aa7-b2a2-b0932a79ece0}</Project>
-      <Name>ConfigHandler</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\GuestFilesReader\RestoreHelper.csproj">
-      <Project>{41dfac29-15cd-4c2d-8939-ed3f42d60ad9}</Project>
-      <Name>RestoreHelper</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\MFUserMode\MFUserMode.csproj">
-      <Project>{093db339-8f66-4a3d-a9ca-d82122444046}</Project>
-      <Name>MFUserMode</Name>
+    <Folder Include="Properties\" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\BlockCompression\BlockCompression.csproj">
+      <Project>{d45ebe54-b547-44be-926a-f9c8fc02e268}</Project>
+      <Name>BlockCompression</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

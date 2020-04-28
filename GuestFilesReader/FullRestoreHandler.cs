@@ -4,17 +4,22 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace HyperVBackupRCT
+namespace RestoreHelper
 {
-    public class RestoreHandler
+    public class FullRestoreHandler
     {
+        private Common.EventHandler eventHandler;
+        private const int NO_RELATED_EVENT = -1;
 
-        public event Common.Job.newEventDelegate newEvent;
+        public FullRestoreHandler(Common.EventHandler eventHandler)
+        {
+            this.eventHandler = eventHandler;
+        }
 
         //performs a full restore process
-        public void performFullRestoreProcess(string basePath, string destPath, string instanceID, ConfigHandler.Compression compressionType)
+        public void performFullRestoreProcess(string basePath, string destPath, string instanceID, Common.Compression compressionType)
         {
-            raiseNewEvent("Analysiere Backups...", false, false);
+            int relatedEventId = this.eventHandler.raiseNewEvent("Analysiere Backups...", false, false, NO_RELATED_EVENT, Common.EventStatus.inProgress);
 
             //get full backup chain
             List<ConfigHandler.BackupConfigHandler.BackupInfo> backupChain = ConfigHandler.BackupConfigHandler.readChain(basePath);
@@ -25,8 +30,8 @@ namespace HyperVBackupRCT
             //target backup found?
             if (targetBackup.instanceID != instanceID)
             {
-                raiseNewEvent("fehlgeschlagen", true, false);
-                raiseNewEvent("Ziel-Backup kann nicht gefunden werden", false, false);
+                this.eventHandler.raiseNewEvent("fehlgeschlagen", true, false, relatedEventId, Common.EventStatus.error);
+                this.eventHandler.raiseNewEvent("Ziel-Backup kann nicht gefunden werden", false, false, NO_RELATED_EVENT, Common.EventStatus.error);
                 return; //not found, no restore
             }
 
@@ -54,7 +59,7 @@ namespace HyperVBackupRCT
                 }
             }
 
-            raiseNewEvent("erfolgreich", true, false);
+            this.eventHandler.raiseNewEvent("erfolgreich", true, false, relatedEventId, Common.EventStatus.successful);
 
             //copy full backup to destination and get vhdx files
             List<string> hddFiles = transferSnapshot(System.IO.Path.Combine(basePath, restoreChain[restoreChain.Count - 1].uuid + ".nxm"), destPath, false, compressionType);
@@ -63,7 +68,7 @@ namespace HyperVBackupRCT
             restoreChain.RemoveAt(restoreChain.Count - 1);
 
             //iterate through all incremental backups
-            DiffHandler diffRestore = new DiffHandler(this.newEvent);
+            Common.DiffHandler diffRestore = new Common.DiffHandler(this.eventHandler);
             while (restoreChain.Count > 0)
             {
                 ConfigHandler.BackupConfigHandler.BackupInfo currentBackup = restoreChain[restoreChain.Count - 1];
@@ -73,10 +78,10 @@ namespace HyperVBackupRCT
 
                 switch (compressionType)
                 {
-                    case ConfigHandler.Compression.zip:
+                    case Common.Compression.zip:
                         archive = new Common.ZipArchive(System.IO.Path.Combine(basePath, currentBackup.uuid + ".nxm"), null);
                         break;
-                    case ConfigHandler.Compression.lz4:
+                    case Common.Compression.lz4:
                         archive = new Common.LZ4Archive(System.IO.Path.Combine(basePath, currentBackup.uuid + ".nxm"), null);
                         break;
                     default: //default fallback => zip
@@ -101,7 +106,7 @@ namespace HyperVBackupRCT
                 //remove current diff
                 restoreChain.RemoveAt(restoreChain.Count - 1);
             }
-            raiseNewEvent("Wiederherstellung erfolgreich", false, false);
+            this.eventHandler.raiseNewEvent("Wiederherstellung erfolgreich", false, false, NO_RELATED_EVENT, Common.EventStatus.successful);
 
         }
 
@@ -121,7 +126,7 @@ namespace HyperVBackupRCT
         }
 
         //copys a file (full backup vhd) from an archive to destination and returns all vhdx files
-        public List<string> transferSnapshot(string archivePath, string destination, bool justHardDrives, ConfigHandler.Compression compressionType)
+        public List<string> transferSnapshot(string archivePath, string destination, bool justHardDrives, Common.Compression compressionType)
         {
             List<string> hddFiles = new List<string>();
 
@@ -129,14 +134,14 @@ namespace HyperVBackupRCT
 
             switch (compressionType)
             {
-                case ConfigHandler.Compression.zip:
-                    archive = new Common.ZipArchive(archivePath, this.newEvent);
+                case Common.Compression.zip:
+                    archive = new Common.ZipArchive(archivePath, this.eventHandler);
                     break;
-                case ConfigHandler.Compression.lz4:
-                    archive = new Common.LZ4Archive(archivePath, this.newEvent);
+                case Common.Compression.lz4:
+                    archive = new Common.LZ4Archive(archivePath, this.eventHandler);
                     break;
                 default: //default fallback => zip
-                    archive = new Common.ZipArchive(archivePath, this.newEvent);
+                    archive = new Common.ZipArchive(archivePath, this.eventHandler);
                     break;
             }
 
@@ -177,18 +182,6 @@ namespace HyperVBackupRCT
             return hddFiles;
         }
 
-        //builds a EventProperties object and raises the "newEvent" event
-        public void raiseNewEvent(string text, bool setDone, bool isUpdate)
-        {
-            Common.EventProperties props = new Common.EventProperties();
-            props.text = text;
-            props.setDone = setDone;
-            props.isUpdate = isUpdate;
-            if (this.newEvent != null)
-            {
-                this.newEvent(props);
-            }
-        }
 
     }
 }

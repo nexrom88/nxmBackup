@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Windows.Forms;
 using ConfigHandler;
 using HyperVBackupRCT;
+using Common;
 
 namespace JobEngine
 {
@@ -11,12 +11,10 @@ namespace JobEngine
     {
         private ConfigHandler.OneJob job;
         private bool inProgress = false;
-        private Common.Job.newEventDelegate newEvent;
 
-        public JobTimer(ConfigHandler.OneJob job, Common.Job.newEventDelegate newEvent)
+        public JobTimer(ConfigHandler.OneJob job)
         {
             this.Job = job;
-            this.newEvent = newEvent;
         }
 
         public OneJob Job { get => job; set => job = value; }
@@ -24,29 +22,41 @@ namespace JobEngine
         //gets raised frequently
         public void tick(object sender, System.Timers.ElapsedEventArgs e)
         {
+         
             startJob(false);
         }
 
         //starts the job
-        public void startJob(bool userInitiated)
+        public void startJob(bool force)
         {
+
+            //just check "job due" when it is not forced
+            if (!force)
+            {
+                //exit if it is not already time for the job            
+                if (!isDue())
+                {
+                    return;
+                }
+            }
+
             //check whether job is still in progress
             if (this.inProgress)
             {
-                if (userInitiated)
-                {
-                    MessageBox.Show("Job wird bereits ausgeführt.");
-                }
+
                 return;
             }
 
             this.inProgress = true;
 
+            //get new execution ID
+            int executionId = Common.DBQueries.addJobExecution(job.DbId.ToString(), "backup");
+
             //iterate vms within the current job
             foreach (JobVM vm in this.Job.JobVMs)
             {
-                SnapshotHandler ssHandler = new SnapshotHandler(vm.vmName);                
-                ssHandler.performFullBackupProcess(ConsistencyLevel.ApplicationAware, true, this.Job.BasePath, true, this.job);
+                SnapshotHandler ssHandler = new SnapshotHandler(vm.vmID, executionId);
+                ssHandler.performFullBackupProcess(ConsistencyLevel.ApplicationAware, true, true, this.job);
             }
 
             this.inProgress = false;
@@ -59,13 +69,13 @@ namespace JobEngine
 
             switch (this.Job.Interval.intervalBase)
             {
-                case ConfigHandler.IntervalBase.hourly: //hourly backup due?
+                case IntervalBase.hourly: //hourly backup due?
                     return now.Minute == int.Parse(this.Job.Interval.minute);
 
-                case ConfigHandler.IntervalBase.daily: //daily backup due?
+                case IntervalBase.daily: //daily backup due?
                     return now.Minute == int.Parse(this.Job.Interval.minute) && now.Hour == int.Parse(this.Job.Interval.hour);
 
-                case ConfigHandler.IntervalBase.weekly: //weekly backup due?
+                case IntervalBase.weekly: //weekly backup due?
                     if(now.Minute == int.Parse(this.Job.Interval.minute) && now.Hour == int.Parse(this.Job.Interval.hour))
                     {
                         return now.DayOfWeek.ToString().ToLower() == this.Job.Interval.day;

@@ -21,7 +21,7 @@
             <ComboBoxItem Content="Leichte Komprimierung"/>
             <ComboBoxItem Content="Starke Komprimierung"/>
         </ComboBox>
-        <Button x:Name="btRestore" Content="Restore" HorizontalAlignment="Left" Margin="65,130,0,0" VerticalAlignment="Top" Width="170" Height="65" Click="BtRestore_Click" Grid.ColumnSpan="2" Grid.Column="1"/>
+        <Button x:Name="btRestore" Content="FLR" HorizontalAlignment="Left" Margin="65,130,0,0" VerticalAlignment="Top" Width="170" Height="65" Click="BtRestore_Click" Grid.ColumnSpan="2" Grid.Column="1"/>
         <Button x:Name="btAddJob" Content="Job erstellen" Margin="25,200,0,0" VerticalAlignment="Top" Height="65" Grid.ColumnSpan="2" HorizontalAlignment="Left" Width="160" Click="btAddJob_Click"/>
         <Button x:Name="btStartJobs" Content="Jobs starten" Margin="65,200,0,0" VerticalAlignment="Top" Height="65" Grid.ColumnSpan="2" HorizontalAlignment="Left" Width="170" Click="btStartJobs_Click" Grid.Column="1"/>
         <Button x:Name="btStartJob" Content="Job starten" Grid.Column="2" HorizontalAlignment="Left" Margin="71,200,0,0" VerticalAlignment="Top" Width="170" Height="65" Click="btStartJob_Click"/>

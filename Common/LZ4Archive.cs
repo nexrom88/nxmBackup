@@ -12,16 +12,15 @@ namespace Common
     public class LZ4Archive : IArchive
     {
         private string path;
-        private Job.newEventDelegate newEvent;
-        private LZ4EncoderSettings encoderSettings = new LZ4EncoderSettings();
+        private Common.EventHandler eventHandler;
+        private const int NO_RELATED_EVENT = -1;
 
 
-        public LZ4Archive(string path, Job.newEventDelegate newEvent)
+        public LZ4Archive(string path,Common.EventHandler eventHandler)
         {
             this.path = path;
-            this.newEvent = newEvent;
+            this.eventHandler = eventHandler;
 
-            this.encoderSettings.CompressionLevel = K4os.Compression.LZ4.LZ4Level.L00_FAST;
         }
 
         //adds a whole folder to the archive
@@ -62,14 +61,14 @@ namespace Common
             System.IO.FileStream baseDestStream = new FileStream(System.IO.Path.Combine(this.path, path + "\\" + fileName) , FileMode.Create);
 
             //open LZ4 stream
-            LZ4EncoderStream compressionStream = LZ4Stream.Encode(baseDestStream, this.encoderSettings, false);
+            BlockCompression.LZ4BlockStream compressionStream = new BlockCompression.LZ4BlockStream(baseDestStream, BlockCompression.AccessMode.write);
 
             //create buffer and read counter
             byte[] buffer = new byte[4096];
             long bytesRemaining = baseSourceStream.Length;
             int lastPercentage = -1;
 
-            raiseNewEvent("Lese " + fileName + " - 0%", false, false);
+            int relatedEventId = this.eventHandler.raiseNewEvent("Lese " + fileName + " - 0%", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
 
             while (bytesRemaining > 0)//still bytes to read?
             {
@@ -93,17 +92,16 @@ namespace Common
                 //progress changed?
                 if (lastPercentage != (int)percentage)
                 {
-                    raiseNewEvent("Lese " + fileName + " - " + (int)percentage + "%", false, true);
+                    this.eventHandler.raiseNewEvent("Lese " + fileName + " - " + (int)percentage + "%", false, true, relatedEventId, EventStatus.inProgress);
                     lastPercentage = (int)percentage;
                 }
 
             }
 
             //transfer completed
-            raiseNewEvent("Lese " + fileName + " - 100%", false, true);
-            baseSourceStream.Close();
-            compressionStream.Close();
+            this.eventHandler.raiseNewEvent("Lese " + fileName + " - 100%", false, true, relatedEventId, EventStatus.successful);
             compressionStream.Dispose();
+            baseSourceStream.Close();
 
         }
 
@@ -142,8 +140,8 @@ namespace Common
             System.IO.FileStream baseDestStream = new FileStream(System.IO.Path.Combine(this.path, path), FileMode.Create);
 
             //open LZ4 stream
-            LZ4EncoderStream compressionStream = LZ4Stream.Encode(baseDestStream, this.encoderSettings, false);
-
+            BlockCompression.LZ4BlockStream compressionStream = new BlockCompression.LZ4BlockStream(baseDestStream, BlockCompression.AccessMode.write);
+            
             return compressionStream;
         }
 
@@ -157,25 +155,26 @@ namespace Common
 
             string sourcePath = System.IO.Path.Combine(this.path, path);
 
-            raiseNewEvent("Stelle wieder her: " + fileName + "... ", false, false);
+            int relatedEventId = this.eventHandler.raiseNewEvent("Stelle wieder her: " + fileName + "... ", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
 
             //open source file
-           System.IO.FileStream sourceStream = new FileStream(sourcePath, FileMode.Open);
+            System.IO.FileStream sourceStream = new FileStream(sourcePath, FileMode.Open);
 
             //open decoder stream
-            LZ4DecoderStream compressionStream = LZ4Stream.Decode(sourceStream, 0);
+            BlockCompression.LZ4BlockStream blockCompressionStream = new BlockCompression.LZ4BlockStream(sourceStream, BlockCompression.AccessMode.read);
+            //LZ4DecoderStream compressionStream = LZ4Stream.Decode(sourceStream, 0);
 
             Directory.CreateDirectory(Path.GetDirectoryName(destinationPath));
             FileStream destStream = new FileStream(destinationPath, FileMode.Create, FileAccess.Write);
 
-            byte[] buffer = new byte[4096];
+            byte[] buffer = new byte[2000000];
             long totalReadBytes = 0;
             int readBytes = -1;
             //read source and write destination
             while (readBytes != 0)
             {
                 //transfer one block
-                readBytes = compressionStream.Read(buffer, 0, buffer.Length);
+                readBytes = blockCompressionStream.Read(buffer, 0, buffer.Length);
                 if (readBytes > 0)
                 {
                     destStream.Write(buffer, 0, readBytes);
@@ -186,14 +185,15 @@ namespace Common
                 string progress = Common.PrettyPrinter.prettyPrintBytes(totalReadBytes);
                 if (progress != lastProgress)
                 {
-                    raiseNewEvent("Stelle wieder her: " + fileName + "... " + progress, false, true);
+                    this.eventHandler.raiseNewEvent("Stelle wieder her: " + fileName + "... " + progress, false, true, relatedEventId, EventStatus.inProgress);
                     lastProgress = progress;
                 }
 
             }
 
+            this.eventHandler.raiseNewEvent("Stelle wieder her: " + fileName + "... erfolgreich", false, true, relatedEventId, EventStatus.successful);
             destStream.Close();
-            compressionStream.Close();
+            blockCompressionStream.Close();
             sourceStream.Close();
 
         }
@@ -233,24 +233,11 @@ namespace Common
             FileStream sourceStream = new FileStream(System.IO.Path.Combine(this.path, path), FileMode.Open);
 
             //open decoder stream
-            LZ4DecoderStream compressionStream = LZ4Stream.Decode(sourceStream);
+            BlockCompression.LZ4BlockStream blockCompressionStream = new BlockCompression.LZ4BlockStream(sourceStream, BlockCompression.AccessMode.read);
 
-            return compressionStream;
+            return blockCompressionStream;
 
         }
 
-        //builds a EventProperties object and raises the "newEvent" event
-        public void raiseNewEvent(string text, bool setDone, bool isUpdate)
-        {
-            Common.EventProperties props = new Common.EventProperties();
-            props.text = text;
-            props.setDone = setDone;
-            props.isUpdate = isUpdate;
-
-            if (this.newEvent != null)
-            {
-                this.newEvent(props);
-            }
-        }
     }
 }

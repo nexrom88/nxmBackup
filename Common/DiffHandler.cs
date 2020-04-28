@@ -5,21 +5,22 @@ using System.Text;
 using System.Threading.Tasks;
 using System.IO;
 
-namespace HyperVBackupRCT
+namespace Common
 {
-    class DiffHandler
+    public class DiffHandler
     {
-        private Common.Job.newEventDelegate newEvent;
+        private Common.EventHandler eventHandler;
+        private const int NO_RELATED_EVENT = -1;
 
-        public DiffHandler(Common.Job.newEventDelegate newEventDelegate)
+        public DiffHandler(Common.EventHandler eventHandler)
         {
-            this.newEvent = newEventDelegate;
+            this.eventHandler = eventHandler;
         }
 
         //writes the diff file using cbt information
         //important: bufferSize has to by a multiple of vhd sector size
         [Obsolete]
-        public void writeDiffFile(ChangedBlock[] changedBlocks, VirtualDiskHandler diskHandler, Common.IArchive archive, ConfigHandler.Compression compressionType, ulong bufferSize, string hddName)
+        public void writeDiffFile(ChangedBlock[] changedBlocks, VirtualDiskHandler diskHandler, Common.IArchive archive, Compression compressionType, ulong bufferSize, string hddName)
         {
 
             //calculate changed bytes count for progress calculation
@@ -30,13 +31,13 @@ namespace HyperVBackupRCT
             {
                 totalBytesCount += bl.length;
             }
-            raiseNewEvent("Erstelle Inkrement - 0%", false, false);
+            int relatedEventId = this.eventHandler.raiseNewEvent("Erstelle Inkrement - 0%", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
 
             //fetch disk file handle
             IntPtr diskHandle = diskHandler.getHandle();
 
             //open destination file
-            Stream outStream = archive.createAndGetFileStream(hddName + ".cb");
+            BlockCompression.LZ4BlockStream outStream = (BlockCompression.LZ4BlockStream)archive.createAndGetFileStream(hddName + ".cb");
 
             //open filestream to make it possible for readfile to read blocks (check why?)
             FileStream inputStream = new FileStream(diskHandle, FileAccess.Read, false, (int)bufferSize, true);
@@ -83,18 +84,17 @@ namespace HyperVBackupRCT
                     //new progress?
                     if (lastPercentage != percentage)
                     {
-                        raiseNewEvent("Erstelle Inkrement - " + percentage + "%", false, true);
+                        this.eventHandler.raiseNewEvent("Erstelle Inkrement - " + percentage + "%", false, true, relatedEventId, EventStatus.inProgress);
                         lastPercentage = percentage;
                     }
                 }
             }
 
-            raiseNewEvent("Erstelle Inkrement - 100%", false, true);
+            this.eventHandler.raiseNewEvent("Erstelle Inkrement - 100%", false, true, relatedEventId, EventStatus.successful);
 
             //close destination stream
             GC.KeepAlive(inputStream);
             outStream.Close();
-            outStream.Dispose();
             inputStream.Close();
 
         }
@@ -103,7 +103,7 @@ namespace HyperVBackupRCT
         //merges a rct diff file with a vhdx
         public void merge(Stream diffStream, string destinationSnapshot)
         {
-            raiseNewEvent("Verarbeite Inkrement...", false, false);
+            int relatedEventId = this.eventHandler.raiseNewEvent("Verarbeite Inkrement...", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
 
             //open file streams
             VirtualDiskHandler diskHandler = new VirtualDiskHandler(destinationSnapshot);
@@ -129,8 +129,7 @@ namespace HyperVBackupRCT
             {
                 ulong offset;
                 ulong length;
-
-                int bytesRead = 0;
+                ulong bytesRead = 0;
                 ulong writeOffset = 0;
 
                 //read block offset
@@ -138,7 +137,7 @@ namespace HyperVBackupRCT
                 //ensure to read 8 bytes, lz4 sometimes reads less
                 while (bytesRead < 8)
                 {
-                    bytesRead += diffStream.Read(buffer, bytesRead, 8 - bytesRead);
+                    bytesRead += (ulong)diffStream.Read(buffer, (int)bytesRead, 8 - (int)bytesRead);
                 }
                 offset = BitConverter.ToUInt64(buffer, 0);
 
@@ -147,7 +146,7 @@ namespace HyperVBackupRCT
                 bytesRead = 0;
                 while (bytesRead < 8)
                 {
-                    bytesRead += diffStream.Read(buffer, bytesRead, 8 - bytesRead);
+                    bytesRead += (ulong)diffStream.Read(buffer, (int)bytesRead, 8 - (int)bytesRead);
                 }
                 length = BitConverter.ToUInt64(buffer, 0);
 
@@ -176,7 +175,7 @@ namespace HyperVBackupRCT
                     {
                         int currentBytesCount = diffStream.Read(buffer, bytesReadBlock, bufferSize - bytesReadBlock);
                         bytesReadBlock += currentBytesCount;
-                        bytesRead += currentBytesCount;
+                        bytesRead += (ulong)currentBytesCount;
 
                         //add length to progress
                         bytesRestored += currentBytesCount;
@@ -190,13 +189,14 @@ namespace HyperVBackupRCT
                     string progress = Common.PrettyPrinter.prettyPrintBytes(bytesRestored);
                     if (progress != lastProgress)
                     {
-                        raiseNewEvent("Verarbeite Inkrement... " + progress, false, true);
+                        this.eventHandler.raiseNewEvent("Verarbeite Inkrement... " + progress, false, true, NO_RELATED_EVENT, EventStatus.inProgress);
                         lastProgress = progress;
                     }
 
                 }
 
             }
+            this.eventHandler.raiseNewEvent("Verarbeite Inkrement... erfolgreich", false, true, NO_RELATED_EVENT, EventStatus.successful);
             GC.KeepAlive(snapshotStream);
             diskHandler.detach();
             diskHandler.close();
@@ -236,19 +236,6 @@ namespace HyperVBackupRCT
 
         }
 
-        //builds an EventProperties object and raises the "newEvent" event
-        public void raiseNewEvent(string text, bool setDone, bool isUpdate)
-        {
-            Common.EventProperties props = new Common.EventProperties();
-            props.text = text;
-            props.setDone = setDone;
-            props.isUpdate = isUpdate;
-
-            if (this.newEvent != null)
-            {
-                this.newEvent(props);
-            }
-        }
 
     }
 }
@@ -261,4 +248,10 @@ namespace HyperVBackupRCT
 //one block:
 //ulong = 8 bytes = changed block offset
 //ulong = 8 bytes = changed block length
+
+//uint = 4 bytes = vhdx block offsets count
+//ulong = 8 bytes = vhdx block offset 1
+//ulong = 8 bytes = vhdx block offset 2
+//...
+
 //data block (size = changed block length)

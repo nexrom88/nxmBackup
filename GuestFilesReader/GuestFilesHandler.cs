@@ -6,13 +6,14 @@ using System.Threading.Tasks;
 using System.Management;
 using System.IO;
 
-namespace GuestFilesReader
+namespace RestoreHelper
 {
     public class GuestFilesHandler
     {
         private string vhdPath;
-        private HyperVBackupRCT.VirtualDiskHandler diskHandler;
-        public event Common.Job.newEventDelegate newEvent;
+        private Common.VirtualDiskHandler diskHandler;
+        public delegate void restoreProgressDelegate(Common.EventProperties props);
+        public event restoreProgressDelegate progressEvent;
 
         public GuestFilesHandler(string vhdPath)
         {
@@ -22,9 +23,9 @@ namespace GuestFilesReader
         //mounts vhdx file without driveletter
         public void mountVHD()
         {
-            diskHandler = new HyperVBackupRCT.VirtualDiskHandler(this.vhdPath);
-            diskHandler.open(HyperVBackupRCT.VirtualDiskHandler.VirtualDiskAccessMask.AttachReadOnly);
-            diskHandler.attach(HyperVBackupRCT.VirtualDiskHandler.ATTACH_VIRTUAL_DISK_FLAG.ATTACH_VIRTUAL_DISK_FLAG_NO_DRIVE_LETTER | HyperVBackupRCT.VirtualDiskHandler.ATTACH_VIRTUAL_DISK_FLAG.ATTACH_VIRTUAL_DISK_FLAG_READ_ONLY);
+            diskHandler = new Common.VirtualDiskHandler(this.vhdPath);
+            diskHandler.open(Common.VirtualDiskHandler.VirtualDiskAccessMask.AttachReadOnly);
+            diskHandler.attach(Common.VirtualDiskHandler.ATTACH_VIRTUAL_DISK_FLAG.ATTACH_VIRTUAL_DISK_FLAG_NO_DRIVE_LETTER | Common.VirtualDiskHandler.ATTACH_VIRTUAL_DISK_FLAG.ATTACH_VIRTUAL_DISK_FLAG_READ_ONLY);
 
         }
 
@@ -65,9 +66,11 @@ namespace GuestFilesReader
         }
 
         //detaches the vhd
-        public void detach()
+        public bool detach()
         {
             this.diskHandler.detach();
+            this.diskHandler.close();
+            return true;
         }
 
         //performs the restore of a single file to local storage
@@ -100,8 +103,7 @@ namespace GuestFilesReader
             //raise event for indication restore completion
             props.currentElement--;
             props.setDone = true;
-            newEvent(props);
-
+            this.progressEvent(props);
         }
 
 
@@ -142,8 +144,8 @@ namespace GuestFilesReader
                     if (currentProgress != lastProgress)
                     {
                         props.progress = currentProgress;
-                        this.newEvent(props);
                         lastProgress = currentProgress;
+                        this.progressEvent(props);
                     }
                     
                 }
@@ -158,7 +160,7 @@ namespace GuestFilesReader
                 //io exception
                 props.progress = -1.0f; //-1.0f for error
                 props.text = ex.ToString();
-                this.newEvent(props);
+                this.progressEvent(props);
                 return;
             }
         }

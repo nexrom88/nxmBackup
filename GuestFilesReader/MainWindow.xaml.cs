@@ -13,13 +13,15 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Security.Principal;
+using System.Threading;
+using WpfAnimatedGif;
 
-namespace GuestFilesReader
+namespace RestoreHelper
 {
     /// <summary>
     /// Interaktionslogik für MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : Window
+    public partial class FLRWindow : Window
     {
         private GuestFilesHandler gfHandler;
         private string currentPath;
@@ -27,8 +29,14 @@ namespace GuestFilesReader
         private delegate void setLabelDelegate(string text);
         private delegate void hideGridDelegate();
         private bool restoreInProgress = false;
+        private string vhdPath;
 
-        public MainWindow()
+        private delegate void addVolumesDelegate(List<VolumeItem> items);
+        private delegate void setLoadingStateDelegate(bool loading);
+
+        public string VhdPath {set => vhdPath = value; }
+
+        public FLRWindow()
         {
             InitializeComponent();
         }
@@ -43,19 +51,39 @@ namespace GuestFilesReader
         }
 
 
+        //sets the loading anim
+        private void setLoadingAnim()
+        {
+            var image = new BitmapImage();
+            image.BeginInit();
+            image.UriSource = new Uri(@"gfx\loading.gif", UriKind.Relative);
+            image.EndInit();
+            ImageBehavior.SetAnimatedSource(imgLoading, image);
+
+        }
+
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
+            imgLoading.Visibility = Visibility.Visible;
+
+            setLoadingState(true);
+            setLoadingAnim();
+
+
+            Thread initThread = new Thread(() => init());
+            initThread.Start();
 
             //hide progress grid
             gridProgress.Visibility = Visibility.Hidden;
 
-            string vhdFile = "C:\\restore\\Virtual Hard Disks\\Windows 10.vhdx";
+        }
 
-            gfHandler = new GuestFilesHandler(vhdFile);
+        //inits the file browser
+        private void init()
+        {
+            gfHandler = new GuestFilesHandler(this.vhdPath);
 
-            //set callback for restore progress
-            gfHandler.newEvent += new Common.Job.newEventDelegate(newEvent);
 
             List<GuestVolume> drives = gfHandler.getMountedDrives();
 
@@ -63,6 +91,7 @@ namespace GuestFilesReader
 
             List<GuestVolume> newDrives = gfHandler.getMountedDrives();
             List<GuestVolume> mountedDrives = new List<GuestVolume>();
+            List<VolumeItem> cbItems = new List<VolumeItem>();
 
             foreach (GuestVolume drive in newDrives)
             {
@@ -82,21 +111,52 @@ namespace GuestFilesReader
                     mountedDrives.Add(drive);
 
                     //add to combobox
-                    ComboBoxItem cbItem = new ComboBoxItem();
-                    cbItem.Uid = drive.path;
-                    cbItem.Content = drive.caption;
-                    cbVolumes.Items.Add(cbItem);
+                    VolumeItem cbItem = new VolumeItem();
+                    cbItem.uid = drive.path;
+                    cbItem.name = drive.caption;
+                    cbItems.Add(cbItem);
                 }
 
             }
-            
+
+            //add items to ComboBox
+            cbVolumes.Dispatcher.Invoke(new addVolumesDelegate(addVolumes), new object[] { cbItems });
+
+
+            imgLoading.Dispatcher.Invoke(new setLoadingStateDelegate(setLoadingState), new object[] { false });
+        }
+
+        //sets the window loading state
+        private void setLoadingState(bool loading)
+        {
+            if (loading)
+            {
+                grdFileBrowser.Visibility = Visibility.Hidden;
+                grdLoading.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                grdFileBrowser.Visibility = Visibility.Visible;
+                grdLoading.Visibility = Visibility.Hidden;
+            }
+        }
+
+        //adds a volumes to ComboBox
+        private void addVolumes(List<VolumeItem> items)
+        {
+            foreach (VolumeItem item in items)
+            {
+                ComboBoxItem cbItem = new ComboBoxItem();
+                cbItem.Uid = item.uid;
+                cbItem.Content = item.name;
+                cbVolumes.Items.Add(cbItem);
+            }
+
             //select first item if available
             if (cbVolumes.Items.Count > 0)
             {
                 cbVolumes.SelectedIndex = 0;
             }
-
-
         }
 
         //sets the view to a given path
@@ -228,6 +288,7 @@ namespace GuestFilesReader
                         //build 1-entry List for restore function
                         List<string> files = new List<string>();
                         files.Add(sourcePath);
+                        this.gfHandler.progressEvent += newEvent;
                         System.Threading.Thread restoreThread = new System.Threading.Thread(() => this.gfHandler.restoreFiles2Local(files, targetPath, this.currentPath));
                         restoreThread.Start();
                     }
@@ -238,9 +299,9 @@ namespace GuestFilesReader
         //progress callback
         private void newEvent(Common.EventProperties props)
         {
-            if (props.progress < 0.0)
+            if (props.progress < 0)
             {
-                MessageBox.Show("Wiederherstellung fehlgeschlagen:\r\n" + props.text);
+                MessageBox.Show("Wiederherstellung fehlgeschlagen\r\n");
             }
             else
             {
@@ -369,9 +430,16 @@ namespace GuestFilesReader
             }
         }
 
+
         private void pbProgress_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
 
+        }
+
+        private struct VolumeItem
+        {
+            public string name;
+            public string uid;
         }
     }
 }
