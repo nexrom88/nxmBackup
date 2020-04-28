@@ -168,7 +168,16 @@ namespace MainGUI
         //gets triggered when the VM selection changes
         private void lvVMs_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            this.selectedVMId = ((ListViewItem)lvVMs.SelectedItem).Tag.ToString();
+
+            ListViewItem selectedItem = (ListViewItem)lvVMs.SelectedItem;
+            if (selectedItem != null)
+            {
+                this.selectedVMId = selectedItem.Tag.ToString();
+            }
+            else
+            {
+                this.selectedVMId = "";
+            }
         }
 
         //updates the event ListView within GUI thread
