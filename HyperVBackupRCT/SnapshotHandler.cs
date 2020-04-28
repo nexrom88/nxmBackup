@@ -500,7 +500,7 @@ namespace HyperVBackupRCT
             diskHandler.open(VirtualDiskHandler.VirtualDiskAccessMask.AttachReadOnly | VirtualDiskHandler.VirtualDiskAccessMask.GetInfo);
             VirtualDiskHandler.GetVirtualDiskInfoSize sizeStruct = diskHandler.getSize();
             ulong hddSize = sizeStruct.VirtualSize;
-            ulong bufferSize = sizeStruct.SectorSize * 10000; //buffersize has to be a multiple of virtual sector size
+            //ulong bufferSize = sizeStruct.SectorSize * 10000; //buffersize has to be a multiple of virtual sector size
             diskHandler.close();
 
 
@@ -524,9 +524,21 @@ namespace HyperVBackupRCT
                     //wait for the snapshot to be exported
                     WmiUtilities.ValidateOutput(outParams, scope);
 
+                    //get vhdx headers
+                    BATTable batTable;
+                    UInt32 vhdxBlockSize = 0;
+                    using (Common.vhdxParser vhdxParser = new vhdxParser(snapshothddPath))
+                    {
+                        Common.RegionTable regionTable = vhdxParser.parseRegionTable();
+                        batTable = vhdxParser.parseBATTable(regionTable);
+                        Common.MetadataTable metadataTable = vhdxParser.parseMetadataTable(regionTable);
+                        vhdxBlockSize = vhdxParser.getBlockSize(metadataTable);
+                    }
+
                     //reopen virtual disk
-                    diskHandler.open(VirtualDiskHandler.VirtualDiskAccessMask.AttachReadOnly | VirtualDiskHandler.VirtualDiskAccessMask.GetInfo);
-                    diskHandler.attach(VirtualDiskHandler.ATTACH_VIRTUAL_DISK_FLAG.ATTACH_VIRTUAL_DISK_FLAG_NO_LOCAL_HOST | VirtualDiskHandler.ATTACH_VIRTUAL_DISK_FLAG.ATTACH_VIRTUAL_DISK_FLAG_READ_ONLY);
+                    System.IO.FileStream sourceHDDStream = new System.IO.FileStream(snapshothddPath, System.IO.FileMode.Open, System.IO.FileAccess.Read);
+                    //diskHandler.open(VirtualDiskHandler.VirtualDiskAccessMask.AttachReadOnly | VirtualDiskHandler.VirtualDiskAccessMask.GetInfo);
+                    //diskHandler.attach(VirtualDiskHandler.ATTACH_VIRTUAL_DISK_FLAG.ATTACH_VIRTUAL_DISK_FLAG_NO_LOCAL_HOST | VirtualDiskHandler.ATTACH_VIRTUAL_DISK_FLAG.ATTACH_VIRTUAL_DISK_FLAG_READ_ONLY);
 
                     //output ok, build block structure
                     int blockCount = ((ulong[])outParams["ChangedByteOffsets"]).Length;
@@ -543,11 +555,11 @@ namespace HyperVBackupRCT
                     //write backup output
                     DiffHandler diffWriter = new DiffHandler(this.eventHandler);
 
-                    diffWriter.writeDiffFile(changedBlocks, diskHandler, archive, compressionType, bufferSize, System.IO.Path.GetFileName(snapshothddPath));
+                    diffWriter.writeDiffFile(changedBlocks, sourceHDDStream, vhdxBlockSize, archive, compressionType, System.IO.Path.GetFileName(snapshothddPath));
 
                     //close vhd file
-                    diskHandler.detach();
-                    diskHandler.close();
+                    //diskHandler.detach();
+                    //diskHandler.close();
 
                 }
 

@@ -7,7 +7,7 @@ using System.IO;
 
 namespace Common
 {
-    class vhdxParser
+    public class vhdxParser : IDisposable
     {
         private FileStream sourceStream;
 
@@ -21,6 +21,12 @@ namespace Common
             {
 
             }
+        }
+
+        //closes the sourceStream
+        public void close()
+        {
+            this.sourceStream.Close();
         }
 
         //reads blockSize from MetadataTable
@@ -222,7 +228,10 @@ namespace Common
             return regionTable;
         }
 
-
+        public void Dispose()
+        {
+            this.close();
+        }
     }
     public struct RegionTable
     {

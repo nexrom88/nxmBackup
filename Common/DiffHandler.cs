@@ -20,7 +20,7 @@ namespace Common
         //writes the diff file using cbt information
         //important: bufferSize has to by a multiple of vhd sector size
         [Obsolete]
-        public void writeDiffFile(ChangedBlock[] changedBlocks, VirtualDiskHandler diskHandler, Common.IArchive archive, Compression compressionType, ulong bufferSize, string hddName)
+        public void writeDiffFile(ChangedBlock[] changedBlocks, FileStream sourceHDDStream, UInt32 vhdxBlockSize, Common.IArchive archive, Compression compressionType, string hddName)
         {
 
             //calculate changed bytes count for progress calculation
@@ -33,14 +33,10 @@ namespace Common
             }
             int relatedEventId = this.eventHandler.raiseNewEvent("Erstelle Inkrement - 0%", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
 
-            //fetch disk file handle
-            IntPtr diskHandle = diskHandler.getHandle();
 
             //open destination file
             BlockCompression.LZ4BlockStream outStream = (BlockCompression.LZ4BlockStream)archive.createAndGetFileStream(hddName + ".cb");
 
-            //open filestream to make it possible for readfile to read blocks (check why?)
-            FileStream inputStream = new FileStream(diskHandle, FileAccess.Read, false, (int)bufferSize, true);
 
             //write block count to destination file
             outStream.Write(BitConverter.GetBytes((UInt32)changedBlocks.Length), 0, 4);
@@ -50,7 +46,7 @@ namespace Common
             //read and write blocks
             foreach (ChangedBlock block in changedBlocks)
             {
-                byte[] buffer;
+                byte[] buffer = new byte[vhdxBlockSize];
                 bytesRead = 0;
 
                 //write block header to diff file

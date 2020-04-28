@@ -12,7 +12,7 @@ namespace JobEngine
         private ConfigHandler.OneJob job;
         private bool inProgress = false;
 
-        public JobTimer(ConfigHandler.OneJob job)
+        public JobTimer(ConfigHandler.OneJob job) 
         {
             this.Job = job;
         }
