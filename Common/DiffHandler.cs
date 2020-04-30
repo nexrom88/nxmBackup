@@ -17,10 +17,26 @@ namespace Common
             this.eventHandler = eventHandler;
         }
 
+        //translates one changed block to vhdxOffsets
+        private UInt64[] getVhdxBlockOffsets(ulong blockOffset, ulong blockLength, Common.BATTable vhdxBATTable, UInt32 vhdxBlockSize)
+        {
+            //calculate start BAT entry
+            UInt32 startEntry = (UInt32)Math.Floor((float)blockOffset / (float)vhdxBlockSize);
+            UInt32 endEntry = (UInt32)Math.Floor((float)blockOffset + (float)blockLength / (float)vhdxBlockSize);
+
+            //translate to vhdxOffsets
+            UInt64[] vhdxOffsets = new UInt64[(endEntry - endEntry) + 1];
+            for (UInt32 i = startEntry; i <= endEntry; i++)
+            {
+                vhdxOffsets[i - startEntry] = vhdxBATTable.entries[(int)i].FileOffsetMB;
+            }
+
+            return vhdxOffsets;
+        }
+
         //writes the diff file using cbt information
-        //important: bufferSize has to by a multiple of vhd sector size
         [Obsolete]
-        public void writeDiffFile(ChangedBlock[] changedBlocks, FileStream sourceHDDStream, UInt32 vhdxBlockSize, Common.IArchive archive, Compression compressionType, string hddName)
+        public void writeDiffFile(ChangedBlock[] changedBlocks, FileStream sourceHDDStream, UInt32 vhdxBlockSize, UInt32 vhdxLogicalSectorSize, Common.IArchive archive, Compression compressionType, string hddName, Common.BATTable vhdxBATTable)
         {
 
             //calculate changed bytes count for progress calculation
@@ -54,21 +70,19 @@ namespace Common
                 outStream.Write(BitConverter.GetBytes(block.offset), 0, 8); //write offset
                 outStream.Write(BitConverter.GetBytes(block.length), 0, 8); //write length
 
-                while (bytesRead < block.length)
+                UInt32 vhdxBlockOffsetsCount = (UInt32)Math.Ceiling((float)block.length / (float)vhdxBlockSize);
+                outStream.Write(BitConverter.GetBytes(vhdxBlockOffsetsCount), 0, 4); //write vhdxBlockOffsetCount
+
+                //get vhdxBlockOffsets
+                UInt64[] vhdxOffsets = getVhdxBlockOffsets(block.offset, block.length, vhdxBATTable, vhdxBlockSize);
+
+
+                for (int i = 0; i < vhdxOffsets.Length; i++)
                 {
-                    //still whole buffersize to read?
-                    if (bytesRead + bufferSize <= block.length)
-                    {
-                        //read whole buffer size           
-                        buffer = diskHandler.read(block.offset + bytesRead, bufferSize);
-                        bytesRead += bufferSize;
-                    }
-                    else //end of block? read remaining bytes
-                    {
-                        ulong bytesRemaining = block.length - bytesRead;
-                        buffer = diskHandler.read(block.offset + bytesRead, bytesRemaining);
-                        bytesRead += bytesRemaining;
-                    }
+                    UInt64 startBlockOffset; //where to start read within block
+                    UInt64 endBlockOffset; //where to end read within block
+
+                    startBlockOffset = block.offset % vhdxOffsets[i];
 
                     //write the current buffer to diff file
                     outStream.Write(buffer, 0, buffer.Length); //write data
@@ -89,9 +103,7 @@ namespace Common
             this.eventHandler.raiseNewEvent("Erstelle Inkrement - 100%", false, true, relatedEventId, EventStatus.successful);
 
             //close destination stream
-            GC.KeepAlive(inputStream);
             outStream.Close();
-            inputStream.Close();
 
         }
 

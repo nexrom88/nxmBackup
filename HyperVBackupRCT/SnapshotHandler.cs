@@ -527,12 +527,14 @@ namespace HyperVBackupRCT
                     //get vhdx headers
                     BATTable batTable;
                     UInt32 vhdxBlockSize = 0;
+                    UInt32 vhdxLogicalSectorSize = 0;
                     using (Common.vhdxParser vhdxParser = new vhdxParser(snapshothddPath))
                     {
                         Common.RegionTable regionTable = vhdxParser.parseRegionTable();
                         batTable = vhdxParser.parseBATTable(regionTable);
                         Common.MetadataTable metadataTable = vhdxParser.parseMetadataTable(regionTable);
                         vhdxBlockSize = vhdxParser.getBlockSize(metadataTable);
+                        vhdxLogicalSectorSize = vhdxParser.getBlockSize(metadataTable);
                     }
 
                     //reopen virtual disk
@@ -555,7 +557,7 @@ namespace HyperVBackupRCT
                     //write backup output
                     DiffHandler diffWriter = new DiffHandler(this.eventHandler);
 
-                    diffWriter.writeDiffFile(changedBlocks, sourceHDDStream, vhdxBlockSize, archive, compressionType, System.IO.Path.GetFileName(snapshothddPath));
+                    diffWriter.writeDiffFile(changedBlocks, sourceHDDStream, vhdxBlockSize, vhdxLogicalSectorSize, archive, compressionType, System.IO.Path.GetFileName(snapshothddPath), batTable);
 
                     //close vhd file
                     //diskHandler.detach();

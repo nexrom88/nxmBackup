@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Data.SqlClient;
 using HyperVBackupRCT;
+using Common;
 
 namespace TestProj
 {
@@ -12,13 +13,15 @@ namespace TestProj
     {
         static void Main(string[] args)
         {
-            eventStatus a = eventStatus.successful;
-            Console.WriteLine(a.ToString());
-            Console.ReadLine();
+            string file = "h:\\Win10.vhdx";
+            vhdxParser parser = new vhdxParser(file);
+
+            RegionTable regTable = parser.parseRegionTable();
+            MetadataTable table = parser.parseMetadataTable(regTable);
+            UInt32 blockSize = parser.getBlockSize(table);
+            UInt32 logicalSectorSize = parser.getLogicalSectorSize(table);
+            UInt64 vhdxChunkRatio = ((UInt64)8388608 * (UInt64)logicalSectorSize) / (UInt64)blockSize;
         }
-        public enum eventStatus
-        {
-            warning, error, inProgress, successful
-        }
+        
     }
 }
