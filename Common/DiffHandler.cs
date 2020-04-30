@@ -57,13 +57,13 @@ namespace Common
             //write block count to destination file
             outStream.Write(BitConverter.GetBytes((UInt32)changedBlocks.Length), 0, 4);
 
-            ulong bytesRead;
+            ulong bytesReadBlock;
 
             //read and write blocks
             foreach (ChangedBlock block in changedBlocks)
             {
-                byte[] buffer = new byte[vhdxBlockSize];
-                bytesRead = 0;
+                byte[] buffer;
+                bytesReadBlock = 0;
 
                 //write block header to diff file
                 //write block
@@ -79,14 +79,29 @@ namespace Common
 
                 for (int i = 0; i < vhdxOffsets.Length; i++)
                 {
-                    UInt64 startBlockOffset; //where to start read within block
-                    UInt64 endBlockOffset; //where to end read within block
+                    UInt64 startBlockOffset = 0; //where to start read within block
+                    UInt64 endBlockOffset = vhdxBlockSize; //where to end read within block
 
-                    startBlockOffset = block.offset % vhdxOffsets[i];
+                    //first block?
+                    if (i == 0)
+                    {
+                        startBlockOffset = block.offset % vhdxBlockSize;
+                    }
+
+                    //last block?
+                    if (i + 1 == vhdxOffsets.Length) {
+                        endBlockOffset = block.length - bytesReadBlock - 1;
+                    }
+
+                    UInt32 bytesToRead = (UInt32)(endBlockOffset - startBlockOffset) + 1;
+                    buffer = new byte[bytesToRead];
+                    sourceHDDStream.Seek((Int64)(vhdxOffsets[i] + startBlockOffset), SeekOrigin.Begin);
+                    sourceHDDStream.Read(buffer, 0, (Int32)bytesToRead);
 
                     //write the current buffer to diff file
                     outStream.Write(buffer, 0, buffer.Length); //write data
                     bytesReadCount += (uint)buffer.Length;
+                    bytesReadBlock += (UInt64)buffer.Length;
 
                     //calculate progress
                     int percentage = (int)(((double)bytesReadCount / (double)totalBytesCount) * 100.0);

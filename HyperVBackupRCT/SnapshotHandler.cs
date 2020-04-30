@@ -559,6 +559,7 @@ namespace HyperVBackupRCT
 
                     diffWriter.writeDiffFile(changedBlocks, sourceHDDStream, vhdxBlockSize, vhdxLogicalSectorSize, archive, compressionType, System.IO.Path.GetFileName(snapshothddPath), batTable);
 
+                    sourceHDDStream.Close();
                     //close vhd file
                     //diskHandler.detach();
                     //diskHandler.close();
