@@ -7,7 +7,7 @@ using System.IO;
 
 namespace Common
 {
-    class vhdxParser
+    public class vhdxParser : IDisposable
     {
         private FileStream sourceStream;
 
@@ -21,6 +21,12 @@ namespace Common
             {
 
             }
+        }
+
+        //closes the sourceStream
+        public void close()
+        {
+            this.sourceStream.Close();
         }
 
         //reads blockSize from MetadataTable
@@ -41,6 +47,30 @@ namespace Common
             this.sourceStream.Seek(offset, SeekOrigin.Begin);
 
             //read block size
+            byte[] buffer = new byte[8];
+            this.sourceStream.Read(buffer, 0, 8);
+
+            return BitConverter.ToUInt32(buffer, 0);
+        }
+
+        //reads logicalSectorSize from MetadataTable
+        public UInt32 getLogicalSectorSize(MetadataTable metadataTable)
+        {
+            UInt32 offset = 0;
+            UInt32 length = 0;
+            foreach (MetadataTableEntry entry in metadataTable.entries)
+            {
+                if (entry.itemID[0] == 0x1D)
+                {
+                    offset = entry.offset;
+                    length = entry.length;
+                }
+            }
+
+            //jump to destination
+            this.sourceStream.Seek(offset, SeekOrigin.Begin);
+
+            //read logicalSectorSize size
             byte[] buffer = new byte[8];
             this.sourceStream.Read(buffer, 0, 8);
 
@@ -222,7 +252,10 @@ namespace Common
             return regionTable;
         }
 
-
+        public void Dispose()
+        {
+            this.close();
+        }
     }
     public struct RegionTable
     {
