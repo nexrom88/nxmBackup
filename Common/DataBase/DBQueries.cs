@@ -75,7 +75,7 @@ namespace Common
                     List<Dictionary<string, string>> jobExecutionEventIds = dbConn.doReadQuery("INSERT INTO JobExecutionEvents (vmId, info, jobExecutionId, status) VALUES (@vmId, @info, @jobExecutionId, (SELECT id FROM EventStatus WHERE text= @status));SELECT SCOPE_IDENTITY() AS id;",
                         new Dictionary<string, string>() { { "vmId", vmName }, { "info", eventProperties.text }, { "jobExecutionId", eventProperties.jobExecutionId.ToString()}, {"status", eventProperties.eventStatus} }, null);
 
-                    if (jobExecutionEventIds.Count == 0)
+                    if (jobExecutionEventIds == null || jobExecutionEventIds.Count == 0)
                     {
                         throw new Exception("Error during insert operation (affectedRows != 1)");
                     }
