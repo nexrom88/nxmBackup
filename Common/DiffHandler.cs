@@ -72,9 +72,18 @@ namespace Common
 
                 UInt32 vhdxBlockOffsetsCount = (UInt32)Math.Ceiling((float)block.length / (float)vhdxBlockSize);
                 outStream.Write(BitConverter.GetBytes(vhdxBlockOffsetsCount), 0, 4); //write vhdxBlockOffsetCount
-
+                
                 //get vhdxBlockOffsets
                 UInt64[] vhdxOffsets = getVhdxBlockOffsets(block.offset, block.length, vhdxBATTable, vhdxBlockSize);
+
+                //write vhdxBlockOffsetsCount
+                outStream.Write(BitConverter.GetBytes(vhdxOffsets.Length), 0, 4);
+
+                //write block offsets
+                foreach (UInt64 offset in vhdxOffsets)
+                {
+                    outStream.Write(BitConverter.GetBytes(offset), 0, 8);
+                }
 
 
                 for (int i = 0; i < vhdxOffsets.Length; i++)
