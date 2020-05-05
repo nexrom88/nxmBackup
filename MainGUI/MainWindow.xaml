@@ -24,43 +24,43 @@
                     <StackPanel Orientation="Horizontal">
                         <Button x:Name="focus" Padding="{Binding Source={StaticResource btnPadding}}" Width="{Binding Source={StaticResource btnHeight}}" Height="{Binding Source={StaticResource btnHeight}}" Background="AliceBlue" BorderThickness="0" Click="btnNewJob_Click">
                             <StackPanel HorizontalAlignment="Center">
-                                <Image Source="plus-sign.png" Width="30" Height="30"/>
+                                <Image Source="Graphics/plus-sign.png" Width="30" Height="30"/>
                                 <TextBlock HorizontalAlignment="Center" Padding="5">Neu</TextBlock>
                             </StackPanel>
                         </Button>
                         <Button x:Name="btnDeleteJob" Padding="{Binding Source={StaticResource btnPadding}}" Width="{Binding Source={StaticResource btnHeight}}" Height="{Binding Source={StaticResource btnHeight}}" Background="AliceBlue" BorderThickness="0" Click="btnDeleteJob_Click">
                             <StackPanel HorizontalAlignment="Center">
-                                <Image Source="delete.png" Width="30" Height="30"/>
+                                <Image Source="Graphics/delete.png" Width="30" Height="30"/>
                                 <TextBlock HorizontalAlignment="Center" Padding="5">Löschen</TextBlock>
                             </StackPanel>
                         </Button>
                         <Button x:Name="btnStartJob" Padding="{Binding Source={StaticResource btnPadding}}" Width="{Binding Source={StaticResource btnHeight}}" Height="{Binding Source={StaticResource btnHeight}}" Background="AliceBlue" BorderThickness="0" Click="btnStartJob_Click" >
                             <StackPanel HorizontalAlignment="Center">
-                                <Image Source="play-button-arrowhead.png" Width="30" Height="30"/>
+                                <Image Source="Graphics/play-button-arrowhead.png" Width="30" Height="30"/>
                                 <TextBlock HorizontalAlignment="Center" Padding="5">Starten</TextBlock>
                             </StackPanel>
                         </Button>
                         <Button x:Name="btnStopJob" Padding="{Binding Source={StaticResource btnPadding}}" Width="{Binding Source={StaticResource btnHeight}}" Height="{Binding Source={StaticResource btnHeight}}" Background="AliceBlue" BorderThickness="0">
                             <StackPanel HorizontalAlignment="Center">
-                                <Image Source="stop.png" Width="30" Height="30"/>
+                                <Image Source="Graphics/stop.png" Width="30" Height="30"/>
                                 <TextBlock HorizontalAlignment="Center" Padding="5">Stoppen</TextBlock>
                             </StackPanel>
                         </Button>
                         <Button x:Name="btnDisabledJob" Padding="{Binding Source={StaticResource btnPadding}}" Width="{Binding Source={StaticResource btnHeight}}" Height="{Binding Source={StaticResource btnHeight}}" Background="AliceBlue" BorderThickness="0">
                             <StackPanel HorizontalAlignment="Center">
-                                <Image Source="disabled.png" Width="30" Height="30"/>
+                                <Image Source="Graphics/disabled.png" Width="30" Height="30"/>
                                 <TextBlock HorizontalAlignment="Center" Padding="5">Deaktivieren</TextBlock>
                             </StackPanel>
                         </Button>
                         <Button x:Name="btnSettings" Padding="{Binding Source={StaticResource btnPadding}}" Width="{Binding Source={StaticResource btnHeight}}" Height="{Binding Source={StaticResource btnHeight}}" Background="AliceBlue" BorderThickness="0">
                             <StackPanel HorizontalAlignment="Center">
-                                <Image Source="settings.png" Width="30" Height="30"/>
+                                <Image Source="Graphics/settings.png" Width="30" Height="30"/>
                                 <TextBlock HorizontalAlignment="Center" Padding="5">Einstellungen</TextBlock>
                             </StackPanel>
                         </Button>
                         <Button x:Name="btnRestore" Padding="{Binding Source={StaticResource btnPadding}}" Width="{Binding Source={StaticResource btnHeight}}" Height="{Binding Source={StaticResource btnHeight}}" Background="AliceBlue" BorderThickness="0" Click="btnRestore_Click">
                             <StackPanel HorizontalAlignment="Center">
-                                <Image Source="circular-arrows.png" Width="30" Height="30"/>
+                                <Image Source="Graphics/circular-arrows.png" Width="30" Height="30"/>
                                 <TextBlock HorizontalAlignment="Center" Padding="5">Restore</TextBlock>
                             </StackPanel>
                         </Button>
@@ -73,9 +73,9 @@
                                 <GridViewColumn Header="Name" DisplayMemberBinding="{Binding Name}"></GridViewColumn>
                                 <GridViewColumn Header="Typ" DisplayMemberBinding="{Binding IntervalBaseForGUI}"></GridViewColumn>
                                 <GridViewColumn Header="Status" DisplayMemberBinding="{Binding IsRunningForGUI}"></GridViewColumn>
-                                <GridViewColumn Header="Letzte Status"></GridViewColumn>
-                                <GridViewColumn Header="Letzter Start"></GridViewColumn>
-                                <GridViewColumn Header="Nächster Start"></GridViewColumn>
+                                <GridViewColumn Header="Letzter Status"></GridViewColumn>
+                                <GridViewColumn Header="Letzter Start" DisplayMemberBinding="{Binding LastRun}"></GridViewColumn>
+                                <GridViewColumn Header="Nächster Start" DisplayMemberBinding="{Binding NextRun}"></GridViewColumn>
                             </GridView>
                         </ListView.View>
                     </ListView>

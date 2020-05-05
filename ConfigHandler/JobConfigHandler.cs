@@ -7,6 +7,7 @@ using System.Data.SqlClient;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using Common;
+using System.Windows.Forms;
 
 namespace ConfigHandler
 {
@@ -40,6 +41,10 @@ namespace ConfigHandler
                     newJob.Name = job["name"];
                     newJob.BlockSize = uint.Parse(job["blocksize"]);
                     newJob.IsRunning = bool.Parse(job["isRunning"]);
+
+                    // build nextRun string
+                    newJob.NextRun = $"{int.Parse(job["hour"]).ToString("00")}:{int.Parse(job["minute"]).ToString("00")}";
+                    if (job["day"] != "") newJob.NextRun += $" ({job["day"]})";
 
                     var rota = new Rotation();
                     //build rotation structure
@@ -99,6 +104,20 @@ namespace ConfigHandler
                         newVM.vmID = vm["id"];
                         newVM.vmName = vm["name"];
                         newJob.JobVMs.Add(newVM);
+                    }
+
+                    //get last jobExecution attributes
+
+                    List<Dictionary<string, string>> jobExecutions = connection.doReadQuery("SELECT * FROM JobExecutions WHERE JobExecutions.jobid=@jobid and JobExecutions.id = (SELECT MAX(id) FROM JobExecutions WHERE JobExecutions.jobid=@jobid)", paramaters, null);
+
+                    if (jobExecutions.Count > 1) MessageBox.Show("db error: jobExecutions hat mehr als 1 result");
+                    else
+                    {
+                        foreach (Dictionary<string, string> jobExecution in jobExecutions)
+                        {
+                            newJob.LastRun = jobExecution["startStamp"];
+                        }
+                            
                     }
 
                     retVal.Add(newJob);
@@ -228,6 +247,8 @@ namespace ConfigHandler
         private uint blockSize;
         private Rotation rotation;
         private bool isRunning;
+        private string nextRun;
+        private string lastRun;
 
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -262,7 +283,6 @@ namespace ConfigHandler
             get
             {
                 switch (isRunning)
-
                 {
                     case true:
                         return "läuft";
@@ -273,6 +293,9 @@ namespace ConfigHandler
                 }
             }
         }
+  
+        public string NextRun { get => nextRun; set => nextRun = value; }
+        public string LastRun { get => lastRun; set => lastRun = value; }
     }
 
     

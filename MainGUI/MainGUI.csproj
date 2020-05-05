@@ -41,6 +41,7 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Windows" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
     <Reference Include="Microsoft.CSharp" />
@@ -122,13 +123,13 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="circular-arrows.png" />
-    <Resource Include="delete.png" />
-    <Resource Include="disabled.png" />
-    <Resource Include="play-button-arrowhead.png" />
-    <Resource Include="plus-sign.png" />
-    <Resource Include="settings.png" />
-    <Resource Include="stop.png" />
+    <Resource Include="Graphics\circular-arrows.png" />
+    <Resource Include="Graphics\delete.png" />
+    <Resource Include="Graphics\disabled.png" />
+    <Resource Include="Graphics\play-button-arrowhead.png" />
+    <Resource Include="Graphics\plus-sign.png" />
+    <Resource Include="Graphics\settings.png" />
+    <Resource Include="Graphics\stop.png" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Common\Common.csproj">
@@ -144,7 +145,7 @@
       <Name>RestoreHelper</Name>
     </ProjectReference>
     <ProjectReference Include="..\JobEngine\JobEngine.csproj">
-      <Project>{10038c72-b913-463f-a5fe-111b4c885207}</Project>
+      <Project>{9774c037-216f-45a1-beaa-11be67659995}</Project>
       <Name>JobEngine</Name>
     </ProjectReference>
   </ItemGroup>
