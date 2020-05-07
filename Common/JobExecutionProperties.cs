@@ -8,8 +8,8 @@ namespace Common
 {
     public struct JobExecutionProperties
     {
-        public string startStamp;
-        public string stopTime;
+        public DateTime startStamp;
+        public DateTime stopTime;
         public bool isRunning;
         public int transferRate;
         public int alreadyRead;

@@ -116,6 +116,7 @@ namespace ConfigHandler
                         foreach (Dictionary<string, string> jobExecution in jobExecutions)
                         {
                             newJob.LastRun = jobExecution["startStamp"];
+                            newJob.Successful = jobExecution["successful"];
                         }
                             
                     }
@@ -249,6 +250,7 @@ namespace ConfigHandler
         private bool isRunning;
         private string nextRun;
         private string lastRun;
+        private bool successful;
 
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -296,6 +298,22 @@ namespace ConfigHandler
   
         public string NextRun { get => nextRun; set => nextRun = value; }
         public string LastRun { get => lastRun; set => lastRun = value; }
+        public string Successful 
+        { 
+            get 
+            { 
+                switch(successful)
+                {
+                    case true:
+                        return "erfolgreich";
+                    case false:
+                        return "fehlgeschlagen";
+                    default:
+                        return "default";                        
+                }
+            }
+            set => successful = bool.Parse(value); 
+        }
     }
 
     

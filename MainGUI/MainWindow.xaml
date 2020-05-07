@@ -73,7 +73,7 @@
                                 <GridViewColumn Header="Name" DisplayMemberBinding="{Binding Name}"></GridViewColumn>
                                 <GridViewColumn Header="Typ" DisplayMemberBinding="{Binding IntervalBaseForGUI}"></GridViewColumn>
                                 <GridViewColumn Header="Status" DisplayMemberBinding="{Binding IsRunningForGUI}"></GridViewColumn>
-                                <GridViewColumn Header="Letzter Status"></GridViewColumn>
+                                <GridViewColumn Header="Letzter Status" DisplayMemberBinding="{Binding Successful}"></GridViewColumn>
                                 <GridViewColumn Header="Letzter Start" DisplayMemberBinding="{Binding LastRun}"></GridViewColumn>
                                 <GridViewColumn Header="Nächster Start" DisplayMemberBinding="{Binding NextRun}"></GridViewColumn>
                             </GridView>

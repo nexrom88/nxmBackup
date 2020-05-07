@@ -60,8 +60,20 @@ namespace JobEngine
                 if (!successful) executionSuccessful = false;
             }
 
-            // set Execution state
-
+            // set job execution state
+            if (executionSuccessful)
+            {
+                JobExecutionProperties executionProps = new JobExecutionProperties();
+                executionProps.stopTime = DateTime.Now;
+                executionProps.isRunning = false;
+                executionProps.transferRate = 0;
+                executionProps.alreadyRead = 0;
+                executionProps.alreadyWritten = 0;
+                executionProps.successful = executionSuccessful;
+                executionProps.warnings = 0;
+                executionProps.errors = 0;
+                Common.DBQueries.updateJobExecution(executionProps, executionId.ToString());
+            }
 
             this.inProgress = false;
         }

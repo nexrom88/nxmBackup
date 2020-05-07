@@ -196,14 +196,14 @@ namespace Common
         }
 
         // Updates an existing execution.
-        public static void updateJobExecution(Common.EventProperties jobExecutionProperties, string jobExecutionId)
+        public static void updateJobExecution(Common.JobExecutionProperties executionProperties, string jobExecutionId)
         {
             try
             {
                 using (DBConnection dbConn = new DBConnection())
                 {
                     int affectedRows = dbConn.doWriteQuery("UPDATE JobExecutions SET stopTime=@stopTime, isRunning=@isRunning, transferRate=@transferRate, alreadyRead=@alreadyRead, alreadyWritten=@alreadyWritten, successful=@successful, warnings=@warnings, errors=@errors WHERE id=@id;",
-                        new Dictionary<string, string>() { { "stopTime", eventProperties.text }, { "isRunning", eventProperties.eventIdToUpdate.ToString() }, { "transferRate", eventProperties.eventStatus }, , { "alreadyRead", eventProperties.eventStatus }, { "alreadyWritten", eventProperties.eventStatus }, { "successful", eventProperties.eventStatus }, { "warnings", eventProperties.eventStatus }, { "errors", eventProperties.eventStatus } }, null);
+                        new Dictionary<string, string>() { { "stopTime", executionProperties.stopTime.ToString() }, { "isRunning", executionProperties.isRunning.ToString() }, { "transferRate", executionProperties.transferRate.ToString() }, { "alreadyRead", executionProperties.alreadyRead.ToString() }, { "alreadyWritten", executionProperties.alreadyWritten.ToString() }, { "successful", executionProperties.successful.ToString() }, { "warnings", executionProperties.warnings.ToString() }, { "errors", executionProperties.errors.ToString() }, { "id", jobExecutionId.ToString() } }, null);
 
                     if (affectedRows == 0)
                     {
