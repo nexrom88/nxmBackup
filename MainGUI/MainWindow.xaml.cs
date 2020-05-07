@@ -209,7 +209,7 @@ namespace MainGUI
                     }
                     
 
-                    lvEvents.Items.Add(ele);
+                    lvEvents.Items.Insert(0,ele);
                 }
             }
         }
