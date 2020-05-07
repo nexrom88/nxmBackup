@@ -28,7 +28,7 @@ namespace HyperVBackupRCT
         }
 
         //performs a full backup chain
-        public void performFullBackupProcess(ConsistencyLevel cLevel, Boolean allowSnapshotFallback, bool incremental, ConfigHandler.OneJob job)
+        public bool performFullBackupProcess(ConsistencyLevel cLevel, Boolean allowSnapshotFallback, bool incremental, ConfigHandler.OneJob job)
         {
             string destination = job.BasePath;
             ManagementObject snapshot = createSnapshot(cLevel, allowSnapshotFallback);
@@ -117,7 +117,7 @@ namespace HyperVBackupRCT
             }
 
             this.eventHandler.raiseNewEvent("Backupvorgang erfolgreich", false, false, NO_RELATED_EVENT, EventStatus.successful);
-
+            return true;
         }
 
         //gets the block count for the given chain

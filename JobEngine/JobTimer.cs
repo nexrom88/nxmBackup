@@ -43,7 +43,6 @@ namespace JobEngine
             //check whether job is still in progress
             if (this.inProgress)
             {
-
                 return;
             }
 
@@ -51,13 +50,18 @@ namespace JobEngine
 
             //get new execution ID
             int executionId = Common.DBQueries.addJobExecution(job.DbId.ToString(), "backup");
+            bool executionSuccessful = true;
 
             //iterate vms within the current job
             foreach (JobVM vm in this.Job.JobVMs)
             {
                 SnapshotHandler ssHandler = new SnapshotHandler(vm.vmID, executionId);
-                ssHandler.performFullBackupProcess(ConsistencyLevel.ApplicationAware, true, true, this.job);
+                bool successful = ssHandler.performFullBackupProcess(ConsistencyLevel.ApplicationAware, true, true, this.job);
+                if (!successful) executionSuccessful = false;
             }
+
+            // set Execution state
+
 
             this.inProgress = false;
         }

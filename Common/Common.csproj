@@ -70,6 +70,7 @@
     <Compile Include="DataBase\DBQueries.cs" />
     <Compile Include="DiffHandler.cs" />
     <Compile Include="EventHandler.cs" />
+    <Compile Include="JobExecutionProperties.cs" />
     <Compile Include="LZ4Archive.cs" />
     <Compile Include="DataBase\DBConnection.cs" />
     <Compile Include="Structs.cs" />
