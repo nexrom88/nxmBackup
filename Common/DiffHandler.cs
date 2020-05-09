@@ -22,10 +22,10 @@ namespace Common
         {
             //calculate start BAT entry
             UInt32 startEntry = (UInt32)Math.Floor((float)blockOffset / (float)vhdxBlockSize);
-            UInt32 endEntry = (UInt32)Math.Floor((float)blockOffset + (float)blockLength / (float)vhdxBlockSize);
+            UInt32 endEntry = (UInt32)Math.Floor(((float)blockOffset + (float)blockLength) / (float)vhdxBlockSize);
 
             //translate to vhdxOffsets
-            UInt64[] vhdxOffsets = new UInt64[(endEntry - endEntry) + 1];
+            UInt64[] vhdxOffsets = new UInt64[(endEntry - startEntry) + 1];
             for (UInt32 i = startEntry; i <= endEntry; i++)
             {
                 vhdxOffsets[i - startEntry] = vhdxBATTable.entries[(int)i].FileOffsetMB;
@@ -72,14 +72,23 @@ namespace Common
 
                 UInt32 vhdxBlockOffsetsCount = (UInt32)Math.Ceiling((float)block.length / (float)vhdxBlockSize);
                 outStream.Write(BitConverter.GetBytes(vhdxBlockOffsetsCount), 0, 4); //write vhdxBlockOffsetCount
-
+                
                 //get vhdxBlockOffsets
                 UInt64[] vhdxOffsets = getVhdxBlockOffsets(block.offset, block.length, vhdxBATTable, vhdxBlockSize);
+
+                //write vhdxBlockOffsetsCount
+                outStream.Write(BitConverter.GetBytes(vhdxOffsets.Length), 0, 4);
+
+                //write block offsets
+                foreach (UInt64 offset in vhdxOffsets)
+                {
+                    outStream.Write(BitConverter.GetBytes(offset), 0, 8);
+                }
 
 
                 for (int i = 0; i < vhdxOffsets.Length; i++)
                 {
-                    UInt64 startBlockOffset = 0; //where to start read within block
+                    UInt64 startBlockOffset = 0; //where to start read within block 
                     UInt64 endBlockOffset = vhdxBlockSize; //where to end read within block
 
                     //first block?
@@ -90,7 +99,7 @@ namespace Common
 
                     //last block?
                     if (i + 1 == vhdxOffsets.Length) {
-                        endBlockOffset = block.length - bytesReadBlock - 1;
+                        endBlockOffset = startBlockOffset + (block.length - bytesReadBlock) - 1;
                     }
 
                     UInt32 bytesToRead = (UInt32)(endBlockOffset - startBlockOffset) + 1;
@@ -173,6 +182,22 @@ namespace Common
                 }
                 length = BitConverter.ToUInt64(buffer, 0);
 
+                //jump over vhdx block offsets
+
+                //read vhdxBlockOffsetsCount
+                bytesRead = 0;
+                while (bytesRead < 4)
+                {
+                    bytesRead += (ulong)diffStream.Read(buffer, (int)bytesRead, 4 - (int)bytesRead);
+                }
+                UInt32 vhdxBlockOffsetsCount = BitConverter.ToUInt32(buffer, 0);
+
+                //read and ignore entries
+                bytesRead = 0;
+                while (bytesRead < 8* vhdxBlockOffsetsCount)
+                {
+                    bytesRead += (ulong)diffStream.Read(buffer, (int)bytesRead, 8 * (int)vhdxBlockOffsetsCount - (int)bytesRead);
+                }
 
 
                 //read data block buffered, has to be 2^X

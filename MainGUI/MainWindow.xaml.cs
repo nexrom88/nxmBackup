@@ -126,6 +126,11 @@ namespace MainGUI
                     this.eventRefreshTimer.Dispose();
                     this.eventRefreshTimer = null;
                 }
+
+                //clear lists
+                lvVMs.Items.Clear();
+                lvEvents.Items.Clear();
+                return;
             }
 
             //start event refresh timer if not already done
@@ -134,8 +139,9 @@ namespace MainGUI
                 this.eventRefreshTimer = new System.Threading.Timer(_ => loadEvents(), null, 3000, 3000);
             }
 
-            //clear list
+            //clear lists
             lvVMs.Items.Clear();
+            lvEvents.Items.Clear();
 
             int dbId = ((ConfigHandler.OneJob)lvJobs.SelectedItem).DbId;
 
