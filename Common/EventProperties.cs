@@ -23,6 +23,6 @@ namespace Common
 
     public enum EventStatus
     {
-        warning, error, inProgress, successful
+        warning, error, inProgress, successful, info
     }
 }

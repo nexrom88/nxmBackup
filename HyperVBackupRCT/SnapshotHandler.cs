@@ -45,7 +45,7 @@ namespace HyperVBackupRCT
             {
                 if (chain == null || chain.Count == 0) //first backup must be full backup
                 {
-                    this.eventHandler.raiseNewEvent("Inkrementielles Backup nicht möglich", false, false, NO_RELATED_EVENT, EventStatus.warning);
+                    this.eventHandler.raiseNewEvent("Inkrementielles Backup nicht möglich", false, false, NO_RELATED_EVENT, EventStatus.info);
                     refP = null; //incremental backup not possible
                 }
                 else if (getBlockSize(chain) >= job.BlockSize) //block size reached?

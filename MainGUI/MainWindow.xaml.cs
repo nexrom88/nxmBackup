@@ -24,13 +24,15 @@ namespace MainGUI
     /// </summary>
     public partial class MainWindow : Window
     {
-        private delegate void UpdateEvents(List<Dictionary<string,string>> events);
+        private delegate void UpdateEvents(List<Dictionary<string, string>> events);
         JobEngine.JobHandler jobHandler;
         List<ConfigHandler.OneJob> jobs = new List<ConfigHandler.OneJob>();
         ObservableCollection<ConfigHandler.OneJob> jobsObservable = new ObservableCollection<ConfigHandler.OneJob>();
         System.Threading.Timer eventRefreshTimer;
         int selectedJobId = -1;
         string selectedVMId = "";
+        // event lock for vm's because timer thread calls the events and click on vm calls also the events.
+        private readonly object eventLock = new object(); 
 
         public MainWindow()
         {
@@ -47,7 +49,7 @@ namespace MainGUI
         {
             //start job engine
             this.jobHandler = new JobEngine.JobHandler();
-            
+
             if (!jobHandler.startJobEngine())
             {
                 //db error occured while starting job engine
@@ -84,7 +86,7 @@ namespace MainGUI
 
             Thread jobThread = new Thread(() => this.jobHandler.startManually(dbId));
             jobThread.Start();
-        } 
+        }
 
         private void btnNewJob_Click(object sender, RoutedEventArgs e)
         {
@@ -125,8 +127,8 @@ namespace MainGUI
                     this.eventRefreshTimer = null;
                 }
             }
-            
-            //start event refresh timer if not laready done
+
+            //start event refresh timer if not already done
             if (this.eventRefreshTimer == null)
             {
                 this.eventRefreshTimer = new System.Threading.Timer(_ => loadEvents(), null, 3000, 3000);
@@ -136,12 +138,12 @@ namespace MainGUI
             lvVMs.Items.Clear();
 
             int dbId = ((ConfigHandler.OneJob)lvJobs.SelectedItem).DbId;
-            
+
             ConfigHandler.OneJob currentJob = (ConfigHandler.OneJob)lvJobs.SelectedItem;
             List<Common.JobVM> vms = currentJob.JobVMs;
 
             //iterate through all vms
-            foreach(Common.JobVM vm in vms)
+            foreach (Common.JobVM vm in vms)
             {
                 ListViewItem newItem = new ListViewItem();
                 newItem.Content = vm.vmName;
@@ -155,13 +157,16 @@ namespace MainGUI
         //callback for refreshing job events
         private void loadEvents()
         {
-            //just load events if a job is selected
-            if (this.selectedJobId > -1)
+            lock(eventLock)
             {
-                List<Dictionary<string, string>> events = Common.DBQueries.getEvents(this.selectedJobId.ToString(), "backup");
+                //just load events if a job is selected
+                if (this.selectedJobId > -1)
+                {
+                    List<Dictionary<string, string>> events = Common.DBQueries.getEvents(this.selectedJobId.ToString(), "backup");
 
-                lvEvents.Dispatcher.Invoke(new UpdateEvents(this.UpdateEventList), new object[] { events });
+                    lvEvents.Dispatcher.Invoke(new UpdateEvents(this.UpdateEventList), new object[] { events });
 
+                }
             }
         }
 
@@ -173,6 +178,7 @@ namespace MainGUI
             if (selectedItem != null)
             {
                 this.selectedVMId = selectedItem.Tag.ToString();
+                loadEvents();
             }
             else
             {
