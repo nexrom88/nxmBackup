@@ -15,6 +15,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using HyperVBackupRCT;
 using RestoreHelper;
 
 namespace nxmBackup
@@ -42,6 +43,16 @@ namespace nxmBackup
 
             fillListViewJobs();
 
+            //cleanUp(); //just for debugging purpose
+
+        }
+
+        //just for debugging purpose:
+        //deletes every type of snapshot for a given vm
+        private void cleanUp()
+        {
+            SnapshotHandler h = new SnapshotHandler("94921741-1567-4C42-84BF-4385F7E4BF9E", -1);
+            h.cleanUp();
         }
 
         //init jobs
@@ -216,6 +227,7 @@ namespace nxmBackup
                             ele.Icon = "Graphics/error.png";
                             break;
                         case "warning":
+                        case "info":
                             ele.Icon = "Graphics/warning.png";
                             break;
                     }
