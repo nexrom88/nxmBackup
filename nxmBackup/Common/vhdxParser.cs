@@ -137,8 +137,8 @@ namespace Common
         }
 
 
-        //parses the BAT table
-        public BATTable parseBATTable(RegionTable table)
+        //parses the BAT table (chunkSize just necessary when removeSectorMask is set)
+        public BATTable parseBATTable(RegionTable table, UInt32 chunkSize, bool removeSectorMask)
         {
             BATTable batTable = new BATTable();
             batTable.entries = new List<BATEntry>();
@@ -167,6 +167,12 @@ namespace Common
             UInt32 entryCount = batLength / 64;
             for (int i = 0; i < entryCount; i++)
             {
+                //jump over sector mask?
+                if (removeSectorMask && i+1 % chunkSize == 0)
+                {
+                    continue;
+                }
+
                 BATEntry newEntry = new BATEntry();
                 UInt64 batEntry = BitConverter.ToUInt64(buffer, 64 * i);
                 newEntry.state = (byte)(batEntry % 8);

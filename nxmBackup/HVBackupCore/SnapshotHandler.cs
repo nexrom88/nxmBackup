@@ -531,10 +531,13 @@ namespace HyperVBackupRCT
                     using (Common.vhdxParser vhdxParser = new vhdxParser(snapshothddPath))
                     {
                         Common.RegionTable regionTable = vhdxParser.parseRegionTable();
-                        batTable = vhdxParser.parseBATTable(regionTable);
                         Common.MetadataTable metadataTable = vhdxParser.parseMetadataTable(regionTable);
                         vhdxBlockSize = vhdxParser.getBlockSize(metadataTable);
-                        vhdxLogicalSectorSize = vhdxParser.getBlockSize(metadataTable);
+                        vhdxLogicalSectorSize = vhdxParser.getLogicalSectorSize(metadataTable);
+
+                        UInt32 vhdxChunkRatio = (UInt32)((Math.Pow(2, 23) * vhdxLogicalSectorSize) / vhdxBlockSize); //see vhdx file format specs
+
+                        batTable = vhdxParser.parseBATTable(regionTable, vhdxChunkRatio, true);
                     }
 
                     //reopen virtual disk
