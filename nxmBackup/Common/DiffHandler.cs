@@ -49,6 +49,8 @@ namespace Common
             }
             int relatedEventId = this.eventHandler.raiseNewEvent("Erstelle Inkrement - 0%", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
 
+            //calculate vhdxChunkRatio
+            UInt32 vhdxChunkRatio = (UInt32)((Math.Pow(2, 23) * vhdxLogicalSectorSize) / vhdxBlockSize); //see vhdx file format specs
 
             //open destination file
             BlockCompression.LZ4BlockStream outStream = (BlockCompression.LZ4BlockStream)archive.createAndGetFileStream(hddName + ".cb");
