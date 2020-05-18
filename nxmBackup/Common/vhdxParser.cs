@@ -168,7 +168,7 @@ namespace Common
             for (int i = 0; i < entryCount; i++)
             {
                 //jump over sector mask?
-                if (removeSectorMask && i+1 % chunkSize == 0)
+                if (removeSectorMask && i > 0 && i % chunkSize == 0)
                 {
                     continue;
                 }
