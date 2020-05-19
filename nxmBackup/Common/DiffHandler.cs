@@ -79,7 +79,7 @@ namespace Common
                 //write vhdxBlockOffsetsCount
                 outStream.Write(BitConverter.GetBytes(vhdxOffsets.Length), 0, 4);
 
-                //write block offsets
+                //write vhdx block offsets
                 foreach (UInt64 offset in vhdxOffsets)
                 {
                     outStream.Write(BitConverter.GetBytes(offset), 0, 8);
