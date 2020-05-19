@@ -500,7 +500,7 @@ namespace HyperVBackupRCT
             diskHandler.open(VirtualDiskHandler.VirtualDiskAccessMask.AttachReadOnly | VirtualDiskHandler.VirtualDiskAccessMask.GetInfo);
             VirtualDiskHandler.GetVirtualDiskInfoSize sizeStruct = diskHandler.getSize();
             ulong hddSize = sizeStruct.VirtualSize;
-            //ulong bufferSize = sizeStruct.SectorSize * 10000; //buffersize has to be a multiple of virtual sector size
+            ulong bufferSize = sizeStruct.SectorSize * 10000; //buffersize has to be a multiple of virtual sector size
             diskHandler.close();
 
 
@@ -525,25 +525,25 @@ namespace HyperVBackupRCT
                     WmiUtilities.ValidateOutput(outParams, scope);
 
                     //get vhdx headers
-                    BATTable batTable;
-                    UInt32 vhdxBlockSize = 0;
-                    UInt32 vhdxLogicalSectorSize = 0;
-                    using (Common.vhdxParser vhdxParser = new vhdxParser(snapshothddPath))
-                    {
-                        Common.RegionTable regionTable = vhdxParser.parseRegionTable();
-                        Common.MetadataTable metadataTable = vhdxParser.parseMetadataTable(regionTable);
-                        vhdxBlockSize = vhdxParser.getBlockSize(metadataTable);
-                        vhdxLogicalSectorSize = vhdxParser.getLogicalSectorSize(metadataTable);
+                    //BATTable batTable;
+                    //UInt32 vhdxBlockSize = 0;
+                    //UInt32 vhdxLogicalSectorSize = 0;
+                    //using (Common.vhdxParser vhdxParser = new vhdxParser(snapshothddPath))
+                    //{
+                    //    Common.RegionTable regionTable = vhdxParser.parseRegionTable();
+                    //    Common.MetadataTable metadataTable = vhdxParser.parseMetadataTable(regionTable);
+                    //    vhdxBlockSize = vhdxParser.getBlockSize(metadataTable);
+                    //    vhdxLogicalSectorSize = vhdxParser.getLogicalSectorSize(metadataTable);
 
-                        UInt32 vhdxChunkRatio = (UInt32)((Math.Pow(2, 23) * vhdxLogicalSectorSize) / vhdxBlockSize); //see vhdx file format specs
+                    //    UInt32 vhdxChunkRatio = (UInt32)((Math.Pow(2, 23) * vhdxLogicalSectorSize) / vhdxBlockSize); //see vhdx file format specs
 
-                        batTable = vhdxParser.parseBATTable(regionTable, vhdxChunkRatio, true);
-                    }
+                    //    batTable = vhdxParser.parseBATTable(regionTable, vhdxChunkRatio, true);
+                    //}
 
                     //reopen virtual disk
                     System.IO.FileStream sourceHDDStream = new System.IO.FileStream(snapshothddPath, System.IO.FileMode.Open, System.IO.FileAccess.Read);
-                    //diskHandler.open(VirtualDiskHandler.VirtualDiskAccessMask.AttachReadOnly | VirtualDiskHandler.VirtualDiskAccessMask.GetInfo);
-                    //diskHandler.attach(VirtualDiskHandler.ATTACH_VIRTUAL_DISK_FLAG.ATTACH_VIRTUAL_DISK_FLAG_NO_LOCAL_HOST | VirtualDiskHandler.ATTACH_VIRTUAL_DISK_FLAG.ATTACH_VIRTUAL_DISK_FLAG_READ_ONLY);
+                    diskHandler.open(VirtualDiskHandler.VirtualDiskAccessMask.AttachReadOnly | VirtualDiskHandler.VirtualDiskAccessMask.GetInfo);
+                    diskHandler.attach(VirtualDiskHandler.ATTACH_VIRTUAL_DISK_FLAG.ATTACH_VIRTUAL_DISK_FLAG_NO_LOCAL_HOST | VirtualDiskHandler.ATTACH_VIRTUAL_DISK_FLAG.ATTACH_VIRTUAL_DISK_FLAG_READ_ONLY);
 
                     //output ok, build block structure
                     int blockCount = ((ulong[])outParams["ChangedByteOffsets"]).Length;
@@ -560,12 +560,12 @@ namespace HyperVBackupRCT
                     //write backup output
                     DiffHandler diffWriter = new DiffHandler(this.eventHandler);
 
-                    diffWriter.writeDiffFile(changedBlocks, sourceHDDStream, vhdxBlockSize, vhdxLogicalSectorSize, archive, compressionType, System.IO.Path.GetFileName(snapshothddPath), batTable);
+                    diffWriter.writeDiffFile(changedBlocks, diskHandler, archive, compressionType, bufferSize, System.IO.Path.GetFileName(snapshothddPath));
 
                     sourceHDDStream.Close();
                     //close vhd file
-                    //diskHandler.detach();
-                    //diskHandler.close();
+                    diskHandler.detach();
+                    diskHandler.close();
 
                 }
 
