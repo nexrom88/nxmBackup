@@ -174,7 +174,7 @@ namespace Common
                 }
 
                 BATEntry newEntry = new BATEntry();
-                UInt64 batEntry = BitConverter.ToUInt64(buffer, 64 * i);
+                UInt64 batEntry = BitConverter.ToUInt64(buffer, 8 * i);
                 newEntry.state = (byte)(batEntry % 8);
                 batEntry = batEntry >> 3;
                 UInt32 reserved = (UInt32)(batEntry % Math.Pow(2, 17));

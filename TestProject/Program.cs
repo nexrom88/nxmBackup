@@ -23,6 +23,7 @@ namespace TestProject
             Common.MetadataTable metadataTable = parser.parseMetadataTable(regionTable);
             Common.BATTable table = parser.parseBATTable(regionTable, 0, false);
             string output = JsonConvert.SerializeObject(table);
+            UInt32 blockSize = parser.getBlockSize(metadataTable);
         }
 
         //parses a cb file (just for testing, but DO NOT DELETE)
