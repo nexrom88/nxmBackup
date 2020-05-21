@@ -500,32 +500,8 @@ namespace HyperVBackupRCT
             diskHandler.open(VirtualDiskHandler.VirtualDiskAccessMask.AttachReadOnly | VirtualDiskHandler.VirtualDiskAccessMask.GetInfo);
             VirtualDiskHandler.GetVirtualDiskInfoSize sizeStruct = diskHandler.getSize();
             ulong hddSize = sizeStruct.VirtualSize;
-            //ulong bufferSize = sizeStruct.SectorSize * 10000; //buffersize has to be a multiple of virtual sector size
+            ulong bufferSize = sizeStruct.SectorSize * 10000; //buffersize has to be a multiple of virtual sector size
             diskHandler.close();
-
-            //get vhdx headers
-            BATTable batTable;
-            UInt32 vhdxBlockSize = 0;
-            UInt32 vhdxLogicalSectorSize = 0;
-            using (Common.vhdxParser vhdxParser = new vhdxParser(snapshothddPath))
-            {
-                Common.RegionTable regionTable = vhdxParser.parseRegionTable();
-                Common.MetadataTable metadataTable = vhdxParser.parseMetadataTable(regionTable);
-                vhdxBlockSize = vhdxParser.getBlockSize(metadataTable);
-                vhdxLogicalSectorSize = vhdxParser.getLogicalSectorSize(metadataTable);
-
-                UInt32 vhdxChunkRatio = (UInt32)((Math.Pow(2, 23) * vhdxLogicalSectorSize) / vhdxBlockSize); //see vhdx file format specs
-
-                batTable = vhdxParser.parseBATTable(regionTable, vhdxChunkRatio, true);
-            }
-
-            //changed blocks
-            //output ok, build block structure
-            UInt32 blockCount = 0;
-            List<ChangedBlock> changedBlocks = new List<ChangedBlock>();
-
-            //reopen virtual disk
-            System.IO.FileStream sourceHDDStream = new System.IO.FileStream(snapshothddPath, System.IO.FileMode.Open, System.IO.FileAccess.Read);
 
 
             ManagementScope scope = new ManagementScope("\\\\localhost\\root\\virtualization\\v2", null);
@@ -548,32 +524,49 @@ namespace HyperVBackupRCT
                     //wait for the snapshot to be exported
                     WmiUtilities.ValidateOutput(outParams, scope);
 
+                    //get vhdx headers
+                    BATTable batTable;
+                    UInt32 vhdxBlockSize = 0;
+                    UInt32 vhdxLogicalSectorSize = 0;
+                    using (Common.vhdxParser vhdxParser = new vhdxParser(snapshothddPath))
+                    {
+                        Common.RegionTable regionTable = vhdxParser.parseRegionTable();
+                        Common.MetadataTable metadataTable = vhdxParser.parseMetadataTable(regionTable);
+                        vhdxBlockSize = vhdxParser.getBlockSize(metadataTable);
+                        vhdxLogicalSectorSize = vhdxParser.getLogicalSectorSize(metadataTable);
 
-                    
-                    //add found blocks to count
-                    blockCount += (UInt32)((ulong[])outParams["ChangedByteOffsets"]).Length;
+                        UInt32 vhdxChunkRatio = (UInt32)((Math.Pow(2, 23) * vhdxLogicalSectorSize) / vhdxBlockSize); //see vhdx file format specs
 
+                        batTable = vhdxParser.parseBATTable(regionTable, vhdxChunkRatio, true);
+                    }
 
-                    for (int i = 0; i < ((ulong[])outParams["ChangedByteOffsets"]).Length; i++)
+                    //reopen virtual disk
+                    System.IO.FileStream sourceHDDStream = new System.IO.FileStream(snapshothddPath, System.IO.FileMode.Open, System.IO.FileAccess.Read);
+                    diskHandler.open(VirtualDiskHandler.VirtualDiskAccessMask.AttachReadOnly | VirtualDiskHandler.VirtualDiskAccessMask.GetInfo);
+                    diskHandler.attach(VirtualDiskHandler.ATTACH_VIRTUAL_DISK_FLAG.ATTACH_VIRTUAL_DISK_FLAG_NO_LOCAL_HOST | VirtualDiskHandler.ATTACH_VIRTUAL_DISK_FLAG.ATTACH_VIRTUAL_DISK_FLAG_READ_ONLY);
+                    //output ok, build block structure
+                    int blockCount = ((ulong[])outParams["ChangedByteOffsets"]).Length;
+                    ChangedBlock[] changedBlocks = new ChangedBlock[blockCount];
+
+                    for (int i = 0; i < blockCount; i++)
                     {
                         ChangedBlock block = new ChangedBlock();
                         block.offset = ((ulong[])outParams["ChangedByteOffsets"])[i];
                         block.length = ((ulong[])outParams["ChangedByteLengths"])[i];
-                        changedBlocks.Add(block);
+                        changedBlocks[i] = block;
                     }
-                }
 
                     //write backup output
                     DiffHandler diffWriter = new DiffHandler(this.eventHandler);
 
-                    diffWriter.writeDiffFile(changedBlocks, sourceHDDStream, vhdxBlockSize, vhdxLogicalSectorSize, archive, compressionType, System.IO.Path.GetFileName(snapshothddPath), batTable);
+                    diffWriter.writeDiffFile(changedBlocks, diskHandler, vhdxBlockSize, archive, compressionType, System.IO.Path.GetFileName(snapshothddPath), batTable, bufferSize);
 
                     sourceHDDStream.Close();
                     //close vhd file
                     //diskHandler.detach();
                     //diskHandler.close();
 
-                
+                }
 
 
             }

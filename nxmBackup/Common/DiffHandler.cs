@@ -36,79 +36,79 @@ namespace Common
 
         //writes the diff file using cbt information
         [Obsolete]
-        public void writeDiffFile(List<ChangedBlock> changedBlocks, FileStream sourceHDDStream, UInt32 vhdxBlockSize, UInt32 vhdxLogicalSectorSize, Common.IArchive archive, Compression compressionType, string hddName, Common.BATTable vhdxBATTable)
+        public void writeDiffFile(ChangedBlock[] changedBlocks, VirtualDiskHandler diskHandler, UInt32 vhdxBlockSize, Common.IArchive archive, Compression compressionType, string hddName, Common.BATTable vhdxBATTable, UInt64 bufferSize)
         {
 
             //calculate changed bytes count for progress calculation
             ulong totalBytesCount = 0;
             ulong bytesReadCount = 0;
             int lastPercentage = -1;
-            foreach(ChangedBlock bl in changedBlocks)
+            foreach (ChangedBlock bl in changedBlocks)
             {
                 totalBytesCount += bl.length;
             }
             int relatedEventId = this.eventHandler.raiseNewEvent("Erstelle Inkrement - 0%", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
 
+            //fetch disk file handle
+            IntPtr diskHandle = diskHandler.getHandle();
+
             //open destination file
             BlockCompression.LZ4BlockStream outStream = (BlockCompression.LZ4BlockStream)archive.createAndGetFileStream(hddName + ".cb");
+            //FileStream outStream = new FileStream("f:\\" + hddName + ".cb", FileMode.Create);
 
+            //open filestream to make it possible for readfile to read blocks (check why?)
+            FileStream inputStream = new FileStream(diskHandle, FileAccess.Read, false, (int)bufferSize, true);
 
             //write block count to destination file
-            outStream.Write(BitConverter.GetBytes(changedBlocks.Count), 0, 4);
+            outStream.Write(BitConverter.GetBytes((UInt32)changedBlocks.Length), 0, 4);
 
-            ulong bytesReadBlock;
+            //write vhdx block size
+            outStream.Write(BitConverter.GetBytes(vhdxBlockSize), 0, 4);
+
+            ulong bytesRead;
 
             //read and write blocks
             foreach (ChangedBlock block in changedBlocks)
             {
                 byte[] buffer;
-                bytesReadBlock = 0;
+                bytesRead = 0;
 
                 //write block header to diff file
                 //write block
                 outStream.Write(BitConverter.GetBytes(block.offset), 0, 8); //write offset
                 outStream.Write(BitConverter.GetBytes(block.length), 0, 8); //write length
 
-                UInt32 vhdxBlockOffsetsCount = (UInt32)Math.Ceiling((float)block.length / (float)vhdxBlockSize);
+                //get vhdx blocks
+                UInt64[] vhdxBlocks = getVhdxBlockOffsets(block.offset, block.length, vhdxBATTable, vhdxBlockSize);
+
+                //write vhdx blocks
+                outStream.Write(BitConverter.GetBytes((UInt32)vhdxBlocks.Length), 0, 4); //block offset count
                 
-                //get vhdxBlockOffsets
-                UInt64[] vhdxOffsets = getVhdxBlockOffsets(block.offset, block.length, vhdxBATTable, vhdxBlockSize);
-
-                //write vhdxBlockOffsetsCount
-                outStream.Write(BitConverter.GetBytes(vhdxOffsets.Length), 0, 4);
-
-                //write block offsets
-                foreach (UInt64 offset in vhdxOffsets)
+                //iterate through all block offsets
+                for (int i = 0; i < vhdxBlocks.Length; i++)
                 {
-                    outStream.Write(BitConverter.GetBytes(offset), 0, 8);
+                    outStream.Write(BitConverter.GetBytes((UInt64)vhdxBlocks[i]), 0, 8); //write one offset
                 }
 
-
-                for (int i = 0; i < vhdxOffsets.Length; i++)
+                while (bytesRead < block.length)
                 {
-                    UInt64 startBlockOffset = 0; //where to start read within block 
-                    UInt64 endBlockOffset = vhdxBlockSize; //where to end read within block
-
-                    //first block?
-                    if (i == 0)
+                    //still whole buffersize to read?
+                    if (bytesRead + bufferSize <= block.length)
                     {
-                        startBlockOffset = block.offset % vhdxBlockSize;
+                        //read whole buffer size           
+                        buffer = diskHandler.read(block.offset + bytesRead, bufferSize);
+                        bytesRead += bufferSize;
                     }
-
-                    //last block?
-                    if (i + 1 == vhdxOffsets.Length) {
-                        endBlockOffset = startBlockOffset + (block.length - bytesReadBlock) - 1;
+                    else //end of block? read remaining bytes
+                    {
+                        ulong bytesRemaining = block.length - bytesRead;
+                        buffer = diskHandler.read(block.offset + bytesRead, bytesRemaining);
+                        bytesRead += bytesRemaining;
                     }
-
-                    UInt32 bytesToRead = (UInt32)(endBlockOffset - startBlockOffset) + 1;
-                    buffer = new byte[bytesToRead];
-                    sourceHDDStream.Seek((Int64)(vhdxOffsets[i] + startBlockOffset), SeekOrigin.Begin);
-                    sourceHDDStream.Read(buffer, 0, (Int32)bytesToRead);
 
                     //write the current buffer to diff file
                     outStream.Write(buffer, 0, buffer.Length); //write data
                     bytesReadCount += (uint)buffer.Length;
-                    bytesReadBlock += (UInt64)buffer.Length;
 
                     //calculate progress
                     int percentage = (int)(((double)bytesReadCount / (double)totalBytesCount) * 100.0);
@@ -125,7 +125,9 @@ namespace Common
             this.eventHandler.raiseNewEvent("Erstelle Inkrement - 100%", false, true, relatedEventId, EventStatus.successful);
 
             //close destination stream
+            GC.KeepAlive(inputStream);
             outStream.Close();
+            inputStream.Close();
 
         }
 
@@ -149,6 +151,10 @@ namespace Common
             byte[] buffer = new byte[4];
             diffStream.Read(buffer, 0, 4);
             UInt32 blockCount = BitConverter.ToUInt32(buffer, 0);
+
+            //read vhdx block size
+            diffStream.Read(buffer, 0, 4);
+            UInt32 vhdxBlockSize = BitConverter.ToUInt32(buffer, 0);
 
             //restored bytes count for progress calculation
             long bytesRestored = 0;
@@ -290,14 +296,15 @@ namespace Common
 //cb file type
 //
 //uint32 = 4 bytes = changed block count
+//uint32 = 4 bytes = vhdx block size
 //
 //one block:
 //ulong = 8 bytes = changed block offset
 //ulong = 8 bytes = changed block length
 
-//uint = 4 bytes = vhdx block offsets count
+//uint32 = 4 bytes = vhdx block offsets count
 //ulong = 8 bytes = vhdx block offset 1
 //ulong = 8 bytes = vhdx block offset 2
 //...
 
-//data block (size = changed block length)
+//block data (size = changed block length)

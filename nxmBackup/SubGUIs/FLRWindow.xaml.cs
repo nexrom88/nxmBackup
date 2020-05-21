@@ -56,7 +56,7 @@ namespace RestoreHelper
         {
             var image = new BitmapImage();
             image.BeginInit();
-            image.UriSource = new Uri(@"gfx\loading.gif", UriKind.Relative);
+            image.UriSource = new Uri(@"../Graphics/loading.gif", UriKind.Relative);
             image.EndInit();
             ImageBehavior.SetAnimatedSource(imgLoading, image);
 
