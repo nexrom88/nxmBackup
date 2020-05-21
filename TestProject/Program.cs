@@ -12,16 +12,17 @@ namespace TestProject
     {
         static void Main(string[] args)
         {
-            CbStructure parsedFile = parseCBFile(@"F:\nxm\Job_1VM\DF86F44C-037D-4111-8EF8-3DC2B3C2F553\b408d1df-6fbc-45c1-9afc-0824108624f0.nxm\Win10.vhdx.cb");
-            string output = JsonConvert.SerializeObject(parsedFile);
+            //CbStructure parsedFile = parseCBFile(@"F:\nxm\Job_1VM\DF86F44C-037D-4111-8EF8-3DC2B3C2F553\15223a46-4172-4e3a-b105-ccbb6a09ebb9.nxm\Win10.vhdx.cb");
+            //string output = JsonConvert.SerializeObject(parsedFile);
 
-            //HyperVBackupRCT.SnapshotHandler sh = new HyperVBackupRCT.SnapshotHandler("94921741-1567-4C42-84BF-4385F7E4BF9E", -1);
+            //HyperVBackupRCT.SnapshotHandler sh = new HyperVBackupRCT.SnapshotHandler("DF86F44C-037D-4111-8EF8-3DC2B3C2F553", -1);
             //sh.cleanUp();
 
-            //Common.vhdxParser parser = new Common.vhdxParser(@"G:\target\Virtual Hard Disks\CentOS.vhdx");
-            //Common.RegionTable regionTable =  parser.parseRegionTable();
-            //Common.MetadataTable metadataTable = parser.parseMetadataTable(regionTable);
-            //UInt32 lss =  parser.getLogicalSectorSize(metadataTable);
+            Common.vhdxParser parser = new Common.vhdxParser(@"C:\VMs\Win10.vhdx");
+            Common.RegionTable regionTable =  parser.parseRegionTable();
+            Common.MetadataTable metadataTable = parser.parseMetadataTable(regionTable);
+            Common.BATTable table = parser.parseBATTable(regionTable, 0, false);
+            string output = JsonConvert.SerializeObject(table);
         }
 
         //parses a cb file (just for testing, but DO NOT DELETE)
@@ -29,6 +30,7 @@ namespace TestProject
         {
             FileStream inputStream = new FileStream(path, FileMode.Open, FileAccess.Read);
             BlockCompression.LZ4BlockStream blockStream = new BlockCompression.LZ4BlockStream(inputStream, BlockCompression.AccessMode.read);
+            blockStream.CachingMode = true;
 
             byte[] buffer = new byte[8];
             blockStream.Read(buffer, 0, 8);
@@ -69,7 +71,8 @@ namespace TestProject
 
                 //read data block
                 byte[] blockData = new byte[blockLength];
-                blockStream.Read(blockData, 0, (int)blockLength);
+                //blockStream.Read(blockData, 0, (int)blockLength);
+                blockStream.Seek((int)blockLength, SeekOrigin.Current);
 
                 //oneBlock.blockData = blockData;
 
