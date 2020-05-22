@@ -54,18 +54,15 @@ namespace RestoreHelper
             }
 
 
-            string vmBasePath = System.IO.Path.Combine(basePath, restoreChain[restoreChain.Count - 1].uuid + ".nxm\\" + "Virtual Hard Disks");
-
-
-            //get vhd files            
-            string[] entries = System.IO.Directory.GetFiles(vmBasePath, "*.vhdx");
+            //get hdd files from backup chain
+            string[] hddFiles = getHDDFilesFromChain(restoreChain, basePath);
 
             //todo: just use first hdd to mount
             MFUserMode.MountHandler mountHandler = new MFUserMode.MountHandler();
 
             string mountPath = "c:\\target\\mount.vhdx";
             MFUserMode.MountHandler.mountState mountState = MFUserMode.MountHandler.mountState.pending;
-            Thread mountThread = new Thread(() => mountHandler.startMfHandling(System.IO.Path.Combine(vmBasePath, entries[0]), mountPath, ref mountState));
+            Thread mountThread = new Thread(() => mountHandler.startMfHandling(hddFiles, mountPath, ref mountState));
             mountThread.Start();
 
             //wait for mounting process
@@ -89,6 +86,33 @@ namespace RestoreHelper
             mountThread.Abort();
             mountHandler.stopMfHandling();
 
+
+        }
+
+        //builds an array of hdd files from a given backup chain
+        private string[] getHDDFilesFromChain(List<ConfigHandler.BackupConfigHandler.BackupInfo> restoreChain, string basePath)
+        {
+            string[] retVal = new string[restoreChain.Count];
+            string targetHDD = ""; //todo: make target hdd selectable by user
+
+            //iterate through all backups within chain in reverse to read full backup first
+            for (int i = restoreChain.Count - 1; i >= 0; i--)
+            {
+                if (restoreChain[i].type == "full")
+                {
+                    //get all vhdx files
+                    string vmBasePath = System.IO.Path.Combine(basePath, restoreChain[i].uuid + ".nxm\\" + "Virtual Hard Disks");
+                    string[] entries = System.IO.Directory.GetFiles(vmBasePath, "*.vhdx");
+                    retVal[i] = entries[0];
+                    targetHDD = System.IO.Path.GetFileName(entries[0]); //todo: make target hdd selectable by user
+                } else if (restoreChain[i].type == "rct")
+                {
+                    string vmBasePath = System.IO.Path.Combine(basePath, restoreChain[i].uuid + ".nxm\\");
+                    retVal[i] = System.IO.Path.Combine(vmBasePath, targetHDD + ".cb");
+                }
+            }
+
+            return retVal;
 
         }
 

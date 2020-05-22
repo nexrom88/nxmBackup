@@ -103,7 +103,9 @@
     <Compile Include="ConfigHandler\JobConfigHandler.cs" />
     <Compile Include="DataBase\DBConnection.cs" />
     <Compile Include="DataBase\DBQueries.cs" />
+    <Compile Include="HVBackupCore\CBParser.cs" />
     <Compile Include="HVBackupCore\ConsistencyLevel.cs" />
+    <Compile Include="HVBackupCore\ReadableBackupChain.cs" />
     <Compile Include="HVBackupCore\SnapshotHandler.cs" />
     <Compile Include="JobEngine\JobHandler.cs" />
     <Compile Include="JobEngine\JobTimer.cs" />

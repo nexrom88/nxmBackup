@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using HyperVBackupRCT;
+using HVBackupCore;
 
 namespace MFUserMode
 {
@@ -13,18 +16,21 @@ namespace MFUserMode
         private bool processStopped = false;
         private System.IO.FileStream destStream;
         private string destDummyFile;
-        System.IO.FileStream sourceStream;
-        BlockCompression.LZ4BlockStream blockStream;
+        private ReadableBackupChain readableChain;
 
         //starts the mount process
-        public void startMfHandling (string sourceFile, string destDummyFile, ref mountState mountState)
+        public void startMfHandling (string[] sourceFiles, string destDummyFile, ref mountState mountState)
         {
             this.destDummyFile = destDummyFile;
 
+            //build readable backup chain structure first
+            this.readableChain = buildReadableBackupChain(sourceFiles);
+
+
             //open source file and read "decompressed file size" (first 8 bytes)
-            this.sourceStream = new System.IO.FileStream(sourceFile, System.IO.FileMode.Open, System.IO.FileAccess.Read);
+            FileStream sourceStream = new System.IO.FileStream(sourceFiles[sourceFiles.Length - 1], System.IO.FileMode.Open, System.IO.FileAccess.Read);
             byte[] buffer = new byte[8];
-            this.sourceStream.Read(buffer, 0, 8);
+            sourceStream.Read(buffer, 0, 8);
             ulong decompressedFileSize = BitConverter.ToUInt64(buffer, 0);
             sourceStream.Close();
             sourceStream.Dispose();
@@ -37,11 +43,7 @@ namespace MFUserMode
             this.destStream.Dispose();
 
             //connect to MF Kernel Mode
-            this.sourceStream = new System.IO.FileStream(sourceFile, System.IO.FileMode.Open, System.IO.FileAccess.Read);
-            this.blockStream = new BlockCompression.LZ4BlockStream(sourceStream, BlockCompression.AccessMode.read);
-            this.blockStream.CachingMode = true;
-
-            this.kmConnection = new MFUserMode(blockStream);
+            this.kmConnection = new MFUserMode(this.readableChain);
             if (this.kmConnection.connectToKM())
             {
                 mountState = mountState.connected;
@@ -57,13 +59,57 @@ namespace MFUserMode
             }
         }
 
+        //builds a readable backup chain structure
+        public ReadableBackupChain buildReadableBackupChain(string[] sourceFiles)
+        {
+            ReadableBackupChain chain = new ReadableBackupChain();
+            chain.RCTBackups = new List<ReadableBackupChain.ReadableRCTBackup>();
+
+            //iterate through cb files first
+            for (int i = 0; i < sourceFiles.Length - 1; i++)
+            {
+                ReadableBackupChain.ReadableRCTBackup rctBackup = new ReadableBackupChain.ReadableRCTBackup();
+                
+                //parse cb file
+                CbStructure cbStruct = CBParser.parseCBFile(sourceFiles[i]);
+                rctBackup.cbStructure = cbStruct;
+
+                //open input stream
+                FileStream inputStream = new FileStream(sourceFiles[i], FileMode.Open, FileAccess.Read);
+                BlockCompression.LZ4BlockStream blockStream = new BlockCompression.LZ4BlockStream(inputStream, BlockCompression.AccessMode.read);
+                rctBackup.sourceStream = blockStream;
+                chain.RCTBackups.Add(rctBackup);
+            }
+
+            //build readable full backup
+            ReadableBackupChain.ReadableFullBackup readableFullBackup = new ReadableBackupChain.ReadableFullBackup();
+            FileStream inputStreamFull = new FileStream(sourceFiles[sourceFiles.Length - 1], FileMode.Open, FileAccess.Read);
+            BlockCompression.LZ4BlockStream blockStreamFull = new BlockCompression.LZ4BlockStream(inputStreamFull, BlockCompression.AccessMode.read);
+            readableFullBackup.sourceStream = blockStreamFull;
+            chain.FullBackup = readableFullBackup;
+
+            return chain;
+
+        }
+
         //stops the mount process
         public void stopMfHandling()
         {
             this.processStopped = true;
-            this.blockStream.Close();
-            this.sourceStream.Close();
+            
+            //iterate through all rct backups
+            foreach (ReadableBackupChain.ReadableRCTBackup rctBackup in this.readableChain.RCTBackups)
+            {
+                rctBackup.sourceStream.Close();
+            }
+
+            //close full backup
+            this.readableChain.FullBackup.sourceStream.Close();
+
+            //close km connection
             this.kmConnection.closeConnection();
+
+            //delete dummy file
             System.IO.File.Delete(this.destDummyFile);
         }
     
@@ -73,6 +119,10 @@ namespace MFUserMode
             connected,
             error
         }
+
+       
+
+        
 
     }
 

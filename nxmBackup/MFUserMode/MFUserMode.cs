@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.IO;
+using HVBackupCore;
 
 namespace MFUserMode
 {
@@ -53,16 +54,16 @@ namespace MFUserMode
 
 
         //source stream (usually seekable decompression stream)
-        private Stream sourceStream;
+        private ReadableBackupChain readableBackupChain;
 
         //the handle to the km connection
         private IntPtr handle;
 
         FileStream logStream = new FileStream("c:\\target\\log.txt", FileMode.Create, FileAccess.Write);
 
-        public MFUserMode(Stream sourceStream)
+        public MFUserMode(ReadableBackupChain readableBackupChain)
         {
-            this.sourceStream = sourceStream;
+            this.readableBackupChain = readableBackupChain;
         }
 
         //starts the connection to kernel Mode driver
@@ -117,10 +118,8 @@ namespace MFUserMode
             byte[] buffer = enc.GetBytes(output);
             this.logStream.Write(buffer, 0, buffer.Length);
 
-            data = new byte[length];
-            sourceStream.Seek(offset, System.IO.SeekOrigin.Begin);
-            sourceStream.Read(data, 0, (int)length);
-            sourceStream.Close();
+            //read the requested data from backup chain
+            data = this.readableBackupChain.readFromChain(offset, length);
 
 
             //build reply
