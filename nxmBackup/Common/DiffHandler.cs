@@ -88,12 +88,36 @@ namespace Common
 
                 //write vhdx blocks
                 outStream.Write(BitConverter.GetBytes((UInt32)vhdxBlocks.Length), 0, 4); //block offset count
-                
+
+
                 //iterate through all block offsets
+                UInt64 remainingLength = block.length;
                 for (int i = 0; i < vhdxBlocks.Length; i++)
                 {
-                    outStream.Write(BitConverter.GetBytes((UInt64)vhdxBlocks[i]), 0, 8); //write one offset
+                    UInt64 currentOffset = vhdxBlocks[i];
+                    UInt64 currentLength = vhdxBlockSize;
+
+                    //first element? adjust offset and length
+                    if (i == 0)
+                    {
+                        UInt64 offsetDelta = block.offset % vhdxBlockSize;
+                        currentOffset += offsetDelta;
+                        currentLength -= offsetDelta;
+                    }
+
+                    //last element? adjust length;
+                    if (i + 1 == vhdxBlocks.Length)
+                    {
+                        currentLength = remainingLength;
+                    }
+
+                    remainingLength -= currentLength;
+
+                    outStream.Write(BitConverter.GetBytes((UInt64)currentOffset), 0, 8); //write one offset
+                    outStream.Write(BitConverter.GetBytes((UInt64)currentLength), 0, 8); //write one length
+
                 }
+
 
                 while (bytesRead < block.length)
                 {
@@ -308,8 +332,12 @@ namespace Common
 //ulong = 8 bytes = changed block length
 
 //uint32 = 4 bytes = vhdx block offsets count
+
 //ulong = 8 bytes = vhdx block offset 1
+//ulong = 8 bytes = vhdx block length 1
+
 //ulong = 8 bytes = vhdx block offset 2
+//ulong = 8 bytes = vhdx block length 1
 //...
 
 //block data (size = changed block length)

@@ -32,7 +32,7 @@ namespace HyperVBackupRCT
             for (int i = 0; i < blockCount; i++)
             {
                 CbBlock oneBlock = new CbBlock();
-                oneBlock.vhdxBlockOffsets = new List<ulong>();
+                oneBlock.vhdxBlockLocations = new List<VhdxBlockLocation>();
 
                 //parse block header
                 blockStream.Read(buffer, 0, 16);
@@ -45,16 +45,22 @@ namespace HyperVBackupRCT
                 blockStream.Read(buffer, 0, 4);
                 UInt32 vhdxBlockOffsetCount = BitConverter.ToUInt32(buffer, 0);
 
-                //read each vhdx offset
+                //read each vhdx offset and length
                 for (int j = 0; j < vhdxBlockOffsetCount; j++)
                 {
-                    blockStream.Read(buffer, 0, 8);
-                    oneBlock.vhdxBlockOffsets.Add(BitConverter.ToUInt64(buffer, 0));
+                    VhdxBlockLocation location = new VhdxBlockLocation();
+                    //offset
+                    blockStream.Read(buffer, 0, 16);
+                    location.vhdxOffset = BitConverter.ToUInt64(buffer, 0);
+
+                    //corresponding length
+                    location.vhdxLength = BitConverter.ToUInt64(buffer, 8);
+
+                    oneBlock.vhdxBlockLocations.Add(location);
                 }
 
 
-
-                oneBlock.fileOffset = (ulong)blockStream.Position;
+                oneBlock.cbFileOffset = (ulong)blockStream.Position;
 
                 //jump over data block
                 blockStream.Seek((long)blockLength, SeekOrigin.Current);
@@ -85,8 +91,15 @@ namespace HyperVBackupRCT
         public UInt64 changedBlockOffset;
         public UInt64 changedBlockLength;
 
-        public List<UInt64> vhdxBlockOffsets;
+        public List<VhdxBlockLocation> vhdxBlockLocations;
 
-        public UInt64 fileOffset;
+        public UInt64 cbFileOffset;
+    }
+
+    public struct VhdxBlockLocation
+    {
+        public UInt64 vhdxOffset;
+        public UInt64 vhdxLength;
+
     }
 }
