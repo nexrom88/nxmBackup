@@ -16,7 +16,7 @@ namespace MFUserMode
         private bool processStopped = false;
         private System.IO.FileStream destStream;
         private string destDummyFile;
-        private ReadableBackupChain readableChain;
+        private BackupChainReader readableChain;
 
         //starts the mount process
         public void startMfHandling (string[] sourceFiles, string destDummyFile, ref mountState mountState)
@@ -60,15 +60,15 @@ namespace MFUserMode
         }
 
         //builds a readable backup chain structure
-        public ReadableBackupChain buildReadableBackupChain(string[] sourceFiles)
+        public BackupChainReader buildReadableBackupChain(string[] sourceFiles)
         {
-            ReadableBackupChain chain = new ReadableBackupChain();
-            chain.RCTBackups = new List<ReadableBackupChain.ReadableRCTBackup>();
+            BackupChainReader chain = new BackupChainReader();
+            chain.RCTBackups = new List<BackupChainReader.ReadableRCTBackup>();
 
             //iterate through cb files first
             for (int i = 0; i < sourceFiles.Length - 1; i++)
             {
-                ReadableBackupChain.ReadableRCTBackup rctBackup = new ReadableBackupChain.ReadableRCTBackup();
+                BackupChainReader.ReadableRCTBackup rctBackup = new BackupChainReader.ReadableRCTBackup();
                 
                 //parse cb file
                 CbStructure cbStruct = CBParser.parseCBFile(sourceFiles[i]);
@@ -82,7 +82,7 @@ namespace MFUserMode
             }
 
             //build readable full backup
-            ReadableBackupChain.ReadableFullBackup readableFullBackup = new ReadableBackupChain.ReadableFullBackup();
+            BackupChainReader.ReadableFullBackup readableFullBackup = new BackupChainReader.ReadableFullBackup();
             FileStream inputStreamFull = new FileStream(sourceFiles[sourceFiles.Length - 1], FileMode.Open, FileAccess.Read);
             BlockCompression.LZ4BlockStream blockStreamFull = new BlockCompression.LZ4BlockStream(inputStreamFull, BlockCompression.AccessMode.read);
             readableFullBackup.sourceStream = blockStreamFull;
@@ -98,7 +98,7 @@ namespace MFUserMode
             this.processStopped = true;
             
             //iterate through all rct backups
-            foreach (ReadableBackupChain.ReadableRCTBackup rctBackup in this.readableChain.RCTBackups)
+            foreach (BackupChainReader.ReadableRCTBackup rctBackup in this.readableChain.RCTBackups)
             {
                 rctBackup.sourceStream.Close();
             }

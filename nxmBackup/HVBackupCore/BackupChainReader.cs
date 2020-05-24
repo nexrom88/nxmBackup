@@ -7,7 +7,7 @@ using HyperVBackupRCT;
 
 namespace HVBackupCore
 {
-    public class ReadableBackupChain
+    public class BackupChainReader
     {
         private ReadableFullBackup fullBackup;
         private List<ReadableRCTBackup> rctBackups;

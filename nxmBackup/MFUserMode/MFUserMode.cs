@@ -54,14 +54,14 @@ namespace MFUserMode
 
 
         //source stream (usually seekable decompression stream)
-        private ReadableBackupChain readableBackupChain;
+        private BackupChainReader readableBackupChain;
 
         //the handle to the km connection
         private IntPtr handle;
 
         FileStream logStream = new FileStream("c:\\target\\log.txt", FileMode.Create, FileAccess.Write);
 
-        public MFUserMode(ReadableBackupChain readableBackupChain)
+        public MFUserMode(BackupChainReader readableBackupChain)
         {
             this.readableBackupChain = readableBackupChain;
         }
