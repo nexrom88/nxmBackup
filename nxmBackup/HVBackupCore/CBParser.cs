@@ -9,6 +9,7 @@ namespace HyperVBackupRCT
 {
     public class CBParser
     {
+        //parses a given cb file compressed by using LZ4 BC
         public static CbStructure parseCBFile(string path)
         {
             FileStream inputStream = new FileStream(path, FileMode.Open, FileAccess.Read);
