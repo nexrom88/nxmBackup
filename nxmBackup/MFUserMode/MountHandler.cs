@@ -26,14 +26,22 @@ namespace MFUserMode
             //build readable backup chain structure first
             this.readableChain = buildReadableBackupChain(sourceFiles);
 
-
-            //open source file and read "decompressed file size" (first 8 bytes)
-            FileStream sourceStream = new System.IO.FileStream(sourceFiles[sourceFiles.Length - 1], System.IO.FileMode.Open, System.IO.FileAccess.Read);
-            byte[] buffer = new byte[8];
-            sourceStream.Read(buffer, 0, 8);
-            ulong decompressedFileSize = BitConverter.ToUInt64(buffer, 0);
-            sourceStream.Close();
-            sourceStream.Dispose();
+            ulong decompressedFileSize;
+            //open source file and read "decompressed file size" (first 8 bytes) when flr on full backup
+            if (sourceFiles.Length == 1)
+            {
+                FileStream sourceStream = new System.IO.FileStream(sourceFiles[sourceFiles.Length - 1], System.IO.FileMode.Open, System.IO.FileAccess.Read);
+                byte[] buffer = new byte[8];
+                sourceStream.Read(buffer, 0, 8);
+                decompressedFileSize = BitConverter.ToUInt64(buffer, 0);
+                sourceStream.Close();
+                sourceStream.Dispose();
+            }
+            else
+            {
+                //read "decompressed file size" from first rct backup
+                decompressedFileSize = this.readableChain.RCTBackups[0].cbStructure.vhdxSize;
+            }
 
             //build dummy dest file
             System.IO.Directory.CreateDirectory(System.IO.Path.GetDirectoryName(destDummyFile));

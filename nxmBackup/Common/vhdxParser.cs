@@ -29,6 +29,34 @@ namespace Common
             this.sourceStream.Close();
         }
 
+        //gets the raw bat table
+        public RawBatTable getRawBatTable(RegionTable table)
+        {
+            RawBatTable rawTable = new RawBatTable();
+            UInt64 batOffset = 0;
+            UInt64 batLength = 0;
+            //read offset and length for BAT table
+            foreach (RegionTableEntry entry in table.entries)
+            {
+                if (entry.guid[0] == 0x66)
+                {
+                    batOffset = entry.fileOffset;
+                    batLength = entry.length;
+                    break;
+                }
+            }
+
+            //jump to first BAT entry
+            this.sourceStream.Seek((long)batOffset, SeekOrigin.Begin);
+            rawTable.vhdxOffset = batOffset;
+
+            //read bat table
+            rawTable.rawData = new byte[batLength];
+            this.sourceStream.Read(rawTable.rawData, 0, (int)batLength);
+
+            return rawTable;
+        }
+
         //reads blockSize from MetadataTable
         public UInt32 getBlockSize(MetadataTable metadataTable)
         {
@@ -324,6 +352,12 @@ namespace Common
     {
         public UInt32 blockSize;
         public UInt32 reserved;
+    }
+
+    public struct RawBatTable
+    {
+        public UInt64 vhdxOffset;
+        public byte[] rawData;
     }
 
 }

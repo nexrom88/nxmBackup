@@ -4,6 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.IO;
+using Common;
+using System.Runtime.CompilerServices;
 
 namespace HyperVBackupRCT
 {
@@ -16,8 +18,8 @@ namespace HyperVBackupRCT
             BlockCompression.LZ4BlockStream blockStream = new BlockCompression.LZ4BlockStream(inputStream, BlockCompression.AccessMode.read);
             blockStream.CachingMode = true;
 
-            byte[] buffer = new byte[8];
-            blockStream.Read(buffer, 0, 8);
+            byte[] buffer = new byte[16];
+            blockStream.Read(buffer, 0, 16);
 
             CbStructure parsedCBFile = new CbStructure();
             parsedCBFile.blocks = new List<CbBlock>();
@@ -25,8 +27,24 @@ namespace HyperVBackupRCT
             //parse file header
             UInt32 blockCount = BitConverter.ToUInt32(buffer, 0);
             UInt32 vhdxBlockSize = BitConverter.ToUInt32(buffer, 4);
+            UInt64 vhdxSize = BitConverter.ToUInt64(buffer, 8);
             parsedCBFile.blockCount = blockCount;
             parsedCBFile.vhdxBlockSize = vhdxBlockSize;
+            parsedCBFile.vhdxSize = vhdxSize;
+
+            //parse bat table:
+
+            //read bat header
+            blockStream.Read(buffer, 0, 16);
+            RawBatTable rawBatTable = new RawBatTable();
+            rawBatTable.vhdxOffset = BitConverter.ToUInt64(buffer, 0);
+            UInt64 batLength = BitConverter.ToUInt64(buffer, 8);
+            rawBatTable.rawData = new byte[batLength];
+
+            //read bat payload
+            blockStream.Read(rawBatTable.rawData, 0, (Int32)batLength);
+            parsedCBFile.batTable = rawBatTable;
+
 
             buffer = new byte[16];
             //iterate through each block
@@ -84,6 +102,10 @@ namespace HyperVBackupRCT
     {
         public UInt32 blockCount;
         public UInt32 vhdxBlockSize;
+        public UInt64 vhdxSize;
+
+        public RawBatTable batTable;
+
         public List<CbBlock> blocks;
     }
 

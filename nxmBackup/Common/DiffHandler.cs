@@ -41,7 +41,7 @@ namespace Common
 
         //writes the diff file using cbt information
         [Obsolete]
-        public void writeDiffFile(ChangedBlock[] changedBlocks, VirtualDiskHandler diskHandler, UInt32 vhdxBlockSize, Common.IArchive archive, Compression compressionType, string hddName, Common.BATTable vhdxBATTable, UInt64 bufferSize)
+        public void writeDiffFile(ChangedBlock[] changedBlocks, VirtualDiskHandler diskHandler, UInt32 vhdxBlockSize, Common.IArchive archive, Compression compressionType, string hddName, Common.BATTable vhdxBATTable, UInt64 bufferSize, RawBatTable rawBatTable, UInt64 vhdxSize)
         {
 
             //calculate changed bytes count for progress calculation
@@ -69,6 +69,19 @@ namespace Common
 
             //write vhdx block size
             outStream.Write(BitConverter.GetBytes(vhdxBlockSize), 0, 4);
+
+            //write vhdx size
+            outStream.Write(BitConverter.GetBytes(vhdxSize), 0, 8);
+
+            //write raw bat table:
+
+            //write raw bat table header
+            outStream.Write(BitConverter.GetBytes(rawBatTable.vhdxOffset), 0, 8); //bat vhdx offset
+            outStream.Write(BitConverter.GetBytes((UInt64)rawBatTable.rawData.Length), 0, 8); //bat vhdx offset
+
+            //write raw bat table payload
+            outStream.Write(rawBatTable.rawData, 0, rawBatTable.rawData.Length);
+
 
             ulong bytesRead;
 
@@ -326,6 +339,12 @@ namespace Common
 //
 //uint32 = 4 bytes = changed block count
 //uint32 = 4 bytes = vhdx block size
+//uint64 = 8 bytes = vhdx size
+//
+//bat table:
+//ulong = 8 bytes = bat vhdx offset
+//ulong = 8 bytes = bat length in bytes
+//bat table data (size = bat length)
 //
 //one block:
 //ulong = 8 bytes = changed block offset

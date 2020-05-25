@@ -18,6 +18,35 @@ namespace HVBackupCore
         //reads the given data from backup chain
         public void readFromChain (Int64 offset, Int64 length, ref byte[] buffer, Int32 bufferOffset)
         {
+            //read from bat table an flr on rct backup?
+            if (RCTBackups.Count > 0 && RCTBackups[0].cbStructure.batTable.vhdxOffset <= (UInt64)offset && (UInt64)offset < RCTBackups[0].cbStructure.batTable.vhdxOffset + (UInt64)RCTBackups[0].cbStructure.batTable.rawData.Length)
+            {
+                //how much bytes can be read here from raw bat table and where?
+                UInt64 readableBytes = (RCTBackups[0].cbStructure.batTable.vhdxOffset + (UInt64)RCTBackups[0].cbStructure.batTable.rawData.Length) - (UInt64)offset;
+                UInt64 readOffset = (UInt64)offset - RCTBackups[0].cbStructure.batTable.vhdxOffset;
+
+                //copy bytes
+                for (UInt64 i = 0; i < readableBytes; i++)
+                {
+                    buffer[(UInt64)bufferOffset + i] = RCTBackups[0].cbStructure.batTable.rawData[readOffset + i];
+                }
+
+                //request completed?
+                if ((Int64)readableBytes == length)
+                {
+                    return;
+                }
+                else
+                {
+                    //bytes missing
+                    readFromChain(offset + (Int64)readableBytes, length - (Int64)readableBytes, ref buffer, bufferOffset + (Int32)readableBytes);
+                    return;
+                }
+            }
+
+            //payload reads:
+
+
             //iterate through all rct backups first to see if data is within rct backup
             foreach (ReadableRCTBackup rctBackup in this.RCTBackups)
             {
