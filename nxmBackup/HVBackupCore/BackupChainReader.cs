@@ -19,28 +19,39 @@ namespace HVBackupCore
         public void readFromChain (Int64 offset, Int64 length, ref byte[] buffer, Int32 bufferOffset)
         {
             //read from bat table an flr on rct backup?
-            if (RCTBackups.Count > 0 && RCTBackups[0].cbStructure.batTable.vhdxOffset <= (UInt64)offset && (UInt64)offset < RCTBackups[0].cbStructure.batTable.vhdxOffset + (UInt64)RCTBackups[0].cbStructure.batTable.rawData.Length)
+            if (rctBackups.Count > 0)
             {
-                //how much bytes can be read here from raw bat table and where?
-                UInt64 readableBytes = (RCTBackups[0].cbStructure.batTable.vhdxOffset + (UInt64)RCTBackups[0].cbStructure.batTable.rawData.Length) - (UInt64)offset;
-                UInt64 readOffset = (UInt64)offset - RCTBackups[0].cbStructure.batTable.vhdxOffset;
+                UInt64 vhdxBatOffset = RCTBackups[0].cbStructure.batTable.vhdxOffset;
+                UInt64 vhdxBatEndOffset = vhdxBatOffset + (UInt64)RCTBackups[0].cbStructure.batTable.rawData.Length;
+                if (vhdxBatOffset <= (UInt64)offset && (UInt64)offset < vhdxBatEndOffset)
+                {
+                    //how much bytes can be read here from raw bat table and where?
+                    UInt64 readableBytes = (vhdxBatEndOffset - (UInt64)offset) + 1;
+                    UInt64 readOffset = (UInt64)offset - vhdxBatOffset;
 
-                //copy bytes
-                for (UInt64 i = 0; i < readableBytes; i++)
-                {
-                    buffer[(UInt64)bufferOffset + i] = RCTBackups[0].cbStructure.batTable.rawData[readOffset + i];
-                }
+                    //do not read more than necessary
+                    if (readableBytes > (UInt64)length)
+                    {
+                        readableBytes = (UInt64)length;
+                    }
 
-                //request completed?
-                if ((Int64)readableBytes == length)
-                {
-                    return;
-                }
-                else
-                {
-                    //bytes missing
-                    readFromChain(offset + (Int64)readableBytes, length - (Int64)readableBytes, ref buffer, bufferOffset + (Int32)readableBytes);
-                    return;
+                    //copy bytes
+                    for (UInt64 i = 0; i < readableBytes; i++)
+                    {
+                        buffer[(UInt64)bufferOffset + i] = RCTBackups[0].cbStructure.batTable.rawData[readOffset + i];
+                    }
+
+                    //request completed?
+                    if ((Int64)readableBytes == length)
+                    {
+                        return;
+                    }
+                    else
+                    {
+                        //bytes missing
+                        readFromChain(offset + (Int64)readableBytes, length - (Int64)readableBytes, ref buffer, bufferOffset + (Int32)readableBytes);
+                        return;
+                    }
                 }
             }
 
@@ -59,6 +70,12 @@ namespace HVBackupCore
                     UInt64 skippedBytes = 0;
                     for (int j = 0; j < rctBackup.cbStructure.blocks[i].vhdxBlockLocations.Count; j++)
                     {
+                        //is vhdxBlocklocation 0? not possible here -> skip this vhdxblocklocation
+                        if (rctBackup.cbStructure.blocks[i].vhdxBlockLocations[j].vhdxOffset == 0)
+                        {
+                            continue;
+                        }
+
                         VhdxBlockLocation currentLocation = rctBackup.cbStructure.blocks[i].vhdxBlockLocations[j];
 
                         //is offset within location?

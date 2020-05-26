@@ -28,13 +28,18 @@ namespace Common
             UInt64[] vhdxOffsets = new UInt64[(endEntry - startEntry) + 1];
             for (UInt32 i = startEntry; i <= endEntry; i++)
             {
-                vhdxOffsets[i - startEntry] = vhdxBATTable.entries[(int)i].FileOffsetMB * 1048576; // multiple with 1024^2 to get byte offset
+                switch (vhdxBATTable.entries[(int)i].state)
+                {
+                    case 6: //block is fully present
+                        vhdxOffsets[i - startEntry] = vhdxBATTable.entries[(int)i].FileOffsetMB * 1048576; // multiple with 1024^2 to get byte offset
+                        break;
+                    default: //block is not present
+                        vhdxOffsets[i - startEntry] = 0;
+                        break;
+                }
+                
             }
 
-            if (vhdxOffsets[0] == 0)
-            {
-                vhdxOffsets[0] = 0;
-            }
 
             return vhdxOffsets;
         }
