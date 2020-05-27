@@ -122,10 +122,6 @@ namespace MFUserMode
             data = new byte[length];
             this.readableBackupChain.readFromChain(offset, length, ref data, 0);
 
-            if (offset == 0)
-            {
-                System.IO.File.WriteAllBytes(@"C:\Users\Administrator\Desktop\log.bin", data);
-            }
 
 
             //build reply
