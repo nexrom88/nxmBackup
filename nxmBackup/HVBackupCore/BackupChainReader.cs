@@ -73,6 +73,7 @@ namespace HVBackupCore
                         //is vhdxBlocklocation 0? not possible here -> skip this vhdxblocklocation
                         if (rctBackup.cbStructure.blocks[i].vhdxBlockLocations[j].vhdxOffset == 0)
                         {
+                            skippedBytes += rctBackup.cbStructure.blocks[i].vhdxBlockLocations[j].vhdxLength;
                             continue;
                         }
 
