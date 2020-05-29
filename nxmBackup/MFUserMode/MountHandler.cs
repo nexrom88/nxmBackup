@@ -79,7 +79,7 @@ namespace MFUserMode
                 BackupChainReader.ReadableRCTBackup rctBackup = new BackupChainReader.ReadableRCTBackup();
                 
                 //parse cb file
-                CbStructure cbStruct = CBParser.parseCBFile(sourceFiles[i]);
+                CbStructure cbStruct = CBParser.parseCBFile(sourceFiles[i], true);
                 rctBackup.cbStructure = cbStruct;
 
                 //open input stream

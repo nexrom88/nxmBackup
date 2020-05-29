@@ -12,10 +12,8 @@ namespace HyperVBackupRCT
     public class CBParser
     {
         //parses a given cb file compressed by using LZ4 BC
-        public static CbStructure parseCBFile(string path)
-        {
-            FileStream inputStream = new FileStream(path, FileMode.Open, FileAccess.Read);
-            BlockCompression.LZ4BlockStream blockStream = new BlockCompression.LZ4BlockStream(inputStream, BlockCompression.AccessMode.read);
+        public static CbStructure parseCBFile(BlockCompression.LZ4BlockStream blockStream, bool closeAfterFinish)
+        {            
             blockStream.CachingMode = true;
 
             byte[] buffer = new byte[16];
@@ -90,11 +88,20 @@ namespace HyperVBackupRCT
 
             }
 
-            blockStream.Close();
-            inputStream.Close();
+            //close stream?
+            if (closeAfterFinish)
+            {
+                blockStream.Close();
+            }
 
             return parsedCBFile;
+        }
 
+        //parses a given cb file compressed by using LZ4 BC by a given filepath
+        public static CbStructure parseCBFile(string path, bool closeAfterFinish)
+        {
+            FileStream inputStream = new FileStream(path, FileMode.Open, FileAccess.Read);
+            return parseCBFile(new BlockCompression.LZ4BlockStream(inputStream, BlockCompression.AccessMode.read), closeAfterFinish);
         }
     }
 

@@ -101,7 +101,7 @@ namespace HVBackupCore
                                 //calculate available bytes
                                 UInt64 availableBytes = (UInt64)length - ((cbOffset + (UInt64)length) - (rctBackup.cbStructure.blocks[i].cbFileOffset + rctBackup.cbStructure.blocks[i].changedBlockLength));
 
-                                rctBackup.sourceStream.Read(buffer, 0, (Int32)availableBytes);
+                                rctBackup.sourceStream.Read(buffer, bufferOffset, (Int32)availableBytes);
 
                                 //read remaining bytes recursive
                                 readFromChain(offset + (Int64)availableBytes, length - (Int64)availableBytes, ref buffer, (Int32)availableBytes);

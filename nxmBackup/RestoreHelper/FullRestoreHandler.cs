@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Documents;
 
 namespace RestoreHelper
 {
@@ -98,7 +99,7 @@ namespace RestoreHelper
                     System.IO.Stream diffStream = archive.openAndGetFileStream(System.IO.Path.GetFileName(hddFile) + ".cb");
 
                     //merge the files
-                    diffRestore.merge(diffStream, hddFile);
+                    diffRestore.merge((BlockCompression.LZ4BlockStream)diffStream, hddFile);
                     diffStream.Close();
                 }
                 archive.close();

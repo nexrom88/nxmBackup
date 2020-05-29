@@ -180,7 +180,7 @@ namespace Common
 
 
         //merges a rct diff file with a vhdx
-        public void merge(Stream diffStream, string destinationSnapshot)
+        public void merge(BlockCompression.LZ4BlockStream diffStream, string destinationSnapshot)
         {
             int relatedEventId = this.eventHandler.raiseNewEvent("Verarbeite Inkrement...", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
 
@@ -194,62 +194,18 @@ namespace Common
 
             FileStream snapshotStream = new FileStream(diskHandler.getHandle(), FileAccess.Write, false, sectorSize, true);
 
-            //read block count
-            byte[] buffer = new byte[4];
-            diffStream.Read(buffer, 0, 4);
-            UInt32 blockCount = BitConverter.ToUInt32(buffer, 0);
-
-            //read vhdx block size
-            diffStream.Read(buffer, 0, 4);
-            UInt32 vhdxBlockSize = BitConverter.ToUInt32(buffer, 0);
+            HyperVBackupRCT.CbStructure cbStruct = HyperVBackupRCT.CBParser.parseCBFile(diffStream, false);
 
             //restored bytes count for progress calculation
             long bytesRestored = 0;
             string lastProgress = "";
 
             //iterate through all blocks
-            for (int i = 0; i < blockCount; i++)
+            byte[] buffer;
+            for (int i = 0; i < cbStruct.blockCount; i++)
             {
-                ulong offset;
-                ulong length;
                 ulong bytesRead = 0;
                 ulong writeOffset = 0;
-
-                //read block offset
-                buffer = new byte[8];
-                //ensure to read 8 bytes, lz4 sometimes reads less
-                while (bytesRead < 8)
-                {
-                    bytesRead += (ulong)diffStream.Read(buffer, (int)bytesRead, 8 - (int)bytesRead);
-                }
-                offset = BitConverter.ToUInt64(buffer, 0);
-
-                //read block length
-                //ensure to read 8 bytes, lz4 sometimes reads less
-                bytesRead = 0;
-                while (bytesRead < 8)
-                {
-                    bytesRead += (ulong)diffStream.Read(buffer, (int)bytesRead, 8 - (int)bytesRead);
-                }
-                length = BitConverter.ToUInt64(buffer, 0);
-
-                //jump over vhdx block offsets
-
-                //read vhdxBlockOffsetsCount
-                bytesRead = 0;
-                while (bytesRead < 4)
-                {
-                    bytesRead += (ulong)diffStream.Read(buffer, (int)bytesRead, 4 - (int)bytesRead);
-                }
-                UInt32 vhdxBlockOffsetsCount = BitConverter.ToUInt32(buffer, 0);
-
-                //read and ignore entries
-                bytesRead = 0;
-                while (bytesRead < 8* vhdxBlockOffsetsCount)
-                {
-                    bytesRead += (ulong)diffStream.Read(buffer, (int)bytesRead, 8 * (int)vhdxBlockOffsetsCount - (int)bytesRead);
-                }
-
 
                 //read data block buffered, has to be 2^X
                 int bufferSize = 16777216;
@@ -257,19 +213,20 @@ namespace Common
                 
                 buffer = new byte[bufferSize];
 
-                while ((ulong)bytesRead < length) //read blockwise until everything is read
+                while ((ulong)bytesRead < cbStruct.blocks[i].changedBlockLength) //read blockwise until everything is read
                 {
                     int bytesReadBlock = 0;
 
                     //shrink buffer size?
-                    if (length - (ulong)bytesRead < (ulong)bufferSize)
+                    if (cbStruct.blocks[i].changedBlockLength - (ulong)bytesRead < (ulong)bufferSize)
                     {
-                        bufferSize = (int)(length - (ulong)bytesRead);
+                        bufferSize = (int)(cbStruct.blocks[i].changedBlockLength - (ulong)bytesRead);
                         buffer = new byte[bufferSize];
                     }
 
 
                     //read until buffer is full (by using lz4 it can occur that readBytes < bufferSize)
+                    diffStream.Seek((Int64)cbStruct.blocks[i].cbFileOffset, SeekOrigin.Begin);
                     while (bytesReadBlock < bufferSize)
                     {
                         int currentBytesCount = diffStream.Read(buffer, bytesReadBlock, bufferSize - bytesReadBlock);
@@ -281,7 +238,7 @@ namespace Common
                     }
 
                     //write block to target file
-                    diskHandler.write(offset + writeOffset, buffer);
+                    diskHandler.write(cbStruct.blocks[i].changedBlockOffset + writeOffset, buffer);
                     writeOffset += (ulong)bufferSize;
 
                     //show progress
@@ -361,7 +318,7 @@ namespace Common
 //ulong = 8 bytes = vhdx block length 1
 
 //ulong = 8 bytes = vhdx block offset 2
-//ulong = 8 bytes = vhdx block length 1
+//ulong = 8 bytes = vhdx block length 2
 //...
 
 //block data (size = changed block length)
