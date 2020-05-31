@@ -16,9 +16,22 @@ namespace HVBackupCore
         public List<ReadableRCTBackup> RCTBackups { get => rctBackups; set => rctBackups = value; }
 
         //reads the given data from backup chain
-        public void readFromChain (Int64 offset, Int64 length, ref byte[] buffer, Int32 bufferOffset)
+        public void readFromChain(Int64 offset, Int64 length, ref byte[] buffer, Int32 bufferOffset)
         {
-            //read from bat table an flr on rct backup?
+            //read from vhdx header (first 1MB) on rct backup?
+            if (rctBackups.Count > 0)
+            {
+                if (offset < 1048576) // within vhdx header?
+                {
+                    for (Int64 i = 0; i < length; i++)
+                    {
+                        buffer[bufferOffset + i] = RCTBackups[0].cbStructure.rawHeader.rawData[offset + i];
+                    }
+                    return;
+                }
+            }
+
+            //read from bat table on flr on rct backup?
             if (rctBackups.Count > 0)
             {
                 UInt64 vhdxBatOffset = RCTBackups[0].cbStructure.batTable.vhdxOffset;
@@ -62,7 +75,6 @@ namespace HVBackupCore
             foreach (ReadableRCTBackup rctBackup in this.RCTBackups)
             {
                 UInt64 vhdxBlockSize = rctBackup.cbStructure.vhdxBlockSize;
-
                 //iterate through all changed blocks
                 for (int i = 0; i < rctBackup.cbStructure.blocks.Count; i++)
                 {
@@ -78,6 +90,11 @@ namespace HVBackupCore
                         }
 
                         VhdxBlockLocation currentLocation = rctBackup.cbStructure.blocks[i].vhdxBlockLocations[j];
+
+                        //if (offset == 10506731520)
+                        //{
+                        //    offset = 10506731520;
+                        //}
 
                         //is offset within location?
                         if ((UInt64)offset >= currentLocation.vhdxOffset && (UInt64)offset < currentLocation.vhdxOffset + currentLocation.vhdxLength)
@@ -104,7 +121,7 @@ namespace HVBackupCore
                                 rctBackup.sourceStream.Read(buffer, bufferOffset, (Int32)availableBytes);
 
                                 //read remaining bytes recursive
-                                readFromChain(offset + (Int64)availableBytes, length - (Int64)availableBytes, ref buffer, (Int32)availableBytes);
+                                readFromChain(offset + (Int64)availableBytes, length - (Int64)availableBytes, ref buffer, bufferOffset + (Int32)availableBytes);
 
                                 return;
                             }

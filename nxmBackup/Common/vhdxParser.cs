@@ -57,6 +57,19 @@ namespace Common
             return rawTable;
         }
 
+        //gets the raw header
+        public RawHeader getRawHeader()
+        {
+            RawHeader header = new RawHeader();
+            header.rawData = new byte[1048576]; // 1MB * 1024 * 1024
+
+            //just return the first 1MB of data
+            this.sourceStream.Seek(0, SeekOrigin.Begin);
+            this.sourceStream.Read(header.rawData, 0, header.rawData.Length);
+
+            return header;
+        }
+
         //reads blockSize from MetadataTable
         public UInt32 getBlockSize(MetadataTable metadataTable)
         {
@@ -357,6 +370,11 @@ namespace Common
     public struct RawBatTable
     {
         public UInt64 vhdxOffset;
+        public byte[] rawData;
+    }
+
+    public struct RawHeader
+    {
         public byte[] rawData;
     }
 

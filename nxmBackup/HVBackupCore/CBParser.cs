@@ -30,6 +30,11 @@ namespace HyperVBackupRCT
             parsedCBFile.vhdxBlockSize = vhdxBlockSize;
             parsedCBFile.vhdxSize = vhdxSize;
 
+            //parse vhdx header
+            parsedCBFile.rawHeader = new RawHeader();
+            parsedCBFile.rawHeader.rawData = new byte[1048576]; // 1MB * 1024 * 1024
+            blockStream.Read(parsedCBFile.rawHeader.rawData, 0, parsedCBFile.rawHeader.rawData.Length);
+
             //parse bat table:
 
             //read bat header
@@ -110,6 +115,8 @@ namespace HyperVBackupRCT
         public UInt32 blockCount;
         public UInt32 vhdxBlockSize;
         public UInt64 vhdxSize;
+
+        public RawHeader rawHeader;
 
         public RawBatTable batTable;
 
