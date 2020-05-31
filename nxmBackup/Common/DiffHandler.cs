@@ -82,7 +82,7 @@ namespace Common
 
             //write raw bat table header
             outStream.Write(BitConverter.GetBytes(rawBatTable.vhdxOffset), 0, 8); //bat vhdx offset
-            outStream.Write(BitConverter.GetBytes((UInt64)rawBatTable.rawData.Length), 0, 8); //bat vhdx offset
+            outStream.Write(BitConverter.GetBytes((UInt64)rawBatTable.rawData.Length), 0, 8); //bat length
 
             //write raw bat table payload
             outStream.Write(rawBatTable.rawData, 0, rawBatTable.rawData.Length);
@@ -105,7 +105,7 @@ namespace Common
                 UInt64[] vhdxBlocks = getVhdxBlockOffsets(block.offset, block.length, vhdxBATTable, vhdxBlockSize);
 
                 //write vhdx blocks
-                outStream.Write(BitConverter.GetBytes((UInt32)vhdxBlocks.Length), 0, 4); //block offset count
+                outStream.Write(BitConverter.GetBytes((UInt32)vhdxBlocks.Length), 0, 4); //vhdx block offsets count
 
 
                 //iterate through all block offsets
@@ -226,7 +226,7 @@ namespace Common
 
 
                     //read until buffer is full (by using lz4 it can occur that readBytes < bufferSize)
-                    diffStream.Seek((Int64)cbStruct.blocks[i].cbFileOffset, SeekOrigin.Begin);
+                    diffStream.Seek((Int64)cbStruct.blocks[i].cbFileOffset + (Int64)bytesRead, SeekOrigin.Begin);
                     while (bytesReadBlock < bufferSize)
                     {
                         int currentBytesCount = diffStream.Read(buffer, bytesReadBlock, bufferSize - bytesReadBlock);
