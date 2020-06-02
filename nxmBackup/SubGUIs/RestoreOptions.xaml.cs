@@ -115,11 +115,11 @@ namespace RestoreHelper
                 case "full":
                     int jobExecutionId = Common.DBQueries.addJobExecution(this.job.DbId.ToString(), "restore");
                     RestoreHelper.FullRestoreHandler restoreHandler = new RestoreHelper.FullRestoreHandler(new Common.EventHandler(((ComboBoxItem)cbVMs.SelectedItem).Tag.ToString(), jobExecutionId));
-                    restoreHandler.performFullRestoreProcess(sourcePath, "f:\\target", restorePoint.InstanceId, this.job.Compression);
+                    restoreHandler.performFullRestoreProcess(sourcePath, "f:\\target", restorePoint.InstanceId);
                     break;
                 case "flr":
                     RestoreHelper.FileLevelRestoreHandler flrHandler = new RestoreHelper.FileLevelRestoreHandler();
-                    flrHandler.performGuestFilesRestore(sourcePath, restorePoint.InstanceId, this.job.Compression);
+                    flrHandler.performGuestFilesRestore(sourcePath, restorePoint.InstanceId);
                     break;
             }
 

@@ -98,7 +98,6 @@
     <Compile Include="Common\VirtualDiskHandler.cs" />
     <Compile Include="Common\WMIHelper.cs" />
     <Compile Include="Common\wmiUtilities.cs" />
-    <Compile Include="Common\ZipArchive.cs" />
     <Compile Include="ConfigHandler\BackupConfigHandler.cs" />
     <Compile Include="ConfigHandler\JobConfigHandler.cs" />
     <Compile Include="DataBase\DBConnection.cs" />

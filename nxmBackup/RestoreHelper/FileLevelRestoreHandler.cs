@@ -15,7 +15,7 @@ namespace RestoreHelper
 
 
         //performs a guest files restore
-        public void performGuestFilesRestore(string basePath, string instanceID, Compression compressionType)
+        public void performGuestFilesRestore(string basePath, string instanceID)
         {
             //get full backup chain
             List<ConfigHandler.BackupConfigHandler.BackupInfo> backupChain = ConfigHandler.BackupConfigHandler.readChain(basePath);

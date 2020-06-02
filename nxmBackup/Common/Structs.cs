@@ -6,12 +6,6 @@ using System.Threading.Tasks;
 
 namespace Common
 {
-    //defines compression type
-    public enum Compression
-    {
-        zip, lz4
-    }
-
     //defines rotation type
     public struct Rotation
     {

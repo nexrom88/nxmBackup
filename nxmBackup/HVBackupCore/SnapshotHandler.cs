@@ -68,7 +68,7 @@ namespace HyperVBackupRCT
             }
 
             //export the snapshot
-            export(destination, snapshot, refP, job.Compression);
+            export(destination, snapshot, refP);
 
             //read current backup chain for further processing
             chain = ConfigHandler.BackupConfigHandler.readChain(destination);
@@ -105,7 +105,7 @@ namespace HyperVBackupRCT
             {
                 if (job.Rotation.maxElementCount > 0 && chain.Count > job.Rotation.maxElementCount)
                 {
-                    mergeOldest(destination, chain, job.Compression);
+                    mergeOldest(destination, chain);
                 }
             }
             else if (job.Rotation.type == RotationType.blockRotation) //RotationType = "blockRotation"
@@ -194,7 +194,7 @@ namespace HyperVBackupRCT
         }
 
         //merge two backups to keep max snapshot count
-        private void mergeOldest(string path, List<ConfigHandler.BackupConfigHandler.BackupInfo> chain, Compression compressionType)
+        private void mergeOldest(string path, List<ConfigHandler.BackupConfigHandler.BackupInfo> chain)
         {
             //when the first two backups are "full" backups then the first one can just be deleted
             if (chain[0].type == "full" && chain[1].type == "full")
@@ -215,7 +215,7 @@ namespace HyperVBackupRCT
             RestoreHelper.FullRestoreHandler restHandler = new RestoreHelper.FullRestoreHandler(this.eventHandler);
 
             //perform restore to staging directory (including merge with second backup)
-            restHandler.performFullRestoreProcess(path, System.IO.Path.Combine(path, "staging"), chain[1].instanceID, compressionType);
+            restHandler.performFullRestoreProcess(path, System.IO.Path.Combine(path, "staging"), chain[1].instanceID);
 
             this.eventHandler.raiseNewEvent("erfolgreich", true, false, eventId, EventStatus.successful);
             eventId = this.eventHandler.raiseNewEvent("Rotiere Backups (Schritt 2 von 5)...", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
@@ -229,7 +229,7 @@ namespace HyperVBackupRCT
             //create new backup container from merged backups
             Guid g = Guid.NewGuid();
             string guidFolder = g.ToString();
-            Common.ZipArchive backupArchive = new Common.ZipArchive(System.IO.Path.Combine(path, guidFolder + ".nxm"), null);
+            Common.LZ4Archive backupArchive = new Common.LZ4Archive(System.IO.Path.Combine(path, guidFolder + ".nxm"), null);
             backupArchive.create();
             backupArchive.open(System.IO.Compression.ZipArchiveMode.Create);
 
@@ -377,7 +377,7 @@ namespace HyperVBackupRCT
         }
 
         //exports a snapshot
-        public void export(string path, ManagementObject currentSnapshot, ManagementObject rctBase, Compression compressionType)
+        public void export(string path, ManagementObject currentSnapshot, ManagementObject rctBase)
         {
             string basePath = path;
             string backupType = "";
@@ -391,18 +391,9 @@ namespace HyperVBackupRCT
             //create and open archive
             Common.IArchive archive;
             
-            switch (compressionType)
-            {
-                case Compression.zip:
-                    archive = new Common.ZipArchive(System.IO.Path.Combine(path, guidFolder + ".nxm"), this.eventHandler);
-                    break;
-                case Compression.lz4:
-                    archive = new Common.LZ4Archive(System.IO.Path.Combine(path, guidFolder + ".nxm"), this.eventHandler);
-                    break;
-                default: //default fallback to zip algorithm
-                    archive = new Common.ZipArchive(System.IO.Path.Combine(path, guidFolder + ".nxm"), this.eventHandler);
-                    break;
-            }
+           
+            archive = new Common.LZ4Archive(System.IO.Path.Combine(path, guidFolder + ".nxm"), this.eventHandler);
+            
             
             archive.create();
             archive.open(System.IO.Compression.ZipArchiveMode.Create);
@@ -456,7 +447,7 @@ namespace HyperVBackupRCT
                     }
                     
                     //do a rct backup copy
-                    performrctbackup(hddPath[0], ((string[])rctBase["ResilientChangeTrackingIdentifiers"])[hddCounter], archive, compressionType);
+                    performrctbackup(hddPath[0], ((string[])rctBase["ResilientChangeTrackingIdentifiers"])[hddCounter], archive);
 
                     backupType = "rct";
                 }
@@ -493,7 +484,7 @@ namespace HyperVBackupRCT
 
 
         //performs a rct backup copy
-        private void performrctbackup(string snapshothddPath, string rctID, Common.IArchive archive, Compression compressionType)
+        private void performrctbackup(string snapshothddPath, string rctID, Common.IArchive archive)
         {
             //read vhd size
             VirtualDiskHandler diskHandler = new VirtualDiskHandler(snapshothddPath);
@@ -571,7 +562,7 @@ namespace HyperVBackupRCT
                     //write backup output
                     DiffHandler diffWriter = new DiffHandler(this.eventHandler);
 
-                    diffWriter.writeDiffFile(changedBlocks, diskHandler, vhdxBlockSize, archive, compressionType, System.IO.Path.GetFileName(snapshothddPath), batTable, bufferSize, rawBatTable, rawHeader, vhdxSize);
+                    diffWriter.writeDiffFile(changedBlocks, diskHandler, vhdxBlockSize, archive, System.IO.Path.GetFileName(snapshothddPath), batTable, bufferSize, rawBatTable, rawHeader, vhdxSize);
 
                     
                     //close vhd file

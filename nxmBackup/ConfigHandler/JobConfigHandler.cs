@@ -23,7 +23,7 @@ namespace ConfigHandler
             //open DB connection
             using (Common.DBConnection connection = new Common.DBConnection())
             {
-                List<Dictionary<string, string>> jobs = connection.doReadQuery("SELECT Jobs.id, Jobs.name, Jobs.isRunning, Jobs.basepath, Jobs.maxelements, Jobs.blocksize, Jobs.day, Jobs.hour, Jobs.minute, Jobs.interval, Compression.name AS compressionname, RotationType.name AS rotationname FROM Jobs INNER JOIN Compression ON Jobs.compressionID=Compression.id INNER JOIN RotationType ON Jobs.rotationtypeID=RotationType.id WHERE Jobs.deleted=0", null, null);
+                List<Dictionary<string, string>> jobs = connection.doReadQuery("SELECT Jobs.id, Jobs.name, Jobs.isRunning, Jobs.basepath, Jobs.maxelements, Jobs.blocksize, Jobs.day, Jobs.hour, Jobs.minute, Jobs.interval, RotationType.name AS rotationname FROM Jobs INNER JOIN RotationType ON Jobs.rotationtypeID=RotationType.id WHERE Jobs.deleted=0", null, null);
 
                 //check that jobs != null
                 if (jobs == null) //DB error
@@ -61,16 +61,6 @@ namespace ConfigHandler
                     rota.maxElementCount = uint.Parse(job["maxelements"]);
                     newJob.Rotation = rota;
 
-                    //build compression level
-                    switch (job["compressionname"])
-                    {
-                        case "zip":
-                            newJob.Compression = Compression.zip;
-                            break;
-                        case "lz4":
-                            newJob.Compression = Compression.lz4;
-                            break;
-                    }
 
                     //build interval structure
                     Interval interval = new Interval();
@@ -146,11 +136,6 @@ namespace ConfigHandler
 
                 List<Dictionary<string, string>> values;
 
-                //get compression id
-                parameters.Add("name", job.Compression.ToString().ToLower());
-                values = connection.doReadQuery("SELECT id FROM compression WHERE name=@name", parameters, transaction);
-                string compressionID = values[0]["id"];
-
                 parameters = new Dictionary<string, string>();
                 //get rotationtype ID
                 parameters.Add("name", job.Rotation.type.ToString().ToLower());
@@ -166,12 +151,11 @@ namespace ConfigHandler
                 parameters.Add("hour", job.Interval.hour);
                 parameters.Add("day", job.Interval.day);
                 parameters.Add("basepath", job.BasePath);
-                parameters.Add("compressionID", compressionID);
                 parameters.Add("blocksize", job.BlockSize.ToString());
                 parameters.Add("maxelements", job.Rotation.maxElementCount.ToString());
                 parameters.Add("rotationtypeID", rotationID);
 
-                values = connection.doReadQuery("INSERT INTO Jobs (name, interval, minute, hour, day, basepath, compressionID, blocksize, maxelements, rotationtypeID) VALUES(@name, @interval, @minute, @hour, @day, @basepath, @compressionID, @blocksize, @maxelements, @rotationtypeID); SELECT SCOPE_IDENTITY() AS id;", parameters, transaction);
+                values = connection.doReadQuery("INSERT INTO Jobs (name, interval, minute, hour, day, basepath, blocksize, maxelements, rotationtypeID) VALUES(@name, @interval, @minute, @hour, @day, @basepath, @blocksize, @maxelements, @rotationtypeID); SELECT SCOPE_IDENTITY() AS id;", parameters, transaction);
 
                 string jobID = values[0]["id"];
 
@@ -244,7 +228,6 @@ namespace ConfigHandler
         private Interval interval;
         private List<JobVM> jobVMs;
         private string basePath;
-        private Compression compression;
         private uint blockSize;
         private Rotation rotation;
         private bool isRunning;
@@ -258,7 +241,6 @@ namespace ConfigHandler
         public Interval Interval { get => interval; set => interval = value; }
         public List<JobVM> JobVMs { get => jobVMs; set => jobVMs = value; }
         public string BasePath { get => basePath; set => basePath = value; }
-        public Compression Compression { get => compression; set => compression = value; }
         public uint BlockSize { get => blockSize; set => blockSize = value; }
         public Rotation Rotation { get => rotation; set => rotation = value; }
         public bool IsRunning { get => isRunning; set => isRunning = value; }

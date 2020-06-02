@@ -163,16 +163,6 @@ namespace nxmBackup
             job.BlockSize = this.blockSize;
             job.Rotation = this.rotation;
 
-            //build compression var
-            switch (((ComboBoxItem)cbCompression.SelectedItem).Uid)
-            {
-                case "zip":
-                    job.Compression = Common.Compression.zip;
-                    break;
-                case "lz4":
-                    job.Compression = Common.Compression.lz4;
-                    break;
-            }
 
             //build interval structure
             ComboBoxItem cbI = (ComboBoxItem)cbInterval.SelectedItem;
@@ -248,6 +238,11 @@ namespace nxmBackup
             }
 
             this.rotation.maxElementCount = (uint)detailWindow.slMaxElements.Value;
+
+        }
+
+        private void cbCompression_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
 
         }
     }

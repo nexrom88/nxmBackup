@@ -18,7 +18,7 @@ namespace RestoreHelper
         }
 
         //performs a full restore process
-        public void performFullRestoreProcess(string basePath, string destPath, string instanceID, Common.Compression compressionType)
+        public void performFullRestoreProcess(string basePath, string destPath, string instanceID)
         {
             int relatedEventId = this.eventHandler.raiseNewEvent("Analysiere Backups...", false, false, NO_RELATED_EVENT, Common.EventStatus.inProgress);
 
@@ -63,7 +63,7 @@ namespace RestoreHelper
             this.eventHandler.raiseNewEvent("erfolgreich", true, false, relatedEventId, Common.EventStatus.successful);
 
             //copy full backup to destination and get vhdx files
-            List<string> hddFiles = transferSnapshot(System.IO.Path.Combine(basePath, restoreChain[restoreChain.Count - 1].uuid + ".nxm"), destPath, false, compressionType);
+            List<string> hddFiles = transferSnapshot(System.IO.Path.Combine(basePath, restoreChain[restoreChain.Count - 1].uuid + ".nxm"), destPath, false);
 
             //remove full backup from restore chain
             restoreChain.RemoveAt(restoreChain.Count - 1);
@@ -77,18 +77,8 @@ namespace RestoreHelper
                 //open diff file
                 Common.IArchive archive;
 
-                switch (compressionType)
-                {
-                    case Common.Compression.zip:
-                        archive = new Common.ZipArchive(System.IO.Path.Combine(basePath, currentBackup.uuid + ".nxm"), null);
-                        break;
-                    case Common.Compression.lz4:
-                        archive = new Common.LZ4Archive(System.IO.Path.Combine(basePath, currentBackup.uuid + ".nxm"), null);
-                        break;
-                    default: //default fallback => zip
-                        archive = new Common.ZipArchive(System.IO.Path.Combine(basePath, currentBackup.uuid + ".nxm"), null);
-                        break;
-                }
+                
+                archive = new Common.LZ4Archive(System.IO.Path.Combine(basePath, currentBackup.uuid + ".nxm"), null);                
                 
                 
                 archive.open(System.IO.Compression.ZipArchiveMode.Read);
@@ -127,24 +117,15 @@ namespace RestoreHelper
         }
 
         //copys a file (full backup vhd) from an archive to destination and returns all vhdx files
-        public List<string> transferSnapshot(string archivePath, string destination, bool justHardDrives, Common.Compression compressionType)
+        public List<string> transferSnapshot(string archivePath, string destination, bool justHardDrives)
         {
             List<string> hddFiles = new List<string>();
 
             Common.IArchive archive;
 
-            switch (compressionType)
-            {
-                case Common.Compression.zip:
-                    archive = new Common.ZipArchive(archivePath, this.eventHandler);
-                    break;
-                case Common.Compression.lz4:
-                    archive = new Common.LZ4Archive(archivePath, this.eventHandler);
-                    break;
-                default: //default fallback => zip
-                    archive = new Common.ZipArchive(archivePath, this.eventHandler);
-                    break;
-            }
+           
+            archive = new Common.LZ4Archive(archivePath, this.eventHandler);
+             
 
             archive.open(System.IO.Compression.ZipArchiveMode.Read);
 

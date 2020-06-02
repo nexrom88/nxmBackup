@@ -46,7 +46,7 @@ namespace Common
 
         //writes the diff file using cbt information
         [Obsolete]
-        public void writeDiffFile(ChangedBlock[] changedBlocks, VirtualDiskHandler diskHandler, UInt32 vhdxBlockSize, Common.IArchive archive, Compression compressionType, string hddName, Common.BATTable vhdxBATTable, UInt64 bufferSize, RawBatTable rawBatTable, RawHeader rawHeader, UInt64 vhdxSize)
+        public void writeDiffFile(ChangedBlock[] changedBlocks, VirtualDiskHandler diskHandler, UInt32 vhdxBlockSize, Common.IArchive archive, string hddName, Common.BATTable vhdxBATTable, UInt64 bufferSize, RawBatTable rawBatTable, RawHeader rawHeader, UInt64 vhdxSize)
         {
 
             //calculate changed bytes count for progress calculation
