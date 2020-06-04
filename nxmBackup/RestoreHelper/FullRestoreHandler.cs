@@ -20,7 +20,11 @@ namespace RestoreHelper
         //performs a full restore process
         public void performFullRestoreProcess(string basePath, string destPath, string instanceID)
         {
-            int relatedEventId = this.eventHandler.raiseNewEvent("Analysiere Backups...", false, false, NO_RELATED_EVENT, Common.EventStatus.inProgress);
+            int relatedEventId = -1;
+            if (this.eventHandler != null)
+            {
+                relatedEventId = this.eventHandler.raiseNewEvent("Analysiere Backups...", false, false, NO_RELATED_EVENT, Common.EventStatus.inProgress);
+            }
 
             //get full backup chain
             List<ConfigHandler.BackupConfigHandler.BackupInfo> backupChain = ConfigHandler.BackupConfigHandler.readChain(basePath);
@@ -29,7 +33,7 @@ namespace RestoreHelper
             ConfigHandler.BackupConfigHandler.BackupInfo targetBackup = getBackup(backupChain, instanceID);
 
             //target backup found?
-            if (targetBackup.instanceID != instanceID)
+            if (targetBackup.instanceID != instanceID && this.eventHandler != null)
             {
                 this.eventHandler.raiseNewEvent("fehlgeschlagen", true, false, relatedEventId, Common.EventStatus.error);
                 this.eventHandler.raiseNewEvent("Ziel-Backup kann nicht gefunden werden", false, false, NO_RELATED_EVENT, Common.EventStatus.error);
@@ -60,7 +64,10 @@ namespace RestoreHelper
                 }
             }
 
-            this.eventHandler.raiseNewEvent("erfolgreich", true, false, relatedEventId, Common.EventStatus.successful);
+            if (this.eventHandler != null)
+            {
+                this.eventHandler.raiseNewEvent("erfolgreich", true, false, relatedEventId, Common.EventStatus.successful);
+            }
 
             //copy full backup to destination and get vhdx files
             List<string> hddFiles = transferSnapshot(System.IO.Path.Combine(basePath, restoreChain[restoreChain.Count - 1].uuid + ".nxm"), destPath, false);
@@ -97,7 +104,11 @@ namespace RestoreHelper
                 //remove current diff
                 restoreChain.RemoveAt(restoreChain.Count - 1);
             }
-            this.eventHandler.raiseNewEvent("Wiederherstellung erfolgreich", false, false, NO_RELATED_EVENT, Common.EventStatus.successful);
+
+            if (this.eventHandler != null)
+            {
+                this.eventHandler.raiseNewEvent("Wiederherstellung erfolgreich", false, false, NO_RELATED_EVENT, Common.EventStatus.successful);
+            }
 
         }
 

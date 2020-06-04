@@ -185,7 +185,11 @@ namespace Common
         //merges a rct diff file with a vhdx
         public void merge(BlockCompression.LZ4BlockStream diffStream, string destinationSnapshot)
         {
-            int relatedEventId = this.eventHandler.raiseNewEvent("Verarbeite Inkrement...", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
+            int relatedEventId = -1;
+            if (this.eventHandler != null)
+            {
+                relatedEventId = this.eventHandler.raiseNewEvent("Verarbeite Inkrement...", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
+            }
 
             //open file streams
             VirtualDiskHandler diskHandler = new VirtualDiskHandler(destinationSnapshot);
@@ -246,7 +250,7 @@ namespace Common
 
                     //show progress
                     string progress = Common.PrettyPrinter.prettyPrintBytes(bytesRestored);
-                    if (progress != lastProgress)
+                    if (progress != lastProgress && this.eventHandler != null)
                     {
                         this.eventHandler.raiseNewEvent("Verarbeite Inkrement... " + progress, false, true, NO_RELATED_EVENT, EventStatus.inProgress);
                         lastProgress = progress;
@@ -255,7 +259,11 @@ namespace Common
                 }
 
             }
-            this.eventHandler.raiseNewEvent("Verarbeite Inkrement... erfolgreich", false, true, NO_RELATED_EVENT, EventStatus.successful);
+
+            if (this.eventHandler != null)
+            {
+                this.eventHandler.raiseNewEvent("Verarbeite Inkrement... erfolgreich", false, true, NO_RELATED_EVENT, EventStatus.successful);
+            }
             GC.KeepAlive(snapshotStream);
             diskHandler.detach();
             diskHandler.close();

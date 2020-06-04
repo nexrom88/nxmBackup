@@ -212,7 +212,7 @@ namespace HyperVBackupRCT
             int eventId;
             eventId = this.eventHandler.raiseNewEvent("Rotiere Backups (Schritt 1 von 5)...", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
 
-            RestoreHelper.FullRestoreHandler restHandler = new RestoreHelper.FullRestoreHandler(this.eventHandler);
+            RestoreHelper.FullRestoreHandler restHandler = new RestoreHelper.FullRestoreHandler(null);
 
             //perform restore to staging directory (including merge with second backup)
             restHandler.performFullRestoreProcess(path, System.IO.Path.Combine(path, "staging"), chain[1].instanceID);
@@ -222,9 +222,9 @@ namespace HyperVBackupRCT
 
             //remove first and second backup from backup chain
             ConfigHandler.BackupConfigHandler.removeBackup(path, chain[0].uuid); //remove from config
-            System.IO.File.Delete(System.IO.Path.Combine(path, chain[0].uuid + ".nxm")); //remove backup file
+            System.IO.Directory.Delete(System.IO.Path.Combine(path, chain[0].uuid + ".nxm"), true); //remove backup file
             ConfigHandler.BackupConfigHandler.removeBackup(path, chain[1].uuid); //remove from config
-            System.IO.File.Delete(System.IO.Path.Combine(path, chain[1].uuid + ".nxm")); //remove backup file
+            System.IO.Directory.Delete(System.IO.Path.Combine(path, chain[1].uuid + ".nxm"), true); //remove backup file
 
             //create new backup container from merged backups
             Guid g = Guid.NewGuid();
