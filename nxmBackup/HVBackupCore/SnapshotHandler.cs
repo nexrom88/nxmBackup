@@ -172,7 +172,7 @@ namespace HyperVBackupRCT
 
             //remove first full backup
             ConfigHandler.BackupConfigHandler.removeBackup(path, chain[0].uuid); //remove from config
-            System.IO.File.Delete(System.IO.Path.Combine(path, chain[0].uuid + ".nxm")); //remove backup file
+            System.IO.Directory.Delete(System.IO.Path.Combine(path, chain[0].uuid + ".nxm"), true); //remove backup file
 
             //remove rct backups
             for (int i = 1; i < chain.Count; i++)
@@ -186,7 +186,7 @@ namespace HyperVBackupRCT
                 {
                     //remove rct backup
                     ConfigHandler.BackupConfigHandler.removeBackup(path, chain[i].uuid); //remove from config
-                    System.IO.File.Delete(System.IO.Path.Combine(path, chain[i].uuid + ".nxm")); //remove backup file
+                    System.IO.Directory.Delete(System.IO.Path.Combine(path, chain[i].uuid + ".nxm"), true); //remove backup file
                 }
             }
 
