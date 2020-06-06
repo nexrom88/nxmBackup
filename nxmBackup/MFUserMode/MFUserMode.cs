@@ -10,7 +10,7 @@ namespace MFUserMode
 {
     using System.ComponentModel;
     using System.Runtime.InteropServices;
-    class MFUserMode
+    public class MFUserMode
     {
 
         // Constant buffer size
@@ -66,6 +66,11 @@ namespace MFUserMode
             this.readableBackupChain = readableBackupChain;
         }
 
+        //empty constructor for debugging purposes
+        public MFUserMode()
+        {
+        }
+
         //starts the connection to kernel Mode driver
         public bool connectToKM()
         {
@@ -113,19 +118,28 @@ namespace MFUserMode
             long offset = BitConverter.ToInt64(data, 0);
             long length = BitConverter.ToInt64(data, 8);
 
-            string output = "offset: " + offset + " length: " + length + "\n";
-            System.Text.ASCIIEncoding enc = new System.Text.ASCIIEncoding();
-            byte[] buffer = enc.GetBytes(output);
-            this.logStream.Write(buffer, 0, buffer.Length);
+            //have to read data?
+            if (offset != 0 || length != 0)
+            {
+                string output = "offset: " + offset + " length: " + length + "\n";
+                System.Text.ASCIIEncoding enc = new System.Text.ASCIIEncoding();
+                byte[] buffer = enc.GetBytes(output);
+                this.logStream.Write(buffer, 0, buffer.Length);
 
-            //read the requested data from backup chain
-            data = new byte[length];
-            this.readableBackupChain.readFromChain(offset, length, ref data, 0);
+                //read the requested data from backup chain
+                data = new byte[length];
+                this.readableBackupChain.readFromChain(offset, length, ref data, 0);
+            }
+            else //offset and length are 0 => send process handle
+            {
+                IntPtr procHandle = System.Diagnostics.Process.GetCurrentProcess().Handle;
+                data = BitConverter.GetBytes(procHandle.ToInt32());
+            }
 
 
 
             //build reply
-            for (int i = 0; i < length; i++)
+            for (int i = 0; i < data.Length; i++)
             {
                 reply.data[i] = data[i];
             }
