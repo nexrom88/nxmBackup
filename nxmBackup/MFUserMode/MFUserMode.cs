@@ -14,7 +14,7 @@ namespace MFUserMode
     {
 
         // Constant buffer size
-        public const int BUFFER_SIZE = 2048;
+        public const int BUFFER_SIZE = 1024;
 
         [DllImport("fltlib", CharSet = CharSet.Auto)]
         static extern unsafe uint FilterConnectCommunicationPort(
@@ -115,11 +115,13 @@ namespace MFUserMode
                 data[i] = dataReceive.messageContent[i];
             }
 
-            long offset = BitConverter.ToInt64(data, 0);
-            long length = BitConverter.ToInt64(data, 8);
+            byte requestType = data[0];
+
+            long offset = BitConverter.ToInt64(data, 1);
+            long length = BitConverter.ToInt64(data, 9);
 
             //have to read data?
-            if (offset != 0 || length != 0)
+            if (requestType == 1)
             {
                 string output = "offset: " + offset + " length: " + length + "\n";
                 System.Text.ASCIIEncoding enc = new System.Text.ASCIIEncoding();
@@ -130,7 +132,7 @@ namespace MFUserMode
                 data = new byte[length];
                 this.readableBackupChain.readFromChain(offset, length, ref data, 0);
             }
-            else //offset and length are 0 => send process handle
+            else if (requestType == 0) //send process handle
             {
                 IntPtr procHandle = System.Diagnostics.Process.GetCurrentProcess().Handle;
                 data = BitConverter.GetBytes(procHandle.ToInt32());
