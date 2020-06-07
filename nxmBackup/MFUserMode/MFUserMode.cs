@@ -14,7 +14,7 @@ namespace MFUserMode
     {
 
         // Constant buffer size
-        public const int BUFFER_SIZE = 1024;
+        public const int BUFFER_SIZE = 2048;
 
         [DllImport("fltlib", CharSet = CharSet.Auto)]
         static extern unsafe uint FilterConnectCommunicationPort(
@@ -32,9 +32,9 @@ namespace MFUserMode
         [DllImport("fltlib")]
         static extern unsafe uint FilterSendMessage(
             IntPtr hPort,
-            void* lpInBuffer,
+            IntPtr lpInBuffer,
             int dwInBufferSize,
-            void* lpOutBuffer,
+            IntPtr lpOutBuffer,
             int dwOutBufferSize,
             out int lpBytesReturned
         );
@@ -76,6 +76,24 @@ namespace MFUserMode
         {
             this.handle = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(IntPtr)));
             uint result = FilterConnectCommunicationPort("\\nxmQueryPort", 0, IntPtr.Zero, 0, IntPtr.Zero,  out handle);
+
+            //return when "connect" is not successful
+            if (result != 0)
+            {
+                return false;
+            }
+
+            IntPtr procHandle = Marshal.AllocHGlobal(8);
+            byte[] buffer = BitConverter.GetBytes(System.Diagnostics.Process.GetCurrentProcess().Handle.ToInt64());
+            Marshal.Copy(buffer, 0, procHandle, 8);
+
+            // send um process handle to km
+            int bytesReturnedDummy;
+
+            result = FilterSendMessage(handle, procHandle, 8, IntPtr.Zero, 0, out bytesReturnedDummy);
+
+            //free memory
+            Marshal.FreeHGlobal(procHandle);
 
             return result == 0;        
 
@@ -131,11 +149,6 @@ namespace MFUserMode
                 //read the requested data from backup chain
                 data = new byte[length];
                 this.readableBackupChain.readFromChain(offset, length, ref data, 0);
-            }
-            else if (requestType == 0) //send process handle
-            {
-                IntPtr procHandle = System.Diagnostics.Process.GetCurrentProcess().Handle;
-                data = BitConverter.GetBytes(procHandle.ToInt32());
             }
 
 
