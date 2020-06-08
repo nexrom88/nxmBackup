@@ -29,6 +29,9 @@ namespace TestProject
             //UInt32 blockSize = parser.getBlockSize(metadataTable);
 
             MFUserMode.MFUserMode um = new MFUserMode.MFUserMode();
+            um.connectToKM();
+            um.readMessages();
+            um.closeConnection();
         }
         
 

@@ -57,7 +57,7 @@ namespace MFUserMode
         private BackupChainReader readableBackupChain;
 
         //the handle to the km connection
-        private IntPtr handle;
+        private IntPtr kmHandle;
 
         FileStream logStream = new FileStream("c:\\target\\log.txt", FileMode.Create, FileAccess.Write);
 
@@ -74,8 +74,12 @@ namespace MFUserMode
         //starts the connection to kernel Mode driver
         public bool connectToKM()
         {
-            this.handle = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(IntPtr)));
-            uint result = FilterConnectCommunicationPort("\\nxmQueryPort", 0, IntPtr.Zero, 0, IntPtr.Zero,  out handle);
+            IntPtr procHandle = System.Diagnostics.Process.GetCurrentProcess().Handle;
+            byte[] buffer = BitConverter.GetBytes(procHandle.ToInt64());
+
+
+            this.kmHandle = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(IntPtr)));
+            uint result = FilterConnectCommunicationPort("\\nxmQueryPort", 0, IntPtr.Zero, 0, IntPtr.Zero,  out kmHandle);
 
             //return when "connect" is not successful
             if (result != 0)
@@ -83,14 +87,11 @@ namespace MFUserMode
                 return false;
             }
 
-            IntPtr procHandle = Marshal.AllocHGlobal(8);
-            byte[] buffer = BitConverter.GetBytes(System.Diagnostics.Process.GetCurrentProcess().Handle.ToInt64());
-            Marshal.Copy(buffer, 0, procHandle, 8);
 
             // send um process handle to km
             int bytesReturnedDummy;
 
-            result = FilterSendMessage(handle, procHandle, 8, IntPtr.Zero, 0, out bytesReturnedDummy);
+            result = FilterSendMessage(kmHandle, procHandle, 8, IntPtr.Zero, 0, out bytesReturnedDummy);
 
             //free memory
             Marshal.FreeHGlobal(procHandle);
@@ -102,7 +103,7 @@ namespace MFUserMode
         //close the km connection
         public void closeConnection()
         {
-            CloseHandle(this.handle);
+            CloseHandle(this.kmHandle);
             this.logStream.Close();
         }
 
@@ -116,7 +117,7 @@ namespace MFUserMode
 
 
 
-            uint status = FilterGetMessage(this.handle, ref dataReceive.messageHeader, dataSize, IntPtr.Zero);
+            uint status = FilterGetMessage(this.kmHandle, ref dataReceive.messageHeader, dataSize, IntPtr.Zero);
 
             if (status != 0)
             {
@@ -164,7 +165,7 @@ namespace MFUserMode
 
             int size = sizeof(FILTER_REPLY_MESSAGE);
 
-            status = FilterReplyMessage(this.handle, ref reply, size);
+            status = FilterReplyMessage(this.kmHandle, ref reply, size);
 
         }
 
