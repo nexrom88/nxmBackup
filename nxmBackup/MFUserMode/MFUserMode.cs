@@ -74,8 +74,7 @@ namespace MFUserMode
         //starts the connection to kernel Mode driver
         public bool connectToKM()
         {
-            IntPtr procHandle = System.Diagnostics.Process.GetCurrentProcess().Handle;
-            byte[] buffer = BitConverter.GetBytes(procHandle.ToInt64());
+            IntPtr procHandle = System.Diagnostics.Process.GetCurrentProcess().Handle; 
 
 
             this.kmHandle = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(IntPtr)));
@@ -91,7 +90,7 @@ namespace MFUserMode
             // send um process handle to km
             int bytesReturnedDummy;
 
-            result = FilterSendMessage(kmHandle, procHandle, 8, IntPtr.Zero, 0, out bytesReturnedDummy);
+            result = FilterSendMessage(kmHandle, procHandle, 4, IntPtr.Zero, 0, out bytesReturnedDummy);
 
             //free memory
             Marshal.FreeHGlobal(procHandle);
