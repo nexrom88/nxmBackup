@@ -111,6 +111,7 @@
     <Compile Include="JobEngine\JobTimer.cs" />
     <Compile Include="MFUserMode\MFUserMode.cs" />
     <Compile Include="MFUserMode\MountHandler.cs" />
+    <Compile Include="MFUserMode\SharedMemory.cs" />
     <Compile Include="RestoreHelper\FileLevelRestoreHandler.cs" />
     <Compile Include="RestoreHelper\FullRestoreHandler.cs" />
     <Compile Include="RestoreHelper\GuestFilesHandler.cs" />

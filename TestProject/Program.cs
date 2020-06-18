@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using HyperVBackupRCT;
 using MFUserMode;
+using nxmBackup.MFUserMode;
 
 namespace TestProject
 {
@@ -28,7 +29,10 @@ namespace TestProject
             //string output = JsonConvert.SerializeObject(table);
             //UInt32 blockSize = parser.getBlockSize(metadataTable);
 
-            MFUserMode.MFUserMode um = new MFUserMode.MFUserMode();
+            //MFUserMode.MFUserMode um = new MFUserMode.MFUserMode();
+            SharedMemory mem = new SharedMemory();
+            mem.allocSharedBuffer(500);
+            mem.releaseSharedBuffer();
         }
         
 
