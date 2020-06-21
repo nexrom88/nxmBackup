@@ -29,10 +29,8 @@ namespace TestProject
             //string output = JsonConvert.SerializeObject(table);
             //UInt32 blockSize = parser.getBlockSize(metadataTable);
 
-            //MFUserMode.MFUserMode um = new MFUserMode.MFUserMode();
-            SharedMemory mem = new SharedMemory();
-            mem.allocSharedBuffer(500);
-            mem.releaseSharedBuffer();
+            MFUserMode.MFUserMode um = new MFUserMode.MFUserMode();
+            um.connectToKM();
         }
         
 
