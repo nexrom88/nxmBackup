@@ -78,26 +78,8 @@ namespace MFUserMode
             uint result = FilterConnectCommunicationPort("\\nxmQueryPort", 0, IntPtr.Zero, 0, IntPtr.Zero,  out kmHandle);
 
             //return when "connect" is not successful
-            if (result != 0)
-            {
-                return false;
-            }
-
-
-            // send command "1" to init shared memory
-            int bytesReturnedDummy;
-            byte[] inBuffer = new byte[1];
-            inBuffer[0] = 1;
-            IntPtr PInBuffer = Marshal.AllocHGlobal(1);
-            Marshal.Copy(inBuffer, 0, PInBuffer, 1);
-
-
-            result = FilterSendMessage(kmHandle, PInBuffer, 1, IntPtr.Zero, 0, out bytesReturnedDummy);
-
-            //free memory
-            Marshal.FreeHGlobal(PInBuffer);
-
-            return result == 0;        
+            return result == 0;
+    
 
         }
 

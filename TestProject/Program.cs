@@ -32,7 +32,7 @@ namespace TestProject
             MFUserMode.MFUserMode um = new MFUserMode.MFUserMode();
             um.connectToKM();
             SharedMemory sm = new SharedMemory();
-            Stream sharedMem = sm.mapSharedBuffer();
+            sm.mapSharedBuffer();
         }
         
 
