@@ -11,13 +11,21 @@ namespace nxmBackup.MFUserMode
 {
      public class SharedMemory
     {
-        [DllImport("ntdll.dll", CharSet = CharSet.Unicode)]
-        public static extern uint ZwOpenSection(out IntPtr sectionHandle, uint desiredAccess, ref OBJECT_ATTRIBUTES attributes);
+        [DllImport("ntdll.dll")]
+        public static extern uint NtOpenSection(out IntPtr sectionHandle, uint desiredAccess, ref OBJECT_ATTRIBUTES attributes);
+
+        [DllImport("ntdll.dll", SetLastError = true)]
+        static extern uint NtMapViewOfSection(IntPtr SectionHandle, IntPtr ProcessHandle, ref IntPtr BaseAddress, uint ZeroBits, uint CommitSize, UIntPtr SectionOffset, out uint ViewSize, uint InheritDisposition, uint AllocationType, uint Win32Protect);
 
         [DllImport("ntdll.dll", SetLastError = false)]
         static extern int NtClose(IntPtr hObject);
 
         private const uint SECTION_MAP_WRITE = 2;
+        private const uint SECTION_MAP_READ = 4;
+
+        private const uint VIEW_UNMAP = 2;
+
+        private const uint PAGE_READWRITE = 4;
 
         private const uint OBJ_FORCE_ACCESS_CHECK = 0x00000400;
         private const uint OBJ_KERNEL_HANDLE = 0x00000200;
@@ -30,8 +38,15 @@ namespace nxmBackup.MFUserMode
 
             OBJECT_ATTRIBUTES attributes = new OBJECT_ATTRIBUTES("\\BaseNamedObjects\\nxmmf", 0);
 
-            uint mappingHandle = ZwOpenSection(out sectionHandle, SECTION_MAP_WRITE, ref attributes);
+            //opens the section created in km
+            uint status = NtOpenSection(out sectionHandle, SECTION_MAP_WRITE | SECTION_MAP_READ, ref attributes);
 
+            IntPtr baseAddress = IntPtr.Zero;
+            uint viewSize = sectionSize;
+            //maps the section to a view
+            status = NtMapViewOfSection(sectionHandle, System.Diagnostics.Process.GetCurrentProcess().Handle, ref baseAddress, 0, 0, UIntPtr.Zero, out viewSize, VIEW_UNMAP, 0, PAGE_READWRITE);
+
+            byte data = Marshal.ReadByte(baseAddress, 0);
 
             NtClose(sectionHandle);
         }
