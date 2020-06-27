@@ -11,7 +11,7 @@ namespace nxmBackup.MFUserMode
 {
      public class SharedMemory
     {
-        [DllImport("ntdll.dll")]
+        [DllImport("ntdll.dll", CharSet = CharSet.Unicode)]
         public static extern uint ZwOpenSection(out IntPtr sectionHandle, uint desiredAccess, ref OBJECT_ATTRIBUTES attributes);
 
         [DllImport("ntdll.dll", SetLastError = false)]
