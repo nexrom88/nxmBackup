@@ -8,6 +8,7 @@ using HVBackupCore;
 
 namespace MFUserMode
 {
+    using nxmBackup.MFUserMode;
     using System.ComponentModel;
     using System.Runtime.InteropServices;
     public class MFUserMode
@@ -61,6 +62,9 @@ namespace MFUserMode
 
         FileStream logStream = new FileStream("c:\\target\\log.txt", FileMode.Create, FileAccess.Write);
 
+        //shared memory with km
+        SharedMemory sharedMemoryHandler = new SharedMemory();
+
         public MFUserMode(BackupChainReader readableBackupChain)
         {
             this.readableBackupChain = readableBackupChain;
@@ -77,9 +81,15 @@ namespace MFUserMode
             this.kmHandle = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(IntPtr)));
             uint result = FilterConnectCommunicationPort("\\nxmQueryPort", 0, IntPtr.Zero, 0, IntPtr.Zero,  out kmHandle);
 
-            //return when "connect" is not successful
-            return result == 0;
-    
+            //alloc shared memory
+            if (result == 0)
+            {
+                return this.sharedMemoryHandler.mapSharedBuffer();
+            }
+            else
+            {
+                return false;
+            }    
 
         }
 
@@ -88,6 +98,12 @@ namespace MFUserMode
         {
             CloseHandle(this.kmHandle);
             this.logStream.Close();
+
+            //close shared memory view if necessary
+            if (this.sharedMemoryHandler.SharedMemoryPointer != IntPtr.Zero)
+            {
+                this.sharedMemoryHandler.unmapSharedBuffer();
+            }
         }
 
         //reads one message
@@ -137,11 +153,8 @@ namespace MFUserMode
 
 
 
-            //build reply
-            for (int i = 0; i < data.Length; i++)
-            {
-                reply.data[i] = data[i];
-            }
+            //write payload data to shred memory
+            Marshal.Copy(data, 0, this.sharedMemoryHandler.SharedMemoryPointer, data.Length);
 
             reply.replyHeader.messageId = dataReceive.messageHeader.messageId;
             reply.replyHeader.status = 0;

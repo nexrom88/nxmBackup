@@ -17,8 +17,8 @@ namespace nxmBackup.MFUserMode
         [DllImport("ntdll.dll", SetLastError = true)]
         static extern uint NtMapViewOfSection(IntPtr SectionHandle, IntPtr ProcessHandle, ref IntPtr BaseAddress, uint ZeroBits, uint CommitSize, UIntPtr SectionOffset, out uint ViewSize, uint InheritDisposition, uint AllocationType, uint Win32Protect);
 
-        [DllImport("ntdll.dll", SetLastError = false)]
-        static extern int NtClose(IntPtr hObject);
+        [DllImport("ntdll.dll", SetLastError = true)]
+        static extern uint NtUnmapViewOfSection(IntPtr hProc, IntPtr baseAddr);
 
         private const uint SECTION_MAP_WRITE = 2;
         private const uint SECTION_MAP_READ = 4;
@@ -31,24 +31,42 @@ namespace nxmBackup.MFUserMode
         private const uint OBJ_KERNEL_HANDLE = 0x00000200;
 
         private const int sectionSize = 1048576;
+        private IntPtr baseAddress = IntPtr.Zero;
+        private IntPtr sectionHandle = IntPtr.Zero;
+
+        public IntPtr SharedMemoryPointer { get => baseAddress;}
+
         //maps a view to the km shared memory section
-        public void mapSharedBuffer()
+        public bool mapSharedBuffer()
         {
-            IntPtr sectionHandle = IntPtr.Zero;
+            
 
             OBJECT_ATTRIBUTES attributes = new OBJECT_ATTRIBUTES("\\BaseNamedObjects\\nxmmf", 0);
 
             //opens the section created in km
             uint status = NtOpenSection(out sectionHandle, SECTION_MAP_WRITE | SECTION_MAP_READ, ref attributes);
 
-            IntPtr baseAddress = IntPtr.Zero;
+            if (status != 0)
+            {
+                //error occured, return null pointer
+                return false;
+            }
+
             uint viewSize = sectionSize;
             //maps the section to a view
-            status = NtMapViewOfSection(sectionHandle, System.Diagnostics.Process.GetCurrentProcess().Handle, ref baseAddress, 0, 0, UIntPtr.Zero, out viewSize, VIEW_UNMAP, 0, PAGE_READWRITE);
+            status = NtMapViewOfSection(sectionHandle, System.Diagnostics.Process.GetCurrentProcess().Handle, ref this.baseAddress, 0, 0, UIntPtr.Zero, out viewSize, VIEW_UNMAP, 0, PAGE_READWRITE);
 
-            byte data = Marshal.ReadByte(baseAddress, 0);
+            return status == 0;
 
-            NtClose(sectionHandle);
+        }
+
+        //unmaps a view to the km memory shared section
+        public void unmapSharedBuffer()
+        {
+            if (this.baseAddress != IntPtr.Zero)
+            {
+                NtUnmapViewOfSection(System.Diagnostics.Process.GetCurrentProcess().Handle, this.baseAddress);
+            }
         }
 
         //native structs for win32 API
