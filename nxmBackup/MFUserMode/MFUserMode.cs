@@ -149,6 +149,7 @@ namespace MFUserMode
                 //read the requested data from backup chain
                 data = new byte[length];
                 this.readableBackupChain.readFromChain(offset, length, ref data, 0);
+
             }
 
 
