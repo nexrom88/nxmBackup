@@ -15,7 +15,7 @@ namespace MFUserMode
     {
 
         // Constant buffer size
-        public const int BUFFER_SIZE = 2048;
+        public const int BUFFER_SIZE = 100;
 
         [DllImport("fltlib", CharSet = CharSet.Auto)]
         static extern unsafe uint FilterConnectCommunicationPort(
