@@ -115,7 +115,6 @@ namespace MFUserMode
             int dataSize = BUFFER_SIZE + headerSize;
 
 
-
             uint status = FilterGetMessage(this.kmHandle, ref dataReceive.messageHeader, dataSize, IntPtr.Zero);
 
             if (status != 0)
@@ -153,8 +152,7 @@ namespace MFUserMode
             }
 
 
-
-            //write payload data to shred memory
+            //write payload data to shared memory
             Marshal.Copy(data, 0, this.sharedMemoryHandler.SharedMemoryPointer, data.Length);
 
             reply.replyHeader.messageId = dataReceive.messageHeader.messageId;
@@ -196,7 +194,7 @@ namespace MFUserMode
         public unsafe struct FILTER_REPLY_MESSAGE
         {
             public FILTER_REPLY_HEADER replyHeader;
-            public fixed byte data[BUFFER_SIZE];
+            public fixed byte data[1];
         }
     }
 }
