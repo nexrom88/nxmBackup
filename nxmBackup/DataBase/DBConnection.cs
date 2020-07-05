@@ -10,7 +10,7 @@ namespace Common
 {
     public class DBConnection : IDisposable
     {
-        private string server = ".\\localhost";
+        private string server = "localhost";
         private string database = "nxmBackup";
         private string user = "nxm";
         private string password = "test123";

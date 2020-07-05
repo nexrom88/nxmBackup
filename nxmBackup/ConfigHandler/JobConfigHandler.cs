@@ -8,6 +8,7 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using Common;
 using System.Windows.Forms;
+using Npgsql;
 
 namespace ConfigHandler
 {
@@ -23,7 +24,7 @@ namespace ConfigHandler
             //open DB connection
             using (Common.DBConnection connection = new Common.DBConnection())
             {
-                List<Dictionary<string, string>> jobs = connection.doReadQuery("SELECT Jobs.id, Jobs.name, Jobs.isRunning, Jobs.basepath, Jobs.maxelements, Jobs.blocksize, Jobs.day, Jobs.hour, Jobs.minute, Jobs.interval, RotationType.name AS rotationname FROM Jobs INNER JOIN RotationType ON Jobs.rotationtypeID=RotationType.id WHERE Jobs.deleted=0", null, null);
+                List<Dictionary<string, string>> jobs = connection.doReadQuery("SELECT jobs.id, jobs.name, jobs.isRunning, jobs.basepath, jobs.maxelements, jobs.blocksize, jobs.day, jobs.hour, jobs.minute, jobs.interval, rotationtype.name AS rotationname FROM jobs INNER JOIN rotationtype ON jobs.rotationtypeid=rotationtype.id WHERE jobs.deleted=FALSE;", null, null);
 
                 //check that jobs != null
                 if (jobs == null) //DB error
@@ -132,7 +133,7 @@ namespace ConfigHandler
                 Dictionary<string, string> parameters = new Dictionary<string, string>();
 
                 //start DB transaction
-                SqlTransaction transaction = connection.beginTransaction();
+                NpgsqlTransaction transaction = connection.beginTransaction();
 
                 List<Dictionary<string, string>> values;
 
@@ -155,7 +156,7 @@ namespace ConfigHandler
                 parameters.Add("maxelements", job.Rotation.maxElementCount.ToString());
                 parameters.Add("rotationtypeID", rotationID);
 
-                values = connection.doReadQuery("INSERT INTO Jobs (name, interval, minute, hour, day, basepath, blocksize, maxelements, rotationtypeID) VALUES(@name, @interval, @minute, @hour, @day, @basepath, @blocksize, @maxelements, @rotationtypeID); SELECT SCOPE_IDENTITY() AS id;", parameters, transaction);
+                values = connection.doReadQuery("INSERT INTO jobs (name, interval, minute, hour, day, basepath, blocksize, maxelements, rotationtypeid) VALUES(@name, @interval, @minute, @hour, @day, @basepath, @blocksize, @maxelements, @rotationtypeID);", parameters, transaction);
 
                 string jobID = values[0]["id"];
 
@@ -168,7 +169,7 @@ namespace ConfigHandler
         }
 
         //creates a job-vms relation
-        private static void createJobVMRelation(OneJob job, string jobID, Common.DBConnection connection, SqlTransaction transaction)
+        private static void createJobVMRelation(OneJob job, string jobID, Common.DBConnection connection, NpgsqlTransaction transaction)
         {
             //iterate through all vms
             foreach (JobVM vm in job.JobVMs)
