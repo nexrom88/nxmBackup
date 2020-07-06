@@ -47,7 +47,7 @@ namespace Common
         }
 
         //sends a sql query
-        public List<Dictionary<string, string>> doReadQuery(string query, Dictionary<string, string> parameters, NpgsqlTransaction transaction)
+        public List<Dictionary<string, string>> doReadQuery(string query, Dictionary<string, object> parameters, NpgsqlTransaction transaction)
         {
             try
             {

@@ -22,7 +22,7 @@ namespace nxmBackup
         private bool windowReady = false;
         private Common.Rotation rotation = new Common.Rotation();
         private bool incrementalActivated = true;
-        private uint blockSize = 2;
+        private int blockSize = 2;
 
         public AddJobWindow()
         {
@@ -171,20 +171,20 @@ namespace nxmBackup
             {
                 case "hourly":
                     jobInterval.intervalBase = Common.IntervalBase.hourly;
-                    jobInterval.minute = cbMinutes.Text;
+                    jobInterval.minute = int.Parse(cbMinutes.Text);
                     jobInterval.day = "";
-                    jobInterval.hour = "";
+                    jobInterval.hour = 0;
                     break;
                 case "daily":
                     jobInterval.intervalBase = Common.IntervalBase.daily;
-                    jobInterval.minute = cbMinutes.Text;
-                    jobInterval.hour = cbHours.Text;
+                    jobInterval.minute = int.Parse(cbMinutes.Text);
+                    jobInterval.hour = int.Parse(cbHours.Text);
                     jobInterval.day = "";
                     break;
                 case "weekly":
                     jobInterval.intervalBase = Common.IntervalBase.weekly;
-                    jobInterval.minute = cbMinutes.Text;
-                    jobInterval.hour = cbHours.Text;
+                    jobInterval.minute = int.Parse(cbMinutes.Text);
+                    jobInterval.hour = int.Parse(cbHours.Text);
                     jobInterval.day = cbDays.Text;
                     break;
             }
@@ -224,7 +224,7 @@ namespace nxmBackup
 
             //read set values
             this.incrementalActivated = (bool)detailWindow.cbIncrements.IsChecked;
-            this.blockSize = uint.Parse(((ComboBoxItem)detailWindow.cbBlockSize.SelectedItem).Content.ToString());
+            this.blockSize = int.Parse(((ComboBoxItem)detailWindow.cbBlockSize.SelectedItem).Content.ToString());
 
 
             switch (((ComboBoxItem)detailWindow.cbRotationType.SelectedItem).Uid)
@@ -237,7 +237,7 @@ namespace nxmBackup
                     break;
             }
 
-            this.rotation.maxElementCount = (uint)detailWindow.slMaxElements.Value;
+            this.rotation.maxElementCount = (int)detailWindow.slMaxElements.Value;
 
         }
 

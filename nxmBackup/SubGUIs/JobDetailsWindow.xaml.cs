@@ -22,11 +22,11 @@ namespace nxmBackup
 
         bool windowLoaded = false;
         bool incremental;
-        uint blockSize;
+        int blockSize;
         string rotationType;
-        uint maxElements;
+        int maxElements;
 
-        public JobDetailsWindow(bool incremental, uint blockSize, string rotationType, uint maxElements)
+        public JobDetailsWindow(bool incremental, int blockSize, string rotationType, int maxElements)
         {
             InitializeComponent();
 

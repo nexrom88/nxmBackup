@@ -86,13 +86,13 @@ namespace JobEngine
             switch (this.Job.Interval.intervalBase)
             {
                 case IntervalBase.hourly: //hourly backup due?
-                    return now.Minute == int.Parse(this.Job.Interval.minute);
+                    return now.Minute == this.Job.Interval.minute;
 
                 case IntervalBase.daily: //daily backup due?
-                    return now.Minute == int.Parse(this.Job.Interval.minute) && now.Hour == int.Parse(this.Job.Interval.hour);
+                    return now.Minute ==this.Job.Interval.minute && now.Hour == this.Job.Interval.hour;
 
                 case IntervalBase.weekly: //weekly backup due?
-                    if(now.Minute == int.Parse(this.Job.Interval.minute) && now.Hour == int.Parse(this.Job.Interval.hour))
+                    if(now.Minute == this.Job.Interval.minute && now.Hour == this.Job.Interval.hour)
                     {
                         return now.DayOfWeek.ToString().ToLower() == this.Job.Interval.day;
                     }

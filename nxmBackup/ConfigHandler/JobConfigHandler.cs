@@ -40,8 +40,8 @@ namespace ConfigHandler
                     newJob.DbId = int.Parse(job["id"]);
                     newJob.BasePath = job["basepath"];
                     newJob.Name = job["name"];
-                    newJob.BlockSize = uint.Parse(job["blocksize"]);
-                    newJob.IsRunning = bool.Parse(job["isRunning"]);
+                    newJob.BlockSize = int.Parse(job["blocksize"]);
+                    newJob.IsRunning = bool.Parse(job["isrunning"]);
 
                     // build nextRun string
                     newJob.NextRun = $"{int.Parse(job["hour"]).ToString("00")}:{int.Parse(job["minute"]).ToString("00")}";
@@ -59,7 +59,7 @@ namespace ConfigHandler
                             break;
                     }
 
-                    rota.maxElementCount = uint.Parse(job["maxelements"]);
+                    rota.maxElementCount = int.Parse(job["maxelements"]);
                     newJob.Rotation = rota;
 
 
@@ -78,14 +78,14 @@ namespace ConfigHandler
                             break;
                     }
                     interval.day = job["day"];
-                    interval.minute = job["minute"];
-                    interval.hour = job["hour"];
+                    interval.minute = int.Parse(job["minute"]);
+                    interval.hour = int.Parse(job["hour"]);
                     newJob.Interval = interval;
 
                     //query VMs
-                    Dictionary<string, string> paramaters = new Dictionary<string, string>();
-                    paramaters.Add("jobid", job["id"]);
-                    List<Dictionary<string, string>> vms = connection.doReadQuery("SELECT VMs.id, VMs.name FROM VMs INNER JOIN JobVMRelation ON JobVMRelation.jobid=@jobid AND JobVMRelation.vmid=VMs.id", paramaters, null);
+                    Dictionary<string, object> paramaters = new Dictionary<string, object>();
+                    paramaters.Add("jobid", int.Parse(job["id"]));
+                    List<Dictionary<string, string>> vms = connection.doReadQuery("SELECT VMs.id, VMs.name FROM vms INNER JOIN jobvmrelation ON JobVMRelation.jobid=@jobid AND jobvmrelation.vmid=VMs.id", paramaters, null);
                     newJob.JobVMs = new List<JobVM>();
 
                     //iterate through all vms
@@ -99,7 +99,7 @@ namespace ConfigHandler
 
                     //get last jobExecution attributes
 
-                    List<Dictionary<string, string>> jobExecutions = connection.doReadQuery("SELECT * FROM JobExecutions WHERE JobExecutions.jobid=@jobid and JobExecutions.id = (SELECT MAX(id) FROM JobExecutions WHERE JobExecutions.jobid=@jobid)", paramaters, null);
+                    List<Dictionary<string, string>> jobExecutions = connection.doReadQuery("SELECT * FROM jobexecutions WHERE jobexecutions.jobid=@jobid and jobexecutions.id = (SELECT MAX(id) FROM jobexecutions WHERE jobexecutions.jobid=@jobid)", paramaters, null);
 
                     if (jobExecutions.Count > 1) MessageBox.Show("db error: jobExecutions hat mehr als 1 result");
                     else
@@ -130,35 +130,34 @@ namespace ConfigHandler
             {
                 string intervalString = job.Interval.intervalBase.ToString();
 
-                Dictionary<string, string> parameters = new Dictionary<string, string>();
+                Dictionary<string, object> parameters = new Dictionary<string, object>();
 
                 //start DB transaction
                 NpgsqlTransaction transaction = connection.beginTransaction();
 
                 List<Dictionary<string, string>> values;
 
-                parameters = new Dictionary<string, string>();
+                parameters = new Dictionary<string, object>();
                 //get rotationtype ID
                 parameters.Add("name", job.Rotation.type.ToString().ToLower());
                 values = connection.doReadQuery("SELECT id FROM RotationType WHERE name=@name", parameters, transaction);
-                string rotationID = values[0]["id"];
-
+                int rotationID = int.Parse(values[0]["id"]);
 
                 //create job entry
-                parameters = new Dictionary<string, string>();
+                parameters = new Dictionary<string, object>();
                 parameters.Add("name", job.Name);
                 parameters.Add("interval", intervalString);
                 parameters.Add("minute", job.Interval.minute);
                 parameters.Add("hour", job.Interval.hour);
                 parameters.Add("day", job.Interval.day);
                 parameters.Add("basepath", job.BasePath);
-                parameters.Add("blocksize", job.BlockSize.ToString());
-                parameters.Add("maxelements", job.Rotation.maxElementCount.ToString());
+                parameters.Add("blocksize", job.BlockSize);
+                parameters.Add("maxelements", job.Rotation.maxElementCount);
                 parameters.Add("rotationtypeID", rotationID);
 
-                values = connection.doReadQuery("INSERT INTO jobs (name, interval, minute, hour, day, basepath, blocksize, maxelements, rotationtypeid) VALUES(@name, @interval, @minute, @hour, @day, @basepath, @blocksize, @maxelements, @rotationtypeID);", parameters, transaction);
+                values = connection.doReadQuery("INSERT INTO jobs (name, interval, minute, hour, day, basepath, blocksize, maxelements, rotationtypeid) VALUES(@name, @interval, @minute, @hour, @day, @basepath, @blocksize, @maxelements, @rotationtypeID) RETURNING id;", parameters, transaction);
 
-                string jobID = values[0]["id"];
+                int jobID = int.Parse(values[0]["id"]);
 
                 createJobVMRelation(job, jobID, connection, transaction);
 
@@ -169,13 +168,13 @@ namespace ConfigHandler
         }
 
         //creates a job-vms relation
-        private static void createJobVMRelation(OneJob job, string jobID, Common.DBConnection connection, NpgsqlTransaction transaction)
+        private static void createJobVMRelation(OneJob job, int jobID, Common.DBConnection connection, NpgsqlTransaction transaction)
         {
             //iterate through all vms
             foreach (JobVM vm in job.JobVMs)
             {
                 //check whether vm already exists
-                Dictionary<string, string> parameters = new Dictionary<string, string>();
+                Dictionary<string, object> parameters = new Dictionary<string, object>();
                 parameters.Add("id", vm.vmID);
                 List<Dictionary<string, string>> result = connection.doReadQuery("SELECT COUNT(*) AS count From VMs WHERE id=@id", parameters, transaction);
 
@@ -183,14 +182,14 @@ namespace ConfigHandler
                 if (int.Parse(result[0]["count"]) == 0)
                 {
                     //vm does not exist
-                    parameters = new Dictionary<string, string>();
+                    parameters = new Dictionary<string, object>();
                     parameters.Add("id", vm.vmID);
                     parameters.Add("name", vm.vmName);
-                    connection.doReadQuery("INSERT INTO VMs(id, name) VALUES (@id, @name); SELECT SCOPE_IDENTITY() AS id;", parameters, transaction);
+                    connection.doReadQuery("INSERT INTO VMs(id, name) VALUES (@id, @name) RETURNING id;", parameters, transaction);
                 }
 
                 //vm exists now, now create relation
-                parameters = new Dictionary<string, string>();
+                parameters = new Dictionary<string, object>();
                 parameters.Add("jobid", jobID);
                 parameters.Add("vmid", vm.vmID);
                 connection.doReadQuery("INSERT INTO JobVMRelation(jobid, vmid) VALUES (@jobid, @vmid)", parameters, transaction);
@@ -203,7 +202,7 @@ namespace ConfigHandler
         {
             using (Common.DBConnection connection = new Common.DBConnection())
             {
-                Dictionary<string, string> parameters = new Dictionary<string, string>();
+                Dictionary<string, object> parameters = new Dictionary<string, object>();
                 parameters.Add("jobId", jobId.ToString());
                 List<Dictionary<string, string>> result = connection.doReadQuery("SELECT isRunning FROM Jobs WHERE id=@jobId", parameters, null);
                 if (result != null && result.Count > 0 && result[0]["id"] != "") return bool.Parse(result[0]["id"]);
@@ -229,7 +228,7 @@ namespace ConfigHandler
         private Interval interval;
         private List<JobVM> jobVMs;
         private string basePath;
-        private uint blockSize;
+        private int blockSize;
         private Rotation rotation;
         private bool isRunning;
         private string nextRun;
@@ -242,7 +241,7 @@ namespace ConfigHandler
         public Interval Interval { get => interval; set => interval = value; }
         public List<JobVM> JobVMs { get => jobVMs; set => jobVMs = value; }
         public string BasePath { get => basePath; set => basePath = value; }
-        public uint BlockSize { get => blockSize; set => blockSize = value; }
+        public int BlockSize { get => blockSize; set => blockSize = value; }
         public Rotation Rotation { get => rotation; set => rotation = value; }
         public bool IsRunning { get => isRunning; set => isRunning = value; }
         public int DbId { get => dbId; set => dbId = value; }

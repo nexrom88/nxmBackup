@@ -17,7 +17,7 @@ namespace Common
                 {
                     List<Dictionary<string, string>> jobExecutionIds = dbConn.doReadQuery("INSERT INTO JobExecutions (jobId, isRunning, transferRate, alreadyRead, alreadyWritten, successful, warnings, errors, type) " +
                         "VALUES(@jobId, @isRunning, @transferRate, @alreadyRead, @alreadyWritten, @successful, @warnings, @errors, @type);SELECT SCOPE_IDENTITY() AS id;",
-                        new Dictionary<string, string>() {
+                        new Dictionary<string, object>() {
                             { "jobId", jobId },
                             { "isRunning", "1" },
                             { "transferRate", "0" },
@@ -73,7 +73,7 @@ namespace Common
                 using (DBConnection dbConn = new DBConnection())
                 {
                     List<Dictionary<string, string>> jobExecutionEventIds = dbConn.doReadQuery("INSERT INTO JobExecutionEvents (vmId, info, jobExecutionId, status) VALUES (@vmId, @info, @jobExecutionId, (SELECT id FROM EventStatus WHERE text= @status));SELECT SCOPE_IDENTITY() AS id;",
-                        new Dictionary<string, string>() { { "vmId", vmName }, { "info", eventProperties.text }, { "jobExecutionId", eventProperties.jobExecutionId.ToString()}, {"status", eventProperties.eventStatus} }, null);
+                        new Dictionary<string, object>() { { "vmId", vmName }, { "info", eventProperties.text }, { "jobExecutionId", eventProperties.jobExecutionId.ToString()}, {"status", eventProperties.eventStatus} }, null);
 
                     if (jobExecutionEventIds == null || jobExecutionEventIds.Count == 0)
                     {
@@ -146,7 +146,7 @@ namespace Common
                 {
                     //get jobExecutions first
                     List<Dictionary<string, string>> jobExecutions = dbConn.doReadQuery("SELECT max(id) id FROM JobExecutions WHERE jobId = @jobId AND type = @type;",
-                        new Dictionary<string, string>() { { "jobId", jobId }, {"type", type } }, null);
+                        new Dictionary<string, object>() { { "jobId", jobId }, {"type", type } }, null);
 
                     //check if executionId is available
                     string jobExecutionId = jobExecutions[0]["id"];
@@ -157,7 +157,7 @@ namespace Common
 
 
                     List<Dictionary<string, string>> jobExecutionEventIds = dbConn.doReadQuery("SELECT vmId, timeStamp, info, EventStatus.text AS status FROM JobExecutionEvents INNER JOIN EventStatus ON EventStatus.id = JobExecutionEvents.status WHERE jobExecutionId = @jobExecutionId;",
-                        new Dictionary<string, string>() { { "jobExecutionId", jobExecutionId } }, null);
+                        new Dictionary<string, object>() { { "jobExecutionId", jobExecutionId } }, null);
 
                     if (jobExecutionEventIds.Count == 0)
                     {

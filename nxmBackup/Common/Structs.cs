@@ -10,7 +10,7 @@ namespace Common
     public struct Rotation
     {
         public RotationType type;
-        public uint maxElementCount;
+        public int maxElementCount;
     }
 
     //defines rotation type
@@ -29,8 +29,8 @@ namespace Common
     public struct Interval
     {
         public IntervalBase intervalBase;
-        public string minute;
-        public string hour;
+        public int minute;
+        public int hour;
         public string day;
     }
 
