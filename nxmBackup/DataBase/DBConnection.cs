@@ -113,7 +113,7 @@ namespace Common
         }
 
         // Do operation.
-        public int doWriteQuery(string query, Dictionary<string, string> parameters, NpgsqlTransaction transaction)
+        public int doWriteQuery(string query, Dictionary<string, object> parameters, NpgsqlTransaction transaction)
         {
             NpgsqlCommand command;
 

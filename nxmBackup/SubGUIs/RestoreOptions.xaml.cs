@@ -113,7 +113,7 @@ namespace RestoreHelper
             switch (restoreType)
             {
                 case "full":
-                    int jobExecutionId = Common.DBQueries.addJobExecution(this.job.DbId.ToString(), "restore");
+                    int jobExecutionId = Common.DBQueries.addJobExecution(this.job.DbId, "restore");
                     RestoreHelper.FullRestoreHandler restoreHandler = new RestoreHelper.FullRestoreHandler(new Common.EventHandler(((ComboBoxItem)cbVMs.SelectedItem).Tag.ToString(), jobExecutionId));
                     restoreHandler.performFullRestoreProcess(sourcePath, "f:\\target", restorePoint.InstanceId);
                     break;

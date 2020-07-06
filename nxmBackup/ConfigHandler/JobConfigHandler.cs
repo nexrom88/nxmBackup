@@ -106,7 +106,7 @@ namespace ConfigHandler
                     {
                         foreach (Dictionary<string, string> jobExecution in jobExecutions)
                         {
-                            newJob.LastRun = jobExecution["startStamp"];
+                            newJob.LastRun = jobExecution["startstamp"];
                             newJob.Successful = jobExecution["successful"];
                         }
                             

@@ -49,7 +49,7 @@ namespace JobEngine
             this.inProgress = true;
 
             //get new execution ID
-            int executionId = Common.DBQueries.addJobExecution(job.DbId.ToString(), "backup");
+            int executionId = Common.DBQueries.addJobExecution(job.DbId, "backup");
             bool executionSuccessful = true;
 
             //iterate vms within the current job

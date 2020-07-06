@@ -179,7 +179,7 @@ namespace nxmBackup
                 //just load events if a job is selected
                 if (this.selectedJobId > -1)
                 {
-                    List<Dictionary<string, string>> events = Common.DBQueries.getEvents(this.selectedJobId.ToString(), "backup");
+                    List<Dictionary<string, string>> events = Common.DBQueries.getEvents(this.selectedJobId, "backup");
 
                     lvEvents.Dispatcher.Invoke(new UpdateEvents(this.UpdateEventList), new object[] { events });
 
@@ -209,7 +209,7 @@ namespace nxmBackup
             lvEvents.Items.Clear();
             foreach (Dictionary<string, string> oneEvent in events)
             {
-                if (oneEvent["vmId"] == this.selectedVMId)
+                if (oneEvent["vmid"] == this.selectedVMId)
                 {
                     EventListEntry ele = new EventListEntry();
                     ele.Text = oneEvent["info"];
