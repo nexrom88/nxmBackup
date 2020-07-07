@@ -20,6 +20,12 @@ namespace Common
         //builds a EventProperties object and raises the "newEvent" event
         public int raiseNewEvent(string text, bool setDone, bool isUpdate, int relatedEventId, EventStatus status)
         {
+            //do not write to DB when execution ID < 0
+            if (this.executionId < 0)
+            {
+                return 0;
+            }
+
             Common.EventProperties props = new Common.EventProperties();
             props.text = text;
             props.eventStatus = status.ToString();
