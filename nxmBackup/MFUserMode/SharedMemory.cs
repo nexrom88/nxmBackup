@@ -53,11 +53,24 @@ namespace nxmBackup.MFUserMode
             }
 
             uint viewSize = sectionSize;
+
             //maps the section to a view
             status = NtMapViewOfSection(sectionHandle, System.Diagnostics.Process.GetCurrentProcess().Handle, ref this.baseAddress, 0, 0, UIntPtr.Zero, out viewSize, VIEW_UNMAP, 0, PAGE_READWRITE);
 
+            //set memory to zero
+            initMemory(viewSize);
+
             return status == 0;
 
+        }
+
+        //inits a given mapped view memory
+        private void initMemory(uint size)
+        {
+            for (int i = 0; i < size; i++)
+            {
+                Marshal.WriteByte(this.baseAddress, 0);
+            }
         }
 
         //unmaps a view to the km memory shared section

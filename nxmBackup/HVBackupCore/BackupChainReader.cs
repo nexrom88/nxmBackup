@@ -16,7 +16,7 @@ namespace HVBackupCore
         public List<ReadableRCTBackup> RCTBackups { get => rctBackups; set => rctBackups = value; }
 
         //reads the given data from backup chain
-        public void readFromChain(Int64 offset, Int64 length, ref byte[] buffer, Int32 bufferOffset)
+        public void readFromChain(Int64 offset, Int64 length, byte[] buffer, Int32 bufferOffset)
         {
             //read from vhdx header (first 1MB) on rct backup?
             if (rctBackups.Count > 0)
@@ -62,7 +62,7 @@ namespace HVBackupCore
                     else
                     {
                         //bytes missing
-                        readFromChain(offset + (Int64)readableBytes, length - (Int64)readableBytes, ref buffer, bufferOffset + (Int32)readableBytes);
+                        readFromChain(offset + (Int64)readableBytes, length - (Int64)readableBytes, buffer, bufferOffset + (Int32)readableBytes);
                         return;
                     }
                 }
@@ -121,7 +121,7 @@ namespace HVBackupCore
                                 rctBackup.sourceStream.Read(buffer, bufferOffset, (Int32)availableBytes);
 
                                 //read remaining bytes recursive
-                                readFromChain(offset + (Int64)availableBytes, length - (Int64)availableBytes, ref buffer, bufferOffset + (Int32)availableBytes);
+                                readFromChain(offset + (Int64)availableBytes, length - (Int64)availableBytes, buffer, bufferOffset + (Int32)availableBytes);
 
                                 return;
                             }

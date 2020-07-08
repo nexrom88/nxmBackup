@@ -147,13 +147,19 @@ namespace MFUserMode
 
                 //read the requested data from backup chain
                 data = new byte[length];
-                this.readableBackupChain.readFromChain(offset, length, ref data, 0);
+                this.readableBackupChain.readFromChain(offset, length, data, 0);
 
             }
 
 
             //write payload data to shared memory
             Marshal.Copy(data, 0, this.sharedMemoryHandler.SharedMemoryPointer, data.Length);
+
+            //byte[] temp = new byte[100];
+            //for (int i = 0; i < 100; i++)
+            //{
+            //    temp[i] = Marshal.ReadByte(this.sharedMemoryHandler.SharedMemoryPointer, i);
+            //}
 
             reply.replyHeader.messageId = dataReceive.messageHeader.messageId;
             reply.replyHeader.status = 0;

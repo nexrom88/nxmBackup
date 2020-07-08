@@ -60,7 +60,7 @@ namespace RestoreHelper
             //todo: just use first hdd to mount
             MFUserMode.MountHandler mountHandler = new MFUserMode.MountHandler();
 
-            string mountPath = "c:\\target\\mount.vhdx";
+            string mountPath = "f:\\mount.vhdx";
             MFUserMode.MountHandler.mountState mountState = MFUserMode.MountHandler.mountState.pending;
             Thread mountThread = new Thread(() => mountHandler.startMfHandling(hddFiles, mountPath, ref mountState));
             mountThread.Start();
