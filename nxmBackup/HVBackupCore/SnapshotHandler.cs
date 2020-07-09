@@ -68,7 +68,7 @@ namespace HyperVBackupRCT
             }
 
             //export the snapshot
-            export(destination, snapshot, refP);
+            export(destination, snapshot, refP, job);
 
             //read current backup chain for further processing
             chain = ConfigHandler.BackupConfigHandler.readChain(destination);
@@ -377,7 +377,7 @@ namespace HyperVBackupRCT
         }
 
         //exports a snapshot
-        public void export(string path, ManagementObject currentSnapshot, ManagementObject rctBase)
+        public void export(string path, ManagementObject currentSnapshot, ManagementObject rctBase, ConfigHandler.OneJob job)
         {
             string basePath = path;
             string backupType = "";
@@ -414,11 +414,21 @@ namespace HyperVBackupRCT
                 hdds.Add((ManagementObject)iterator.Current);
             }
 
+            //have hdds changed?
+            bool hddsChange = hddsChanged(hdds, job);
+
+            //set to full backup when hdds have changed
+            if (hddsChange)
+            {
+                rctBase = null;
+                this.eventHandler.raiseNewEvent("Veränderter Datenspeicher erkannt", false, false, NO_RELATED_EVENT, EventStatus.warning);
+            }
+
             //now export the hdds
             foreach (ManagementObject hdd in hdds)
             {
                 string[] hddPath = (string[])hdd["HostResource"];
-                if (hddPath[0].EndsWith(".iso"))
+                if (!hddPath[0].EndsWith(".vhdx"))
                 {
                     continue;
                 }
@@ -480,6 +490,45 @@ namespace HyperVBackupRCT
 
             ConfigHandler.BackupConfigHandler.addBackup(basePath, guidFolder, backupType, (string)refP["InstanceId"], parentiid, false);
 
+        }
+
+        //checks whether vm hdds are the same within the job definition
+        private bool hddsChanged(List<ManagementObject> mountedHDDs, ConfigHandler.OneJob job)
+        {
+            JobVM currentVM = new JobVM();
+            //find the corresponding vm object
+            foreach(JobVM vm in job.JobVMs)
+            {
+                if (vm.vmID == this.vmId)
+                {
+                    //found vm object
+                    currentVM = vm;
+                    break;
+                }
+            }
+
+            //iterate through all currently mounted HDDs
+            foreach (ManagementObject mountedHDD in mountedHDDs)
+            {
+                bool hddFound = false;
+                //find correspinding HDD within job
+                foreach (VMHDD vmHDD in currentVM.vmHDDs)
+                {
+                    if ((string)mountedHDD["InstanceID"] == vmHDD.name)
+                    {
+                        hddFound = true;
+                        break;
+                    }
+                }
+
+                //hdd not found?
+                if (!hddFound)
+                {
+                    return true;
+                }
+            }
+
+            return true;
         }
 
 

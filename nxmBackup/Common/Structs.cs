@@ -39,5 +39,12 @@ namespace Common
     {
         public string vmID;
         public string vmName;
+        public List<VMHDD> vmHDDs;
+    }
+
+    //defines one HDD
+    public struct VMHDD
+    {
+        public string name;
     }
 }

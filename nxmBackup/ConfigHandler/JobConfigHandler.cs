@@ -159,12 +159,44 @@ namespace ConfigHandler
 
                 int jobID = int.Parse(values[0]["id"]);
 
+                //create vms relation
                 createJobVMRelation(job, jobID, connection, transaction);
+
+                //create hdds relation
+                createVMHDDRelation(job.JobVMs, connection, transaction);
 
                 //commit transaction
                 transaction.Commit();
             }
 
+        }
+
+        //creates a vm-hdd relation for all selected vms within a job. vm must be in DB already
+        private static void createVMHDDRelation(List<JobVM> vms, Common.DBConnection connection, NpgsqlTransaction transaction)
+        {
+            //iterate through all vms
+            foreach (JobVM vm in vms)
+            {
+                List<int> hddIDs = new List<int>();
+                //add hdd DB entries
+                foreach(VMHDD currentHDD in vm.vmHDDs)
+                {
+                    Dictionary<string, object> parameters = new Dictionary<string, object>();
+                    parameters.Add("name", currentHDD.name);
+                    List<Dictionary<string, string>> result = connection.doReadQuery("INSERT INTO hdds (name) VALUES (@name) RETURNING id;", parameters, transaction);
+                    hddIDs.Add(int.Parse(result[0]["id"]));
+                }
+
+                //add vm hdd relations
+                foreach(int hddID in hddIDs)
+                {
+                    Dictionary<string, object> parameters = new Dictionary<string, object>();
+                    parameters.Add("vmid", vm.vmID);
+                    parameters.Add("hddid", hddID);
+                    List<Dictionary<string, string>> result = connection.doReadQuery("INSERT INTO vmhddrelation (vmid, hddid) VALUES (@vmid, @hddid);", parameters, transaction);
+                }
+
+            }
         }
 
         //creates a job-vms relation
@@ -176,7 +208,7 @@ namespace ConfigHandler
                 //check whether vm already exists
                 Dictionary<string, object> parameters = new Dictionary<string, object>();
                 parameters.Add("id", vm.vmID);
-                List<Dictionary<string, string>> result = connection.doReadQuery("SELECT COUNT(*) AS count From VMs WHERE id=@id", parameters, transaction);
+                List<Dictionary<string, string>> result = connection.doReadQuery("SELECT COUNT(*) AS count From vms WHERE id=@id", parameters, transaction);
 
                 //does vm already exist in DB?
                 if (int.Parse(result[0]["count"]) == 0)
@@ -185,7 +217,7 @@ namespace ConfigHandler
                     parameters = new Dictionary<string, object>();
                     parameters.Add("id", vm.vmID);
                     parameters.Add("name", vm.vmName);
-                    connection.doReadQuery("INSERT INTO VMs(id, name) VALUES (@id, @name) RETURNING id;", parameters, transaction);
+                    connection.doReadQuery("INSERT INTO vms(id, name) VALUES (@id, @name);", parameters, transaction);
                 }
 
                 //vm exists now, now create relation

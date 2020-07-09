@@ -20,11 +20,11 @@ namespace Common
                 if (UseWMIV2NameSpace)
                 {
                     query =
-                        "SELECT VirtualSystemIdentifier, ElementName FROM Msvm_VirtualSystemSettingData WHERE VirtualSystemType = 'Microsoft:Hyper-V:System:Realized'";
+                        "SELECT * FROM Msvm_VirtualSystemSettingData WHERE VirtualSystemType = 'Microsoft:Hyper-V:System:Realized'";
                 }
                 else
                 {
-                    query = "SELECT SystemName, ElementName FROM Msvm_VirtualSystemSettingData WHERE SettingType = 3";
+                    query = "SELECT * FROM Msvm_VirtualSystemSettingData WHERE SettingType = 3";
                 }
 
 
@@ -40,6 +40,7 @@ namespace Common
                                 OneVM vm = new OneVM();
                                 vm.name = (string)mo["ElementName"];
                                 vm.id = (string)mo["VirtualSystemIdentifier"];
+                                vm.hdds = getHDDs((ManagementObject)mo);
                                 vms.Add(vm);
 
                             }
@@ -51,6 +52,37 @@ namespace Common
             {
                 return null;
             }
+        }
+
+        //gets the connected hdds for a given vm (ManagementObject)
+        private static List<string> getHDDs(ManagementObject vm)
+        {
+            List<string> hdds = new List<string>();
+            var iterator = vm.GetRelated("Msvm_StorageAllocationSettingData").GetEnumerator();
+            List<ManagementObject> hddsMo = new List<ManagementObject>();
+            
+            //build hdd ManagementObject list
+            while (iterator.MoveNext())
+            {
+                hddsMo.Add((ManagementObject)iterator.Current);
+            }
+
+            //retrieve details from ManagementObject list
+            foreach (ManagementObject hdd in hddsMo)
+            {
+                string[] hddPath = (string[])hdd["HostResource"];
+                if (!hddPath[0].EndsWith(".vhdx")) //ignore non-vhdx files
+                {
+                    continue;
+                }
+
+                string hddName = (string)hdd["InstanceID"];
+
+                hdds.Add(hddName);
+
+            }
+
+                return hdds;
         }
 
         //gets the system information of the requested VM
@@ -134,6 +166,7 @@ namespace Common
         {
             public string id;
             public string name;
+            public List<string> hdds;
         }
 
         

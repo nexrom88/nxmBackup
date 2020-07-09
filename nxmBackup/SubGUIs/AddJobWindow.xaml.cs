@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Common;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -23,6 +24,7 @@ namespace nxmBackup
         private Common.Rotation rotation = new Common.Rotation();
         private bool incrementalActivated = true;
         private int blockSize = 2;
+        List<Common.WMIHelper.OneVM> vms;
 
         public AddJobWindow()
         {
@@ -46,11 +48,11 @@ namespace nxmBackup
             cbHours.SelectedIndex = 0;
 
             //load vms
-            List<Common.WMIHelper.OneVM> vms = Common.WMIHelper.listVMs();
+            this.vms = Common.WMIHelper.listVMs();
 
             if (vms != null)
             {
-                foreach (Common.WMIHelper.OneVM vm in vms)
+                foreach (Common.WMIHelper.OneVM vm in this.vms)
                 {
                     ListBoxItem lbItem = new ListBoxItem();
                     lbItem.Content = vm.name;
@@ -194,10 +196,28 @@ namespace nxmBackup
             List<Common.JobVM> jobVMs = new List<Common.JobVM>();
             foreach (ListBoxItem vm in lbSelectedVMs.Items)
             {
-                Common.JobVM jobVM = new Common.JobVM();
-                jobVM.vmName = (string)vm.Content;
-                jobVM.vmID = vm.Uid;
-                jobVMs.Add(jobVM);
+                //find coresponding vm
+                foreach(WMIHelper.OneVM tempVM in this.vms)
+                {
+                    if (tempVM.id == vm.Uid)
+                    {
+                        Common.JobVM jobVM = new Common.JobVM();
+                        jobVM.vmName = tempVM.name;
+                        jobVM.vmID = tempVM.id;
+
+                        List<VMHDD> hdds = new List<VMHDD>();
+                        //build hdd objects
+                        foreach(string hdd in tempVM.hdds)
+                        {
+                            VMHDD newHDD = new VMHDD();
+                            newHDD.name = hdd;
+                            hdds.Add(newHDD);
+                        }
+                        jobVM.vmHDDs = hdds;
+
+                        jobVMs.Add(jobVM);
+                    }
+                }
             }
             job.JobVMs = jobVMs;
 
