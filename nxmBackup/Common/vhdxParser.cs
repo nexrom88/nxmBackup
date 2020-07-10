@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.IO;
+using System.ComponentModel;
 
 namespace Common
 {
@@ -15,7 +16,7 @@ namespace Common
         {
             try
             {
-                this.sourceStream = new FileStream(file, FileMode.Open, FileAccess.Read);
+                this.sourceStream = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
             }
             catch (Exception ex)
             {
@@ -92,6 +93,30 @@ namespace Common
             this.sourceStream.Read(buffer, 0, 8);
 
             return BitConverter.ToUInt32(buffer, 0);
+        }
+
+        //reads "virtual disk ID" from MetadataTable
+        public byte[] getVirtualDiskID(MetadataTable metadataTable)
+        {
+            UInt32 offset = 0;
+            UInt32 length = 0;
+            foreach (MetadataTableEntry entry in metadataTable.entries)
+            {
+                if (entry.itemID[0] == 0xAB)
+                {
+                    offset = entry.offset;
+                    length = entry.length;
+                }
+            }
+
+            //jump to destination
+            this.sourceStream.Seek(offset, SeekOrigin.Begin);
+
+            //read virtual disk ID size
+            byte[] buffer = new byte[16];
+            this.sourceStream.Read(buffer, 0, 16);
+
+            return buffer;
         }
 
         //reads logicalSectorSize from MetadataTable

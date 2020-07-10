@@ -490,11 +490,25 @@ namespace HyperVBackupRCT
 
             ConfigHandler.BackupConfigHandler.addBackup(basePath, guidFolder, backupType, (string)refP["InstanceId"], parentiid, false);
 
+            //hdds changed? write the new hdd config to job
+            if (hddsChange)
+            {
+                //build hdd string list
+                List<string> hddStrings = new List<string>();
+                foreach (ManagementObject hdd in hdds)
+                {
+                    hddStrings.Add((string)hdd["InstanceID"]);
+                }
+                DBQueries.refreshHDDs(hddStrings, this.vmId);
+                this.eventHandler.raiseNewEvent("Veränderter Datenspeicher inventarisiert", false, false, NO_RELATED_EVENT, EventStatus.info);
+            }
+
         }
 
         //checks whether vm hdds are the same within the job definition
         private bool hddsChanged(List<ManagementObject> mountedHDDs, ConfigHandler.OneJob job)
         {
+
             JobVM currentVM = new JobVM();
             //find the corresponding vm object
             foreach(JobVM vm in job.JobVMs)
@@ -505,6 +519,12 @@ namespace HyperVBackupRCT
                     currentVM = vm;
                     break;
                 }
+            }
+
+            //hdd count changed?
+            if (mountedHDDs.Count != currentVM.vmHDDs.Count)
+            {
+                return true;
             }
 
             //iterate through all currently mounted HDDs
@@ -528,7 +548,7 @@ namespace HyperVBackupRCT
                 }
             }
 
-            return true;
+            return false;
         }
 
 

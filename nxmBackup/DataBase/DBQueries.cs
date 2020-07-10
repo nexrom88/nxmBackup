@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Npgsql;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,6 +9,41 @@ namespace Common
 {
     public class DBQueries
     {
+        //deletes the old hdds from a given vm and adds new ones
+        public static void refreshHDDs(List<string> hdds, string vmid)
+        {
+            using (DBConnection dbConn = new DBConnection())
+            {
+                NpgsqlTransaction transaction = dbConn.beginTransaction();
+
+                //delete vm hdd relation
+                Dictionary<string, object> parameters = new Dictionary<string, object>();
+                parameters.Add("vmid", vmid);
+                dbConn.doWriteQuery("DELETE FROM vmhddrelation WHERE vmid=@vmid;", parameters, transaction);
+
+                //add new hdds and their relations to vm
+                foreach(string hdd in hdds)
+                {
+                    //add hdd
+                    parameters.Clear();
+                    parameters.Add("name", hdd);
+                    List<Dictionary<string,string>> result = dbConn.doReadQuery("INSERT INTO hdds (name) VALUES (@name) RETURNING id;", parameters, transaction);
+                    int newHDDID = int.Parse(result[0]["id"]);
+
+                    //add relation
+                    parameters.Clear();
+                    parameters.Add("vmid", vmid);
+                    parameters.Add("hddid", newHDDID);
+                    dbConn.doWriteQuery("INSERT INTO vmhddrelation (vmid,hddid) VALUES (@vmid, @hddid);", parameters, transaction);
+
+                }
+
+                //commit transaction
+                transaction.Commit();
+
+            }
+        }
+
         // Adds a new job execution before performing backup process.
         public static int addJobExecution(int jobId, string type)
         {

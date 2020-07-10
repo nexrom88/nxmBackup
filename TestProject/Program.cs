@@ -22,19 +22,17 @@ namespace TestProject
             //HyperVBackupRCT.SnapshotHandler sh = new HyperVBackupRCT.SnapshotHandler("DF86F44C-037D-4111-8EF8-3DC2B3C2F553", -1);
             //sh.cleanUp();
 
-            //Common.vhdxParser parser = new Common.vhdxParser(@"C:\VMs\Win10.vhdx");
-            //Common.RegionTable regionTable = parser.parseRegionTable();
-            //Common.MetadataTable metadataTable = parser.parseMetadataTable(regionTable);
-            //Common.BATTable table = parser.parseBATTable(regionTable, 0, false);
-            //string output = JsonConvert.SerializeObject(table);
-            //UInt32 blockSize = parser.getBlockSize(metadataTable);
+            Common.vhdxParser parser = new Common.vhdxParser(@"C:\VMs\Win10.vhdx");
+            Common.RegionTable regionTable = parser.parseRegionTable();
+            Common.MetadataTable metadataTable = parser.parseMetadataTable(regionTable);
+            byte[] id = parser.getVirtualDiskID(metadataTable);
 
             //MFUserMode.MFUserMode um = new MFUserMode.MFUserMode();
             //um.connectToKM();
             //SharedMemory sm = new SharedMemory();
             //sm.mapSharedBuffer();
 
-            Common.WMIHelper.listVMs();
+            //Common.WMIHelper.listVMs();
         }
         
 

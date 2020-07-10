@@ -94,11 +94,32 @@ namespace ConfigHandler
                         JobVM newVM = new JobVM();
                         newVM.vmID = vm["id"];
                         newVM.vmName = vm["name"];
+
+                        //read vm hdds
+                        paramaters.Clear();
+                        paramaters.Add("vmid", vm["id"]);
+                        List<Dictionary<string, string>> hdds = connection.doReadQuery("SELECT hdds.name FROM hdds INNER JOIN vmhddrelation ON hdds.id=vmhddrelation.hddid WHERE vmhddrelation.vmid=@vmid;", paramaters, null);
+
+                        newVM.vmHDDs = new List<VMHDD>();
+
+                        //iterate through all hdds
+                        foreach(Dictionary<string,string> oneHDD in hdds)
+                        {
+                            VMHDD newHDD = new VMHDD();
+                            newHDD.name = oneHDD["name"];
+                            newVM.vmHDDs.Add(newHDD);
+                        }
+
                         newJob.JobVMs.Add(newVM);
+
                     }
+
+
 
                     //get last jobExecution attributes
 
+                    paramaters.Clear();
+                    paramaters.Add("jobid", int.Parse(job["id"]));
                     List<Dictionary<string, string>> jobExecutions = connection.doReadQuery("SELECT * FROM jobexecutions WHERE jobexecutions.jobid=@jobid and jobexecutions.id = (SELECT MAX(id) FROM jobexecutions WHERE jobexecutions.jobid=@jobid)", paramaters, null);
 
                     if (jobExecutions.Count > 1) MessageBox.Show("db error: jobExecutions hat mehr als 1 result");
