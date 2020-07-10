@@ -10,7 +10,7 @@ namespace Common
     public class DBQueries
     {
         //deletes the old hdds from a given vm and adds new ones
-        public static void refreshHDDs(List<string> hdds, string vmid)
+        public static void refreshHDDs(List<VMHDD> hdds, string vmid)
         {
             using (DBConnection dbConn = new DBConnection())
             {
@@ -22,12 +22,13 @@ namespace Common
                 dbConn.doWriteQuery("DELETE FROM vmhddrelation WHERE vmid=@vmid;", parameters, transaction);
 
                 //add new hdds and their relations to vm
-                foreach(string hdd in hdds)
+                foreach(VMHDD hdd in hdds)
                 {
                     //add hdd
                     parameters.Clear();
-                    parameters.Add("name", hdd);
-                    List<Dictionary<string,string>> result = dbConn.doReadQuery("INSERT INTO hdds (name) VALUES (@name) RETURNING id;", parameters, transaction);
+                    parameters.Add("name", hdd.name);
+                    parameters.Add("path", hdd.path);
+                    List<Dictionary<string,string>> result = dbConn.doReadQuery("INSERT INTO hdds (name, path) VALUES (@name, @path) RETURNING id;", parameters, transaction);
                     int newHDDID = int.Parse(result[0]["id"]);
 
                     //add relation

@@ -55,9 +55,9 @@ namespace Common
         }
 
         //gets the connected hdds for a given vm (ManagementObject)
-        private static List<string> getHDDs(ManagementObject vm)
+        private static List<OneVMHDD> getHDDs(ManagementObject vm)
         {
-            List<string> hdds = new List<string>();
+            List<OneVMHDD> hdds = new List<OneVMHDD>();
             var iterator = vm.GetRelated("Msvm_StorageAllocationSettingData").GetEnumerator();
             List<ManagementObject> hddsMo = new List<ManagementObject>();
             
@@ -70,15 +70,37 @@ namespace Common
             //retrieve details from ManagementObject list
             foreach (ManagementObject hdd in hddsMo)
             {
+                OneVMHDD oneVMHDD = new OneVMHDD();
                 string[] hddPath = (string[])hdd["HostResource"];
                 if (!hddPath[0].EndsWith(".vhdx")) //ignore non-vhdx files
                 {
                     continue;
                 }
 
-                string hddName = (string)hdd["InstanceID"];
+                //does hdd exist?
+                if (!System.IO.File.Exists(hddPath[0]))
+                {
+                    oneVMHDD.name = "";
+                    oneVMHDD.path = "";
+                    hdds.Add(oneVMHDD);
+                    continue;
+                }
 
-                hdds.Add(hddName);
+                //get hdd name from vhdx parser
+                byte[] idBytes = vhdxParser.getVHDXIDFromFile(hddPath[0]);
+                if (idBytes == null)
+                {
+                    oneVMHDD.name = "";
+                    oneVMHDD.path = "";
+                    hdds.Add(oneVMHDD);
+                    continue;
+                }
+
+                string hddName = Convert.ToBase64String(idBytes);
+
+                oneVMHDD.name = hddName;
+                oneVMHDD.path = hddPath[0];
+                hdds.Add(oneVMHDD);
 
             }
 
@@ -166,7 +188,13 @@ namespace Common
         {
             public string id;
             public string name;
-            public List<string> hdds;
+            public List<OneVMHDD> hdds;
+        }
+
+        public struct OneVMHDD
+        {
+            public string name;
+            public string path;
         }
 
         

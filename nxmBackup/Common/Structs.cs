@@ -46,5 +46,6 @@ namespace Common
     public struct VMHDD
     {
         public string name;
+        public string path;
     }
 }

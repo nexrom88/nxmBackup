@@ -98,7 +98,7 @@ namespace ConfigHandler
                         //read vm hdds
                         paramaters.Clear();
                         paramaters.Add("vmid", vm["id"]);
-                        List<Dictionary<string, string>> hdds = connection.doReadQuery("SELECT hdds.name FROM hdds INNER JOIN vmhddrelation ON hdds.id=vmhddrelation.hddid WHERE vmhddrelation.vmid=@vmid;", paramaters, null);
+                        List<Dictionary<string, string>> hdds = connection.doReadQuery("SELECT hdds.name, hdds.path FROM hdds INNER JOIN vmhddrelation ON hdds.id=vmhddrelation.hddid WHERE vmhddrelation.vmid=@vmid;", paramaters, null);
 
                         newVM.vmHDDs = new List<VMHDD>();
 
@@ -107,6 +107,7 @@ namespace ConfigHandler
                         {
                             VMHDD newHDD = new VMHDD();
                             newHDD.name = oneHDD["name"];
+                            newHDD.path = oneHDD["path"];
                             newVM.vmHDDs.Add(newHDD);
                         }
 
@@ -204,7 +205,8 @@ namespace ConfigHandler
                 {
                     Dictionary<string, object> parameters = new Dictionary<string, object>();
                     parameters.Add("name", currentHDD.name);
-                    List<Dictionary<string, string>> result = connection.doReadQuery("INSERT INTO hdds (name) VALUES (@name) RETURNING id;", parameters, transaction);
+                    parameters.Add("path", currentHDD.path);
+                    List<Dictionary<string, string>> result = connection.doReadQuery("INSERT INTO hdds (name, path) VALUES (@name, @path) RETURNING id;", parameters, transaction);
                     hddIDs.Add(int.Parse(result[0]["id"]));
                 }
 

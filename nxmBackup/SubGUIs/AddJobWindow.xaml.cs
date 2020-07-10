@@ -207,10 +207,11 @@ namespace nxmBackup
 
                         List<VMHDD> hdds = new List<VMHDD>();
                         //build hdd objects
-                        foreach(string hdd in tempVM.hdds)
+                        foreach(WMIHelper.OneVMHDD hdd in tempVM.hdds)
                         {
                             VMHDD newHDD = new VMHDD();
-                            newHDD.name = hdd;
+                            newHDD.name = hdd.name;
+                            newHDD.path = hdd.path;
                             hdds.Add(newHDD);
                         }
                         jobVM.vmHDDs = hdds;

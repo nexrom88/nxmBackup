@@ -398,8 +398,6 @@ namespace HyperVBackupRCT
             archive.create();
             archive.open(System.IO.Compression.ZipArchiveMode.Create);
 
-            
-            bool hasHDD = false;
 
             this.eventHandler.raiseNewEvent("erfolgreich", true, false, eventId, EventStatus.successful);
 
@@ -413,12 +411,12 @@ namespace HyperVBackupRCT
             {
                 hdds.Add((ManagementObject)iterator.Current);
             }
-
+            
             //have hdds changed?
-            bool hddsChange = hddsChanged(hdds, job);
+            ChangedHDDsResponse hddsChangedResponse = hddsChanged(hdds, job);
 
             //set to full backup when hdds have changed
-            if (hddsChange)
+            if (hddsChangedResponse.hddsChanged)
             {
                 rctBase = null;
                 this.eventHandler.raiseNewEvent("Veränderter Datenspeicher erkannt", false, false, NO_RELATED_EVENT, EventStatus.warning);
@@ -432,8 +430,6 @@ namespace HyperVBackupRCT
                 {
                     continue;
                 }
-
-                hasHDD = true; //indicates that the vm has at least one snapshotable vhd
 
                 //copy a full snapshot?
                 if (rctBase == null)
@@ -491,7 +487,7 @@ namespace HyperVBackupRCT
             ConfigHandler.BackupConfigHandler.addBackup(basePath, guidFolder, backupType, (string)refP["InstanceId"], parentiid, false);
 
             //hdds changed? write the new hdd config to job
-            if (hddsChange)
+            if (hddsChangedResponse.hddsChanged)
             {
                 //build hdd string list
                 List<string> hddStrings = new List<string>();
@@ -499,16 +495,16 @@ namespace HyperVBackupRCT
                 {
                     hddStrings.Add((string)hdd["InstanceID"]);
                 }
-                DBQueries.refreshHDDs(hddStrings, this.vmId);
+                DBQueries.refreshHDDs(hddsChangedResponse.newHDDs, this.vmId);
                 this.eventHandler.raiseNewEvent("Veränderter Datenspeicher inventarisiert", false, false, NO_RELATED_EVENT, EventStatus.info);
             }
 
         }
 
         //checks whether vm hdds are the same within the job definition
-        private bool hddsChanged(List<ManagementObject> mountedHDDs, ConfigHandler.OneJob job)
+        private ChangedHDDsResponse hddsChanged(List<ManagementObject> mountedHDDs, ConfigHandler.OneJob job)
         {
-
+            ChangedHDDsResponse retVal = new ChangedHDDsResponse();
             JobVM currentVM = new JobVM();
             //find the corresponding vm object
             foreach(JobVM vm in job.JobVMs)
@@ -521,20 +517,27 @@ namespace HyperVBackupRCT
                 }
             }
 
-            //hdd count changed?
-            if (mountedHDDs.Count != currentVM.vmHDDs.Count)
-            {
-                return true;
-            }
 
+            List<VMHDD> newHDDS = new List<VMHDD>(); //struct for new HDDs retVal
+
+            bool hddsHaveChanged = false;
             //iterate through all currently mounted HDDs
             foreach (ManagementObject mountedHDD in mountedHDDs)
             {
                 bool hddFound = false;
-                //find correspinding HDD within job
+                //find corresponding HDD within job
                 foreach (VMHDD vmHDD in currentVM.vmHDDs)
                 {
-                    if ((string)mountedHDD["InstanceID"] == vmHDD.name)
+                    VMHDD newHDD = new VMHDD();
+                    //get vhdx id from vhdx file
+                    string vhdxPath = ((string[])mountedHDD["HostResource"])[0];
+                    string hddID = Convert.ToBase64String(vhdxParser.getVHDXIDFromFile(vhdxPath));
+                    
+                    newHDD.name = hddID;
+                    newHDD.path = vhdxPath;
+                    newHDDS.Add(newHDD);
+
+                    if (hddID == vmHDD.name)
                     {
                         hddFound = true;
                         break;
@@ -544,11 +547,22 @@ namespace HyperVBackupRCT
                 //hdd not found?
                 if (!hddFound)
                 {
-                    return true;
+                    hddsHaveChanged = true;
                 }
             }
 
-            return false;
+            //hdd count changed or hdds themself changed?
+            if (mountedHDDs.Count != currentVM.vmHDDs.Count || hddsHaveChanged)
+            {
+                retVal.hddsChanged = true;;
+            }
+            else
+            {
+                retVal.hddsChanged = false;
+            }
+
+            retVal.newHDDs = newHDDS;
+            return retVal;
         }
 
 
@@ -800,9 +814,14 @@ namespace HyperVBackupRCT
             {
                 this.removeReferencePoint(snapshot);
             }
-
         }
 
+        //struct for hddsChanged retVal
+        private struct ChangedHDDsResponse
+        {
+            public bool hddsChanged;
+            public List<VMHDD> newHDDs;
+        }
 
 
 

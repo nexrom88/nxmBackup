@@ -24,6 +24,27 @@ namespace Common
             }
         }
 
+        //public static function to just retrieve virtual disk id from a given vhdx file
+        public static byte[] getVHDXIDFromFile(string file)
+        {
+            //open vhdx file within parser
+            vhdxParser parser = new vhdxParser(file);
+            Common.RegionTable regionTable = parser.parseRegionTable();
+
+            //return nothing if regionTable contains of no entries
+            if (regionTable.entries.Length == 0)
+            {
+                parser.close();
+                return null;
+            }
+
+            Common.MetadataTable metadataTable = parser.parseMetadataTable(regionTable);
+            byte[] id = parser.getVirtualDiskID(metadataTable);
+            parser.close();
+            return id;
+
+        }
+
         //closes the sourceStream
         public void close()
         {
