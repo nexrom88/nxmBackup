@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Threading;
 using Common;
 using System.Windows;
+using nxmBackup.SubGUIs;
 
 namespace RestoreHelper
 {
@@ -51,6 +52,17 @@ namespace RestoreHelper
                     //valid element found
                     restoreChain.Add(restoreElement); 
                 }
+            }
+
+            //get all available vhdx files
+            string[] baseHDDFiles = getBaseHDDFilesFromChain(restoreChain, basePath);
+
+            //show hdd picker window when more than one hdd
+            if (baseHDDFiles.Length > 1)
+            {
+                HDDPickerWindow pickerWindow = new HDDPickerWindow();
+                pickerWindow.BaseHDDs = baseHDDFiles;
+                pickerWindow.ShowDialog();
             }
 
 
@@ -115,6 +127,26 @@ namespace RestoreHelper
             return retVal;
 
         }
+
+        //builds an array of available vhdx files from a given backup chain
+        private string[] getBaseHDDFilesFromChain(List<ConfigHandler.BackupConfigHandler.BackupInfo> restoreChain, string basePath)
+        {
+            //iterate through all backups within chain in reverse to read full backup first
+            for (int i = restoreChain.Count - 1; i >= 0; i--)
+            {
+                if (restoreChain[i].type == "full")
+                {
+                    //get all vhdx files
+                    string vmBasePath = System.IO.Path.Combine(basePath, restoreChain[i].uuid + ".nxm\\" + "Virtual Hard Disks");
+                    string[] entries = System.IO.Directory.GetFiles(vmBasePath, "*.vhdx");
+                    return entries;
+                }
+            }
+
+            return null;
+
+        }
+
 
         //gets a backup by the given instanceID
         private ConfigHandler.BackupConfigHandler.BackupInfo getBackup(List<ConfigHandler.BackupConfigHandler.BackupInfo> backupChain, string instanceID)

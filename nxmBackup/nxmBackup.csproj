@@ -197,6 +197,9 @@
     <Compile Include="SubGUIs\FLRWindow.xaml.cs">
       <DependentUpon>FLRWindow.xaml</DependentUpon>
     </Compile>
+    <Compile Include="SubGUIs\HDDPickerWindow.xaml.cs">
+      <DependentUpon>HDDPickerWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="SubGUIs\JobDetailsWindow.xaml.cs">
       <DependentUpon>JobDetailsWindow.xaml</DependentUpon>
     </Compile>
@@ -222,6 +225,10 @@
     <Page Include="SubGUIs\FLRWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
+    </Page>
+    <Page Include="SubGUIs\HDDPickerWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="SubGUIs\JobDetailsWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
