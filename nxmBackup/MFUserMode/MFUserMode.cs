@@ -60,7 +60,6 @@ namespace MFUserMode
         //the handle to the km connection
         private IntPtr kmHandle;
 
-        FileStream logStream = new FileStream("c:\\target\\log.txt", FileMode.Create, FileAccess.Write);
 
         //shared memory with km
         SharedMemory sharedMemoryHandler = new SharedMemory();
@@ -97,7 +96,6 @@ namespace MFUserMode
         public void closeConnection()
         {
             CloseHandle(this.kmHandle);
-            this.logStream.Close();
 
             //close shared memory view if necessary
             if (this.sharedMemoryHandler.SharedMemoryPointer != IntPtr.Zero)
@@ -143,7 +141,6 @@ namespace MFUserMode
                 string output = "offset: " + offset + " length: " + length + "\n";
                 System.Text.ASCIIEncoding enc = new System.Text.ASCIIEncoding();
                 byte[] buffer = enc.GetBytes(output);
-                this.logStream.Write(buffer, 0, buffer.Length);
 
                 //read the requested data from backup chain
                 data = new byte[length];

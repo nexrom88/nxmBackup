@@ -15,14 +15,15 @@ namespace MFUserMode
         private MFUserMode kmConnection;
         private bool processStopped = false;
         private System.IO.FileStream destStream;
-        private string destDummyFile;
         private BackupChainReader readableChain;
+        private string mountFile;
+
+        public string MountFile { get => mountFile; }
+
 
         //starts the mount process
-        public void startMfHandling (string[] sourceFiles, string destDummyFile, ref mountState mountState)
+        public void startMfHandling (string[] sourceFiles, ref mountState mountState)
         {
-            this.destDummyFile = destDummyFile;
-
             //build readable backup chain structure first
             this.readableChain = buildReadableBackupChain(sourceFiles);
 
@@ -43,9 +44,16 @@ namespace MFUserMode
                 decompressedFileSize = this.readableChain.RCTBackups[0].cbStructure.vhdxSize;
             }
 
+            this.mountFile = getMountHDDPath(decompressedFileSize);
+            if (this.mountFile == null)
+            {
+                mountState = mountState.error;
+                return;
+            }
+
             //build dummy dest file
-            System.IO.Directory.CreateDirectory(System.IO.Path.GetDirectoryName(destDummyFile));
-            this.destStream = new System.IO.FileStream(destDummyFile, System.IO.FileMode.Create, System.IO.FileAccess.Write);
+            System.IO.Directory.CreateDirectory(System.IO.Path.GetDirectoryName(this.MountFile));
+            this.destStream = new System.IO.FileStream(this.MountFile, System.IO.FileMode.Create, System.IO.FileAccess.Write);
             this.destStream.SetLength((long)decompressedFileSize);
             this.destStream.Close();
             this.destStream.Dispose();
@@ -65,6 +73,31 @@ namespace MFUserMode
             {
                 mountState = mountState.error;
             }
+        }
+
+        //gets the path to a mount path with enough hdd space
+        private string getMountHDDPath(ulong fileSize)
+        {
+            try
+            {
+                //iterate through all drives with a drive letter
+                foreach (DriveInfo drive in DriveInfo.GetDrives())
+                {
+                    //remaining free space has to be 1GB
+                    if ((ulong)drive.AvailableFreeSpace - fileSize > 1000000000)
+                    {
+                        //try to create mountfolder
+                        System.IO.Directory.CreateDirectory(drive.Name + "nxmMount");
+                        mountFile = drive.Name + "nxmMount\\mount.vhdx";
+                        return mountFile;
+                    }
+                }
+            }catch(Exception ex)
+            {
+                return null;
+            }
+
+            return null;
         }
 
         //builds a readable backup chain structure
@@ -118,7 +151,7 @@ namespace MFUserMode
             this.kmConnection.closeConnection();
 
             //delete dummy file
-            System.IO.File.Delete(this.destDummyFile);
+            System.IO.File.Delete(this.MountFile);
         }
     
         public enum mountState

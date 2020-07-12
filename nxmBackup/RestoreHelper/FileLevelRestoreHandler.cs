@@ -78,12 +78,10 @@ namespace RestoreHelper
             //get hdd files from backup chain
             string[] hddFiles = getHDDFilesFromChain(restoreChain, basePath, selectedHDD);
 
-            //todo: just use first hdd to mount
             MFUserMode.MountHandler mountHandler = new MFUserMode.MountHandler();
 
-            string mountPath = "f:\\mount.vhdx";
             MFUserMode.MountHandler.mountState mountState = MFUserMode.MountHandler.mountState.pending;
-            Thread mountThread = new Thread(() => mountHandler.startMfHandling(hddFiles, mountPath, ref mountState));
+            Thread mountThread = new Thread(() => mountHandler.startMfHandling(hddFiles, ref mountState));
             mountThread.Start();
 
             //wait for mounting process
@@ -101,7 +99,7 @@ namespace RestoreHelper
 
             //start restore window
             FLRWindow h = new FLRWindow();
-            h.VhdPath = mountPath;
+            h.VhdPath = mountHandler.MountFile;
             h.ShowDialog();
 
             mountThread.Abort();
@@ -109,6 +107,7 @@ namespace RestoreHelper
 
 
         }
+
 
         //builds an array of hdd files from a given backup chain
         private string[] getHDDFilesFromChain(List<ConfigHandler.BackupConfigHandler.BackupInfo> restoreChain, string basePath, string userSelectedHDD)

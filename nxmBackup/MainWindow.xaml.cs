@@ -108,6 +108,11 @@ namespace nxmBackup
 
         private void btnRestore_Click(object sender, RoutedEventArgs e)
         {
+            if (lvJobs.SelectedItem == null)
+            {
+                MessageBox.Show("Es wurde kein Job ausgewählt.", "Fehlgeschlagen", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
             RestoreOptions restoreOptionsWindows = new RestoreOptions((ConfigHandler.OneJob)lvJobs.SelectedItem);
             restoreOptionsWindows.ShowDialog();
         }
