@@ -58,16 +58,25 @@ namespace RestoreHelper
             string[] baseHDDFiles = getBaseHDDFilesFromChain(restoreChain, basePath);
 
             //show hdd picker window when more than one hdd
+            string selectedHDD = null;
             if (baseHDDFiles.Length > 1)
             {
                 HDDPickerWindow pickerWindow = new HDDPickerWindow();
                 pickerWindow.BaseHDDs = baseHDDFiles;
                 pickerWindow.ShowDialog();
+                selectedHDD = pickerWindow.UserPickedHDD;
+
+                //no hdd selected -> cancel restore
+                if (selectedHDD == null)
+                {
+                    return;
+                }
             }
 
 
+
             //get hdd files from backup chain
-            string[] hddFiles = getHDDFilesFromChain(restoreChain, basePath);
+            string[] hddFiles = getHDDFilesFromChain(restoreChain, basePath, selectedHDD);
 
             //todo: just use first hdd to mount
             MFUserMode.MountHandler mountHandler = new MFUserMode.MountHandler();
@@ -102,7 +111,7 @@ namespace RestoreHelper
         }
 
         //builds an array of hdd files from a given backup chain
-        private string[] getHDDFilesFromChain(List<ConfigHandler.BackupConfigHandler.BackupInfo> restoreChain, string basePath)
+        private string[] getHDDFilesFromChain(List<ConfigHandler.BackupConfigHandler.BackupInfo> restoreChain, string basePath, string userSelectedHDD)
         {
             string[] retVal = new string[restoreChain.Count];
             string targetHDD = ""; //todo: make target hdd selectable by user
@@ -112,11 +121,20 @@ namespace RestoreHelper
             {
                 if (restoreChain[i].type == "full")
                 {
-                    //get all vhdx files
-                    string vmBasePath = System.IO.Path.Combine(basePath, restoreChain[i].uuid + ".nxm\\" + "Virtual Hard Disks");
-                    string[] entries = System.IO.Directory.GetFiles(vmBasePath, "*.vhdx");
-                    retVal[i] = entries[0];
-                    targetHDD = System.IO.Path.GetFileName(entries[0]); //todo: make target hdd selectable by user
+                    //did user select an HDD?
+                    if (userSelectedHDD != null)
+                    {
+                        retVal[i] = userSelectedHDD;
+                        targetHDD = System.IO.Path.GetFileName(userSelectedHDD);
+                    }
+                    else //no user-selected HDD
+                    {
+                        //get all vhdx files
+                        string vmBasePath = System.IO.Path.Combine(basePath, restoreChain[i].uuid + ".nxm\\" + "Virtual Hard Disks");
+                        string[] entries = System.IO.Directory.GetFiles(vmBasePath, "*.vhdx");
+                        retVal[i] = entries[0]; //take first found file. OK here because otherwise user would have chosen one
+                        targetHDD = System.IO.Path.GetFileName(entries[0]);
+                    }
                 } else if (restoreChain[i].type == "rct")
                 {
                     string vmBasePath = System.IO.Path.Combine(basePath, restoreChain[i].uuid + ".nxm\\");

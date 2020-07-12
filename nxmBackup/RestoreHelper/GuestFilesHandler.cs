@@ -83,6 +83,12 @@ namespace RestoreHelper
             props.currentElement = 1;
             props.progress = 0.0;
 
+            //trim baseSourcePath
+            if (baseSourcePath.EndsWith("\\"))
+            {
+                baseSourcePath = baseSourcePath.Substring(0, baseSourcePath.Length - 1);
+            }
+
             //iterate all files
             foreach (string file in files)
             {

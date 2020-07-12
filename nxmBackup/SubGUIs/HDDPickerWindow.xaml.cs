@@ -21,7 +21,7 @@ namespace nxmBackup.SubGUIs
     {
         private string[] baseHDDs;
 
-        private string userPickedHDD;
+        private string userPickedHDD = null;
 
         public string[] BaseHDDs { get => baseHDDs; set => baseHDDs = value; }
         public string UserPickedHDD { get => userPickedHDD; }
