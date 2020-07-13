@@ -38,10 +38,9 @@ namespace nxmBackup.MFUserMode
 
         //maps a view to the km shared memory section
         public bool mapSharedBuffer()
-        {
-            
+        {  
 
-            OBJECT_ATTRIBUTES attributes = new OBJECT_ATTRIBUTES("\\BaseNamedObjects\\nxmmf", 0);
+            OBJECT_ATTRIBUTES attributes = new OBJECT_ATTRIBUTES("\\BaseNamedObjects\\nxmmfflr", 0);
 
             //opens the section created in km
             uint status = NtOpenSection(out sectionHandle, SECTION_MAP_WRITE | SECTION_MAP_READ, ref attributes);

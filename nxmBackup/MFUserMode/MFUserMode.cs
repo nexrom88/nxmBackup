@@ -78,7 +78,7 @@ namespace MFUserMode
         public bool connectToKM()
         {
             this.kmHandle = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(IntPtr)));
-            uint result = FilterConnectCommunicationPort("\\nxmQueryPort", 0, IntPtr.Zero, 0, IntPtr.Zero,  out kmHandle);
+            uint result = FilterConnectCommunicationPort("\\nxmFLRPort", 0, IntPtr.Zero, 0, IntPtr.Zero,  out kmHandle);
 
             //alloc shared memory
             if (result == 0)
