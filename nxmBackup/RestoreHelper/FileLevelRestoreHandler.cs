@@ -7,6 +7,7 @@ using System.Threading;
 using Common;
 using System.Windows;
 using nxmBackup.SubGUIs;
+using nxmBackup.MFUserMode;
 
 namespace RestoreHelper
 {
@@ -78,20 +79,20 @@ namespace RestoreHelper
             //get hdd files from backup chain
             string[] hddFiles = getHDDFilesFromChain(restoreChain, basePath, selectedHDD);
 
-            MFUserMode.MountHandler mountHandler = new MFUserMode.MountHandler();
+            MountHandler mountHandler = new MountHandler();
 
-            MFUserMode.MountHandler.mountState mountState = MFUserMode.MountHandler.mountState.pending;
+            MountHandler.mountState mountState = MountHandler.mountState.pending;
             Thread mountThread = new Thread(() => mountHandler.startMfHandling(hddFiles, ref mountState));
             mountThread.Start();
 
             //wait for mounting process
-            while (mountState == MFUserMode.MountHandler.mountState.pending)
+            while (mountState == MountHandler.mountState.pending)
             {
                 Thread.Sleep(200);
             }
 
             //error while mounting
-            if (mountState == MFUserMode.MountHandler.mountState.error)
+            if (mountState == MountHandler.mountState.error)
             {
                 MessageBox.Show("Backup konnte nicht eingehängt werden", "Restore Fehler", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;

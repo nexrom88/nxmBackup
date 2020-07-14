@@ -47,5 +47,6 @@ namespace Common
     {
         public string name;
         public string path;
+        public int lbObjectID; //random value for LB hdd identification
     }
 }

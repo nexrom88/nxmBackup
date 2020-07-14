@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using HyperVBackupRCT;
 using HVBackupCore;
 
-namespace MFUserMode
+namespace nxmBackup.MFUserMode
 {
     public class MountHandler
     {

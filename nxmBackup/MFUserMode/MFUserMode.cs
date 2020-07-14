@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using System.IO;
 using HVBackupCore;
 
-namespace MFUserMode
+namespace nxmBackup.MFUserMode
 {
     using nxmBackup.MFUserMode;
     using System.ComponentModel;
@@ -125,6 +125,7 @@ namespace MFUserMode
 
             int headerSize = Marshal.SizeOf(dataReceive.messageHeader);
             int dataSize = 8 + 8 + 4 + headerSize; //offset + length + object id + headerSize
+            dataSize *= 2;
 
             //read message
             uint status = FilterGetMessage(this.kmHandle, ref dataReceive.messageHeader, dataSize, IntPtr.Zero);

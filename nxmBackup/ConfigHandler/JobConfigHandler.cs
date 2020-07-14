@@ -32,6 +32,7 @@ namespace ConfigHandler
                     return null;
                 }
 
+                int lbHDDObjectID = 1;
                 //iterate through all jobs
                 foreach (Dictionary<string, string> job in jobs)
                 {
@@ -108,7 +109,9 @@ namespace ConfigHandler
                             VMHDD newHDD = new VMHDD();
                             newHDD.name = oneHDD["name"];
                             newHDD.path = oneHDD["path"];
+                            newHDD.lbObjectID = lbHDDObjectID;
                             newVM.vmHDDs.Add(newHDD);
+                            lbHDDObjectID++;
                         }
 
                         newJob.JobVMs.Add(newVM);
