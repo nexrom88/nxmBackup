@@ -60,13 +60,13 @@ namespace MFUserMode
 
             //connect to MF Kernel Mode
             this.kmConnection = new MFUserMode(this.readableChain);
-            if (this.kmConnection.connectToKM())
+            if (this.kmConnection.connectToKM("\\nxmFLRPort", "\\BaseNamedObjects\\nxmmfflr"))
             {
                 mountState = mountState.connected;
 
                 while (!this.processStopped)
                 {
-                    this.kmConnection.readMessages();
+                    this.kmConnection.handleFLRMessage();
                 }
             }
             else

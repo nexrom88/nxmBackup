@@ -8,6 +8,7 @@ using Newtonsoft.Json;
 using HyperVBackupRCT;
 using MFUserMode;
 using nxmBackup.MFUserMode;
+using System.ComponentModel;
 
 namespace TestProject
 {
@@ -27,15 +28,39 @@ namespace TestProject
             //Common.MetadataTable metadataTable = parser.parseMetadataTable(regionTable);
             //byte[] id = parser.getVirtualDiskID(metadataTable);
 
-            //MFUserMode.MFUserMode um = new MFUserMode.MFUserMode();
-            //um.connectToKM();
+            MFUserMode.MFUserMode um = new MFUserMode.MFUserMode();
+            um.connectToKM("\\nxmLBPort", "\\BaseNamedObjects\\nxmmflb");
+            byte[] data = new byte[261];
+            data[0] = 1;
+            byte[] intDummy = BitConverter.GetBytes(666);
+            for (int i = 0; i < 4; i++)
+            {
+                data[i + 1] = intDummy[i];
+            }
+            byte[] strDummy = Encoding.ASCII.GetBytes("c:\\testt.vhdx");
+            for (int i = 0; i < strDummy.Length; i++)
+            {
+                data[i + 5] = strDummy[i];
+            }
+            bool a = um.writeMessage(data);
+
+            data[0] = 2;
+            um.writeMessage(data);
+
+            MFUserMode.MFUserMode.LB_BLOCK block = um.handleLBMessage();
+
+            um.closeConnection();
+
+
             //SharedMemory sm = new SharedMemory();
             //sm.mapSharedBuffer();
 
             //Common.WMIHelper.listVMs();
 
-            DriveInfo[] drives = System.IO.DriveInfo.GetDrives();
-            drives = null;
+            //DriveInfo[] drives = System.IO.DriveInfo.GetDrives();
+            //drives = null;
+
+
         }
         
 
