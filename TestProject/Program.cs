@@ -9,8 +9,6 @@ using HyperVBackupRCT;
 using nxmBackup.MFUserMode;
 using System.ComponentModel;
 
-using nxmBackup.MFUserMode;
-
 namespace TestProject
 {
     class Program
@@ -68,6 +66,28 @@ namespace TestProject
             //DriveInfo[] drives = System.IO.DriveInfo.GetDrives();
             //drives = null;
 
+
+            ConfigHandler.OneJob dummyJob = new ConfigHandler.OneJob();
+            Common.JobVM vm1 = new Common.JobVM();
+            Common.VMHDD hdd1 = new Common.VMHDD();
+            hdd1.lbObjectID = 1;
+            hdd1.name = "hdd1";
+            hdd1.path = "c:\\target\\file1.txt";
+            Common.VMHDD hdd2 = new Common.VMHDD();
+            hdd2.lbObjectID = 2;
+            hdd2.name = "hdd2";
+            hdd2.path = "c:\\target\\file2.txt";
+            vm1.vmHDDs = new List<Common.VMHDD>();
+            vm1.vmHDDs.Add(hdd1);
+            vm1.vmHDDs.Add(hdd2);
+            dummyJob.JobVMs = new List<Common.JobVM>();
+            dummyJob.JobVMs.Add(vm1);
+
+            nxmBackup.HVBackupCore.LiveBackupWorker worker = new nxmBackup.HVBackupCore.LiveBackupWorker(dummyJob);
+            worker.startLB();
+
+            Console.ReadLine();
+            worker.stopLB();
 
         }
 
