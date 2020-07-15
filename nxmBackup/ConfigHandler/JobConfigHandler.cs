@@ -24,7 +24,7 @@ namespace ConfigHandler
             //open DB connection
             using (Common.DBConnection connection = new Common.DBConnection())
             {
-                List<Dictionary<string, string>> jobs = connection.doReadQuery("SELECT jobs.id, jobs.name, jobs.isRunning, jobs.basepath, jobs.maxelements, jobs.blocksize, jobs.day, jobs.hour, jobs.minute, jobs.interval, rotationtype.name AS rotationname FROM jobs INNER JOIN rotationtype ON jobs.rotationtypeid=rotationtype.id WHERE jobs.deleted=FALSE;", null, null);
+                List<Dictionary<string, string>> jobs = connection.doReadQuery("SELECT jobs.id, jobs.name, jobs.isRunning, jobs.basepath, jobs.maxelements, jobs.blocksize, jobs.day, jobs.hour, jobs.minute, jobs.interval, jobs.livebackup, rotationtype.name AS rotationname FROM jobs INNER JOIN rotationtype ON jobs.rotationtypeid=rotationtype.id WHERE jobs.deleted=FALSE;", null, null);
 
                 //check that jobs != null
                 if (jobs == null) //DB error
@@ -43,6 +43,7 @@ namespace ConfigHandler
                     newJob.Name = job["name"];
                     newJob.BlockSize = int.Parse(job["blocksize"]);
                     newJob.IsRunning = bool.Parse(job["isrunning"]);
+                    newJob.LiveBackup = bool.Parse(job["livebackup"]);
 
                     // build nextRun string
                     newJob.NextRun = $"{int.Parse(job["hour"]).ToString("00")}:{int.Parse(job["minute"]).ToString("00")}";
@@ -179,8 +180,9 @@ namespace ConfigHandler
                 parameters.Add("blocksize", job.BlockSize);
                 parameters.Add("maxelements", job.Rotation.maxElementCount);
                 parameters.Add("rotationtypeID", rotationID);
+                parameters.Add("livebackup", job.LiveBackup);
 
-                values = connection.doReadQuery("INSERT INTO jobs (name, interval, minute, hour, day, basepath, blocksize, maxelements, rotationtypeid) VALUES(@name, @interval, @minute, @hour, @day, @basepath, @blocksize, @maxelements, @rotationtypeID) RETURNING id;", parameters, transaction);
+                values = connection.doReadQuery("INSERT INTO jobs (name, interval, minute, hour, day, basepath, blocksize, maxelements, livebackup, rotationtypeid) VALUES(@name, @interval, @minute, @hour, @day, @basepath, @blocksize, @maxelements, @livebackup, @rotationtypeID) RETURNING id;", parameters, transaction);
 
                 int jobID = int.Parse(values[0]["id"]);
 
@@ -288,6 +290,7 @@ namespace ConfigHandler
         private string basePath;
         private int blockSize;
         private Rotation rotation;
+        private bool liveBackup;
         private bool isRunning;
         private string nextRun;
         private string lastRun;
@@ -303,6 +306,7 @@ namespace ConfigHandler
         public Rotation Rotation { get => rotation; set => rotation = value; }
         public bool IsRunning { get => isRunning; set => isRunning = value; }
         public int DbId { get => dbId; set => dbId = value; }
+        public bool LiveBackup { get => liveBackup; set => liveBackup = value; }
         public string IntervalBaseForGUI
         {
             get

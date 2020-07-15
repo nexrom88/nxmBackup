@@ -22,7 +22,7 @@ namespace nxmBackup
     {
         private bool windowReady = false;
         private Common.Rotation rotation = new Common.Rotation();
-        private bool incrementalActivated = true;
+        private bool lb = false;
         private int blockSize = 2;
         List<Common.WMIHelper.OneVM> vms;
 
@@ -164,6 +164,8 @@ namespace nxmBackup
             job.Name = txtJobName.Text;
             job.BlockSize = this.blockSize;
             job.Rotation = this.rotation;
+            job.LiveBackup = this.lb;
+            
 
 
             //build interval structure
@@ -240,11 +242,11 @@ namespace nxmBackup
 
         private void btJobDetails_Click(object sender, RoutedEventArgs e)
         {
-            JobDetailsWindow detailWindow = new JobDetailsWindow(this.incrementalActivated, this.blockSize, this.rotation.type.ToString().ToLower(), this.rotation.maxElementCount);
+            JobDetailsWindow detailWindow = new JobDetailsWindow(this.blockSize, this.rotation.type.ToString().ToLower(), this.rotation.maxElementCount);
             detailWindow.ShowDialog();
 
             //read set values
-            this.incrementalActivated = (bool)detailWindow.cbIncrements.IsChecked;
+            this.lb = (bool)detailWindow.cbLB.IsChecked;
             this.blockSize = int.Parse(((ComboBoxItem)detailWindow.cbBlockSize.SelectedItem).Content.ToString());
 
 

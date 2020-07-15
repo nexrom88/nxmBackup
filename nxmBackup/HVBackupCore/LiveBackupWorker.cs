@@ -24,13 +24,21 @@ namespace nxmBackup.HVBackupCore
         }
 
         //starts LB
-        public void startLB()
+        public bool startLB()
         {
+
             isRunning = true;
 
             //connect to km and shared memory
             this.um = new MFUserMode.MFUserMode();
-            this.um.connectToKM("\\nxmLBPort", "\\BaseNamedObjects\\nxmmflb");
+            bool status = this.um.connectToKM("\\nxmLBPort", "\\BaseNamedObjects\\nxmmflb");
+
+            //quit when connection not successful
+            if (!status)
+            {
+                isRunning = false;
+                return false;
+            }
 
             //start lb reading thred
             this.lbReadThread = new Thread(() => readLBMessages());
@@ -39,8 +47,11 @@ namespace nxmBackup.HVBackupCore
             //iterate through all vms
             foreach (Common.JobVM vm in this.selectedJob.JobVMs)
             {
+                //add vm-LB to backup config.xml
+                addToBackupConfig(vm);
+
                 //iterate through all hdds
-                foreach(Common.VMHDD hdd in vm.vmHDDs)
+                foreach (Common.VMHDD hdd in vm.vmHDDs)
                 {
                     byte[] data = new byte[261];
                     data[0] = 1;
@@ -60,6 +71,23 @@ namespace nxmBackup.HVBackupCore
                     um.writeMessage(data);
                 }
             }
+
+            return true;
+        }
+
+        //adds the vm-LB backup to destination config.xml file for the given vm
+        private void addToBackupConfig(Common.JobVM vm)
+        {
+            //read existing backup chain
+            List<ConfigHandler.BackupConfigHandler.BackupInfo> currentChain = ConfigHandler.BackupConfigHandler.readChain(System.IO.Path.Combine(this.selectedJob.BasePath, vm.vmID));
+
+            //get parent backup
+            string parentInstanceID = currentChain[currentChain.Count - 1].instanceID;
+
+            //add new backup
+            Guid g = Guid.NewGuid();
+            string guidFolder = g.ToString();
+            ConfigHandler.BackupConfigHandler.addBackup(System.IO.Path.Combine(this.selectedJob.BasePath, vm.vmID), guidFolder, "lb", "nxm:" + guidFolder, parentInstanceID, false);
         }
 
         //reads km lb messages
@@ -71,12 +99,37 @@ namespace nxmBackup.HVBackupCore
                 {
                     MFUserMode.MFUserMode.LB_BLOCK lbBlock = this.um.handleLBMessage();
 
-                    System.IO.File.AppendAllText("c:\\output.txt", lbBlock.offset + "-" + lbBlock.length + "-" + lbBlock.objectID);
+                    if (lbBlock.isValid)
+                    {
+                        Common.JobVM targetVM;
+                        Common.VMHDD targetHDD;
+                        //look for corresponding vm and hdd
+                        foreach(Common.JobVM vm in this.selectedJob.JobVMs)
+                        {
+                            foreach(Common.VMHDD hdd in vm.vmHDDs)
+                            {
+                                if (hdd.lbObjectID == lbBlock.objectID)
+                                {
+                                    targetHDD = hdd;
+                                    targetVM = vm;
+
+                                    //save the block to backup destination
+                                    storeLBBlock(lbBlock, vm, hdd);
+                                }
+                            }
+                        }
+                    }  
                 }
             }catch(Exception ex)
             {
                 ex = ex;
             }
+        }
+
+        //writes LB block to corresponding backup path
+        private void storeLBBlock(MFUserMode.MFUserMode.LB_BLOCK lbBlock, Common.JobVM vm, Common.VMHDD hdd)
+        {
+            string vmBasePath = System.IO.Path.Combine(this.selectedJob.BasePath, vm.vmID);
         }
 
         //stops LB

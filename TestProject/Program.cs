@@ -84,7 +84,10 @@ namespace TestProject
             dummyJob.JobVMs.Add(vm1);
 
             nxmBackup.HVBackupCore.LiveBackupWorker worker = new nxmBackup.HVBackupCore.LiveBackupWorker(dummyJob);
-            worker.startLB();
+            if (!worker.startLB())
+            {
+                return;
+            }
 
             Console.ReadLine();
             worker.stopLB();
