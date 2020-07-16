@@ -75,7 +75,7 @@ namespace nxmBackup.HVBackupCore
             return true;
         }
 
-        //adds the vm-LB backup to destination config.xml file for the given vm
+        //adds the vm-LB backup to destination config.xml file for the given vm and returns filestreams to destination files
         private void addToBackupConfig(Common.JobVM vm)
         {
             //read existing backup chain
@@ -88,6 +88,28 @@ namespace nxmBackup.HVBackupCore
             Guid g = Guid.NewGuid();
             string guidFolder = g.ToString();
             ConfigHandler.BackupConfigHandler.addBackup(System.IO.Path.Combine(this.selectedJob.BasePath, vm.vmID), guidFolder, "lb", "nxm:" + guidFolder, parentInstanceID, false);
+
+            //create lb folder
+            string destFolder = System.IO.Path.Combine(this.selectedJob.BasePath, vm.vmID + "\\" + guidFolder + ".nxm");
+            System.IO.Directory.CreateDirectory(destFolder);
+
+            //create destination files and their corresponding streams
+            for (int i = 0; i < vm.vmHDDs.Count; i++)
+            {
+
+                string fileName = System.IO.Path.GetFileName(vm.vmHDDs[i].path) + ".lb";
+                fileName = System.IO.Path.Combine(destFolder, fileName);
+                System.IO.FileStream stream = new System.IO.FileStream(fileName, System.IO.FileMode.Create);
+
+                //build new hdd struct, otherwise it cannot be changed within Arraylist
+                Common.VMHDD newHDD = new Common.VMHDD();
+                newHDD.lbObjectID = vm.vmHDDs[i].lbObjectID;
+                newHDD.name = vm.vmHDDs[i].name;
+                newHDD.path = vm.vmHDDs[i].path;
+                newHDD.ldDestinationStream = stream;
+                vm.vmHDDs.RemoveAt(i);
+                vm.vmHDDs.Insert(i,newHDD);
+            }
         }
 
         //reads km lb messages

@@ -20,7 +20,7 @@
         <ComboBox x:Name="cbBlockSize" Margin="20,100,20,0" VerticalAlignment="Top" Grid.ColumnSpan="2">
         </ComboBox>
         <Label Content="Vollbackup nach Anzahl Backups:" Margin="20,70,20,0" VerticalAlignment="Top" Grid.ColumnSpan="2"/>
-        <CheckBox x:Name="cbLB" Content="LiveBackup verwenden" Margin="20,30,20,0" VerticalAlignment="Top" Checked="cbIncrements_Checked" Unchecked="cbIncrements_Unchecked" Grid.ColumnSpan="2"/>
+        <CheckBox x:Name="cbLB" Content="LiveBackup verwenden" Margin="20,30,20,0" VerticalAlignment="Top" Grid.ColumnSpan="2"/>
         <Button Content="Übernehmen" Margin="95,285,90,0" VerticalAlignment="Top" Height="40" Click="Button_Click" Grid.ColumnSpan="2"/>
         <Label x:Name="lblBlocksCaption" Content="Anzahl aufzubewahrender Backups:" Margin="20,210,50,0" VerticalAlignment="Top" Grid.ColumnSpan="2"/>
         <Slider x:Name="slMaxElements" Margin="20,240,20,0" VerticalAlignment="Top" IsSnapToTickEnabled="True" Minimum="1" SmallChange="1" TickPlacement="TopLeft" Value="1" Grid.ColumnSpan="2" Maximum="20"/>
