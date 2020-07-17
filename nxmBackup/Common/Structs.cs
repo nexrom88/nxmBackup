@@ -35,7 +35,7 @@ namespace Common
     }
 
     //defines one VM within a job
-    public struct JobVM
+    public class JobVM
     {
         public string vmID;
         public string vmName;
@@ -43,7 +43,7 @@ namespace Common
     }
 
     //defines one HDD
-    public struct VMHDD
+    public class VMHDD
     {
         public string name;
         public string path;

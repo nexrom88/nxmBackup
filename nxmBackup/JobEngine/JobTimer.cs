@@ -4,6 +4,7 @@ using System.Text;
 using ConfigHandler;
 using HyperVBackupRCT;
 using Common;
+using nxmBackup.HVBackupCore;
 
 namespace JobEngine
 {
@@ -46,6 +47,13 @@ namespace JobEngine
                 return;
             }
 
+            //stop LB if in progress
+            if (this.job.LiveBackupWorker != null)
+            {
+                this.job.LiveBackupWorker.stopLB();
+                this.job.LiveBackupWorker = null;
+            }
+
             this.inProgress = true;
 
             //get new execution ID
@@ -55,7 +63,7 @@ namespace JobEngine
             //iterate vms within the current job
             foreach (JobVM vm in this.Job.JobVMs)
             {
-                SnapshotHandler ssHandler = new SnapshotHandler(vm.vmID, executionId);
+                SnapshotHandler ssHandler = new SnapshotHandler(vm, executionId);
                 bool successful = ssHandler.performFullBackupProcess(ConsistencyLevel.ApplicationAware, true, true, this.job);
                 if (!successful) executionSuccessful = false;
             }

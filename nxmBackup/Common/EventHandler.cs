@@ -11,10 +11,10 @@ namespace Common
         private string vmId;
         private int executionId;
 
-        public EventHandler (string vmId, int jobExecutionId)
+        public EventHandler (JobVM vm, int jobExecutionId)
         {
             this.executionId = jobExecutionId;
-            this.vmId = vmId;
+            this.vmId = vm.vmID;
         }
 
         //builds a EventProperties object and raises the "newEvent" event

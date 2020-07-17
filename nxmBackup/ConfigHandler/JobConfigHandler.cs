@@ -9,6 +9,7 @@ using System.Runtime.CompilerServices;
 using Common;
 using System.Windows.Forms;
 using Npgsql;
+using nxmBackup.HVBackupCore;
 
 namespace ConfigHandler
 {
@@ -281,7 +282,7 @@ namespace ConfigHandler
     // Structures:
 
     //represents one job within jobs.xml
-    public struct OneJob : System.ComponentModel.INotifyPropertyChanged
+    public class OneJob : System.ComponentModel.INotifyPropertyChanged
     {
         private int dbId;
         private string name;
@@ -291,6 +292,7 @@ namespace ConfigHandler
         private int blockSize;
         private Rotation rotation;
         private bool liveBackup;
+        private LiveBackupWorker lbWorker;
         private bool isRunning;
         private string nextRun;
         private string lastRun;
@@ -307,6 +309,7 @@ namespace ConfigHandler
         public bool IsRunning { get => isRunning; set => isRunning = value; }
         public int DbId { get => dbId; set => dbId = value; }
         public bool LiveBackup { get => liveBackup; set => liveBackup = value; }
+        public LiveBackupWorker LiveBackupWorker { get => lbWorker; set => lbWorker = value; }
         public string IntervalBaseForGUI
         {
             get

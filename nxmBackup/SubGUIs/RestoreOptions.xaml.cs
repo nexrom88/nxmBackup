@@ -113,8 +113,20 @@ namespace RestoreHelper
             switch (restoreType)
             {
                 case "full":
+                    //look for selected job object
+                    string vmId = ((ComboBoxItem)cbVMs.SelectedItem).Tag.ToString();
+                    Common.JobVM targetVM = new Common.JobVM();
+                    foreach(Common.JobVM vm in this.job.JobVMs)
+                    {
+                        if (vm.vmID == vmId)
+                        {
+                            targetVM = vm;
+                            break;
+                        }
+                    }
+
                     int jobExecutionId = Common.DBQueries.addJobExecution(this.job.DbId, "restore");
-                    RestoreHelper.FullRestoreHandler restoreHandler = new RestoreHelper.FullRestoreHandler(new Common.EventHandler(((ComboBoxItem)cbVMs.SelectedItem).Tag.ToString(), jobExecutionId));
+                    RestoreHelper.FullRestoreHandler restoreHandler = new RestoreHelper.FullRestoreHandler(new Common.EventHandler(targetVM, jobExecutionId));
                     restoreHandler.performFullRestoreProcess(sourcePath, "f:\\target", restorePoint.InstanceId);
                     break;
                 case "flr":

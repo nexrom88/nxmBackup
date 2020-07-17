@@ -5,6 +5,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Runtime.InteropServices;
 using System.Threading;
+using Microsoft.EntityFrameworkCore.Metadata.Conventions;
+using System.ComponentModel;
 
 namespace nxmBackup.HVBackupCore
 {
@@ -17,6 +19,7 @@ namespace nxmBackup.HVBackupCore
         private bool isRunning = false;
         private MFUserMode.MFUserMode um;
         private Thread lbReadThread;
+        private string destGUIDFolder;
 
         public LiveBackupWorker(ConfigHandler.OneJob job)
         {
@@ -48,7 +51,7 @@ namespace nxmBackup.HVBackupCore
             foreach (Common.JobVM vm in this.selectedJob.JobVMs)
             {
                 //add vm-LB to backup config.xml
-                addToBackupConfig(vm);
+                initFileStreams(vm);
 
                 //iterate through all hdds
                 foreach (Common.VMHDD hdd in vm.vmHDDs)
@@ -75,28 +78,20 @@ namespace nxmBackup.HVBackupCore
             return true;
         }
 
-        //adds the vm-LB backup to destination config.xml file for the given vm and returns filestreams to destination files
-        private void addToBackupConfig(Common.JobVM vm)
+        //returns filestreams for destination files
+        private void initFileStreams(Common.JobVM vm)
         {
-            //read existing backup chain
-            List<ConfigHandler.BackupConfigHandler.BackupInfo> currentChain = ConfigHandler.BackupConfigHandler.readChain(System.IO.Path.Combine(this.selectedJob.BasePath, vm.vmID));
-
-            //get parent backup
-            string parentInstanceID = currentChain[currentChain.Count - 1].instanceID;
-
             //add new backup
             Guid g = Guid.NewGuid();
             string guidFolder = g.ToString();
-            ConfigHandler.BackupConfigHandler.addBackup(System.IO.Path.Combine(this.selectedJob.BasePath, vm.vmID), guidFolder, "lb", "nxm:" + guidFolder, parentInstanceID, false);
-
+           
             //create lb folder
-            string destFolder = System.IO.Path.Combine(this.selectedJob.BasePath, vm.vmID + "\\" + guidFolder + ".nxm");
+            string destFolder = System.IO.Path.Combine(this.selectedJob.BasePath, this.selectedJob.Name + "\\" + vm.vmID + "\\" + guidFolder + ".nxm");
             System.IO.Directory.CreateDirectory(destFolder);
 
             //create destination files and their corresponding streams
             for (int i = 0; i < vm.vmHDDs.Count; i++)
             {
-
                 string fileName = System.IO.Path.GetFileName(vm.vmHDDs[i].path) + ".lb";
                 fileName = System.IO.Path.Combine(destFolder, fileName);
                 System.IO.FileStream stream = new System.IO.FileStream(fileName, System.IO.FileMode.Create);
@@ -110,6 +105,26 @@ namespace nxmBackup.HVBackupCore
                 vm.vmHDDs.RemoveAt(i);
                 vm.vmHDDs.Insert(i,newHDD);
             }
+
+            this.destGUIDFolder = guidFolder;
+        }
+
+        //adds the vm-LB backup to destination config.xml file for the given vm
+        public void addToBackupConfig()
+        {
+            //iterate through all vms
+            foreach (Common.JobVM vm in this.selectedJob.JobVMs)
+            {
+                //read existing backup chain
+                List<ConfigHandler.BackupConfigHandler.BackupInfo> currentChain = ConfigHandler.BackupConfigHandler.readChain(System.IO.Path.Combine(this.selectedJob.BasePath, this.selectedJob.Name + "\\" + vm.vmID));
+
+                //get parent backup
+                string parentInstanceID = currentChain[currentChain.Count - 1].instanceID;
+
+                ConfigHandler.BackupConfigHandler.addBackup(System.IO.Path.Combine(this.selectedJob.BasePath, this.selectedJob.Name + "\\" + vm.vmID), this.destGUIDFolder, "lb", "nxm:" + this.destGUIDFolder, parentInstanceID, false);
+
+            }
+
         }
 
         //reads km lb messages
@@ -151,7 +166,24 @@ namespace nxmBackup.HVBackupCore
         //writes LB block to corresponding backup path
         private void storeLBBlock(MFUserMode.MFUserMode.LB_BLOCK lbBlock, Common.JobVM vm, Common.VMHDD hdd)
         {
-            string vmBasePath = System.IO.Path.Combine(this.selectedJob.BasePath, vm.vmID);
+            //write data to stream if stream exists
+            if (hdd.ldDestinationStream != null)
+            {
+                //write offset
+                byte[] buffer;
+                buffer = BitConverter.GetBytes(lbBlock.offset);
+                hdd.ldDestinationStream.Write(buffer, 0, 8);
+
+                //write length
+                buffer = BitConverter.GetBytes(lbBlock.length);
+                hdd.ldDestinationStream.Write(buffer, 0, 8);
+
+                //write payload data
+                hdd.ldDestinationStream.Write(lbBlock.buffer, 0, (int)lbBlock.length);
+
+                //flush stream
+                hdd.ldDestinationStream.Flush();
+            }
         }
 
         //stops LB
@@ -166,6 +198,15 @@ namespace nxmBackup.HVBackupCore
 
                 this.um.closeConnection();
                 this.lbReadThread.Abort();
+
+                //close all open filestreams
+                foreach(Common.JobVM vm in this.selectedJob.JobVMs)
+                {
+                    foreach(Common.VMHDD hdd in vm.vmHDDs)
+                    {
+                        hdd.ldDestinationStream.Close();
+                    }
+                }
             }
         }
 
@@ -180,3 +221,8 @@ namespace nxmBackup.HVBackupCore
 
     }
 }
+
+//file structure
+//8 bytes = offset
+//8 bytes = length
+//length bytes = payload data

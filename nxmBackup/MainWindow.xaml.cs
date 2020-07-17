@@ -51,8 +51,8 @@ namespace nxmBackup
         //deletes every type of snapshot for a given vm
         private void cleanUp()
         {
-            SnapshotHandler h = new SnapshotHandler("94921741-1567-4C42-84BF-4385F7E4BF9E", -1);
-            h.cleanUp();
+            //SnapshotHandler h = new SnapshotHandler("94921741-1567-4C42-84BF-4385F7E4BF9E", -1);
+            //h.cleanUp();
         }
 
         //init jobs
@@ -249,5 +249,16 @@ namespace nxmBackup
             public string Text { get; set; }
         }
 
+        private void MainGUI_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            //look for active lb worker and close it
+            foreach(ConfigHandler.OneJob job in this.jobs)
+            {
+                if (job.LiveBackup && job.LiveBackupWorker != null)
+                {
+                    job.LiveBackupWorker.stopLB();
+                }
+            }
+        }
     }
 }
