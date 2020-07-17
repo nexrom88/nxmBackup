@@ -491,7 +491,10 @@ namespace HyperVBackupRCT
             ConfigHandler.BackupConfigHandler.addBackup(basePath, guidFolder, backupType, (string)refP["InstanceId"], parentiid, false);
 
             //now add lb backup to config.xml
-            job.LiveBackupWorker.addToBackupConfig();
+            if (job.LiveBackup)
+            {
+                job.LiveBackupWorker.addToBackupConfig();
+            }
 
             //hdds changed? write the new hdd config to job
             if (hddsChangedResponse.hddsChanged)
