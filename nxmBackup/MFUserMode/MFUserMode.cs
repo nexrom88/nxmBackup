@@ -148,7 +148,7 @@ namespace nxmBackup.MFUserMode
             int objectID = BitConverter.ToInt32(managedBuffer, 16);
 
             //copy shared memory to retVal struct
-            retVal.buffer = new byte[length];
+            retVal.buffer = new byte[length + 1];
             Marshal.Copy(this.sharedMemoryHandler.SharedMemoryPointer, retVal.buffer, 0, (int)length + 1);
             retVal.isValid = true;
             retVal.length = length;
