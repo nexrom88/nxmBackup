@@ -149,7 +149,7 @@ namespace nxmBackup.MFUserMode
 
             //copy shared memory to retVal struct
             retVal.buffer = new byte[length];
-            Marshal.Copy(this.sharedMemoryHandler.SharedMemoryPointer, retVal.buffer, 0, (int)length);
+            Marshal.Copy(this.sharedMemoryHandler.SharedMemoryPointer, retVal.buffer, 0, (int)length + 1);
             retVal.isValid = true;
             retVal.length = length;
             retVal.offset = offset;
