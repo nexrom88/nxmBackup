@@ -182,6 +182,7 @@
     <Compile Include="HVBackupCore\CBParser.cs" />
     <Compile Include="HVBackupCore\ConsistencyLevel.cs" />
     <Compile Include="HVBackupCore\BackupChainReader.cs" />
+    <Compile Include="HVBackupCore\LBParser.cs" />
     <Compile Include="HVBackupCore\LiveBackupWorker.cs" />
     <Compile Include="HVBackupCore\SnapshotHandler.cs" />
     <Compile Include="JobEngine\JobHandler.cs" />

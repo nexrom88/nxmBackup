@@ -80,7 +80,7 @@ namespace TestProject
             Common.VMHDD hdd2 = new Common.VMHDD();
             hdd2.lbObjectID = 2;
             hdd2.name = "hdd2";
-            hdd2.path = "c:\\target\\file2.txt";
+            hdd2.path = "c:\\test.mp3";
             vm1.vmHDDs = new List<Common.VMHDD>();
             vm1.vmHDDs.Add(hdd1);
             vm1.vmHDDs.Add(hdd2);
