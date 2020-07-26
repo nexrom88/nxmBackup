@@ -124,7 +124,7 @@ namespace nxmBackup.MFUserMode
             LB_BLOCK retVal = new LB_BLOCK();
 
             int headerSize = Marshal.SizeOf(dataReceive.messageHeader);
-            int dataSize = 100;
+            int dataSize = BUFFER_SIZE + headerSize;
 
             //read message
             uint status = FilterGetMessage(this.kmHandle, ref dataReceive.messageHeader, dataSize, IntPtr.Zero);
