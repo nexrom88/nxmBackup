@@ -68,33 +68,36 @@ namespace TestProject
             //DriveInfo[] drives = System.IO.DriveInfo.GetDrives();
             //drives = null;
 
+            FileStream inStream = new FileStream(@"C:\BasePath\DummyJob\9cf7f1f7-d00e-4d38-8381-71f470299b98.nxm\test.mp3.lb", FileMode.Open, FileAccess.Read);
+            List<nxmBackup.HVBackupCore.LBStructure> retVal = nxmBackup.HVBackupCore.LBParser.parseLBFile(inStream, true);
 
-            ConfigHandler.OneJob dummyJob = new ConfigHandler.OneJob();
-            dummyJob.BasePath = "c:\\BasePath";
-            dummyJob.Name = "DummyJob";
-            Common.JobVM vm1 = new Common.JobVM();
-            Common.VMHDD hdd1 = new Common.VMHDD();
-            hdd1.lbObjectID = 1;
-            hdd1.name = "hdd1";
-            hdd1.path = "c:\\target\\file1.txt";
-            Common.VMHDD hdd2 = new Common.VMHDD();
-            hdd2.lbObjectID = 2;
-            hdd2.name = "hdd2";
-            hdd2.path = "c:\\test.mp3";
-            vm1.vmHDDs = new List<Common.VMHDD>();
-            vm1.vmHDDs.Add(hdd1);
-            vm1.vmHDDs.Add(hdd2);
-            dummyJob.JobVMs = new List<Common.JobVM>();
-            dummyJob.JobVMs.Add(vm1);
+            retVal = null;
+            //ConfigHandler.OneJob dummyJob = new ConfigHandler.OneJob();
+            //dummyJob.BasePath = "c:\\BasePath";
+            //dummyJob.Name = "DummyJob";
+            //Common.JobVM vm1 = new Common.JobVM();
+            //Common.VMHDD hdd1 = new Common.VMHDD();
+            //hdd1.lbObjectID = 1;
+            //hdd1.name = "hdd1";
+            //hdd1.path = "c:\\target\\file1.txt";
+            //Common.VMHDD hdd2 = new Common.VMHDD();
+            //hdd2.lbObjectID = 2;
+            //hdd2.name = "hdd2";
+            //hdd2.path = "c:\\test.mp3";
+            //vm1.vmHDDs = new List<Common.VMHDD>();
+            //vm1.vmHDDs.Add(hdd1);
+            //vm1.vmHDDs.Add(hdd2);
+            //dummyJob.JobVMs = new List<Common.JobVM>();
+            //dummyJob.JobVMs.Add(vm1);
 
-            nxmBackup.HVBackupCore.LiveBackupWorker worker = new nxmBackup.HVBackupCore.LiveBackupWorker(dummyJob);
-            if (!worker.startLB())
-            {
-                return;
-            }
+            //nxmBackup.HVBackupCore.LiveBackupWorker worker = new nxmBackup.HVBackupCore.LiveBackupWorker(dummyJob);
+            //if (!worker.startLB())
+            //{
+            //    return;
+            //}
 
-            Console.ReadLine();
-            worker.stopLB();
+            //Console.ReadLine();
+            //worker.stopLB();
 
         }
 

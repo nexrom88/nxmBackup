@@ -38,6 +38,12 @@ namespace nxmBackup.HVBackupCore
                 readBytes += 16 + length;
             }
 
+            //close filestream?
+            if (closeAfterFinish)
+            {
+                inStream.Close();
+            }
+
             return retVal;
         }
 
