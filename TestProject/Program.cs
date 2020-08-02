@@ -68,10 +68,10 @@ namespace TestProject
             //DriveInfo[] drives = System.IO.DriveInfo.GetDrives();
             //drives = null;
 
-            FileStream inStream = new FileStream(@"C:\BasePath\DummyJob\9cf7f1f7-d00e-4d38-8381-71f470299b98.nxm\test.mp3.lb", FileMode.Open, FileAccess.Read);
-            List<nxmBackup.HVBackupCore.LBStructure> retVal = nxmBackup.HVBackupCore.LBParser.parseLBFile(inStream, true);
+            //FileStream inStream = new FileStream(@"C:\BasePath\DummyJob\9cf7f1f7-d00e-4d38-8381-71f470299b98.nxm\test.mp3.lb", FileMode.Open, FileAccess.Read);
+            //List<nxmBackup.HVBackupCore.LBStructure> retVal = nxmBackup.HVBackupCore.LBParser.parseLBFile(inStream, true);
 
-            retVal = null;
+            //retVal = null;
             //ConfigHandler.OneJob dummyJob = new ConfigHandler.OneJob();
             //dummyJob.BasePath = "c:\\BasePath";
             //dummyJob.Name = "DummyJob";

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Globalization;
 
 namespace nxmBackup.HVBackupCore
 {
@@ -18,12 +19,15 @@ namespace nxmBackup.HVBackupCore
             while (readBytes < (ulong)inStream.Length)
             {
                 LBStructure currentStructure = new LBStructure();
-                //read 16 header bytes
+                //read 24 header bytes
                 byte[] buffer = new byte[16];
                 inStream.Read(buffer, 0, 16);
 
-                UInt64 offset = BitConverter.ToUInt64(buffer, 0);
-                UInt64 length = BitConverter.ToUInt64(buffer, 8);
+                UInt64 timestamp = BitConverter.ToUInt64(buffer, 0);
+                UInt64 offset = BitConverter.ToUInt64(buffer, 8);
+                UInt64 length = BitConverter.ToUInt64(buffer, 16);
+
+                currentStructure.timestamp = DateTime.ParseExact(timestamp.ToString(), "yyyyMMddHHmmss", CultureInfo.InvariantCulture);
                 currentStructure.offset = offset;
                 currentStructure.length = length;
 
@@ -48,6 +52,7 @@ namespace nxmBackup.HVBackupCore
         }
 
         //LB file structure:
+        //8 bytes: timestamp (yyyyMMddHHmmss)
         //8 bytes: payload offset
         //8 bytes: payload length
         //x bytes: payload
@@ -55,6 +60,7 @@ namespace nxmBackup.HVBackupCore
 
     public struct LBStructure
     {
+        public DateTime timestamp;
         public UInt64 offset;
         public UInt64 length;
         public byte[] payload;

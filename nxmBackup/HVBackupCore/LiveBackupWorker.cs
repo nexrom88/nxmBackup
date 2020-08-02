@@ -169,8 +169,14 @@ namespace nxmBackup.HVBackupCore
             //write data to stream if stream exists
             if (hdd.ldDestinationStream != null)
             {
-                //write offset
                 byte[] buffer;
+
+                //write timestamp
+                ulong timeStamp = ulong.Parse(DateTime.Now.ToString("yyyyMMddHHmmss"));
+                buffer = BitConverter.GetBytes(timeStamp);
+                hdd.ldDestinationStream.Write(buffer, 0, 8);
+
+                //write offset
                 buffer = BitConverter.GetBytes(lbBlock.offset);
                 hdd.ldDestinationStream.Write(buffer, 0, 8);
 
