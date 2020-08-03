@@ -129,6 +129,7 @@ namespace nxmBackup.MFUserMode
             //read message
             uint status = FilterGetMessage(this.kmHandle, ref dataReceive.messageHeader, dataSize, IntPtr.Zero);
 
+            
             if (status != 0)
             {
                 retVal.isValid = false;
