@@ -150,13 +150,19 @@ namespace nxmBackup.MFUserMode
             //copy shared memory to retVal struct
             retVal.buffer = new byte[length];
             Marshal.Copy(IntPtr.Add(this.sharedMemoryHandler.SharedMemoryPointer, 1), retVal.buffer, 0, (int)length);
+
+            //send reply to km
+            FILTER_REPLY_MESSAGE reply = new FILTER_REPLY_MESSAGE();
+            reply.replyHeader.messageId = dataReceive.messageHeader.messageId;
+            reply.replyHeader.status = 0;
+            int size = sizeof(FILTER_REPLY_MESSAGE);
+            status = FilterReplyMessage(this.kmHandle, ref reply, size);
+
+
             retVal.isValid = true;
             retVal.length = length;
             retVal.offset = offset;
             retVal.objectID = objectID;
-
-            //set sharedmemory unseen flag to 0
-            Marshal.WriteByte(this.sharedMemoryHandler.SharedMemoryPointer, 0);
 
             return retVal;
 
