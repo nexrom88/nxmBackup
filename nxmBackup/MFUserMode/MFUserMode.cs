@@ -149,7 +149,7 @@ namespace nxmBackup.MFUserMode
 
             //copy shared memory to retVal struct
             retVal.buffer = new byte[length];
-            Marshal.Copy(IntPtr.Add(this.sharedMemoryHandler.SharedMemoryPointer, 1), retVal.buffer, 0, (int)length);
+            Marshal.Copy(this.sharedMemoryHandler.SharedMemoryPointer, retVal.buffer, 0, (int)length);
 
             //send reply to km
             FILTER_REPLY_MESSAGE reply = new FILTER_REPLY_MESSAGE();
