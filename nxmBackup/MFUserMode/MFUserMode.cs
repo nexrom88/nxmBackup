@@ -11,6 +11,8 @@ namespace nxmBackup.MFUserMode
     using nxmBackup.MFUserMode;
     using System.ComponentModel;
     using System.Runtime.InteropServices;
+    using System.Threading;
+
     public class MFUserMode
     {
 
@@ -124,12 +126,13 @@ namespace nxmBackup.MFUserMode
             LB_BLOCK retVal = new LB_BLOCK();
 
             int headerSize = Marshal.SizeOf(dataReceive.messageHeader);
+            
             int dataSize = BUFFER_SIZE + headerSize;
-
+            Console.WriteLine("get message");
             //read message
             uint status = FilterGetMessage(this.kmHandle, ref dataReceive.messageHeader, dataSize, IntPtr.Zero);
+            Console.WriteLine("done get message");
 
-            
             if (status != 0)
             {
                 retVal.isValid = false;
@@ -147,17 +150,21 @@ namespace nxmBackup.MFUserMode
             long length = BitConverter.ToInt64(managedBuffer, 8);
             int objectID = BitConverter.ToInt32(managedBuffer, 16);
 
+            Console.WriteLine("copy message");
             //copy shared memory to retVal struct
             retVal.buffer = new byte[length];
             Marshal.Copy(this.sharedMemoryHandler.SharedMemoryPointer, retVal.buffer, 0, (int)length);
+            Console.WriteLine("done copy message");
 
             //send reply to km
             FILTER_REPLY_MESSAGE reply = new FILTER_REPLY_MESSAGE();
             reply.replyHeader.messageId = dataReceive.messageHeader.messageId;
             reply.replyHeader.status = 0;
-            int size = sizeof(FILTER_REPLY_MESSAGE);
+            int size = sizeof(FILTER_REPLY_HEADER) + 1;
+            Console.WriteLine("reply message");
             status = FilterReplyMessage(this.kmHandle, ref reply, size);
-
+            Console.WriteLine("done reply message");
+            Thread.Sleep(100);
 
             retVal.isValid = true;
             retVal.length = length;
