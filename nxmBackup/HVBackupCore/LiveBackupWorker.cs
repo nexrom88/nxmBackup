@@ -43,10 +43,6 @@ namespace nxmBackup.HVBackupCore
                 return false;
             }
 
-            //start lb reading thred
-            this.lbReadThread = new Thread(() => readLBMessages());
-            this.lbReadThread.Start();
-
             //iterate through all vms
             foreach (Common.JobVM vm in this.selectedJob.JobVMs)
             {
@@ -74,6 +70,10 @@ namespace nxmBackup.HVBackupCore
                     um.writeMessage(data);
                 }
             }
+
+            //start lb reading thred
+            this.lbReadThread = new Thread(() => readLBMessages());
+            this.lbReadThread.Start();
 
             return true;
         }

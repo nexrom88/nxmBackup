@@ -128,7 +128,7 @@ namespace nxmBackup.MFUserMode
             int headerSize = Marshal.SizeOf(dataReceive.messageHeader);
             
             int dataSize = BUFFER_SIZE + headerSize;
-            Console.WriteLine("get message");
+            //Console.WriteLine("get message");
             //read message
             uint status = FilterGetMessage(this.kmHandle, ref dataReceive.messageHeader, dataSize, IntPtr.Zero);
             Console.WriteLine("done get message");
