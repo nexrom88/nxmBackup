@@ -20,8 +20,8 @@ namespace nxmBackup.HVBackupCore
             {
                 LBStructure currentStructure = new LBStructure();
                 //read 24 header bytes
-                byte[] buffer = new byte[16];
-                inStream.Read(buffer, 0, 16);
+                byte[] buffer = new byte[24];
+                int read = inStream.Read(buffer, 0, 24);
 
                 UInt64 timestamp = BitConverter.ToUInt64(buffer, 0);
                 UInt64 offset = BitConverter.ToUInt64(buffer, 8);
@@ -39,7 +39,7 @@ namespace nxmBackup.HVBackupCore
                 retVal.Add(currentStructure);
 
                 //increase counter
-                readBytes += 16 + length;
+                readBytes += (UInt64)buffer.Length + length; //header size + payload size
             }
 
             //close filestream?
