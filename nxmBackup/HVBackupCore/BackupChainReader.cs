@@ -4,38 +4,39 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using HyperVBackupRCT;
+using nxmBackup.HVBackupCore;
 
 namespace HVBackupCore
 {
     public class BackupChainReader
     {
         private ReadableFullBackup fullBackup;
-        private List<ReadableRCTBackup> rctBackups;
+        private List<ReadableNonFullBackup> nonFullBackups;
 
         public ReadableFullBackup FullBackup { get => fullBackup; set => fullBackup = value; }
-        public List<ReadableRCTBackup> RCTBackups { get => rctBackups; set => rctBackups = value; }
+        public List<ReadableNonFullBackup> NonFullBackups { get => nonFullBackups; set => nonFullBackups = value; }
 
         //reads the given data from backup chain
         public void readFromChain(Int64 offset, Int64 length, byte[] buffer, Int32 bufferOffset)
         {
             //read from vhdx header (first 1MB) on rct backup?
-            if (rctBackups.Count > 0)
+            if (nonFullBackups.Count > 0)
             {
                 if (offset < 1048576) // within vhdx header?
                 {
                     for (Int64 i = 0; i < length; i++)
                     {
-                        buffer[bufferOffset + i] = RCTBackups[0].cbStructure.rawHeader.rawData[offset + i];
+                        buffer[bufferOffset + i] = NonFullBackups[0].cbStructure.rawHeader.rawData[offset + i];
                     }
                     return;
                 }
             }
 
             //read from bat table on flr on rct backup?
-            if (rctBackups.Count > 0)
+            if (nonFullBackups.Count > 0)
             {
-                UInt64 vhdxBatOffset = RCTBackups[0].cbStructure.batTable.vhdxOffset;
-                UInt64 vhdxBatEndOffset = vhdxBatOffset + (UInt64)RCTBackups[0].cbStructure.batTable.rawData.Length;
+                UInt64 vhdxBatOffset = NonFullBackups[0].cbStructure.batTable.vhdxOffset;
+                UInt64 vhdxBatEndOffset = vhdxBatOffset + (UInt64)NonFullBackups[0].cbStructure.batTable.rawData.Length;
                 if (vhdxBatOffset <= (UInt64)offset && (UInt64)offset < vhdxBatEndOffset)
                 {
                     //how much bytes can be read here from raw bat table and where?
@@ -51,7 +52,7 @@ namespace HVBackupCore
                     //copy bytes
                     for (UInt64 i = 0; i < readableBytes; i++)
                     {
-                        buffer[(UInt64)bufferOffset + i] = RCTBackups[0].cbStructure.batTable.rawData[readOffset + i];
+                        buffer[(UInt64)bufferOffset + i] = NonFullBackups[0].cbStructure.batTable.rawData[readOffset + i];
                     }
 
                     //request completed?
@@ -71,67 +72,75 @@ namespace HVBackupCore
             //payload reads:
 
 
-            //iterate through all rct backups first to see if data is within rct backup
-            foreach (ReadableRCTBackup rctBackup in this.RCTBackups)
+            //iterate through all non-full backups first to see if data is within rct backup
+            foreach (ReadableNonFullBackup nonFullBackup in this.NonFullBackups)
             {
-                UInt64 vhdxBlockSize = rctBackup.cbStructure.vhdxBlockSize;
-                //iterate through all changed blocks
-                for (int i = 0; i < rctBackup.cbStructure.blocks.Count; i++)
+                switch (nonFullBackup.backupType)
                 {
-                    //iterate through all vhdxoffsets
-                    UInt64 skippedBytes = 0;
-                    for (int j = 0; j < rctBackup.cbStructure.blocks[i].vhdxBlockLocations.Count; j++)
-                    {
-                        //is vhdxBlocklocation 0? not possible here -> skip this vhdxblocklocation
-                        if (rctBackup.cbStructure.blocks[i].vhdxBlockLocations[j].vhdxOffset == 0)
+                    case NonFullBackupType.lb: //lb backup
+
+                        //iterate through all changed blocks
+
+                        break;
+                    case NonFullBackupType.rct: //rct backup
+
+                        UInt64 vhdxBlockSize = nonFullBackup.cbStructure.vhdxBlockSize;
+                        //iterate through all changed blocks
+                        for (int i = 0; i < nonFullBackup.cbStructure.blocks.Count; i++)
                         {
-                            skippedBytes += rctBackup.cbStructure.blocks[i].vhdxBlockLocations[j].vhdxLength;
-                            continue;
-                        }
-
-                        VhdxBlockLocation currentLocation = rctBackup.cbStructure.blocks[i].vhdxBlockLocations[j];
-
-                        //if (offset == 10506731520)
-                        //{
-                        //    offset = 10506731520;
-                        //}
-
-                        //is offset within location?
-                        if ((UInt64)offset >= currentLocation.vhdxOffset && (UInt64)offset < currentLocation.vhdxOffset + currentLocation.vhdxLength)
-                        {
-                            //where to start reading within cb file?
-                            UInt64 cbOffset = ((UInt64)offset - currentLocation.vhdxOffset) + skippedBytes + rctBackup.cbStructure.blocks[i].cbFileOffset;
-
-                            //can everything be read?
-                            if (cbOffset + (UInt64)length < rctBackup.cbStructure.blocks[i].cbFileOffset + rctBackup.cbStructure.blocks[i].changedBlockLength)
+                            //iterate through all vhdxoffsets
+                            UInt64 skippedBytes = 0;
+                            for (int j = 0; j < nonFullBackup.cbStructure.blocks[i].vhdxBlockLocations.Count; j++)
                             {
-                                rctBackup.sourceStream.Seek((Int64)cbOffset, System.IO.SeekOrigin.Begin);
+                                //is vhdxBlocklocation 0? not possible here -> skip this vhdxblocklocation
+                                if (nonFullBackup.cbStructure.blocks[i].vhdxBlockLocations[j].vhdxOffset == 0)
+                                {
+                                    skippedBytes += nonFullBackup.cbStructure.blocks[i].vhdxBlockLocations[j].vhdxLength;
+                                    continue;
+                                }
 
-                                rctBackup.sourceStream.Read(buffer, bufferOffset, (Int32)length);
-                                return;
-                            }
-                            else //not everything can be read
-                            {
-                                //read just available bytes here
-                                rctBackup.sourceStream.Seek((Int64)cbOffset, System.IO.SeekOrigin.Begin);
+                                VhdxBlockLocation currentLocation = nonFullBackup.cbStructure.blocks[i].vhdxBlockLocations[j];
 
-                                //calculate available bytes
-                                UInt64 availableBytes = (UInt64)length - ((cbOffset + (UInt64)length) - (rctBackup.cbStructure.blocks[i].cbFileOffset + rctBackup.cbStructure.blocks[i].changedBlockLength));
+                                //is offset within location?
+                                if ((UInt64)offset >= currentLocation.vhdxOffset && (UInt64)offset < currentLocation.vhdxOffset + currentLocation.vhdxLength)
+                                {
+                                    //where to start reading within cb file?
+                                    UInt64 cbOffset = ((UInt64)offset - currentLocation.vhdxOffset) + skippedBytes + nonFullBackup.cbStructure.blocks[i].cbFileOffset;
 
-                                rctBackup.sourceStream.Read(buffer, bufferOffset, (Int32)availableBytes);
+                                    //can everything be read?
+                                    if (cbOffset + (UInt64)length < nonFullBackup.cbStructure.blocks[i].cbFileOffset + nonFullBackup.cbStructure.blocks[i].changedBlockLength)
+                                    {
+                                        nonFullBackup.sourceStreamRCT.Seek((Int64)cbOffset, System.IO.SeekOrigin.Begin);
 
-                                //read remaining bytes recursive
-                                readFromChain(offset + (Int64)availableBytes, length - (Int64)availableBytes, buffer, bufferOffset + (Int32)availableBytes);
+                                        nonFullBackup.sourceStreamRCT.Read(buffer, bufferOffset, (Int32)length);
+                                        return;
+                                    }
+                                    else //not everything can be read
+                                    {
+                                        //read just available bytes here
+                                        nonFullBackup.sourceStreamRCT.Seek((Int64)cbOffset, System.IO.SeekOrigin.Begin);
 
-                                return;
+                                        //calculate available bytes
+                                        UInt64 availableBytes = (UInt64)length - ((cbOffset + (UInt64)length) - (nonFullBackup.cbStructure.blocks[i].cbFileOffset + nonFullBackup.cbStructure.blocks[i].changedBlockLength));
+
+                                        nonFullBackup.sourceStreamRCT.Read(buffer, bufferOffset, (Int32)availableBytes);
+
+                                        //read remaining bytes recursive
+                                        readFromChain(offset + (Int64)availableBytes, length - (Int64)availableBytes, buffer, bufferOffset + (Int32)availableBytes);
+
+                                        return;
+                                    }
+                                }
+                                else
+                                {
+                                    skippedBytes += currentLocation.vhdxLength;
+                                }
                             }
                         }
-                        else
-                        {
-                            skippedBytes += currentLocation.vhdxLength;
-                        }
-                    }
+                        break;
                 }
+
+                
             }
 
             //data not found within rct backups => read from full backup
@@ -147,11 +156,25 @@ namespace HVBackupCore
             public BlockCompression.LZ4BlockStream sourceStream;
         }
 
-        //one readable rct backup
-        public struct ReadableRCTBackup
+        //one readable non-full backup
+        public struct ReadableNonFullBackup
         {
-            public BlockCompression.LZ4BlockStream sourceStream;
+            public NonFullBackupType backupType;
+
+            //for rct backup:
+            public BlockCompression.LZ4BlockStream sourceStreamRCT;
             public CbStructure cbStructure;
+
+            //for lb backup:
+            public System.IO.FileStream sourceStreamLB;
+            public LBBlock lbStructure;
+        }
+
+        //non full backup type
+        public enum NonFullBackupType
+        {
+            rct,
+            lb
         }
     }
 }

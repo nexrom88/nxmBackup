@@ -41,7 +41,7 @@ namespace nxmBackup.MFUserMode
             else
             {
                 //read "decompressed file size" from first rct backup
-                decompressedFileSize = this.readableChain.RCTBackups[0].cbStructure.vhdxSize;
+                decompressedFileSize = this.readableChain.NonFullBackups[0].cbStructure.vhdxSize;
             }
 
             this.mountFile = getMountHDDPath(decompressedFileSize);
@@ -104,12 +104,12 @@ namespace nxmBackup.MFUserMode
         public BackupChainReader buildReadableBackupChain(string[] sourceFiles)
         {
             BackupChainReader chain = new BackupChainReader();
-            chain.RCTBackups = new List<BackupChainReader.ReadableRCTBackup>();
+            chain.NonFullBackups = new List<BackupChainReader.ReadableNonFullBackup>();
 
             //iterate through cb files first
             for (int i = 0; i < sourceFiles.Length - 1; i++)
             {
-                BackupChainReader.ReadableRCTBackup rctBackup = new BackupChainReader.ReadableRCTBackup();
+                BackupChainReader.ReadableNonFullBackup rctBackup = new BackupChainReader.ReadableNonFullBackup();
                 
                 //parse cb file
                 CbStructure cbStruct = CBParser.parseCBFile(sourceFiles[i], true);
@@ -118,8 +118,8 @@ namespace nxmBackup.MFUserMode
                 //open input stream
                 FileStream inputStream = new FileStream(sourceFiles[i], FileMode.Open, FileAccess.Read);
                 BlockCompression.LZ4BlockStream blockStream = new BlockCompression.LZ4BlockStream(inputStream, BlockCompression.AccessMode.read);
-                rctBackup.sourceStream = blockStream;
-                chain.RCTBackups.Add(rctBackup);
+                rctBackup.sourceStreamRCT = blockStream;
+                chain.NonFullBackups.Add(rctBackup);
             }
 
             //build readable full backup
@@ -139,7 +139,7 @@ namespace nxmBackup.MFUserMode
             this.processStopped = true;
             
             //iterate through all rct backups
-            foreach (BackupChainReader.ReadableRCTBackup rctBackup in this.readableChain.RCTBackups)
+            foreach (BackupChainReader.ReadableNonFullBackup rctBackup in this.readableChain.NonFullBackups)
             {
                 rctBackup.sourceStream.Close();
             }

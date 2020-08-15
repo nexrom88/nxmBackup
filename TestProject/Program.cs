@@ -69,7 +69,7 @@ namespace TestProject
             //drives = null;
 
             FileStream inStream = new FileStream(@"F:\nxm\Win10\DF86F44C-037D-4111-8EF8-3DC2B3C2F553\182bea31-f53e-4620-996d-7685b5ec5dd6.nxm\Win10.vhdx.lb", FileMode.Open, FileAccess.Read);
-            List<nxmBackup.HVBackupCore.LBStructure> retVal = nxmBackup.HVBackupCore.LBParser.parseLBFile(inStream, true);
+            List<nxmBackup.HVBackupCore.LBBlock> retVal = nxmBackup.HVBackupCore.LBParser.parseLBFile(inStream, true);
 
             //retVal = null;
             //ConfigHandler.OneJob dummyJob = new ConfigHandler.OneJob();

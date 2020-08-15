@@ -10,15 +10,15 @@ namespace nxmBackup.HVBackupCore
     public class LBParser
     {
         //parses a given LB file
-        public static List<LBStructure> parseLBFile (System.IO.FileStream inStream, bool closeAfterFinish)
+        public static List<LBBlock> parseLBFile (System.IO.FileStream inStream, bool closeAfterFinish)
         {
             UInt64 readBytes = 0;
-            List<LBStructure> retVal = new List<LBStructure>();
+            List<LBBlock> retVal = new List<LBBlock>();
 
             //read until everything is read
             while (readBytes < (ulong)inStream.Length)
             {
-                LBStructure currentStructure = new LBStructure();
+                LBBlock currentStructure = new LBBlock();
                 //read 24 header bytes
                 byte[] buffer = new byte[24];
                 int read = inStream.Read(buffer, 0, 24);
@@ -58,11 +58,17 @@ namespace nxmBackup.HVBackupCore
         //x bytes: payload
     }
 
-    public struct LBStructure
+    public struct LBBlock
     {
         public DateTime timestamp;
         public UInt64 offset;
         public UInt64 length;
         public byte[] payload;
     }
+
+    public struct LBStruct
+    {
+
+    }
+
 }
