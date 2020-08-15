@@ -69,7 +69,7 @@ namespace nxmBackup
                 return;
             }
 
-            jobs = ConfigHandler.JobConfigHandler.readJobs();
+            jobs = ConfigHandler.JobConfigHandler.Jobs;
 
             jobsObservable.Clear();
 

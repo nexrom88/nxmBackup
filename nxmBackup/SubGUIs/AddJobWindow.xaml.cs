@@ -142,7 +142,7 @@ namespace nxmBackup
             }
 
             //check that jobname does not already exist
-            List<ConfigHandler.OneJob> jobs = ConfigHandler.JobConfigHandler.readJobs();
+            List<ConfigHandler.OneJob> jobs = ConfigHandler.JobConfigHandler.Jobs;
             bool nameFound = false;
             foreach(ConfigHandler.OneJob j in jobs)
             {

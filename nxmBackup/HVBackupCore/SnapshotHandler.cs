@@ -472,6 +472,7 @@ namespace HyperVBackupRCT
             archive.close();
 
             //if LB activated for job, start it before converting to reference point
+            
             if (job.LiveBackup)
             {
                 job.LiveBackupWorker = new nxmBackup.HVBackupCore.LiveBackupWorker(job);

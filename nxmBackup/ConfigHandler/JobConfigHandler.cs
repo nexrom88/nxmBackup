@@ -16,43 +16,46 @@ namespace ConfigHandler
     public class JobConfigHandler
     {
         private static Object lockObj = new object();
+        private static List<OneJob> jobs;
 
-        //reads and returns all jobs
-        public static List<OneJob> readJobs()
+        public static List<OneJob> Jobs { get => jobs; }
+
+        //reads all jobs from the DB
+        public static void readJobsFromDB()
         {
-            List<OneJob> retVal = new List<OneJob>();
+            jobs = new List<OneJob>();
 
             //open DB connection
             using (Common.DBConnection connection = new Common.DBConnection())
             {
-                List<Dictionary<string, string>> jobs = connection.doReadQuery("SELECT jobs.id, jobs.name, jobs.isRunning, jobs.basepath, jobs.maxelements, jobs.blocksize, jobs.day, jobs.hour, jobs.minute, jobs.interval, jobs.livebackup, rotationtype.name AS rotationname FROM jobs INNER JOIN rotationtype ON jobs.rotationtypeid=rotationtype.id WHERE jobs.deleted=FALSE;", null, null);
+                List<Dictionary<string, string>> jobsDB = connection.doReadQuery("SELECT jobs.id, jobs.name, jobs.isRunning, jobs.basepath, jobs.maxelements, jobs.blocksize, jobs.day, jobs.hour, jobs.minute, jobs.interval, jobs.livebackup, rotationtype.name AS rotationname FROM jobs INNER JOIN rotationtype ON jobs.rotationtypeid=rotationtype.id WHERE jobs.deleted=FALSE;", null, null);
 
                 //check that jobs != null
-                if (jobs == null) //DB error
+                if (jobsDB == null) //DB error
                 {
-                    return null;
+                    return;
                 }
 
                 int lbHDDObjectID = 1;
                 //iterate through all jobs
-                foreach (Dictionary<string, string> job in jobs)
+                foreach (Dictionary<string, string> jobDB in jobsDB)
                 {
                     //build structure
                     OneJob newJob = new OneJob();
-                    newJob.DbId = int.Parse(job["id"]);
-                    newJob.BasePath = job["basepath"];
-                    newJob.Name = job["name"];
-                    newJob.BlockSize = int.Parse(job["blocksize"]);
-                    newJob.IsRunning = bool.Parse(job["isrunning"]);
-                    newJob.LiveBackup = bool.Parse(job["livebackup"]);
+                    newJob.DbId = int.Parse(jobDB["id"]);
+                    newJob.BasePath = jobDB["basepath"];
+                    newJob.Name = jobDB["name"];
+                    newJob.BlockSize = int.Parse(jobDB["blocksize"]);
+                    newJob.IsRunning = bool.Parse(jobDB["isrunning"]);
+                    newJob.LiveBackup = bool.Parse(jobDB["livebackup"]);
 
                     // build nextRun string
-                    newJob.NextRun = $"{int.Parse(job["hour"]).ToString("00")}:{int.Parse(job["minute"]).ToString("00")}";
-                    if (job["day"] != "") newJob.NextRun += $" ({job["day"]})";
+                    newJob.NextRun = $"{int.Parse(jobDB["hour"]).ToString("00")}:{int.Parse(jobDB["minute"]).ToString("00")}";
+                    if (jobDB["day"] != "") newJob.NextRun += $" ({jobDB["day"]})";
 
                     var rota = new Rotation();
                     //build rotation structure
-                    switch (job["rotationname"])
+                    switch (jobDB["rotationname"])
                     {
                         case "merge":
                             rota.type = RotationType.merge;
@@ -62,13 +65,13 @@ namespace ConfigHandler
                             break;
                     }
 
-                    rota.maxElementCount = int.Parse(job["maxelements"]);
+                    rota.maxElementCount = int.Parse(jobDB["maxelements"]);
                     newJob.Rotation = rota;
 
 
                     //build interval structure
                     Interval interval = new Interval();
-                    switch (job["interval"])
+                    switch (jobDB["interval"])
                     {
                         case "hourly":
                             interval.intervalBase = IntervalBase.hourly;
@@ -80,14 +83,14 @@ namespace ConfigHandler
                             interval.intervalBase = IntervalBase.weekly;
                             break;
                     }
-                    interval.day = job["day"];
-                    interval.minute = int.Parse(job["minute"]);
-                    interval.hour = int.Parse(job["hour"]);
+                    interval.day = jobDB["day"];
+                    interval.minute = int.Parse(jobDB["minute"]);
+                    interval.hour = int.Parse(jobDB["hour"]);
                     newJob.Interval = interval;
 
                     //query VMs
                     Dictionary<string, object> paramaters = new Dictionary<string, object>();
-                    paramaters.Add("jobid", int.Parse(job["id"]));
+                    paramaters.Add("jobid", int.Parse(jobDB["id"]));
                     List<Dictionary<string, string>> vms = connection.doReadQuery("SELECT VMs.id, VMs.name FROM vms INNER JOIN jobvmrelation ON JobVMRelation.jobid=@jobid AND jobvmrelation.vmid=VMs.id", paramaters, null);
                     newJob.JobVMs = new List<JobVM>();
 
@@ -125,7 +128,7 @@ namespace ConfigHandler
                     //get last jobExecution attributes
 
                     paramaters.Clear();
-                    paramaters.Add("jobid", int.Parse(job["id"]));
+                    paramaters.Add("jobid", int.Parse(jobDB["id"]));
                     List<Dictionary<string, string>> jobExecutions = connection.doReadQuery("SELECT * FROM jobexecutions WHERE jobexecutions.jobid=@jobid and jobexecutions.id = (SELECT MAX(id) FROM jobexecutions WHERE jobexecutions.jobid=@jobid)", paramaters, null);
 
                     if (jobExecutions.Count > 1) MessageBox.Show("db error: jobExecutions hat mehr als 1 result");
@@ -139,12 +142,9 @@ namespace ConfigHandler
                             
                     }
 
-                    retVal.Add(newJob);
+                    jobs.Add(newJob);
 
                 }
-
-                return retVal;
-
             }
         }
 

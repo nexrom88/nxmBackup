@@ -65,6 +65,9 @@ namespace RestoreHelper
                     case "rct":
                         restorePoint.Type = "Inkrementiell";
                         break;
+                    case "lb":
+                        restorePoint.Type = "LiveBackup";
+                        break;
                 }
                 
                 restorePoints.Add(restorePoint);
