@@ -28,7 +28,7 @@ namespace nxmBackup.MFUserMode
             //build readable backup chain structure first
             this.readableChain = buildReadableBackupChain(sourceFiles);
 
-            ulong decompressedFileSize;
+            ulong decompressedFileSize = 0;
             //open source file and read "decompressed file size" (first 8 bytes) when flr on full backup
             if (sourceFiles.Length == 1)
             {
@@ -39,10 +39,14 @@ namespace nxmBackup.MFUserMode
                 sourceStream.Close();
                 sourceStream.Dispose();
             }
-            else
+            else if (sourceFiles[0].EndsWith(".cb"))
             {
                 //read "decompressed file size" from first rct backup
                 decompressedFileSize = this.readableChain.NonFullBackups[0].cbStructure.vhdxSize;
+            }else if (sourceFiles[0].EndsWith("lb"))
+            {
+                //read "decompressed file size" from first lb backup
+                decompressedFileSize = this.readableChain.NonFullBackups[0].lbStructure.vhdxSize;
             }
 
             this.mountFile = getMountHDDPath(decompressedFileSize);
