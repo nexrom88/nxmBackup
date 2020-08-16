@@ -55,7 +55,17 @@ namespace RestoreHelper
                 }
             }
 
-            //get all available vhdx files
+            //remove all lb backups except when lb backup is first element
+            for(int i = 1; i < restoreChain.Count; i++)
+            {
+                if (restoreChain[i].type == "lb")
+                {
+                    restoreChain.RemoveAt(i);
+                    i--;
+                }
+            }
+
+            //get all available vhdx files for hdd picker
             string[] baseHDDFiles = getBaseHDDFilesFromChain(restoreChain, basePath);
 
             //show hdd picker window when more than one hdd
@@ -114,7 +124,7 @@ namespace RestoreHelper
         private string[] getHDDFilesFromChain(List<ConfigHandler.BackupConfigHandler.BackupInfo> restoreChain, string basePath, string userSelectedHDD)
         {
             string[] retVal = new string[restoreChain.Count];
-            string targetHDD = ""; //todo: make target hdd selectable by user
+            string targetHDD = "";
 
             //iterate through all backups within chain in reverse to read full backup first
             for (int i = restoreChain.Count - 1; i >= 0; i--)
@@ -136,6 +146,10 @@ namespace RestoreHelper
                         targetHDD = System.IO.Path.GetFileName(entries[0]);
                     }
                 } else if (restoreChain[i].type == "rct")
+                {
+                    string vmBasePath = System.IO.Path.Combine(basePath, restoreChain[i].uuid + ".nxm\\");
+                    retVal[i] = System.IO.Path.Combine(vmBasePath, targetHDD + ".cb");
+                } else if (restoreChain[i].type == "lb")
                 {
                     string vmBasePath = System.IO.Path.Combine(basePath, restoreChain[i].uuid + ".nxm\\");
                     retVal[i] = System.IO.Path.Combine(vmBasePath, targetHDD + ".cb");

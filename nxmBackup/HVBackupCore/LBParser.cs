@@ -5,15 +5,21 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Globalization;
 
-namespace nxmBackup.HVBackupCore
+namespace HyperVBackupRCT
 {
     public class LBParser
     {
         //parses a given LB file
-        public static List<LBBlock> parseLBFile (System.IO.FileStream inStream, bool closeAfterFinish)
+        public static LBStructure parseLBFile (System.IO.FileStream inStream, bool closeAfterFinish)
         {
             UInt64 readBytes = 0;
-            List<LBBlock> retVal = new List<LBBlock>();
+            LBStructure retVal = new LBStructure();
+            retVal.blocks = new List<LBBlock>();
+
+            //read vhdx size
+            byte[] vhdxSizeBuffer = new byte[8];
+            inStream.Read(vhdxSizeBuffer, 0, 8);
+            retVal.vhdxSize = BitConverter.ToUInt64(vhdxSizeBuffer, 0);
 
             //read until everything is read
             while (readBytes < (ulong)inStream.Length)
@@ -36,7 +42,7 @@ namespace nxmBackup.HVBackupCore
                 inStream.Read(currentStructure.payload, 0, (int)length);
 
                 //add to list
-                retVal.Add(currentStructure);
+                retVal.blocks.Add(currentStructure);
 
                 //increase counter
                 readBytes += (UInt64)buffer.Length + length; //header size + payload size
@@ -66,9 +72,10 @@ namespace nxmBackup.HVBackupCore
         public byte[] payload;
     }
 
-    public struct LBStruct
+    public struct LBStructure
     {
-
+        public UInt64 vhdxSize;
+        public List<LBBlock> blocks;
     }
 
 }

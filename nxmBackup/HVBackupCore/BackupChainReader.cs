@@ -167,7 +167,7 @@ namespace HVBackupCore
 
             //for lb backup:
             public System.IO.FileStream sourceStreamLB;
-            public LBBlock lbStructure;
+            public LBStructure lbStructure;
         }
 
         //non full backup type

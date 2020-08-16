@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using HyperVBackupRCT;
 using HVBackupCore;
+using nxmBackup.HVBackupCore;
 
 namespace nxmBackup.MFUserMode
 {
@@ -109,17 +110,32 @@ namespace nxmBackup.MFUserMode
             //iterate through cb files first
             for (int i = 0; i < sourceFiles.Length - 1; i++)
             {
-                BackupChainReader.ReadableNonFullBackup rctBackup = new BackupChainReader.ReadableNonFullBackup();
-                
-                //parse cb file
-                CbStructure cbStruct = CBParser.parseCBFile(sourceFiles[i], true);
-                rctBackup.cbStructure = cbStruct;
+                BackupChainReader.ReadableNonFullBackup nonFullBackup = new BackupChainReader.ReadableNonFullBackup();
 
-                //open input stream
-                FileStream inputStream = new FileStream(sourceFiles[i], FileMode.Open, FileAccess.Read);
-                BlockCompression.LZ4BlockStream blockStream = new BlockCompression.LZ4BlockStream(inputStream, BlockCompression.AccessMode.read);
-                rctBackup.sourceStreamRCT = blockStream;
-                chain.NonFullBackups.Add(rctBackup);
+                //get type by file extension
+
+                if (sourceFiles[i].EndsWith(".cb"))
+                {
+                    //parse cb file
+                    CbStructure cbStruct = CBParser.parseCBFile(sourceFiles[i], true);
+                    nonFullBackup.cbStructure = cbStruct;
+                    nonFullBackup.backupType = BackupChainReader.NonFullBackupType.rct;
+                    FileStream inputStream = new FileStream(sourceFiles[i], FileMode.Open, FileAccess.Read);
+                    BlockCompression.LZ4BlockStream blockStream = new BlockCompression.LZ4BlockStream(inputStream, BlockCompression.AccessMode.read);
+                    nonFullBackup.sourceStreamRCT = blockStream;
+
+                }
+                else if (sourceFiles[i].EndsWith(".lb"))
+                {
+                    FileStream inputStream = new FileStream(sourceFiles[i], FileMode.Open, FileAccess.Read);
+                    LBStructure lbStruct = LBParser.parseLBFile(inputStream, true);
+                    nonFullBackup.lbStructure = lbStruct;
+                    nonFullBackup.backupType = BackupChainReader.NonFullBackupType.lb;
+                    nonFullBackup.sourceStreamLB = inputStream;
+
+                }
+                
+                chain.NonFullBackups.Add(nonFullBackup);
             }
 
             //build readable full backup
@@ -139,9 +155,18 @@ namespace nxmBackup.MFUserMode
             this.processStopped = true;
             
             //iterate through all rct backups
-            foreach (BackupChainReader.ReadableNonFullBackup rctBackup in this.readableChain.NonFullBackups)
+            foreach (BackupChainReader.ReadableNonFullBackup nonFullBackup in this.readableChain.NonFullBackups)
             {
-                rctBackup.sourceStream.Close();
+                switch (nonFullBackup.backupType)
+                {
+                    case BackupChainReader.NonFullBackupType.lb:
+                        nonFullBackup.sourceStreamLB.Close();
+                        break;
+                    case BackupChainReader.NonFullBackupType.rct:
+                        nonFullBackup.sourceStreamRCT.Close();
+                        break;
+                }
+                
             }
 
             //close full backup

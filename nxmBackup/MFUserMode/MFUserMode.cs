@@ -210,9 +210,9 @@ namespace nxmBackup.MFUserMode
             //have to read data?
             if (requestType == 1)
             {
-                string output = "offset: " + offset + " length: " + length + "\n";
-                System.Text.ASCIIEncoding enc = new System.Text.ASCIIEncoding();
-                byte[] buffer = enc.GetBytes(output);
+                //string output = "offset: " + offset + " length: " + length + "\n";
+                //System.Text.ASCIIEncoding enc = new System.Text.ASCIIEncoding();
+                //byte[] buffer = enc.GetBytes(output);
 
                 //read the requested data from backup chain
                 data = new byte[length];

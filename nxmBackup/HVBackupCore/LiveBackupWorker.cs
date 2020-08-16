@@ -96,6 +96,10 @@ namespace nxmBackup.HVBackupCore
                 fileName = System.IO.Path.Combine(destFolder, fileName);
                 System.IO.FileStream stream = new System.IO.FileStream(fileName, System.IO.FileMode.Create);
 
+                //write dummy to first 8 bytes (vhdxSize, gets filled later)
+                byte[] buffer = new byte[8];
+                stream.Write(buffer, 0, 8);
+
                 //build new hdd struct, otherwise it cannot be changed within Arraylist
                 Common.VMHDD newHDD = new Common.VMHDD();
                 newHDD.lbObjectID = vm.vmHDDs[i].lbObjectID;
@@ -210,6 +214,16 @@ namespace nxmBackup.HVBackupCore
                 {
                     foreach(Common.VMHDD hdd in vm.vmHDDs)
                     {
+                        //get vhdx size
+                        System.IO.FileInfo fileInfo = new System.IO.FileInfo(hdd.path);
+                        UInt64 vhdxSize = (UInt64)fileInfo.Length;
+
+                        //write vhdx size to file header
+                        hdd.ldDestinationStream.Seek(0, System.IO.SeekOrigin.Begin);
+                        byte[] buffer = BitConverter.GetBytes(vhdxSize);
+                        hdd.ldDestinationStream.Write(buffer, 0, 8);
+
+                        //close stream
                         hdd.ldDestinationStream.Close();
                     }
                 }
@@ -229,6 +243,9 @@ namespace nxmBackup.HVBackupCore
 }
 
 //file structure
+//8 bytes = vhdx size
+
+//one block:
 //8 bytes = offset
 //8 bytes = length
 //length bytes = payload data
