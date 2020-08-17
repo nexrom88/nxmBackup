@@ -58,11 +58,7 @@ namespace HyperVBackupRCT
             return retVal;
         }
 
-        //LB file structure:
-        //8 bytes: timestamp (yyyyMMddHHmmss)
-        //8 bytes: payload offset
-        //8 bytes: payload length
-        //x bytes: payload
+
     }
 
     public struct LBBlock
@@ -80,3 +76,12 @@ namespace HyperVBackupRCT
     }
 
 }
+
+//file structure
+//8 bytes = vhdx size
+
+//one block:
+//8 bytes: timestamp (yyyyMMddHHmmss)
+//8 bytes: payload offset
+//8 bytes: payload length
+//x bytes: payload
