@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using HyperVBackupRCT;
@@ -27,7 +28,7 @@ namespace HVBackupCore
             }
 
             //read from vhdx header (first 1MB) on rct backup?
-            if (nonFullBackups.Count > 0)
+            if (nonFullBackups.Count > firstRCTIndex)
             {
                 if (offset < 1048576) // within vhdx header?
                 {
@@ -40,7 +41,7 @@ namespace HVBackupCore
             }
 
             //read from bat table on flr on rct backup?
-            if (nonFullBackups.Count > 0)
+            if (nonFullBackups.Count > firstRCTIndex)
             {
                 UInt64 vhdxBatOffset = NonFullBackups[firstRCTIndex].cbStructure.batTable.vhdxOffset;
                 UInt64 vhdxBatEndOffset = vhdxBatOffset + (UInt64)NonFullBackups[firstRCTIndex].cbStructure.batTable.rawData.Length;
@@ -167,7 +168,44 @@ namespace HVBackupCore
         //try read from lb
         private void readFromLBBackup(Int64 offset, Int64 length, byte[] buffer, Int32 bufferOffset)
         {
+            //just continue when LB is first non-full backup
+            if (this.nonFullBackups.Count == 0 || this.nonFullBackups[0].backupType != NonFullBackupType.lb)
+            {
+                return;
+            }
 
+            //iterate through all blocks
+            foreach(LBBlock block in this.nonFullBackups[0].lbStructure.blocks)
+            {
+                UInt64 sourceOffset = 0, destOffset = 0, sourceAndDestLength = 0;
+
+                //start offset is within current block?
+                if (block.offset <= (UInt64)offset && (UInt64)offset < block.offset + block.length)
+                {
+                    //where and how much to read from this block?
+                    destOffset = 0;
+                    sourceOffset = (UInt64)offset - block.offset;
+                    sourceAndDestLength = (block.offset + block.length) - (UInt64)offset;
+
+                    //adjust blockLength
+                    if (sourceAndDestLength > (UInt64)length)
+                    {
+                        sourceAndDestLength = (UInt64)length;
+                    }
+
+                //end offset is within current block
+                }else if (block.offset <= (UInt64)offset + (UInt64)length && (UInt64)offset + (UInt64)length < block.offset + block.length)
+                {
+                    sourceOffset = 0;
+                    sourceAndDestLength = ((UInt64)offset + (UInt64)length) - block.offset;
+                    destOffset = block.offset - (UInt64)offset;
+                }
+
+                //copy to dest array
+                if (sourceAndDestLength != 0) {
+                    Buffer.BlockCopy(block.payload, (int)sourceOffset, buffer, bufferOffset + (int)destOffset, (int)sourceAndDestLength);
+                }
+            }
         }
 
         //one readable full backup

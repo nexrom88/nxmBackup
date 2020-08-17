@@ -20,6 +20,7 @@ namespace HyperVBackupRCT
             byte[] vhdxSizeBuffer = new byte[8];
             inStream.Read(vhdxSizeBuffer, 0, 8);
             retVal.vhdxSize = BitConverter.ToUInt64(vhdxSizeBuffer, 0);
+            readBytes += 8;
 
             //read until everything is read
             while (readBytes < (ulong)inStream.Length)

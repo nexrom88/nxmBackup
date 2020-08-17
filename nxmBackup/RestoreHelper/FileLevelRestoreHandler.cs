@@ -152,7 +152,7 @@ namespace RestoreHelper
                 } else if (restoreChain[i].type == "lb")
                 {
                     string vmBasePath = System.IO.Path.Combine(basePath, restoreChain[i].uuid + ".nxm\\");
-                    retVal[i] = System.IO.Path.Combine(vmBasePath, targetHDD + ".cb");
+                    retVal[i] = System.IO.Path.Combine(vmBasePath, targetHDD + ".lb");
                 }
             }
 
