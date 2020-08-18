@@ -7,6 +7,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 using System.ComponentModel;
+using Microsoft.Extensions.Logging;
 
 namespace nxmBackup.HVBackupCore
 {
@@ -20,6 +21,14 @@ namespace nxmBackup.HVBackupCore
         private MFUserMode.MFUserMode um;
         private Thread lbReadThread;
         private string destGUIDFolder;
+        private Common.EventHandler eventHandler;
+        private const int NO_RELATED_EVENT = -1;
+
+        private int jobExecutionID;
+        private int eventID;
+        private UInt64 processedBytes = 0;
+        private UInt64 lastShownBytes = 0; //for progress calculation
+        private string lastPrettyPrintedBytes = ""; //for progress calculation
 
         public LiveBackupWorker(ConfigHandler.OneJob job)
         {
@@ -42,6 +51,11 @@ namespace nxmBackup.HVBackupCore
                 isRunning = false;
                 return false;
             }
+
+            //add job to DB
+            this.jobExecutionID = Common.DBQueries.addJobExecution(this.selectedJob.DbId, "backup");
+            this.eventHandler = new Common.EventHandler(null, jobExecutionID);
+            this.eventID = this.eventHandler.raiseNewEvent("LiveBackup läuft...", false, false, NO_RELATED_EVENT, Common.EventStatus.info);
 
             //iterate through all vms
             foreach (Common.JobVM vm in this.selectedJob.JobVMs)
@@ -140,6 +154,24 @@ namespace nxmBackup.HVBackupCore
                 {
                     MFUserMode.MFUserMode.LB_BLOCK lbBlock = this.um.handleLBMessage();
 
+                    this.processedBytes += (UInt64)lbBlock.length;
+
+                    //just show progress every 10 MB
+                    if (this.processedBytes - this.lastShownBytes >= 10000000)
+                    {
+                        this.lastShownBytes = this.processedBytes;
+                        string prettyPrintedBytes = Common.PrettyPrinter.prettyPrintBytes((long)this.processedBytes);
+
+                        //just add to DB when string changed
+                        if (prettyPrintedBytes != this.lastPrettyPrintedBytes)
+                        {
+                            this.lastPrettyPrintedBytes = prettyPrintedBytes;
+                            this.eventHandler.raiseNewEvent("LiveBackup läuft... " + prettyPrintedBytes + " verarbeitet", false, true, this.eventID, Common.EventStatus.info);
+                        }
+                    }
+
+                    
+
                     if (lbBlock.isValid)
                     {
                         Common.JobVM targetVM;
@@ -227,6 +259,9 @@ namespace nxmBackup.HVBackupCore
                         hdd.ldDestinationStream.Close();
                     }
                 }
+
+                //write stop to DB
+                this.eventHandler.raiseNewEvent("LiveBackup beendet. " + this.lastPrettyPrintedBytes + " verarbeitet", true, false, this.eventID, Common.EventStatus.info);
             }
         }
 

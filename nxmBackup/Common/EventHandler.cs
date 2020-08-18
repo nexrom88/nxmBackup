@@ -8,13 +8,17 @@ namespace Common
 {
     public class EventHandler
     {
-        private string vmId;
+        private string vmId = "";
         private int executionId;
 
         public EventHandler (JobVM vm, int jobExecutionId)
         {
             this.executionId = jobExecutionId;
-            this.vmId = vm.vmID;
+            if (vm != null)
+            {
+                this.vmId = vm.vmID;
+
+            }  
         }
 
         //builds a EventProperties object and raises the "newEvent" event
