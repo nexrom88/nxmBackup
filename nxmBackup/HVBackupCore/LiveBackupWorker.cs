@@ -261,7 +261,8 @@ namespace nxmBackup.HVBackupCore
                 }
 
                 //write stop to DB
-                this.eventHandler.raiseNewEvent("LiveBackup beendet. " + this.lastPrettyPrintedBytes + " verarbeitet", true, false, this.eventID, Common.EventStatus.info);
+                this.eventHandler.raiseNewEvent("LiveBackup beendet. " + this.lastPrettyPrintedBytes + " verarbeitet", false, true, this.eventID, Common.EventStatus.info);
+                this.eventHandler.raiseNewEvent("", true, false, this.eventID, Common.EventStatus.info);
             }
         }
 

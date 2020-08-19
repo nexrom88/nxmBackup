@@ -260,5 +260,10 @@ namespace nxmBackup
                 }
             }
         }
+
+        private void lvJobs_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            this.selectedVMId = "";
+        }
     }
 }
