@@ -22,6 +22,7 @@ namespace HyperVBackupRCT
             retVal.vhdxSize = BitConverter.ToUInt64(vhdxSizeBuffer, 0);
             readBytes += 8;
 
+
             //read until everything is read
             while (readBytes < (ulong)inStream.Length)
             {
@@ -33,6 +34,11 @@ namespace HyperVBackupRCT
                 UInt64 timestamp = BitConverter.ToUInt64(buffer, 0);
                 UInt64 offset = BitConverter.ToUInt64(buffer, 8);
                 UInt64 length = BitConverter.ToUInt64(buffer, 16);
+
+                if (offset < 1048576)
+                {
+                    offset = offset;
+                }
 
                 currentStructure.timestamp = DateTime.ParseExact(timestamp.ToString(), "yyyyMMddHHmmss", CultureInfo.InvariantCulture);
                 currentStructure.offset = offset;

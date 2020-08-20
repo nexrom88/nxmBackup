@@ -36,6 +36,10 @@ namespace HVBackupCore
                     {
                         buffer[bufferOffset + i] = NonFullBackups[firstRCTIndex].cbStructure.rawHeader.rawData[offset + i];
                     }
+
+                    //have to read from lb backup?
+                    readFromLBBackup(offset, length, buffer, bufferOffset);
+
                     return;
                 }
             }
@@ -66,6 +70,8 @@ namespace HVBackupCore
                     //request completed?
                     if ((Int64)readableBytes == length)
                     {
+                        //try to read from LB
+                        readFromLBBackup(offset, length, buffer, bufferOffset);
                         return;
                     }
                     else
@@ -136,6 +142,9 @@ namespace HVBackupCore
 
                                 nonFullBackup.sourceStreamRCT.Read(buffer, bufferOffset, (Int32)availableBytes);
 
+                                //try to read from LB
+                                readFromLBBackup(offset, (Int64)availableBytes, buffer, bufferOffset);
+
                                 //read remaining bytes recursive
                                 readFromChain(offset + (Int64)availableBytes, length - (Int64)availableBytes, buffer, bufferOffset + (Int32)availableBytes);
 
@@ -173,6 +182,7 @@ namespace HVBackupCore
             {
                 return;
             }
+
 
             //iterate through all blocks
             foreach(LBBlock block in this.nonFullBackups[0].lbStructure.blocks)
