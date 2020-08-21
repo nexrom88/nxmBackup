@@ -153,7 +153,7 @@ namespace HyperVBackupRCT
                 {
                     blockSize = 1;
                 }
-                else //rct backup found -> increment blockSize counter
+                else if (backup.type != "lb") //rct backup found -> increment blockSize counter
                 {
                     blockSize++;
                 }
