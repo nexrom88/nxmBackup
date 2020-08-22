@@ -208,6 +208,9 @@
     <Compile Include="SubGUIs\JobDetailsWindow.xaml.cs">
       <DependentUpon>JobDetailsWindow.xaml</DependentUpon>
     </Compile>
+    <Compile Include="SubGUIs\LBDatePickerWindow.xaml.cs">
+      <DependentUpon>LBDatePickerWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="SubGUIs\RestoreOptions.xaml.cs">
       <DependentUpon>RestoreOptions.xaml</DependentUpon>
     </Compile>
@@ -238,6 +241,10 @@
     <Page Include="SubGUIs\JobDetailsWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
+    </Page>
+    <Page Include="SubGUIs\LBDatePickerWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="SubGUIs\RestoreOptions.xaml">
       <Generator>MSBuild:Compile</Generator>

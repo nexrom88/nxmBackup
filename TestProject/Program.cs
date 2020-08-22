@@ -22,7 +22,7 @@ namespace TestProject
             //string output = JsonConvert.SerializeObject(parsedFile);
 
             Common.JobVM vm = new Common.JobVM();
-            vm.vmID = "DF86F44C-037D-4111-8EF8-3DC2B3C2F553";
+            vm.vmID = "D7631892-C72A-4BC1-A447-F95D72917137";
             HyperVBackupRCT.SnapshotHandler sh = new HyperVBackupRCT.SnapshotHandler(vm, -1);
             sh.cleanUp();
 

@@ -52,7 +52,14 @@ namespace HyperVBackupRCT
                 else
                 {
                     //incremental backup possible, get required reference point
-                    string instanceID = chain[chain.Count - 1].instanceID;
+                    string instanceID;
+                    if (chain[chain.Count - 1].type != "lb") {
+                        instanceID = chain[chain.Count - 1].instanceID;
+                    }
+                    else //last backup lb backup? take very last backup
+                    {
+                        instanceID = chain[chain.Count - 2].instanceID;
+                    }
                     List<ManagementObject> refPs = getReferencePoints();
                     foreach (ManagementObject mo in refPs)
                     {
@@ -181,7 +188,7 @@ namespace HyperVBackupRCT
                 }
                 else
                 {
-                    //remove rct backup
+                    //remove rct or lb backup
                     ConfigHandler.BackupConfigHandler.removeBackup(path, chain[i].uuid); //remove from config
                     System.IO.Directory.Delete(System.IO.Path.Combine(path, chain[i].uuid + ".nxm"), true); //remove backup file
                 }
@@ -201,7 +208,16 @@ namespace HyperVBackupRCT
                 return;
             }
 
-            //Given at this point: first backup is "full", the second one is "rct"
+            //Given at this point: first backup is "full", the second one is "rct" or "lb"
+
+            //is second backup within chain "lb" backup?
+            if (chain[1].type == "lb")
+            {
+                //remove lb backup from config, hdd and chainlist
+                ConfigHandler.BackupConfigHandler.removeBackup(path, chain[1].uuid); //remove from config
+                System.IO.Directory.Delete(System.IO.Path.Combine(path, chain[1].uuid + ".nxm"), true); //remove backup file
+                chain.RemoveAt(1);
+            }
 
             //create staging dir
             System.IO.Directory.CreateDirectory(System.IO.Path.Combine(path, "staging"));
@@ -406,7 +422,10 @@ namespace HyperVBackupRCT
             List<ManagementObject> hdds = new List<ManagementObject>();
             while (iterator.MoveNext())
             {
-                hdds.Add((ManagementObject)iterator.Current);
+                //just add vhdx files to hdd list
+                if (((string[])iterator.Current["HostResource"])[0].EndsWith(".vhdx")){
+                    hdds.Add((ManagementObject)iterator.Current);
+                }
             }
             
             //have hdds changed?
@@ -535,6 +554,12 @@ namespace HyperVBackupRCT
             //iterate through all currently mounted HDDs
             foreach (ManagementObject mountedHDD in mountedHDDs)
             {
+                //ignore non vhdx files like isos
+                if (!((string[])mountedHDD["HostResource"])[0].EndsWith(".vhdx"))
+                {
+                    continue;
+                }
+
                 bool hddFound = false;
                 //find corresponding HDD within job
                 foreach (VMHDD vmHDD in currentVM.vmHDDs)
@@ -542,6 +567,8 @@ namespace HyperVBackupRCT
                     VMHDD newHDD = new VMHDD();
                     //get vhdx id from vhdx file
                     string vhdxPath = ((string[])mountedHDD["HostResource"])[0];
+
+
                     string hddID = Convert.ToBase64String(vhdxParser.getVHDXIDFromFile(vhdxPath));
                     
                     newHDD.name = hddID;
@@ -565,7 +592,7 @@ namespace HyperVBackupRCT
             //hdd count changed or hdds themself changed?
             if (mountedHDDs.Count != currentVM.vmHDDs.Count || hddsHaveChanged)
             {
-                retVal.hddsChanged = true;;
+                retVal.hddsChanged = true;
             }
             else
             {

@@ -65,6 +65,7 @@ namespace RestoreHelper
                 }
             }
 
+
             //get all available vhdx files for hdd picker
             string[] baseHDDFiles = getBaseHDDFilesFromChain(restoreChain, basePath);
 
@@ -84,6 +85,15 @@ namespace RestoreHelper
                 }
             }
 
+            //if lb is first element, show date picker
+            //if (restoreChain[0].type == "lb") {
+            //    string selectedHDDFileName = System.IO.Path.GetFileName(selectedHDD);
+            //    LBDatePickerWindow datePickerWindow = new LBDatePickerWindow();
+            //    datePickerWindow.TargetBackup = restoreChain[0];
+            //    datePickerWindow.TargetHDD = selectedHDDFileName;
+            //    datePickerWindow.BasePath = basePath;
+            //    datePickerWindow.ShowDialog();
+            //}
 
 
             //get hdd files from backup chain
