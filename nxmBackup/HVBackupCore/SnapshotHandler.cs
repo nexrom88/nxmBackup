@@ -554,32 +554,26 @@ namespace HyperVBackupRCT
             //iterate through all currently mounted HDDs
             foreach (ManagementObject mountedHDD in mountedHDDs)
             {
-                //ignore non vhdx files like isos
-                if (!((string[])mountedHDD["HostResource"])[0].EndsWith(".vhdx"))
-                {
-                    continue;
-                }
 
                 bool hddFound = false;
                 //find corresponding HDD within job
                 foreach (VMHDD vmHDD in currentVM.vmHDDs)
                 {
-                    VMHDD newHDD = new VMHDD();
-                    //get vhdx id from vhdx file
-                    string vhdxPath = ((string[])mountedHDD["HostResource"])[0];
+                    VMHDD hdd;
+                    hdd = buildHDDStructure(mountedHDD);
+                    newHDDS.Add(hdd);
 
-
-                    string hddID = Convert.ToBase64String(vhdxParser.getVHDXIDFromFile(vhdxPath));
-                    
-                    newHDD.name = hddID;
-                    newHDD.path = vhdxPath;
-                    newHDDS.Add(newHDD);
-
-                    if (hddID == vmHDD.name)
+                    if (hdd.name == vmHDD.name)
                     {
                         hddFound = true;
                         break;
                     }
+                }
+
+                //add hdd to newHDDs list when currentVM.vmHDDS is empty
+                if (currentVM.vmHDDs.Count == 0)
+                {
+                    newHDDS.Add(buildHDDStructure(mountedHDD));
                 }
 
                 //hdd not found?
@@ -601,6 +595,22 @@ namespace HyperVBackupRCT
 
             retVal.newHDDs = newHDDS;
             return retVal;
+        }
+
+        //builds a hdd structure from a given ManagementObject
+        private VMHDD buildHDDStructure(ManagementObject mo)
+        {
+            VMHDD newHDD = new VMHDD();
+            //get vhdx id from vhdx file
+            string vhdxPath = ((string[])mo["HostResource"])[0];
+
+
+            string hddID = Convert.ToBase64String(vhdxParser.getVHDXIDFromFile(vhdxPath));
+
+            newHDD.name = hddID;
+            newHDD.path = vhdxPath;
+
+            return newHDD;
         }
 
 
