@@ -80,9 +80,21 @@ namespace HyperVBackupRCT
             //if full backup, delete unnecessary reference points
             if (refP == null)
             {
-                int eventId = this.eventHandler.raiseNewEvent("Entferne alte Referenz Punkte...", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
-                //remove current (last) backup
-                chain.RemoveAt(chain.Count - 1);
+                int eventId = this.eventHandler.raiseNewEvent("Entferne alte Referenzpunkte...", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
+                
+                //remove current (last) full backup
+
+                if (chain[chain.Count - 1].type == "lb") //last backup lb backup? remove very last element
+                {
+                    chain.RemoveAt(chain.Count - 2);
+                }
+                else //last backup full backup? remove last element
+                {
+                    chain.RemoveAt(chain.Count - 1);
+                }
+                
+                
+                
                 List<ManagementObject> refPs = getReferencePoints();
 
                 //iterate chain
