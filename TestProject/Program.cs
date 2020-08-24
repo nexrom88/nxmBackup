@@ -22,7 +22,7 @@ namespace TestProject
             //string output = JsonConvert.SerializeObject(parsedFile);
 
             Common.JobVM vm = new Common.JobVM();
-            vm.vmID = "D7631892-C72A-4BC1-A447-F95D72917137";
+            vm.vmID = "6097AA29-9454-4496-9580-6BDB637E07B2";
             HyperVBackupRCT.SnapshotHandler sh = new HyperVBackupRCT.SnapshotHandler(vm, -1);
             sh.cleanUp();
 
@@ -68,8 +68,16 @@ namespace TestProject
             //DriveInfo[] drives = System.IO.DriveInfo.GetDrives();
             //drives = null;
 
-            //FileStream inStream = new FileStream(@"F:\nxm\Win10\DF86F44C-037D-4111-8EF8-3DC2B3C2F553\182bea31-f53e-4620-996d-7685b5ec5dd6.nxm\Win10.vhdx.lb", FileMode.Open, FileAccess.Read);
-            //List<nxmBackup.HVBackupCore.LBBlock> retVal = nxmBackup.HVBackupCore.LBParser.parseLBFile(inStream, true);
+            //FileStream inStream = new FileStream(@"F:\nxm\Win10_neu\6097AA29-9454-4496-9580-6BDB637E07B2\8ee5b475-4343-4c2f-8e78-6a9503783c2b.nxm\Win10.vhdx.lb", FileMode.Open, FileAccess.Read);
+            //HyperVBackupRCT.LBStructure retVal = HyperVBackupRCT.LBParser.parseLBFile(inStream, true);
+
+            //foreach (HyperVBackupRCT.LBBlock block in retVal.blocks)
+            //{
+            //    if (block.offset < 32000)
+            //    {
+            //        inStream = inStream;
+            //    }
+            //}
 
             //retVal = null;
             //ConfigHandler.OneJob dummyJob = new ConfigHandler.OneJob();

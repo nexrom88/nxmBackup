@@ -214,9 +214,10 @@ namespace nxmBackup.MFUserMode
                 //System.Text.ASCIIEncoding enc = new System.Text.ASCIIEncoding();
                 //byte[] buffer = enc.GetBytes(output);
 
-                //read the requested data from backup chain
+                //read the requested data from backup chain and from lb
                 data = new byte[length];
                 this.readableBackupChain.readFromChain(offset, length, data, 0);
+                this.readableBackupChain.readFromLB(offset, length, data);
 
             }
 

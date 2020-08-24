@@ -41,6 +41,11 @@ namespace nxmBackup.HVBackupCore
 
             isRunning = true;
 
+            //add job to DB
+            this.jobExecutionID = Common.DBQueries.addJobExecution(this.selectedJob.DbId, "backup");
+            this.eventHandler = new Common.EventHandler(null, jobExecutionID);
+            this.eventID = this.eventHandler.raiseNewEvent("LiveBackup läuft...", false, false, NO_RELATED_EVENT, Common.EventStatus.info);
+
             //connect to km and shared memory
             this.um = new MFUserMode.MFUserMode();
             bool status = this.um.connectToKM("\\nxmLBPort", "\\BaseNamedObjects\\nxmmflb");
@@ -49,13 +54,12 @@ namespace nxmBackup.HVBackupCore
             if (!status)
             {
                 isRunning = false;
+                this.eventHandler.raiseNewEvent("Livebackup konnte nicht gestartet werden", false, true, this.eventID, Common.EventStatus.error);
+                this.eventHandler.raiseNewEvent("", true, false, this.eventID, Common.EventStatus.error);
                 return false;
             }
 
-            //add job to DB
-            this.jobExecutionID = Common.DBQueries.addJobExecution(this.selectedJob.DbId, "backup");
-            this.eventHandler = new Common.EventHandler(null, jobExecutionID);
-            this.eventID = this.eventHandler.raiseNewEvent("LiveBackup läuft...", false, false, NO_RELATED_EVENT, Common.EventStatus.info);
+            
 
             //iterate through all vms
             foreach (Common.JobVM vm in this.selectedJob.JobVMs)

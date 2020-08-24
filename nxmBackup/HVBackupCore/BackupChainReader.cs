@@ -18,7 +18,7 @@ namespace HVBackupCore
         public List<ReadableNonFullBackup> NonFullBackups { get => nonFullBackups; set => nonFullBackups = value; }
 
         //reads the given data from backup chain
-        public void readFromChain(Int64 offset, Int64 length, byte[] buffer, Int32 bufferOffset)
+        public void readFromChain(Int64 offset, Int64 length, byte[] buffer, Int32 bufferOffset, int callDepth = 0)
         {
 
             int firstRCTIndex = 0;
@@ -26,6 +26,7 @@ namespace HVBackupCore
             {
                 firstRCTIndex = 1;
             }
+
 
             //read from vhdx header (first 1MB) on rct backup?
             if (nonFullBackups.Count > firstRCTIndex)
@@ -37,8 +38,6 @@ namespace HVBackupCore
                         buffer[bufferOffset + i] = NonFullBackups[firstRCTIndex].cbStructure.rawHeader.rawData[offset + i];
                     }
 
-                    //have to read from lb backup?
-                    readFromLBBackup(offset, length, buffer, bufferOffset);
 
                     return;
                 }
@@ -70,14 +69,13 @@ namespace HVBackupCore
                     //request completed?
                     if ((Int64)readableBytes == length)
                     {
-                        //try to read from LB
-                        readFromLBBackup(offset, length, buffer, bufferOffset);
                         return;
                     }
                     else
                     {
                         //bytes missing
-                        readFromChain(offset + (Int64)readableBytes, length - (Int64)readableBytes, buffer, bufferOffset + (Int32)readableBytes);
+                        readFromChain(offset + (Int64)readableBytes, length - (Int64)readableBytes, buffer, bufferOffset + (Int32)readableBytes, callDepth +1);
+
                         return;
                     }
                 }
@@ -95,8 +93,6 @@ namespace HVBackupCore
                 }
 
 
-
-                UInt64 vhdxBlockSize = nonFullBackup.cbStructure.vhdxBlockSize;
                 //iterate through all changed blocks
                 for (int i = 0; i < nonFullBackup.cbStructure.blocks.Count; i++)
                 {
@@ -113,7 +109,7 @@ namespace HVBackupCore
 
                         VhdxBlockLocation currentLocation = nonFullBackup.cbStructure.blocks[i].vhdxBlockLocations[j];
 
-                        //is offset within location?
+                        //is offset within location? (start within location)
                         if ((UInt64)offset >= currentLocation.vhdxOffset && (UInt64)offset < currentLocation.vhdxOffset + currentLocation.vhdxLength)
                         {
                             //where to start reading within cb file?
@@ -125,10 +121,6 @@ namespace HVBackupCore
                                 nonFullBackup.sourceStreamRCT.Seek((Int64)cbOffset, System.IO.SeekOrigin.Begin);
 
                                 nonFullBackup.sourceStreamRCT.Read(buffer, bufferOffset, (Int32)length);
-
-
-                                //try to read from LB
-                                readFromLBBackup(offset, length, buffer, bufferOffset);
 
                                 return;
                             }
@@ -142,14 +134,33 @@ namespace HVBackupCore
 
                                 nonFullBackup.sourceStreamRCT.Read(buffer, bufferOffset, (Int32)availableBytes);
 
-                                //try to read from LB
-                                readFromLBBackup(offset, (Int64)availableBytes, buffer, bufferOffset);
 
                                 //read remaining bytes recursive
-                                readFromChain(offset + (Int64)availableBytes, length - (Int64)availableBytes, buffer, bufferOffset + (Int32)availableBytes);
+                                readFromChain(offset + (Int64)availableBytes, length - (Int64)availableBytes, buffer, bufferOffset + (Int32)availableBytes, callDepth +1);
 
                                 return;
                             }
+                        }
+
+                        //is offset + length within location? (end within location)
+                        else if ((UInt64)offset + (UInt64)length > currentLocation.vhdxOffset && (UInt64)offset + (UInt64)length < currentLocation.vhdxOffset + currentLocation.vhdxLength)
+                        {
+                            //where to start reading within cb file?
+                            UInt64 cbOffset = nonFullBackup.cbStructure.blocks[i].cbFileOffset;
+
+                            //how much to read?
+                            UInt64 readLength = ((UInt64)offset + (UInt64)length) - currentLocation.vhdxOffset;
+
+
+                            nonFullBackup.sourceStreamRCT.Seek((Int64)cbOffset, System.IO.SeekOrigin.Begin);
+                            nonFullBackup.sourceStreamRCT.Read(buffer, bufferOffset + ((int)length - (int)readLength), (Int32)readLength);
+
+
+                            //read the here-ignored start bytes
+                            readFromChain(offset, length - (int)readLength, buffer, bufferOffset, callDepth +1);
+
+                            return;
+
                         }
                         else
                         {
@@ -168,14 +179,11 @@ namespace HVBackupCore
             fullBackup.sourceStream.Seek(offset, System.IO.SeekOrigin.Begin);
             fullBackup.sourceStream.Read(buffer, bufferOffset, (Int32)length);
 
-            //try to read from LB
-            readFromLBBackup(offset, length, buffer, bufferOffset);
-
         }
 
 
         //try read from lb
-        private void readFromLBBackup(Int64 offset, Int64 length, byte[] buffer, Int32 bufferOffset)
+        public void readFromLB(Int64 offset, Int64 length, byte[] buffer)
         {
             //just continue when LB is first non-full backup
             if (this.nonFullBackups.Count == 0 || this.nonFullBackups[0].backupType != NonFullBackupType.lb)
@@ -185,7 +193,7 @@ namespace HVBackupCore
 
 
             //iterate through all blocks
-            foreach(LBBlock block in this.nonFullBackups[0].lbStructure.blocks)
+            foreach (LBBlock block in this.nonFullBackups[0].lbStructure.blocks)
             {
                 UInt64 sourceOffset = 0, destOffset = 0, sourceAndDestLength = 0;
 
@@ -203,8 +211,9 @@ namespace HVBackupCore
                         sourceAndDestLength = (UInt64)length;
                     }
 
-                //end offset is within current block
-                }else if (block.offset <= (UInt64)offset + (UInt64)length && (UInt64)offset + (UInt64)length < block.offset + block.length)
+                    //end offset is within current block
+                }
+                else if (block.offset < (UInt64)offset + (UInt64)length && (UInt64)offset + (UInt64)length < block.offset + block.length)
                 {
                     sourceOffset = 0;
                     sourceAndDestLength = ((UInt64)offset + (UInt64)length) - block.offset;
@@ -212,8 +221,9 @@ namespace HVBackupCore
                 }
 
                 //copy to dest array
-                if (sourceAndDestLength != 0) {
-                    Buffer.BlockCopy(block.payload, (int)sourceOffset, buffer, bufferOffset + (int)destOffset, (int)sourceAndDestLength);
+                if (sourceAndDestLength != 0)
+                {
+                    Buffer.BlockCopy(block.payload, (int)sourceOffset, buffer,(int)destOffset, (int)sourceAndDestLength);
                 }
             }
         }
