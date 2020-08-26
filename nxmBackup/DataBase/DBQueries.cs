@@ -66,7 +66,7 @@ namespace Common
                             { "type", type }
                         }, null);
 
-                    if (jobExecutionIds.Count != 1)
+                    if (jobExecutionIds == null || jobExecutionIds.Count != 1)
                     {
                         throw new Exception("Error during insert operation (no insert id)");
                     }
