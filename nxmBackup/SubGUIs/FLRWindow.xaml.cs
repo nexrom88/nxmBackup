@@ -394,6 +394,7 @@ namespace RestoreHelper
                         this.restoreInProgress = true;
                         gridProgress.Visibility = Visibility.Visible;
 
+                        this.gfHandler.progressEvent += newEvent;
                         System.Threading.Thread restoreThread = new System.Threading.Thread(() => this.gfHandler.restoreFiles2Local(files, destinationPath, sourcePath));
                         restoreThread.Start();
                     }
