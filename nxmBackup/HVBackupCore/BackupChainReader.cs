@@ -223,7 +223,12 @@ namespace HVBackupCore
                 //copy to dest array
                 if (sourceAndDestLength != 0)
                 {
-                    Buffer.BlockCopy(block.payload, (int)sourceOffset, buffer,(int)destOffset, (int)sourceAndDestLength);
+                    //read from lb
+                    byte[] sourceBuffer = new byte[sourceAndDestLength];
+                    this.nonFullBackups[0].sourceStreamLB.Seek((Int64)(block.lbFileOffset + sourceOffset), System.IO.SeekOrigin.Begin);
+                    this.nonFullBackups[0].sourceStreamLB.Read(sourceBuffer, 0, (int)sourceAndDestLength);
+
+                    Buffer.BlockCopy(sourceBuffer, 0, buffer,(int)destOffset, (int)sourceAndDestLength);
                 }
             }
         }
