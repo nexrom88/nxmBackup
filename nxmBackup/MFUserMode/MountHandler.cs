@@ -132,7 +132,7 @@ namespace nxmBackup.MFUserMode
                 else if (sourceFiles[i].EndsWith(".lb"))
                 {
                     FileStream inputStream = new FileStream(sourceFiles[i], FileMode.Open, FileAccess.Read);
-                    LBStructure lbStruct = LBParser.parseLBFile(inputStream, true);
+                    LBStructure lbStruct = LBParser.parseLBFile(inputStream, false);
                     nonFullBackup.lbStructure = lbStruct;
                     nonFullBackup.backupType = BackupChainReader.NonFullBackupType.lb;
                     nonFullBackup.sourceStreamLB = inputStream;
