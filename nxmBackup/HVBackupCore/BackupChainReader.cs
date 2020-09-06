@@ -190,7 +190,7 @@ namespace HVBackupCore
             {
                 return;
             }
-
+            
 
             //iterate through all blocks
             foreach (LBBlock block in this.nonFullBackups[0].lbStructure.blocks)
