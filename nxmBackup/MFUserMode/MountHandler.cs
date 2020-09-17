@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using HyperVBackupRCT;
 using HVBackupCore;
 using nxmBackup.HVBackupCore;
+using System.Linq.Expressions;
 
 namespace nxmBackup.MFUserMode
 {
@@ -83,23 +84,24 @@ namespace nxmBackup.MFUserMode
         //gets the path to a mount path with enough hdd space
         private string getMountHDDPath(ulong fileSize)
         {
-            try
+            //iterate through all drives with a drive letter
+            foreach (DriveInfo drive in DriveInfo.GetDrives())
             {
-                //iterate through all drives with a drive letter
-                foreach (DriveInfo drive in DriveInfo.GetDrives())
+                try
                 {
                     //remaining free space has to be 1GB
-                    if ((ulong)drive.AvailableFreeSpace - fileSize > 1000000000)
+                    if (drive.AvailableFreeSpace - (long)fileSize > 1000000000)
                     {
                         //try to create mountfolder
                         System.IO.Directory.CreateDirectory(drive.Name + "nxmMount");
                         mountFile = drive.Name + "nxmMount\\mount.vhdx";
                         return mountFile;
                     }
+
                 }
-            }catch(Exception ex)
-            {
-                return null;
+                catch (Exception ex) //catch for drives not ready
+                {
+                }
             }
 
             return null;
