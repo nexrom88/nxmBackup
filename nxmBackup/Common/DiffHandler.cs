@@ -185,6 +185,45 @@ namespace Common
         //merges a lb file with a vhdx
         public void merge_lb(System.IO.FileStream lbStream, string destinationSnapshot)
         {
+            int relatedEventId = -1;
+            if (this.eventHandler != null)
+            {
+                relatedEventId = this.eventHandler.raiseNewEvent("Verarbeite LiveBackup...", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
+            }
+
+            //parse lb file
+            HyperVBackupRCT.LBStructure parsedLBFile = HyperVBackupRCT.LBParser.parseLBFile(lbStream, false);
+
+            //open destination stream
+            FileStream destinationStream = new FileStream(destinationSnapshot, FileMode.Open, FileAccess.ReadWrite);
+
+            ulong blockCounter = 0;
+            int lastProgress = 0;
+            //iterate through each lb block
+            foreach (HyperVBackupRCT.LBBlock currentBlock in parsedLBFile.blocks)
+            {
+                //read current block payload from source stream
+                lbStream.Seek((long)currentBlock.lbFileOffset, SeekOrigin.Begin);
+                byte[] blockPayload = new byte[currentBlock.length];
+                lbStream.Read(blockPayload, 0, (int)currentBlock.length);
+
+                //write current block payload to dest stream
+                destinationStream.Seek((long)currentBlock.offset, SeekOrigin.Begin);
+                destinationStream.Write(blockPayload, 0, (int)currentBlock.length);
+
+                blockCounter++;
+
+                //show progress
+                int progress = (int)(((float)blockCounter / (float)(parsedLBFile.blocks.Count)) * 100.0);
+                if (progress != lastProgress)
+                {
+                    lastProgress = progress;
+                    this.eventHandler.raiseNewEvent("Verarbeite LiveBackup... " + progress, false, true, relatedEventId, EventStatus.inProgress);
+                }
+            }
+
+            //close dest stream
+            destinationStream.Close();
 
         }
 
@@ -258,7 +297,7 @@ namespace Common
                     string progress = Common.PrettyPrinter.prettyPrintBytes(bytesRestored);
                     if (progress != lastProgress && this.eventHandler != null)
                     {
-                        this.eventHandler.raiseNewEvent("Verarbeite Inkrement... " + progress, false, true, NO_RELATED_EVENT, EventStatus.inProgress);
+                        this.eventHandler.raiseNewEvent("Verarbeite Inkrement... " + progress, false, true, relatedEventId, EventStatus.inProgress);
                         lastProgress = progress;
                     }
 
