@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -51,6 +52,12 @@ namespace RestoreHelper
             {
                 ConfigHandler.BackupConfigHandler.BackupInfo restoreElement = getBackup(backupChain, restoreChain[restoreChain.Count - 1].parentInstanceID);
 
+                //just first backup can be "lb", ignore it here
+                if (restoreElement.type == "lb")
+                {
+                    continue;
+                }
+
                 //valid element found?
                 if (restoreElement.instanceID != restoreChain[restoreChain.Count - 1].parentInstanceID)
                 {
@@ -81,25 +88,40 @@ namespace RestoreHelper
             {
                 ConfigHandler.BackupConfigHandler.BackupInfo currentBackup = restoreChain[restoreChain.Count - 1];
 
-                //open diff file
-                Common.IArchive archive;
-
-                
-                archive = new Common.LZ4Archive(System.IO.Path.Combine(basePath, currentBackup.uuid + ".nxm"), null);                
-                
-                
-                archive.open(System.IO.Compression.ZipArchiveMode.Read);
-
-                //iterate through all vhds
-                foreach (string hddFile in hddFiles)
+                if (currentBackup.type == "rct") //rct backup?
                 {
-                    System.IO.Stream diffStream = archive.openAndGetFileStream(System.IO.Path.GetFileName(hddFile) + ".cb");
+                    //open diff file
+                    Common.IArchive archive;
 
-                    //merge the files
-                    diffRestore.merge((BlockCompression.LZ4BlockStream)diffStream, hddFile);
-                    diffStream.Close();
+
+                    archive = new Common.LZ4Archive(System.IO.Path.Combine(basePath, currentBackup.uuid + ".nxm"), null);
+
+
+                    archive.open(System.IO.Compression.ZipArchiveMode.Read);
+
+                    //iterate through all vhds
+                    foreach (string hddFile in hddFiles)
+                    {
+                        System.IO.Stream diffStream = archive.openAndGetFileStream(System.IO.Path.GetFileName(hddFile) + ".cb");
+
+                        //merge the files
+                        diffRestore.merge_rct((BlockCompression.LZ4BlockStream)diffStream, hddFile);
+                        diffStream.Close();
+                    }
+                    archive.close();
+
+                }else if (currentBackup.type == "lb") //lb backup
+                {
+                    //iterate through all vhds
+                    foreach (string hddFile in hddFiles)
+                    {
+                        FileStream lbStream = new FileStream(System.IO.Path.Combine(basePath, currentBackup.uuid + ".nxm\\" + System.IO.Path.GetFileName(hddFile) + ".lb"), FileMode.Open, FileAccess.Read);
+
+                        //merge the files
+                        diffRestore.merge_lb(lbStream, hddFile);
+                    }
+
                 }
-                archive.close();
 
                 //remove current diff
                 restoreChain.RemoveAt(restoreChain.Count - 1);

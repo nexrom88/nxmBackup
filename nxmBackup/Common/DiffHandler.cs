@@ -182,8 +182,14 @@ namespace Common
         }
 
 
+        //merges a lb file with a vhdx
+        public void merge_lb(System.IO.FileStream lbStream, string destinationSnapshot)
+        {
+
+        }
+
         //merges a rct diff file with a vhdx
-        public void merge(BlockCompression.LZ4BlockStream diffStream, string destinationSnapshot)
+        public void merge_rct(BlockCompression.LZ4BlockStream diffStream, string destinationSnapshot)
         {
             int relatedEventId = -1;
             if (this.eventHandler != null)
