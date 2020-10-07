@@ -116,6 +116,7 @@ namespace RestoreHelper
             switch (restoreType)
             {
                 case "full":
+                case "fullImport":
                     //look for selected job object
                     string vmId = ((ComboBoxItem)cbVMs.SelectedItem).Tag.ToString();
                     Common.JobVM targetVM = new Common.JobVM();
@@ -128,9 +129,16 @@ namespace RestoreHelper
                         }
                     }
 
+                    //import to HyperV?
+                    bool importToHyperV = false;
+                    if (restoreType == "fullImport")
+                    {
+                        importToHyperV = true;
+                    }
+
                     int jobExecutionId = Common.DBQueries.addJobExecution(this.job.DbId, "restore");
-                    RestoreHelper.FullRestoreHandler restoreHandler = new RestoreHelper.FullRestoreHandler(new Common.EventHandler(targetVM, jobExecutionId));
-                    restoreHandler.performFullRestoreProcess(sourcePath, "f:\\target", restorePoint.InstanceId);
+                    RestoreHelper.FullRestoreHandler fullRestoreHandler = new RestoreHelper.FullRestoreHandler(new Common.EventHandler(targetVM, jobExecutionId));
+                    fullRestoreHandler.performFullRestoreProcess(sourcePath, "f:\\target", restorePoint.InstanceId, importToHyperV);
                     break;
                 case "flr":
                     RestoreHelper.FileLevelRestoreHandler flrHandler = new RestoreHelper.FileLevelRestoreHandler();

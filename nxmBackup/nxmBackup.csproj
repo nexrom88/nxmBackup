@@ -178,6 +178,7 @@
     <Compile Include="Common\VirtualDiskHandler.cs" />
     <Compile Include="Common\WMIHelper.cs" />
     <Compile Include="Common\wmiUtilities.cs" />
+    <Compile Include="Common\wmiUtilitiesForHyperVImport.cs" />
     <Compile Include="ConfigHandler\BackupConfigHandler.cs" />
     <Compile Include="ConfigHandler\JobConfigHandler.cs" />
     <Compile Include="DataBase\DBConnection.cs" />
@@ -196,6 +197,7 @@
     <Compile Include="RestoreHelper\FileLevelRestoreHandler.cs" />
     <Compile Include="RestoreHelper\FullRestoreHandler.cs" />
     <Compile Include="RestoreHelper\GuestFilesHandler.cs" />
+    <Compile Include="RestoreHelper\VMImporter.cs" />
     <Compile Include="SubGUIs\AddJobWindow.xaml.cs">
       <DependentUpon>AddJobWindow.xaml</DependentUpon>
     </Compile>

@@ -9,7 +9,8 @@
     <Grid>
         <Label Content="Restore-Typ:" HorizontalAlignment="Left" Margin="0,20,0,0" VerticalAlignment="Top"/>
         <ComboBox Name="cbRestoreType" Margin="100,20,20,0" VerticalAlignment="Top" SelectionChanged="ComboBox_SelectionChanged" SelectedIndex="0">
-            <ComboBoxItem Tag="full" Content="Komplette VM Wiederherstellung"/>
+            <ComboBoxItem Tag="full" Content="VM-Dateien Wiederherstellung"/>
+            <ComboBoxItem Tag="fullImport" Content="VM Wiederherstellung nach HyperV"/>
             <ComboBoxItem Tag="flr" Content="Einzeldateien Wiederherstellen"/>
         </ComboBox>
         <StackPanel Height="3" Margin="0,80,0,0" VerticalAlignment="Top" Background="Black"/>

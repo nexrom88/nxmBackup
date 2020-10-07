@@ -19,7 +19,7 @@ namespace RestoreHelper
         }
 
         //performs a full restore process
-        public void performFullRestoreProcess(string basePath, string destPath, string instanceID)
+        public void performFullRestoreProcess(string basePath, string destPath, string instanceID, bool importToHyperV)
         {
             int relatedEventId = -1;
             if (this.eventHandler != null)
@@ -127,9 +127,17 @@ namespace RestoreHelper
                 restoreChain.RemoveAt(restoreChain.Count - 1);
             }
 
-            if (this.eventHandler != null)
+            if (this.eventHandler != null && !importToHyperV)
             {
                 this.eventHandler.raiseNewEvent("Wiederherstellung erfolgreich", false, false, NO_RELATED_EVENT, Common.EventStatus.successful);
+            }
+
+            //has the restored VM to be imported into HyperV?
+            if (importToHyperV)
+            {
+                relatedEventId = this.eventHandler.raiseNewEvent("An HyperV registrieren...", false, false, NO_RELATED_EVENT, Common.EventStatus.inProgress);
+
+
             }
 
         }
