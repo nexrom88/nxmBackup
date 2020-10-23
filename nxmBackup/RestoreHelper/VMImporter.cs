@@ -13,7 +13,7 @@ namespace RestoreHelper
 {
     public class VMImporter
     {
-        static ManagementObject CreateSwitch(ManagementScope scope, string name, string friendlyName, int learnableAddress)
+        private static ManagementObject CreateSwitch(ManagementScope scope, string name, string friendlyName, int learnableAddress)
         {
             ManagementObject switchService = wmiUtilitiesForHyperVImport.GetServiceObject(scope, "Msvm_VirtualSwitchManagementService");
             ManagementObject createdSwitch = null;
@@ -37,7 +37,7 @@ namespace RestoreHelper
         }
 
 
-        static ManagementBaseObject GetVirtualSystemImportSettingData(ManagementScope scope, string importDirectory, string rootDirectoryToCopy)
+        private static ManagementBaseObject GetVirtualSystemImportSettingData(ManagementScope scope, string importDirectory, string rootDirectoryToCopy)
         {
             string targetVhdResourcePath = importDirectory + "\\Temp.vhd"; //Directories specified should exist
             ManagementObject virtualSystemService = wmiUtilitiesForHyperVImport.GetServiceObject(scope, "Msvm_VirtualSystemManagementService");
@@ -83,7 +83,7 @@ namespace RestoreHelper
             return importSettingData;
         }
 
-        static void ImportVirtualSystemEx(string importDirectory)
+        public static void ImportVirtualSystemEx(string importDirectory)
         {
             string importCopyDirectory = importDirectory + "\\NewCopy";
             ManagementScope scope = new ManagementScope(@"root\virtualization", null);
