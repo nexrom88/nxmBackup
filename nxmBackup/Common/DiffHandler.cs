@@ -351,32 +351,3 @@ namespace Common
 
     }
 }
-
-
-//cb file type
-//
-//uint32 = 4 bytes = changed block count
-//uint32 = 4 bytes = vhdx block size
-//uint64 = 8 bytes = vhdx size
-//
-//1048576 bytes = vhdx header
-//
-//bat table:
-//ulong = 8 bytes = bat vhdx offset
-//ulong = 8 bytes = bat length in bytes
-//bat table data (size = bat length)
-//
-//one block:
-//ulong = 8 bytes = changed block offset
-//ulong = 8 bytes = changed block length
-
-//uint32 = 4 bytes = vhdx block offsets count
-
-//ulong = 8 bytes = vhdx block offset 1
-//ulong = 8 bytes = vhdx block length 1
-
-//ulong = 8 bytes = vhdx block offset 2
-//ulong = 8 bytes = vhdx block length 2
-//...
-
-//block data (size = changed block length)
