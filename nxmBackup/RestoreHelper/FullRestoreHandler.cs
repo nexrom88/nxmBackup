@@ -19,7 +19,7 @@ namespace RestoreHelper
         }
 
         //performs a full restore process
-        public void performFullRestoreProcess(string basePath, string destPath, string instanceID, bool importToHyperV)
+        public void performFullRestoreProcess(string basePath, string destPath, string vmName, string instanceID, bool importToHyperV)
         {
             int relatedEventId = -1;
             if (this.eventHandler != null)
@@ -127,18 +127,35 @@ namespace RestoreHelper
                 restoreChain.RemoveAt(restoreChain.Count - 1);
             }
 
-            if (this.eventHandler != null && !importToHyperV)
-            {
-                this.eventHandler.raiseNewEvent("Wiederherstellung erfolgreich", false, false, NO_RELATED_EVENT, Common.EventStatus.successful);
-            }
-
             //has the restored VM to be imported into HyperV?
             if (importToHyperV)
             {
                 relatedEventId = this.eventHandler.raiseNewEvent("An HyperV registrieren...", false, false, NO_RELATED_EVENT, Common.EventStatus.inProgress);
 
+                //look for vmcx file
+                string[] configFiles = System.IO.Directory.GetFiles(destPath, "*.vmcx", SearchOption.AllDirectories);
+                
+                //there may just be exactly one config file otherwise cancel import
+                if (configFiles.Length != 1)
+                {
+                    this.eventHandler.raiseNewEvent("fehlgeschlagen", true, false, relatedEventId, Common.EventStatus.warning);
+                }
+                else
+                {
+                    //import vm
+                    VMImporter.importVM(configFiles[0], destPath, true, vmName);
+                    this.eventHandler.raiseNewEvent("erfolgreich", true, false, relatedEventId, Common.EventStatus.successful);
+                }
+
 
             }
+
+            if (this.eventHandler != null)
+            {
+                this.eventHandler.raiseNewEvent("Wiederherstellung erfolgreich", false, false, NO_RELATED_EVENT, Common.EventStatus.successful);
+            }
+
+
 
         }
 

@@ -138,7 +138,7 @@ namespace RestoreHelper
 
                     int jobExecutionId = Common.DBQueries.addJobExecution(this.job.DbId, "restore");
                     RestoreHelper.FullRestoreHandler fullRestoreHandler = new RestoreHelper.FullRestoreHandler(new Common.EventHandler(targetVM, jobExecutionId));
-                    fullRestoreHandler.performFullRestoreProcess(sourcePath, "f:\\target", restorePoint.InstanceId, importToHyperV);
+                    fullRestoreHandler.performFullRestoreProcess(sourcePath, "f:\\target", ((ComboBoxItem)cbVMs.SelectedItem).Content.ToString() + "_restored", restorePoint.InstanceId, importToHyperV);
                     break;
                 case "flr":
                     RestoreHelper.FileLevelRestoreHandler flrHandler = new RestoreHelper.FileLevelRestoreHandler();
