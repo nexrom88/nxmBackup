@@ -14,7 +14,9 @@ namespace RestoreHelper
 {
     public class VMImporter
     {
-        public static void importVM(string vmDefinitionPath, string snapshotFolderPath, bool newId)
+
+        //imports a given vm and sets vm name
+        public static void importVM(string vmDefinitionPath, string snapshotFolderPath, bool newId, string name)
         {
             ManagementScope scope = new ManagementScope(@"root\virtualization\v2");
 
@@ -38,29 +40,32 @@ namespace RestoreHelper
                 {
                     //get the imported planned vm
                     ManagementObject vm =  GetImportedVM(outParams);
+
+                    //rename the vm
+                    renameVM(vm, name);
+
                     string vmID = vm["Name"].ToString();
 
                     //realize the planned vm
                     ManagementObject realizedVM =  realizePlannedVM(vmID);
 
-                    //rename the vm
-                    renameVM(realizedVM);
                 }
             }
         }
 
         //renames a virtual machine
-        private static void renameVM(ManagementObject realizedVM)
+        private static void renameVM(ManagementObject realizedVM, string newName)
         {
             ManagementObject settings = WmiUtilities.GetVirtualMachineSettings(realizedVM);
-            settings["ElementName"] = "Testo";
+            settings["ElementName"] = newName;
 
-            ManagementObject vm = null;
             ManagementScope scope = new ManagementScope(@"root\virtualization\v2");
 
             using (ManagementObject VMsettings = WmiUtilities.GetVirtualSystemManagementService(scope))
+            using (ManagementBaseObject inParams = VMsettings.GetMethodParameters("ModifySystemSettings"))
             {
-
+                inParams["SystemSettings"] = settings.GetText(TextFormat.CimDtd20);
+                VMsettings.InvokeMethod("ModifySystemSettings", inParams, null);
             }
 
         }
