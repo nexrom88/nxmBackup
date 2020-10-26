@@ -197,6 +197,7 @@
     <Compile Include="RestoreHelper\FileLevelRestoreHandler.cs" />
     <Compile Include="RestoreHelper\FullRestoreHandler.cs" />
     <Compile Include="RestoreHelper\GuestFilesHandler.cs" />
+    <Compile Include="RestoreHelper\LiveRestore.cs" />
     <Compile Include="RestoreHelper\VMImporter.cs" />
     <Compile Include="SubGUIs\AddJobWindow.xaml.cs">
       <DependentUpon>AddJobWindow.xaml</DependentUpon>
