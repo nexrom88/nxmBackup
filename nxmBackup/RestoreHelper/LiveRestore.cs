@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using nxmBackup.MFUserMode;
+using System.Threading;
 
 namespace RestoreHelper
 {
@@ -55,7 +57,25 @@ namespace RestoreHelper
                 }
             }
 
-            
+            //remove all lb backups except when lb backup is first element
+            for (int i = 1; i < restoreChain.Count; i++)
+            {
+                if (restoreChain[i].type == "lb")
+                {
+                    restoreChain.RemoveAt(i);
+                    i--;
+                }
+            }
+
+            //get hdd files from backup chain
+            string[] hddFiles = getHDDFilesFromChain(restoreChain, basePath, selectedHDD);
+
+           MountHandler mountHandler = new MountHandler();
+
+            MountHandler.mountState mountState = MountHandler.mountState.pending;
+            Thread mountThread = new Thread(() => mountHandler.startMfHandlingForFLR(hddFiles, ref mountState));
+            mountThread.Start();
+
         }
 
         private ConfigHandler.BackupConfigHandler.BackupInfo getBackup(List<ConfigHandler.BackupConfigHandler.BackupInfo> backupChain, string instanceID)

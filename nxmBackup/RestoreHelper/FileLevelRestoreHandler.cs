@@ -102,7 +102,7 @@ namespace RestoreHelper
             MountHandler mountHandler = new MountHandler();
 
             MountHandler.mountState mountState = MountHandler.mountState.pending;
-            Thread mountThread = new Thread(() => mountHandler.startMfHandling(hddFiles, ref mountState));
+            Thread mountThread = new Thread(() => mountHandler.startMfHandlingForFLR(hddFiles, ref mountState));
             mountThread.Start();
 
             //wait for mounting process

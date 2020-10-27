@@ -22,9 +22,67 @@ namespace nxmBackup.MFUserMode
 
         public string MountFile { get => mountFile; }
 
+        //starts the mount process for LR
+        public void startMfHandlingForLR(string[] sourceFiles, ref mountState mountState)
+        {
+            //build readable backup chain structure first
+            this.readableChain = buildReadableBackupChain(sourceFiles);
 
-        //starts the mount process
-        public void startMfHandling (string[] sourceFiles, ref mountState mountState)
+            ulong decompressedFileSize = 0;
+            //open source file and read "decompressed file size" (first 8 bytes) when flr on full backup
+            if (sourceFiles.Length == 1)
+            {
+                FileStream sourceStream = new System.IO.FileStream(sourceFiles[sourceFiles.Length - 1], System.IO.FileMode.Open, System.IO.FileAccess.Read);
+                byte[] buffer = new byte[8];
+                sourceStream.Read(buffer, 0, 8);
+                decompressedFileSize = BitConverter.ToUInt64(buffer, 0);
+                sourceStream.Close();
+                sourceStream.Dispose();
+            }
+            else if (sourceFiles[0].EndsWith(".cb"))
+            {
+                //read "decompressed file size" from first rct backup
+                decompressedFileSize = this.readableChain.NonFullBackups[0].cbStructure.vhdxSize;
+            }
+            else if (sourceFiles[0].EndsWith("lb"))
+            {
+                //read "decompressed file size" from first lb backup
+                decompressedFileSize = this.readableChain.NonFullBackups[0].lbStructure.vhdxSize;
+            }
+
+            this.mountFile = getMountHDDPath(decompressedFileSize);
+            if (this.mountFile == null)
+            {
+                mountState = mountState.error;
+                return;
+            }
+
+            //build dummy dest file
+            System.IO.Directory.CreateDirectory(System.IO.Path.GetDirectoryName(this.MountFile));
+            this.destStream = new System.IO.FileStream(this.MountFile, System.IO.FileMode.Create, System.IO.FileAccess.Write);
+            this.destStream.SetLength((long)decompressedFileSize);
+            this.destStream.Close();
+            this.destStream.Dispose();
+
+            //connect to MF Kernel Mode
+            this.kmConnection = new MFUserMode(this.readableChain);
+            if (this.kmConnection.connectToKM("\\nxmLRPort", "\\BaseNamedObjects\\nxmmflr"))
+            {
+                mountState = mountState.connected;
+
+                while (!this.processStopped)
+                {
+                    this.kmConnection.handleFLRMessage();
+                }
+            }
+            else
+            {
+                mountState = mountState.error;
+            }
+        }
+
+        //starts the mount process for FLR
+        public void startMfHandlingForFLR (string[] sourceFiles, ref mountState mountState)
         {
             //build readable backup chain structure first
             this.readableChain = buildReadableBackupChain(sourceFiles);
