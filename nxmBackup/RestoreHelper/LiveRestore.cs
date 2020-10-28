@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using nxmBackup.MFUserMode;
 using System.Threading;
+using ConfigHandler;
 
 namespace RestoreHelper
 {
@@ -68,12 +69,12 @@ namespace RestoreHelper
             }
 
             //get hdd files from backup chain
-            string[] hddFiles = getHDDFilesFromChain(restoreChain, basePath, selectedHDD);
+            string[] hddFiles = BackupConfigHandler.getHDDFilesFromChain(restoreChain, basePath, null);
 
            MountHandler mountHandler = new MountHandler();
 
             MountHandler.mountState mountState = MountHandler.mountState.pending;
-            Thread mountThread = new Thread(() => mountHandler.startMfHandlingForFLR(hddFiles, ref mountState));
+            Thread mountThread = new Thread(() => mountHandler.startMfHandlingForLR(hddFiles, ref mountState));
             mountThread.Start();
 
         }
