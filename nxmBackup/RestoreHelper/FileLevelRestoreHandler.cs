@@ -8,6 +8,7 @@ using Common;
 using System.Windows;
 using nxmBackup.SubGUIs;
 using nxmBackup.MFUserMode;
+using ConfigHandler;
 
 namespace RestoreHelper
 {
@@ -97,7 +98,7 @@ namespace RestoreHelper
 
 
             //get hdd files from backup chain
-            string[] hddFiles = getHDDFilesFromChain(restoreChain, basePath, selectedHDD);
+            string[] hddFiles = BackupConfigHandler.getHDDFilesFromChain(restoreChain, basePath, selectedHDD);
 
             MountHandler mountHandler = new MountHandler();
 
@@ -130,45 +131,7 @@ namespace RestoreHelper
         }
 
 
-        //builds an array of hdd files from a given backup chain
-        private string[] getHDDFilesFromChain(List<ConfigHandler.BackupConfigHandler.BackupInfo> restoreChain, string basePath, string userSelectedHDD)
-        {
-            string[] retVal = new string[restoreChain.Count];
-            string targetHDD = "";
-
-            //iterate through all backups within chain in reverse to read full backup first
-            for (int i = restoreChain.Count - 1; i >= 0; i--)
-            {
-                if (restoreChain[i].type == "full")
-                {
-                    //did user select an HDD?
-                    if (userSelectedHDD != null)
-                    {
-                        retVal[i] = userSelectedHDD;
-                        targetHDD = System.IO.Path.GetFileName(userSelectedHDD);
-                    }
-                    else //no user-selected HDD
-                    {
-                        //get all vhdx files
-                        string vmBasePath = System.IO.Path.Combine(basePath, restoreChain[i].uuid + ".nxm\\" + "Virtual Hard Disks");
-                        string[] entries = System.IO.Directory.GetFiles(vmBasePath, "*.vhdx");
-                        retVal[i] = entries[0]; //take first found file. OK here because otherwise user would have chosen one
-                        targetHDD = System.IO.Path.GetFileName(entries[0]);
-                    }
-                } else if (restoreChain[i].type == "rct")
-                {
-                    string vmBasePath = System.IO.Path.Combine(basePath, restoreChain[i].uuid + ".nxm\\");
-                    retVal[i] = System.IO.Path.Combine(vmBasePath, targetHDD + ".cb");
-                } else if (restoreChain[i].type == "lb")
-                {
-                    string vmBasePath = System.IO.Path.Combine(basePath, restoreChain[i].uuid + ".nxm\\");
-                    retVal[i] = System.IO.Path.Combine(vmBasePath, targetHDD + ".lb");
-                }
-            }
-
-            return retVal;
-
-        }
+        
 
         //builds an array of available vhdx files from a given backup chain
         private string[] getBaseHDDFilesFromChain(List<ConfigHandler.BackupConfigHandler.BackupInfo> restoreChain, string basePath)
