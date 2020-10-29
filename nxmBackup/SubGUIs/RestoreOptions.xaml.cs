@@ -144,6 +144,10 @@ namespace RestoreHelper
                     RestoreHelper.FileLevelRestoreHandler flrHandler = new RestoreHelper.FileLevelRestoreHandler();
                     flrHandler.performGuestFilesRestore(sourcePath, restorePoint.InstanceId);
                     break;
+                case "lr":
+                    RestoreHelper.LiveRestore lrHandler = new LiveRestore();
+                    lrHandler.performLiveRestore(sourcePath, ((ComboBoxItem)cbVMs.SelectedItem).Content.ToString() + "_LiveRestore", restorePoint.InstanceId);
+                    break;
             }
 
             

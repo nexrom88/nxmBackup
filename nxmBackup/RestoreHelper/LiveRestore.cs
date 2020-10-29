@@ -11,7 +11,7 @@ namespace RestoreHelper
 {
     public class LiveRestore
     {
-        public void performLiveRestore(string basePath, string destPath, string vmName, string instanceID, bool importToHyperV)
+        public void performLiveRestore(string basePath, string vmName, string instanceID)
         {
          
 

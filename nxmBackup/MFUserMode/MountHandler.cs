@@ -8,6 +8,7 @@ using HyperVBackupRCT;
 using HVBackupCore;
 using nxmBackup.HVBackupCore;
 using System.Linq.Expressions;
+using System.Net.Http.Headers;
 
 namespace nxmBackup.MFUserMode
 {
@@ -29,7 +30,7 @@ namespace nxmBackup.MFUserMode
             this.readableChain = buildReadableBackupChain(sourceFiles);
 
             ulong decompressedFileSize = 0;
-            //open source file and read "decompressed file size" (first 8 bytes) when flr on full backup
+            //open source file and read "decompressed file size" (first 8 bytes) when LR on full backup
             if (sourceFiles.Length == 1)
             {
                 FileStream sourceStream = new System.IO.FileStream(sourceFiles[sourceFiles.Length - 1], System.IO.FileMode.Open, System.IO.FileAccess.Read);
@@ -57,12 +58,15 @@ namespace nxmBackup.MFUserMode
                 return;
             }
 
-            //build dummy dest file
+            //build dummy dest vhdx file
             System.IO.Directory.CreateDirectory(System.IO.Path.GetDirectoryName(this.MountFile));
             this.destStream = new System.IO.FileStream(this.MountFile, System.IO.FileMode.Create, System.IO.FileAccess.Write);
             this.destStream.SetLength((long)decompressedFileSize);
             this.destStream.Close();
             this.destStream.Dispose();
+
+            //restore vm config files
+            transferVMConfig()
 
             //connect to MF Kernel Mode
             this.kmConnection = new MFUserMode(this.readableChain);
@@ -72,13 +76,61 @@ namespace nxmBackup.MFUserMode
 
                 while (!this.processStopped)
                 {
-                    this.kmConnection.handleFLRMessage();
+                    this.kmConnection.handleLRMessage();
                 }
             }
             else
             {
                 mountState = mountState.error;
             }
+        }
+
+        //transfer vm config files from backup archive
+        public List<string> transferVMConfig(string archivePath, string destination)
+        {
+            List<string> hddFiles = new List<string>();
+
+            Common.IArchive archive;
+
+
+            archive = new Common.LZ4Archive(archivePath, null);
+
+
+            archive.open(System.IO.Compression.ZipArchiveMode.Read);
+
+            //get all archive entries
+            List<string> entries = archive.listEntries();
+
+            //iterate through all entries
+            foreach (string entry in entries)
+            {
+
+                //ignore vhdx files
+                if (entry.EndsWith(".vhdx"))
+                {
+                    continue;
+                }
+
+                //extract folder from archive folder
+                string archiveFolder = entry.Substring(0, entry.LastIndexOf("/"));
+
+                //build complete dest folder
+                string fileDestination = System.IO.Path.Combine(destination, archiveFolder);
+                string[] splitter = entry.Split("/".ToCharArray());
+                fileDestination = System.IO.Path.Combine(fileDestination, splitter[splitter.Length - 1]);
+
+                //start the transfer
+                archive.getFile(entry, fileDestination);
+
+                //add to return list if vhdx
+                if (fileDestination.EndsWith(".vhdx"))
+                {
+                    hddFiles.Add(fileDestination);
+                }
+            }
+
+            archive.close();
+            return hddFiles;
         }
 
         //starts the mount process for FLR
@@ -151,8 +203,8 @@ namespace nxmBackup.MFUserMode
                     if (drive.AvailableFreeSpace - (long)fileSize > 1000000000)
                     {
                         //try to create mountfolder
-                        System.IO.Directory.CreateDirectory(drive.Name + "nxmMount");
-                        mountFile = drive.Name + "nxmMount\\mount.vhdx";
+                        System.IO.Directory.CreateDirectory(drive.Name + "nxmMount\\Virtual Hard Disks");
+                        mountFile = drive.Name + "nxmMount\\Virtual Hard Disks\\mount.vhdx";
                         return mountFile;
                     }
 

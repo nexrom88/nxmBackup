@@ -12,6 +12,7 @@
             <ComboBoxItem Tag="full" Content="VM-Dateien Wiederherstellung"/>
             <ComboBoxItem Tag="fullImport" Content="VM Wiederherstellung nach HyperV"/>
             <ComboBoxItem Tag="flr" Content="Einzeldateien Wiederherstellen"/>
+            <ComboBoxItem Tag="lr" Content="LiveRestore"/>
         </ComboBox>
         <StackPanel Height="3" Margin="0,80,0,0" VerticalAlignment="Top" Background="Black"/>
 

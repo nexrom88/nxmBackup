@@ -170,6 +170,36 @@ namespace nxmBackup.MFUserMode
 
         }
 
+        //reads one lr message
+        public unsafe void handleLRMessage()
+        {
+            DATA_RECEIVE dataReceive = new DATA_RECEIVE();
+
+            int headerSize = Marshal.SizeOf(dataReceive.messageHeader);
+            int dataSize = BUFFER_SIZE + headerSize;
+
+
+            uint status = FilterGetMessage(this.kmHandle, ref dataReceive.messageHeader, dataSize, IntPtr.Zero);
+
+            if (status != 0)
+            {
+                return;
+
+            }
+            //get lr operation mode (0 = read, 1 = write)
+            LROperationMode operationMode = new LROperationMode();
+            switch (dataReceive.messageContent[0])
+            {
+                case 0:
+                    operationMode = LROperationMode.read;
+                    break;
+                case 1:
+                    operationMode = LROperationMode.write;
+                    break;
+            }
+
+        }
+
 
         //reads one flr message
         public unsafe void handleFLRMessage()
@@ -275,6 +305,12 @@ namespace nxmBackup.MFUserMode
         {
             public FILTER_REPLY_HEADER replyHeader;
             public fixed byte data[1];
+        }
+
+        //LR operation mode
+        public enum LROperationMode
+        {
+            read, write
         }
     }
 }
