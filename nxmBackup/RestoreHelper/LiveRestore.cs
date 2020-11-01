@@ -71,10 +71,12 @@ namespace RestoreHelper
             //get hdd files from backup chain
             string[] hddFiles = BackupConfigHandler.getHDDFilesFromChain(restoreChain, basePath, null);
 
-           MountHandler mountHandler = new MountHandler();
+            string backupBasePath = System.IO.Path.Combine(basePath, restoreChain[0].uuid);
+
+            MountHandler mountHandler = new MountHandler();
 
             MountHandler.mountState mountState = MountHandler.mountState.pending;
-            Thread mountThread = new Thread(() => mountHandler.startMfHandlingForLR(hddFiles, ref mountState));
+            Thread mountThread = new Thread(() => mountHandler.startMfHandlingForLR(hddFiles, backupBasePath, ref mountState));
             mountThread.Start();
 
         }

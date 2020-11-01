@@ -24,7 +24,7 @@ namespace nxmBackup.MFUserMode
         public string MountFile { get => mountFile; }
 
         //starts the mount process for LR
-        public void startMfHandlingForLR(string[] sourceFiles, ref mountState mountState)
+        public void startMfHandlingForLR(string[] sourceFiles, string basePath, ref mountState mountState)
         {
             //build readable backup chain structure first
             this.readableChain = buildReadableBackupChain(sourceFiles);
@@ -59,14 +59,15 @@ namespace nxmBackup.MFUserMode
             }
 
             //build dummy dest vhdx file
-            System.IO.Directory.CreateDirectory(System.IO.Path.GetDirectoryName(this.MountFile));
+            string mountDirectory = System.IO.Path.GetDirectoryName(this.MountFile);
+            System.IO.Directory.CreateDirectory(mountDirectory);
             this.destStream = new System.IO.FileStream(this.MountFile, System.IO.FileMode.Create, System.IO.FileAccess.Write);
             this.destStream.SetLength((long)decompressedFileSize);
             this.destStream.Close();
             this.destStream.Dispose();
 
             //restore vm config files
-            transferVMConfig()
+            transferVMConfig(basePath, mountDirectory);
 
             //connect to MF Kernel Mode
             this.kmConnection = new MFUserMode(this.readableChain);
