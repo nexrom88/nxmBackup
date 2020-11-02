@@ -59,7 +59,7 @@ namespace nxmBackup.MFUserMode
             }
 
             //build dummy dest vhdx file
-            string mountDirectory = System.IO.Path.GetDirectoryName(this.MountFile);
+            string mountDirectory = Directory.GetParent(System.IO.Path.GetDirectoryName(this.MountFile)).FullName; //getParent to go up one folder to leave 'Virtual Hard Disks' folder
             System.IO.Directory.CreateDirectory(mountDirectory);
             this.destStream = new System.IO.FileStream(this.MountFile, System.IO.FileMode.Create, System.IO.FileAccess.Write);
             this.destStream.SetLength((long)decompressedFileSize);
@@ -67,6 +67,7 @@ namespace nxmBackup.MFUserMode
             this.destStream.Dispose();
 
             //restore vm config files
+            
             transferVMConfig(basePath, mountDirectory);
 
             //connect to MF Kernel Mode
@@ -87,7 +88,7 @@ namespace nxmBackup.MFUserMode
         }
 
         //transfer vm config files from backup archive
-        public List<string> transferVMConfig(string archivePath, string destination)
+        public void transferVMConfig(string archivePath, string destination)
         {
             List<string> hddFiles = new List<string>();
 
@@ -113,25 +114,19 @@ namespace nxmBackup.MFUserMode
                 }
 
                 //extract folder from archive folder
-                string archiveFolder = entry.Substring(0, entry.LastIndexOf("/"));
+                string archiveFolder = entry.Substring(0, entry.LastIndexOf("\\"));
 
                 //build complete dest folder
                 string fileDestination = System.IO.Path.Combine(destination, archiveFolder);
-                string[] splitter = entry.Split("/".ToCharArray());
+                string[] splitter = entry.Split("\\".ToCharArray());
                 fileDestination = System.IO.Path.Combine(fileDestination, splitter[splitter.Length - 1]);
 
                 //start the transfer
                 archive.getFile(entry, fileDestination);
 
-                //add to return list if vhdx
-                if (fileDestination.EndsWith(".vhdx"))
-                {
-                    hddFiles.Add(fileDestination);
-                }
             }
 
             archive.close();
-            return hddFiles;
         }
 
         //starts the mount process for FLR
