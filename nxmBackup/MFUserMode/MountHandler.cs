@@ -51,7 +51,11 @@ namespace nxmBackup.MFUserMode
                 decompressedFileSize = this.readableChain.NonFullBackups[0].lbStructure.vhdxSize;
             }
 
-            this.mountFile = getMountHDDPath(decompressedFileSize);
+            //get vhdx file name
+            string[] stringSplitter = sourceFiles[sourceFiles.Length - 1].Split("\\".ToCharArray());
+            string vhdxName = stringSplitter[stringSplitter.Length -1];
+
+            this.mountFile = getMountHDDPath(decompressedFileSize, vhdxName);
             if (this.mountFile == null)
             {
                 mountState = mountState.error;
@@ -114,11 +118,11 @@ namespace nxmBackup.MFUserMode
                 }
 
                 //extract folder from archive folder
-                string archiveFolder = entry.Substring(0, entry.LastIndexOf("\\"));
+                string archiveFolder = entry.Substring(0, entry.LastIndexOf("/"));
 
                 //build complete dest folder
                 string fileDestination = System.IO.Path.Combine(destination, archiveFolder);
-                string[] splitter = entry.Split("\\".ToCharArray());
+                string[] splitter = entry.Split("/".ToCharArray());
                 fileDestination = System.IO.Path.Combine(fileDestination, splitter[splitter.Length - 1]);
 
                 //start the transfer
@@ -156,7 +160,7 @@ namespace nxmBackup.MFUserMode
                 decompressedFileSize = this.readableChain.NonFullBackups[0].lbStructure.vhdxSize;
             }
 
-            this.mountFile = getMountHDDPath(decompressedFileSize);
+            this.mountFile = getMountHDDPath(decompressedFileSize, "mount.vhdx");
             if (this.mountFile == null)
             {
                 mountState = mountState.error;
@@ -187,8 +191,8 @@ namespace nxmBackup.MFUserMode
             }
         }
 
-        //gets the path to a mount path with enough hdd space
-        private string getMountHDDPath(ulong fileSize)
+        //gets the path to a mount path with enough hdd space and a given file name
+        private string getMountHDDPath(ulong fileSize, string vhdxName)
         {
             //iterate through all drives with a drive letter
             foreach (DriveInfo drive in DriveInfo.GetDrives())
@@ -200,7 +204,7 @@ namespace nxmBackup.MFUserMode
                     {
                         //try to create mountfolder
                         System.IO.Directory.CreateDirectory(drive.Name + "nxmMount\\Virtual Hard Disks");
-                        mountFile = drive.Name + "nxmMount\\Virtual Hard Disks\\mount.vhdx";
+                        mountFile = drive.Name + "nxmMount\\Virtual Hard Disks\\" + vhdxName;
                         return mountFile;
                     }
 
