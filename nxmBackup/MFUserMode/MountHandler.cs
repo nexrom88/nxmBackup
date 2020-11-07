@@ -97,7 +97,16 @@ namespace nxmBackup.MFUserMode
         //sends a target vhdx to km for lr
         private void sendVHDXTargetPathToKM(string path)
         {
-            this.kmConnection.writeMessage(Encoding.Unicode.GetBytes(path));
+            //get unicode bytes
+            byte[] buffer = Encoding.Unicode.GetBytes(path);
+
+            //build send buffer, to zero-terminate unicode string
+            byte[] sendBuffer = new byte[buffer.Length + 1];
+            Array.Copy(buffer, sendBuffer, buffer.Length);
+            sendBuffer[sendBuffer.Length - 1] = 0;
+
+
+            this.kmConnection.writeMessage(sendBuffer);
         }
 
         //transfer vm config files from backup archive
