@@ -78,6 +78,9 @@ namespace nxmBackup.MFUserMode
             this.kmConnection = new MFUserMode(this.readableChain);
             if (this.kmConnection.connectToKM("\\nxmLRPort", "\\BaseNamedObjects\\nxmmflr"))
             {
+                //send target vhdx path to km
+                sendVHDXTargetPathToKM(this.mountFile);
+
                 mountState = mountState.connected;
 
                 while (!this.processStopped)
@@ -89,6 +92,12 @@ namespace nxmBackup.MFUserMode
             {
                 mountState = mountState.error;
             }
+        }
+
+        //sends a target vhdx to km for lr
+        private void sendVHDXTargetPathToKM(string path)
+        {
+            this.kmConnection.writeMessage(Encoding.Unicode.GetBytes(path));
         }
 
         //transfer vm config files from backup archive
