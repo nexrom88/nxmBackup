@@ -26,6 +26,7 @@ namespace RestoreHelper
             diskHandler = new Common.VirtualDiskHandler(this.vhdPath);
             diskHandler.open(Common.VirtualDiskHandler.VirtualDiskAccessMask.AttachReadOnly);
             diskHandler.attach(Common.VirtualDiskHandler.ATTACH_VIRTUAL_DISK_FLAG.ATTACH_VIRTUAL_DISK_FLAG_NO_DRIVE_LETTER | Common.VirtualDiskHandler.ATTACH_VIRTUAL_DISK_FLAG.ATTACH_VIRTUAL_DISK_FLAG_READ_ONLY);
+            //diskHandler.attach(Common.VirtualDiskHandler.ATTACH_VIRTUAL_DISK_FLAG.ATTACH_VIRTUAL_DISK_FLAG_READ_ONLY);
 
         }
 
@@ -82,6 +83,12 @@ namespace RestoreHelper
             props.elementsCount = (uint)files.Count;
             props.currentElement = 1;
             props.progress = 0.0;
+
+            //trim baseSourcePath
+            if (baseSourcePath.EndsWith("\\"))
+            {
+                baseSourcePath = baseSourcePath.Substring(0, baseSourcePath.Length - 1);
+            }
 
             //iterate all files
             foreach (string file in files)

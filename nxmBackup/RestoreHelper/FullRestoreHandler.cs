@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Documents;
 
 namespace RestoreHelper
 {
@@ -17,9 +19,13 @@ namespace RestoreHelper
         }
 
         //performs a full restore process
-        public void performFullRestoreProcess(string basePath, string destPath, string instanceID, Common.Compression compressionType)
+        public void performFullRestoreProcess(string basePath, string destPath, string vmName, string instanceID, bool importToHyperV)
         {
-            int relatedEventId = this.eventHandler.raiseNewEvent("Analysiere Backups...", false, false, NO_RELATED_EVENT, Common.EventStatus.inProgress);
+            int relatedEventId = -1;
+            if (this.eventHandler != null)
+            {
+                relatedEventId = this.eventHandler.raiseNewEvent("Analysiere Backups...", false, false, NO_RELATED_EVENT, Common.EventStatus.inProgress);
+            }
 
             //get full backup chain
             List<ConfigHandler.BackupConfigHandler.BackupInfo> backupChain = ConfigHandler.BackupConfigHandler.readChain(basePath);
@@ -28,7 +34,7 @@ namespace RestoreHelper
             ConfigHandler.BackupConfigHandler.BackupInfo targetBackup = getBackup(backupChain, instanceID);
 
             //target backup found?
-            if (targetBackup.instanceID != instanceID)
+            if (targetBackup.instanceID != instanceID && this.eventHandler != null)
             {
                 this.eventHandler.raiseNewEvent("fehlgeschlagen", true, false, relatedEventId, Common.EventStatus.error);
                 this.eventHandler.raiseNewEvent("Ziel-Backup kann nicht gefunden werden", false, false, NO_RELATED_EVENT, Common.EventStatus.error);
@@ -46,6 +52,12 @@ namespace RestoreHelper
             {
                 ConfigHandler.BackupConfigHandler.BackupInfo restoreElement = getBackup(backupChain, restoreChain[restoreChain.Count - 1].parentInstanceID);
 
+                //just first backup can be "lb", ignore it here
+                if (restoreElement.type == "lb")
+                {
+                    continue;
+                }
+
                 //valid element found?
                 if (restoreElement.instanceID != restoreChain[restoreChain.Count - 1].parentInstanceID)
                 {
@@ -59,10 +71,13 @@ namespace RestoreHelper
                 }
             }
 
-            this.eventHandler.raiseNewEvent("erfolgreich", true, false, relatedEventId, Common.EventStatus.successful);
+            if (this.eventHandler != null)
+            {
+                this.eventHandler.raiseNewEvent("erfolgreich", true, false, relatedEventId, Common.EventStatus.successful);
+            }
 
             //copy full backup to destination and get vhdx files
-            List<string> hddFiles = transferSnapshot(System.IO.Path.Combine(basePath, restoreChain[restoreChain.Count - 1].uuid + ".nxm"), destPath, false, compressionType);
+            List<string> hddFiles = transferSnapshot(System.IO.Path.Combine(basePath, restoreChain[restoreChain.Count - 1].uuid + ".nxm"), destPath, false);
 
             //remove full backup from restore chain
             restoreChain.RemoveAt(restoreChain.Count - 1);
@@ -73,40 +88,74 @@ namespace RestoreHelper
             {
                 ConfigHandler.BackupConfigHandler.BackupInfo currentBackup = restoreChain[restoreChain.Count - 1];
 
-                //open diff file
-                Common.IArchive archive;
-
-                switch (compressionType)
+                if (currentBackup.type == "rct") //rct backup?
                 {
-                    case Common.Compression.zip:
-                        archive = new Common.ZipArchive(System.IO.Path.Combine(basePath, currentBackup.uuid + ".nxm"), null);
-                        break;
-                    case Common.Compression.lz4:
-                        archive = new Common.LZ4Archive(System.IO.Path.Combine(basePath, currentBackup.uuid + ".nxm"), null);
-                        break;
-                    default: //default fallback => zip
-                        archive = new Common.ZipArchive(System.IO.Path.Combine(basePath, currentBackup.uuid + ".nxm"), null);
-                        break;
-                }
-                
-                
-                archive.open(System.IO.Compression.ZipArchiveMode.Read);
+                    //open diff file
+                    Common.IArchive archive;
 
-                //iterate through all vhds
-                foreach (string hddFile in hddFiles)
+
+                    archive = new Common.LZ4Archive(System.IO.Path.Combine(basePath, currentBackup.uuid + ".nxm"), null);
+
+
+                    archive.open(System.IO.Compression.ZipArchiveMode.Read);
+
+                    //iterate through all vhds
+                    foreach (string hddFile in hddFiles)
+                    {
+                        System.IO.Stream diffStream = archive.openAndGetFileStream(System.IO.Path.GetFileName(hddFile) + ".cb");
+
+                        //merge the files
+                        diffRestore.merge_rct((BlockCompression.LZ4BlockStream)diffStream, hddFile);
+                        diffStream.Close();
+                    }
+                    archive.close();
+
+                }else if (currentBackup.type == "lb") //lb backup
                 {
-                    System.IO.Stream diffStream = archive.openAndGetFileStream(System.IO.Path.GetFileName(hddFile) + ".cb");
+                    //iterate through all vhds
+                    foreach (string hddFile in hddFiles)
+                    {
+                        FileStream lbStream = new FileStream(System.IO.Path.Combine(basePath, currentBackup.uuid + ".nxm\\" + System.IO.Path.GetFileName(hddFile) + ".lb"), FileMode.Open, FileAccess.Read);
 
-                    //merge the files
-                    diffRestore.merge(diffStream, hddFile);
-                    diffStream.Close();
+                        //merge the files
+                        diffRestore.merge_lb(lbStream, hddFile);
+                    }
+
                 }
-                archive.close();
 
                 //remove current diff
                 restoreChain.RemoveAt(restoreChain.Count - 1);
             }
-            this.eventHandler.raiseNewEvent("Wiederherstellung erfolgreich", false, false, NO_RELATED_EVENT, Common.EventStatus.successful);
+
+            //has the restored VM to be imported into HyperV?
+            if (importToHyperV)
+            {
+                relatedEventId = this.eventHandler.raiseNewEvent("An HyperV registrieren...", false, false, NO_RELATED_EVENT, Common.EventStatus.inProgress);
+
+                //look for vmcx file
+                string[] configFiles = System.IO.Directory.GetFiles(destPath, "*.vmcx", SearchOption.AllDirectories);
+                
+                //there may just be exactly one config file otherwise cancel import
+                if (configFiles.Length != 1)
+                {
+                    this.eventHandler.raiseNewEvent("fehlgeschlagen", true, false, relatedEventId, Common.EventStatus.warning);
+                }
+                else
+                {
+                    //import vm
+                    VMImporter.importVM(configFiles[0], destPath, true, vmName);
+                    this.eventHandler.raiseNewEvent("erfolgreich", true, false, relatedEventId, Common.EventStatus.successful);
+                }
+
+
+            }
+
+            if (this.eventHandler != null)
+            {
+                this.eventHandler.raiseNewEvent("Wiederherstellung erfolgreich", false, false, NO_RELATED_EVENT, Common.EventStatus.successful);
+            }
+
+
 
         }
 
@@ -126,24 +175,15 @@ namespace RestoreHelper
         }
 
         //copys a file (full backup vhd) from an archive to destination and returns all vhdx files
-        public List<string> transferSnapshot(string archivePath, string destination, bool justHardDrives, Common.Compression compressionType)
+        public List<string> transferSnapshot(string archivePath, string destination, bool justHardDrives)
         {
             List<string> hddFiles = new List<string>();
 
             Common.IArchive archive;
 
-            switch (compressionType)
-            {
-                case Common.Compression.zip:
-                    archive = new Common.ZipArchive(archivePath, this.eventHandler);
-                    break;
-                case Common.Compression.lz4:
-                    archive = new Common.LZ4Archive(archivePath, this.eventHandler);
-                    break;
-                default: //default fallback => zip
-                    archive = new Common.ZipArchive(archivePath, this.eventHandler);
-                    break;
-            }
+           
+            archive = new Common.LZ4Archive(archivePath, this.eventHandler);
+             
 
             archive.open(System.IO.Compression.ZipArchiveMode.Read);
 

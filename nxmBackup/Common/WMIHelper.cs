@@ -20,11 +20,11 @@ namespace Common
                 if (UseWMIV2NameSpace)
                 {
                     query =
-                        "SELECT VirtualSystemIdentifier, ElementName FROM Msvm_VirtualSystemSettingData WHERE VirtualSystemType = 'Microsoft:Hyper-V:System:Realized'";
+                        "SELECT * FROM Msvm_VirtualSystemSettingData WHERE VirtualSystemType = 'Microsoft:Hyper-V:System:Realized'";
                 }
                 else
                 {
-                    query = "SELECT SystemName, ElementName FROM Msvm_VirtualSystemSettingData WHERE SettingType = 3";
+                    query = "SELECT * FROM Msvm_VirtualSystemSettingData WHERE SettingType = 3";
                 }
 
 
@@ -40,6 +40,7 @@ namespace Common
                                 OneVM vm = new OneVM();
                                 vm.name = (string)mo["ElementName"];
                                 vm.id = (string)mo["VirtualSystemIdentifier"];
+                                vm.hdds = getHDDs((ManagementObject)mo);
                                 vms.Add(vm);
 
                             }
@@ -51,6 +52,59 @@ namespace Common
             {
                 return null;
             }
+        }
+
+        //gets the connected hdds for a given vm (ManagementObject)
+        private static List<OneVMHDD> getHDDs(ManagementObject vm)
+        {
+            List<OneVMHDD> hdds = new List<OneVMHDD>();
+            var iterator = vm.GetRelated("Msvm_StorageAllocationSettingData").GetEnumerator();
+            List<ManagementObject> hddsMo = new List<ManagementObject>();
+            
+            //build hdd ManagementObject list
+            while (iterator.MoveNext())
+            {
+                hddsMo.Add((ManagementObject)iterator.Current);
+            }
+
+            //retrieve details from ManagementObject list
+            foreach (ManagementObject hdd in hddsMo)
+            {
+                OneVMHDD oneVMHDD = new OneVMHDD();
+                string[] hddPath = (string[])hdd["HostResource"];
+                if (!hddPath[0].EndsWith(".vhdx")) //ignore non-vhdx files
+                {
+                    continue;
+                }
+
+                //does hdd exist?
+                if (!System.IO.File.Exists(hddPath[0]))
+                {
+                    oneVMHDD.name = "";
+                    oneVMHDD.path = "";
+                    hdds.Add(oneVMHDD);
+                    continue;
+                }
+
+                //get hdd name from vhdx parser
+                byte[] idBytes = vhdxParser.getVHDXIDFromFile(hddPath[0]);
+                if (idBytes == null)
+                {
+                    oneVMHDD.name = "";
+                    oneVMHDD.path = "";
+                    hdds.Add(oneVMHDD);
+                    continue;
+                }
+
+                string hddName = Convert.ToBase64String(idBytes);
+
+                oneVMHDD.name = hddName;
+                oneVMHDD.path = hddPath[0];
+                hdds.Add(oneVMHDD);
+
+            }
+
+                return hdds;
         }
 
         //gets the system information of the requested VM
@@ -134,6 +188,13 @@ namespace Common
         {
             public string id;
             public string name;
+            public List<OneVMHDD> hdds;
+        }
+
+        public struct OneVMHDD
+        {
+            public string name;
+            public string path;
         }
 
         

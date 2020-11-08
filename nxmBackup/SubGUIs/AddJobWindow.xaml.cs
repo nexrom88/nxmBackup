@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Common;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -21,8 +22,9 @@ namespace nxmBackup
     {
         private bool windowReady = false;
         private Common.Rotation rotation = new Common.Rotation();
-        private bool incrementalActivated = true;
-        private uint blockSize = 2;
+        private bool lb = false;
+        private int blockSize = 2;
+        List<Common.WMIHelper.OneVM> vms;
 
         public AddJobWindow()
         {
@@ -46,11 +48,11 @@ namespace nxmBackup
             cbHours.SelectedIndex = 0;
 
             //load vms
-            List<Common.WMIHelper.OneVM> vms = Common.WMIHelper.listVMs();
+            this.vms = Common.WMIHelper.listVMs();
 
             if (vms != null)
             {
-                foreach (Common.WMIHelper.OneVM vm in vms)
+                foreach (Common.WMIHelper.OneVM vm in this.vms)
                 {
                     ListBoxItem lbItem = new ListBoxItem();
                     lbItem.Content = vm.name;
@@ -140,7 +142,7 @@ namespace nxmBackup
             }
 
             //check that jobname does not already exist
-            List<ConfigHandler.OneJob> jobs = ConfigHandler.JobConfigHandler.readJobs();
+            List<ConfigHandler.OneJob> jobs = ConfigHandler.JobConfigHandler.Jobs;
             bool nameFound = false;
             foreach(ConfigHandler.OneJob j in jobs)
             {
@@ -162,17 +164,9 @@ namespace nxmBackup
             job.Name = txtJobName.Text;
             job.BlockSize = this.blockSize;
             job.Rotation = this.rotation;
+            job.LiveBackup = this.lb;
+            
 
-            //build compression var
-            switch (((ComboBoxItem)cbCompression.SelectedItem).Uid)
-            {
-                case "zip":
-                    job.Compression = Common.Compression.zip;
-                    break;
-                case "lz4":
-                    job.Compression = Common.Compression.lz4;
-                    break;
-            }
 
             //build interval structure
             ComboBoxItem cbI = (ComboBoxItem)cbInterval.SelectedItem;
@@ -181,20 +175,20 @@ namespace nxmBackup
             {
                 case "hourly":
                     jobInterval.intervalBase = Common.IntervalBase.hourly;
-                    jobInterval.minute = cbMinutes.Text;
+                    jobInterval.minute = int.Parse(cbMinutes.Text);
                     jobInterval.day = "";
-                    jobInterval.hour = "";
+                    jobInterval.hour = 0;
                     break;
                 case "daily":
                     jobInterval.intervalBase = Common.IntervalBase.daily;
-                    jobInterval.minute = cbMinutes.Text;
-                    jobInterval.hour = cbHours.Text;
+                    jobInterval.minute = int.Parse(cbMinutes.Text);
+                    jobInterval.hour = int.Parse(cbHours.Text);
                     jobInterval.day = "";
                     break;
                 case "weekly":
                     jobInterval.intervalBase = Common.IntervalBase.weekly;
-                    jobInterval.minute = cbMinutes.Text;
-                    jobInterval.hour = cbHours.Text;
+                    jobInterval.minute = int.Parse(cbMinutes.Text);
+                    jobInterval.hour = int.Parse(cbHours.Text);
                     jobInterval.day = cbDays.Text;
                     break;
             }
@@ -204,10 +198,29 @@ namespace nxmBackup
             List<Common.JobVM> jobVMs = new List<Common.JobVM>();
             foreach (ListBoxItem vm in lbSelectedVMs.Items)
             {
-                Common.JobVM jobVM = new Common.JobVM();
-                jobVM.vmName = (string)vm.Content;
-                jobVM.vmID = vm.Uid;
-                jobVMs.Add(jobVM);
+                //find coresponding vm
+                foreach(WMIHelper.OneVM tempVM in this.vms)
+                {
+                    if (tempVM.id == vm.Uid)
+                    {
+                        Common.JobVM jobVM = new Common.JobVM();
+                        jobVM.vmName = tempVM.name;
+                        jobVM.vmID = tempVM.id;
+
+                        List<VMHDD> hdds = new List<VMHDD>();
+                        //build hdd objects
+                        foreach(WMIHelper.OneVMHDD hdd in tempVM.hdds)
+                        {
+                            VMHDD newHDD = new VMHDD();
+                            newHDD.name = hdd.name;
+                            newHDD.path = hdd.path;
+                            hdds.Add(newHDD);
+                        }
+                        jobVM.vmHDDs = hdds;
+
+                        jobVMs.Add(jobVM);
+                    }
+                }
             }
             job.JobVMs = jobVMs;
 
@@ -229,12 +242,12 @@ namespace nxmBackup
 
         private void btJobDetails_Click(object sender, RoutedEventArgs e)
         {
-            JobDetailsWindow detailWindow = new JobDetailsWindow(this.incrementalActivated, this.blockSize, this.rotation.type.ToString().ToLower(), this.rotation.maxElementCount);
+            JobDetailsWindow detailWindow = new JobDetailsWindow(this.blockSize, this.rotation.type.ToString().ToLower(), this.rotation.maxElementCount);
             detailWindow.ShowDialog();
 
             //read set values
-            this.incrementalActivated = (bool)detailWindow.cbIncrements.IsChecked;
-            this.blockSize = uint.Parse(((ComboBoxItem)detailWindow.cbBlockSize.SelectedItem).Content.ToString());
+            this.lb = (bool)detailWindow.cbLB.IsChecked;
+            this.blockSize = int.Parse(((ComboBoxItem)detailWindow.cbBlockSize.SelectedItem).Content.ToString());
 
 
             switch (((ComboBoxItem)detailWindow.cbRotationType.SelectedItem).Uid)
@@ -247,7 +260,12 @@ namespace nxmBackup
                     break;
             }
 
-            this.rotation.maxElementCount = (uint)detailWindow.slMaxElements.Value;
+            this.rotation.maxElementCount = (int)detailWindow.slMaxElements.Value;
+
+        }
+
+        private void cbCompression_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
 
         }
     }

@@ -68,7 +68,11 @@ namespace Common
             long bytesRemaining = baseSourceStream.Length;
             int lastPercentage = -1;
 
-            int relatedEventId = this.eventHandler.raiseNewEvent("Lese " + fileName + " - 0%", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
+            int relatedEventId = -1;
+            if (this.eventHandler != null)
+            {
+                relatedEventId = this.eventHandler.raiseNewEvent("Lese " + fileName + " - 0%", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
+            }
 
             while (bytesRemaining > 0)//still bytes to read?
             {
@@ -90,7 +94,7 @@ namespace Common
                 float percentage = (((float)baseSourceStream.Length - (float)bytesRemaining) / (float)baseSourceStream.Length) * 100.0f;
 
                 //progress changed?
-                if (lastPercentage != (int)percentage)
+                if (lastPercentage != (int)percentage && this.eventHandler != null)
                 {
                     this.eventHandler.raiseNewEvent("Lese " + fileName + " - " + (int)percentage + "%", false, true, relatedEventId, EventStatus.inProgress);
                     lastPercentage = (int)percentage;
@@ -99,7 +103,10 @@ namespace Common
             }
 
             //transfer completed
-            this.eventHandler.raiseNewEvent("Lese " + fileName + " - 100%", false, true, relatedEventId, EventStatus.successful);
+            if (this.eventHandler != null)
+            {
+                this.eventHandler.raiseNewEvent("Lese " + fileName + " - 100%", false, true, relatedEventId, EventStatus.successful);
+            }
             compressionStream.Dispose();
             baseSourceStream.Close();
 
@@ -155,7 +162,11 @@ namespace Common
 
             string sourcePath = System.IO.Path.Combine(this.path, path);
 
-            int relatedEventId = this.eventHandler.raiseNewEvent("Stelle wieder her: " + fileName + "... ", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
+            int relatedEventId = -1;
+            if (this.eventHandler != null)
+            {
+                relatedEventId = this.eventHandler.raiseNewEvent("Stelle wieder her: " + fileName + "... ", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
+            }
 
             //open source file
             System.IO.FileStream sourceStream = new FileStream(sourcePath, FileMode.Open);
@@ -183,7 +194,7 @@ namespace Common
 
                 //show progress
                 string progress = Common.PrettyPrinter.prettyPrintBytes(totalReadBytes);
-                if (progress != lastProgress)
+                if (progress != lastProgress && this.eventHandler != null)
                 {
                     this.eventHandler.raiseNewEvent("Stelle wieder her: " + fileName + "... " + progress, false, true, relatedEventId, EventStatus.inProgress);
                     lastProgress = progress;
@@ -191,7 +202,10 @@ namespace Common
 
             }
 
-            this.eventHandler.raiseNewEvent("Stelle wieder her: " + fileName + "... erfolgreich", false, true, relatedEventId, EventStatus.successful);
+            if (this.eventHandler != null)
+            {
+                this.eventHandler.raiseNewEvent("Stelle wieder her: " + fileName + "... erfolgreich", false, true, relatedEventId, EventStatus.successful);
+            }
             destStream.Close();
             blockCompressionStream.Close();
             sourceStream.Close();

@@ -1,0 +1,18 @@
+﻿<Window x:Class="nxmBackup.SubGUIs.HDDPickerWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:nxmBackup"
+        mc:Ignorable="d"
+        Title="Quellspeicher auswählen" Height="200" Width="268" ResizeMode="NoResize">
+    <Grid Margin="0,0,0,0" Loaded="Grid_Loaded">
+
+
+        <ComboBox x:Name="cbHDDs" Margin="10,40,10,0" VerticalAlignment="Top" Grid.ColumnSpan="2" SelectedIndex="0">
+        </ComboBox>
+        <Label Margin="10,10,0,0" Content="Quell-Datenspeicher auswählen:" VerticalAlignment="Top" Grid.ColumnSpan="2"/>
+        <Button x:Name="btStartRestore" Content="Wiederherstellung starten" HorizontalAlignment="Center" Margin="0,0,0,30" Height="40" VerticalAlignment="Bottom" Click="btStartRestore_Click"/>
+
+    </Grid>
+</Window>

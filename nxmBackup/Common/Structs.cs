@@ -6,17 +6,11 @@ using System.Threading.Tasks;
 
 namespace Common
 {
-    //defines compression type
-    public enum Compression
-    {
-        zip, lz4
-    }
-
     //defines rotation type
     public struct Rotation
     {
         public RotationType type;
-        public uint maxElementCount;
+        public int maxElementCount;
     }
 
     //defines rotation type
@@ -35,15 +29,25 @@ namespace Common
     public struct Interval
     {
         public IntervalBase intervalBase;
-        public string minute;
-        public string hour;
+        public int minute;
+        public int hour;
         public string day;
     }
 
     //defines one VM within a job
-    public struct JobVM
+    public class JobVM
     {
         public string vmID;
         public string vmName;
+        public List<VMHDD> vmHDDs;
+    }
+
+    //defines one HDD
+    public class VMHDD
+    {
+        public string name;
+        public string path;
+        public int lbObjectID; //random value for LB hdd identification
+        public System.IO.FileStream ldDestinationStream; //LB destination stream - gets set by LB worker
     }
 }

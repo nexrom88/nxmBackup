@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.IO;
+using System.ComponentModel;
 
 namespace Common
 {
@@ -15,7 +16,7 @@ namespace Common
         {
             try
             {
-                this.sourceStream = new FileStream(file, FileMode.Open, FileAccess.Read);
+                this.sourceStream = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
             }
             catch (Exception ex)
             {
@@ -23,10 +24,72 @@ namespace Common
             }
         }
 
+        //public static function to just retrieve virtual disk id from a given vhdx file
+        public static byte[] getVHDXIDFromFile(string file)
+        {
+            //open vhdx file within parser
+            vhdxParser parser = new vhdxParser(file);
+            Common.RegionTable regionTable = parser.parseRegionTable();
+
+            //return nothing if regionTable contains of no entries
+            if (regionTable.entries.Length == 0)
+            {
+                parser.close();
+                return null;
+            }
+
+            Common.MetadataTable metadataTable = parser.parseMetadataTable(regionTable);
+            byte[] id = parser.getVirtualDiskID(metadataTable);
+            parser.close();
+            return id;
+
+        }
+
         //closes the sourceStream
         public void close()
         {
             this.sourceStream.Close();
+        }
+
+        //gets the raw bat table
+        public RawBatTable getRawBatTable(RegionTable table)
+        {
+            RawBatTable rawTable = new RawBatTable();
+            UInt64 batOffset = 0;
+            UInt64 batLength = 0;
+            //read offset and length for BAT table
+            foreach (RegionTableEntry entry in table.entries)
+            {
+                if (entry.guid[0] == 0x66)
+                {
+                    batOffset = entry.fileOffset;
+                    batLength = entry.length;
+                    break;
+                }
+            }
+
+            //jump to first BAT entry
+            this.sourceStream.Seek((long)batOffset, SeekOrigin.Begin);
+            rawTable.vhdxOffset = batOffset;
+
+            //read bat table
+            rawTable.rawData = new byte[batLength];
+            this.sourceStream.Read(rawTable.rawData, 0, (int)batLength);
+
+            return rawTable;
+        }
+
+        //gets the raw header
+        public RawHeader getRawHeader()
+        {
+            RawHeader header = new RawHeader();
+            header.rawData = new byte[1048576]; // 1MB * 1024 * 1024
+
+            //just return the first 1MB of data
+            this.sourceStream.Seek(0, SeekOrigin.Begin);
+            this.sourceStream.Read(header.rawData, 0, header.rawData.Length);
+
+            return header;
         }
 
         //reads blockSize from MetadataTable
@@ -51,6 +114,30 @@ namespace Common
             this.sourceStream.Read(buffer, 0, 8);
 
             return BitConverter.ToUInt32(buffer, 0);
+        }
+
+        //reads "virtual disk ID" from MetadataTable
+        public byte[] getVirtualDiskID(MetadataTable metadataTable)
+        {
+            UInt32 offset = 0;
+            UInt32 length = 0;
+            foreach (MetadataTableEntry entry in metadataTable.entries)
+            {
+                if (entry.itemID[0] == 0xAB)
+                {
+                    offset = entry.offset;
+                    length = entry.length;
+                }
+            }
+
+            //jump to destination
+            this.sourceStream.Seek(offset, SeekOrigin.Begin);
+
+            //read virtual disk ID size
+            byte[] buffer = new byte[16];
+            this.sourceStream.Read(buffer, 0, 16);
+
+            return buffer;
         }
 
         //reads logicalSectorSize from MetadataTable
@@ -137,8 +224,8 @@ namespace Common
         }
 
 
-        //parses the BAT table
-        public BATTable parseBATTable(RegionTable table)
+        //parses the BAT table (chunkSize just necessary when removeSectorMask is set)
+        public BATTable parseBATTable(RegionTable table, UInt32 chunkSize, bool removeSectorMask)
         {
             BATTable batTable = new BATTable();
             batTable.entries = new List<BATEntry>();
@@ -167,8 +254,14 @@ namespace Common
             UInt32 entryCount = batLength / 64;
             for (int i = 0; i < entryCount; i++)
             {
+                //jump over sector mask?
+                if (removeSectorMask && i > 0 && i % chunkSize == 0)
+                {
+                    continue;
+                }
+
                 BATEntry newEntry = new BATEntry();
-                UInt64 batEntry = BitConverter.ToUInt64(buffer, 64 * i);
+                UInt64 batEntry = BitConverter.ToUInt64(buffer, 8 * i);
                 newEntry.state = (byte)(batEntry % 8);
                 batEntry = batEntry >> 3;
                 UInt32 reserved = (UInt32)(batEntry % Math.Pow(2, 17));
@@ -318,6 +411,17 @@ namespace Common
     {
         public UInt32 blockSize;
         public UInt32 reserved;
+    }
+
+    public struct RawBatTable
+    {
+        public UInt64 vhdxOffset;
+        public byte[] rawData;
+    }
+
+    public struct RawHeader
+    {
+        public byte[] rawData;
     }
 
 }

@@ -4,16 +4,20 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.IO;
+using HVBackupCore;
 
-namespace MFUserMode
+namespace nxmBackup.MFUserMode
 {
+    using nxmBackup.MFUserMode;
     using System.ComponentModel;
     using System.Runtime.InteropServices;
-    class MFUserMode
+    using System.Threading;
+
+    public class MFUserMode
     {
 
         // Constant buffer size
-        public const int BUFFER_SIZE = 2048;
+        public const int BUFFER_SIZE = 100;
 
         [DllImport("fltlib", CharSet = CharSet.Auto)]
         static extern unsafe uint FilterConnectCommunicationPort(
@@ -31,9 +35,9 @@ namespace MFUserMode
         [DllImport("fltlib")]
         static extern unsafe uint FilterSendMessage(
             IntPtr hPort,
-            void* lpInBuffer,
+            IntPtr lpInBuffer,
             int dwInBufferSize,
-            void* lpOutBuffer,
+            IntPtr lpOutBuffer,
             int dwOutBufferSize,
             out int lpBytesReturned
         );
@@ -53,37 +57,121 @@ namespace MFUserMode
 
 
         //source stream (usually seekable decompression stream)
-        private Stream sourceStream;
+        private BackupChainReader readableBackupChain;
 
         //the handle to the km connection
-        private IntPtr handle;
+        private IntPtr kmHandle;
 
-        FileStream logStream = new FileStream("c:\\target\\log.txt", FileMode.Create, FileAccess.Write);
 
-        public MFUserMode(Stream sourceStream)
+        //shared memory with km
+        SharedMemory sharedMemoryHandler = new SharedMemory();
+
+        public MFUserMode(BackupChainReader readableBackupChain)
         {
-            this.sourceStream = sourceStream;
+            this.readableBackupChain = readableBackupChain;
+        }
+
+        //empty constructor for debugging purposes
+        public MFUserMode()
+        {
         }
 
         //starts the connection to kernel Mode driver
-        public bool connectToKM()
+        public bool connectToKM(string portName, string sectionName)
         {
-            this.handle = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(IntPtr)));
-            uint result = FilterConnectCommunicationPort("\\nxmQueryPort", 0, IntPtr.Zero, 0, IntPtr.Zero,  out handle);
+            this.kmHandle = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(IntPtr)));
+            uint result = FilterConnectCommunicationPort(portName, 0, IntPtr.Zero, 0, IntPtr.Zero,  out kmHandle);
 
-            return result == 0;        
+            //alloc shared memory
+            if (result == 0)
+            {
+                return this.sharedMemoryHandler.mapSharedBuffer(sectionName);
+            }
+            else
+            {
+                return false;
+            }    
 
         }
 
         //close the km connection
         public void closeConnection()
         {
-            CloseHandle(this.handle);
-            this.logStream.Close();
+            CloseHandle(this.kmHandle);
+
+            //close shared memory view if necessary
+            if (this.sharedMemoryHandler.SharedMemoryPointer != IntPtr.Zero)
+            {
+                this.sharedMemoryHandler.unmapSharedBuffer();
+            }
         }
 
-        //reads one message
-        public unsafe void readMessages()
+        //writes one "standalone" message to km (no response)
+        public unsafe bool writeMessage(byte[] data)
+        {
+            //copy data to unmanaged memory
+            IntPtr dataPtr = Marshal.AllocHGlobal(data.Length);
+            Marshal.Copy(data, 0, dataPtr, data.Length);
+
+            //write message to KM
+            int dummy;
+            return FilterSendMessage(this.kmHandle, dataPtr, data.Length, IntPtr.Zero, 0, out dummy) == 0;
+
+        }
+
+        //reads one LB message from kernel mode and reads shared memory
+        public unsafe LB_BLOCK handleLBMessage()
+        {
+            DATA_RECEIVE dataReceive = new DATA_RECEIVE();
+            LB_BLOCK retVal = new LB_BLOCK();
+
+            int headerSize = Marshal.SizeOf(dataReceive.messageHeader);
+            
+            int dataSize = BUFFER_SIZE + headerSize;
+
+            //read message
+            uint status = FilterGetMessage(this.kmHandle, ref dataReceive.messageHeader, dataSize, IntPtr.Zero);
+
+            if (status != 0)
+            {
+                retVal.isValid = false;
+                return retVal;
+
+            }
+
+            byte[] managedBuffer = new byte[8 + 8 + 4];
+            for(int i = 0; i < managedBuffer.Length; i++)
+            {
+                managedBuffer[i] = dataReceive.messageContent[i];
+            }
+
+            long offset = BitConverter.ToInt64(managedBuffer, 0);
+            long length = BitConverter.ToInt64(managedBuffer, 8);
+            int objectID = BitConverter.ToInt32(managedBuffer, 16);
+
+            //copy shared memory to retVal struct
+            retVal.buffer = new byte[length];
+            Marshal.Copy(this.sharedMemoryHandler.SharedMemoryPointer, retVal.buffer, 0, (int)length);
+
+            //send reply to km
+            FILTER_REPLY_MESSAGE reply = new FILTER_REPLY_MESSAGE();
+            reply.replyHeader.messageId = dataReceive.messageHeader.messageId;
+            reply.replyHeader.status = 0;
+            int size = sizeof(FILTER_REPLY_HEADER) + 1;
+            status = FilterReplyMessage(this.kmHandle, ref reply, size);
+
+
+            retVal.isValid = true;
+            retVal.length = length;
+            retVal.offset = offset;
+            retVal.objectID = objectID;
+
+            return retVal;
+
+        }
+
+        //reads one lr message
+        public unsafe void handleLRMessage()
         {
             DATA_RECEIVE dataReceive = new DATA_RECEIVE();
 
@@ -91,8 +179,38 @@ namespace MFUserMode
             int dataSize = BUFFER_SIZE + headerSize;
 
 
+            uint status = FilterGetMessage(this.kmHandle, ref dataReceive.messageHeader, dataSize, IntPtr.Zero);
 
-            uint status = FilterGetMessage(this.handle, ref dataReceive.messageHeader, dataSize, IntPtr.Zero);
+            if (status != 0)
+            {
+                return;
+
+            }
+            //get lr operation mode (0 = read, 1 = write)
+            LROperationMode operationMode = new LROperationMode();
+            switch (dataReceive.messageContent[0])
+            {
+                case 0:
+                    operationMode = LROperationMode.read;
+                    break;
+                case 1:
+                    operationMode = LROperationMode.write;
+                    break;
+            }
+
+        }
+
+
+        //reads one flr message
+        public unsafe void handleFLRMessage()
+        {
+            DATA_RECEIVE dataReceive = new DATA_RECEIVE();
+
+            int headerSize = Marshal.SizeOf(dataReceive.messageHeader);
+            int dataSize = BUFFER_SIZE + headerSize;
+
+
+            uint status = FilterGetMessage(this.kmHandle, ref dataReceive.messageHeader, dataSize, IntPtr.Zero);
 
             if (status != 0)
             {
@@ -109,35 +227,53 @@ namespace MFUserMode
                 data[i] = dataReceive.messageContent[i];
             }
 
-            long offset = BitConverter.ToInt64(data, 0);
-            long length = BitConverter.ToInt64(data, 8);
+            byte requestType = data[0];
 
-            string output = "offset: " + offset + " length: " + length + "\n";
-            System.Text.ASCIIEncoding enc = new System.Text.ASCIIEncoding();
-            byte[] buffer = enc.GetBytes(output);
-            this.logStream.Write(buffer, 0, buffer.Length);
+            long offset = BitConverter.ToInt64(data, 1);
+            long length = BitConverter.ToInt64(data, 9);
 
-            data = new byte[length];
-            sourceStream.Seek(offset, System.IO.SeekOrigin.Begin);
-            sourceStream.Read(data, 0, (int)length);
-            sourceStream.Close();
-
-
-            //build reply
-            for (int i = 0; i < length; i++)
+            //have to read data?
+            if (requestType == 1)
             {
-                reply.data[i] = data[i];
+                //string output = "offset: " + offset + " length: " + length + "\n";
+                //System.Text.ASCIIEncoding enc = new System.Text.ASCIIEncoding();
+                //byte[] buffer = enc.GetBytes(output);
+
+                //read the requested data from backup chain and from lb
+                data = new byte[length];
+                this.readableBackupChain.readFromChain(offset, length, data, 0);
+                this.readableBackupChain.readFromLB(offset, length, data);
+
             }
+
+
+            //write payload data to shared memory
+            Marshal.Copy(data, 0, this.sharedMemoryHandler.SharedMemoryPointer, data.Length);
+
+            //byte[] temp = new byte[100];
+            //for (int i = 0; i < 100; i++)
+            //{
+            //    temp[i] = Marshal.ReadByte(this.sharedMemoryHandler.SharedMemoryPointer, i);
+            //}
 
             reply.replyHeader.messageId = dataReceive.messageHeader.messageId;
             reply.replyHeader.status = 0;
 
             int size = sizeof(FILTER_REPLY_MESSAGE);
 
-            status = FilterReplyMessage(this.handle, ref reply, size);
+            status = FilterReplyMessage(this.kmHandle, ref reply, size);
 
         }
 
+        //written block for LB
+        public struct LB_BLOCK
+        {
+            public bool isValid;
+            public int objectID;
+            public long offset;
+            public long length;
+            public byte[] buffer;
+        }
 
         // message receive struct
         [StructLayout(LayoutKind.Sequential)]
@@ -168,7 +304,13 @@ namespace MFUserMode
         public unsafe struct FILTER_REPLY_MESSAGE
         {
             public FILTER_REPLY_HEADER replyHeader;
-            public fixed byte data[BUFFER_SIZE];
+            public fixed byte data[1];
+        }
+
+        //LR operation mode
+        public enum LROperationMode
+        {
+            read, write
         }
     }
 }

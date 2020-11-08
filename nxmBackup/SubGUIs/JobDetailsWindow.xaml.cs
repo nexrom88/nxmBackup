@@ -21,17 +21,17 @@ namespace nxmBackup
     {
 
         bool windowLoaded = false;
-        bool incremental;
-        uint blockSize;
+        bool lb;
+        int blockSize;
         string rotationType;
-        uint maxElements;
+        int maxElements;
 
-        public JobDetailsWindow(bool incremental, uint blockSize, string rotationType, uint maxElements)
+        public JobDetailsWindow(int blockSize, string rotationType, int maxElements)
         {
             InitializeComponent();
 
             //initialize default values
-            this.incremental = incremental;
+            this.lb = false;
             this.blockSize = blockSize;
             this.rotationType = rotationType;
             this.maxElements = maxElements;
@@ -48,7 +48,7 @@ namespace nxmBackup
             }
 
             //set default settings
-            cbIncrements.IsChecked = this.incremental;
+            cbLB.IsChecked = false;
             cbBlockSize.SelectedIndex = (int)this.blockSize - 1;
 
             for (int i = 0; i < cbRotationType.Items.Count; i++)
@@ -63,16 +63,6 @@ namespace nxmBackup
             slMaxElements.Value = this.maxElements;
 
             windowLoaded = true;
-        }
-
-        private void cbIncrements_Checked(object sender, RoutedEventArgs e)
-        {
-            cbBlockSize.IsEnabled = true;
-            cbRotationType.IsEnabled = true;
-            if (((ComboBoxItem)cbRotationType.SelectedItem).Uid == "blockrotation")
-            {
-                lblBlocksCaption.Content = "Anzahl aufzubewahrender Blöcke:";
-            }
         }
 
         private void cbIncrements_Unchecked(object sender, RoutedEventArgs e)

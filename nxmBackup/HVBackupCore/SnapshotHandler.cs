@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Management;
 using System.Runtime.InteropServices;
 using Common;
@@ -15,16 +12,16 @@ namespace HyperVBackupRCT
     {
         private const UInt16 SnapshotTypeRecovery = 32768;
         private const UInt16 SnapshotTypeFull = 2;
-        private string vmId;
+        private JobVM vm;
         private int executionId;
         private const int NO_RELATED_EVENT = -1;
         private Common.EventHandler eventHandler;
 
-        public SnapshotHandler(string vmId, int executionId)
+        public SnapshotHandler(JobVM vm, int executionId)
         {
-            this.vmId = vmId;
+            this.vm = vm;
             this.executionId = executionId;
-            this.eventHandler = new Common.EventHandler(vmId, executionId);
+            this.eventHandler = new Common.EventHandler(vm, executionId);
         }
 
         //performs a full backup chain
@@ -35,7 +32,7 @@ namespace HyperVBackupRCT
             ManagementObject refP = null;
 
             //add job name and vm name to destination
-            destination = System.IO.Path.Combine(destination, job.Name + "\\" + this.vmId);
+            destination = System.IO.Path.Combine(destination, job.Name + "\\" + this.vm.vmID);
 
             //create folder if it does not exist
             System.IO.Directory.CreateDirectory(destination);
@@ -55,7 +52,14 @@ namespace HyperVBackupRCT
                 else
                 {
                     //incremental backup possible, get required reference point
-                    string instanceID = chain[chain.Count - 1].instanceID;
+                    string instanceID;
+                    if (chain[chain.Count - 1].type != "lb") {
+                        instanceID = chain[chain.Count - 1].instanceID;
+                    }
+                    else //last backup lb backup? take very last backup
+                    {
+                        instanceID = chain[chain.Count - 2].instanceID;
+                    }
                     List<ManagementObject> refPs = getReferencePoints();
                     foreach (ManagementObject mo in refPs)
                     {
@@ -68,7 +72,7 @@ namespace HyperVBackupRCT
             }
 
             //export the snapshot
-            export(destination, snapshot, refP, job.Compression);
+            export(destination, snapshot, refP, job);
 
             //read current backup chain for further processing
             chain = ConfigHandler.BackupConfigHandler.readChain(destination);
@@ -76,9 +80,21 @@ namespace HyperVBackupRCT
             //if full backup, delete unnecessary reference points
             if (refP == null)
             {
-                int eventId = this.eventHandler.raiseNewEvent("Entferne alte Referenz Punkte...", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
-                //remove current (last) backup
-                chain.RemoveAt(chain.Count - 1);
+                int eventId = this.eventHandler.raiseNewEvent("Entferne alte Referenzpunkte...", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
+                
+                //remove current (last) full backup
+
+                if (chain[chain.Count - 1].type == "lb") //last backup lb backup? remove very last element
+                {
+                    chain.RemoveAt(chain.Count - 2);
+                }
+                else //last backup full backup? remove last element
+                {
+                    chain.RemoveAt(chain.Count - 1);
+                }
+                
+                
+                
                 List<ManagementObject> refPs = getReferencePoints();
 
                 //iterate chain
@@ -105,7 +121,7 @@ namespace HyperVBackupRCT
             {
                 if (job.Rotation.maxElementCount > 0 && chain.Count > job.Rotation.maxElementCount)
                 {
-                    mergeOldest(destination, chain, job.Compression);
+                    mergeOldest(destination, chain);
                 }
             }
             else if (job.Rotation.type == RotationType.blockRotation) //RotationType = "blockRotation"
@@ -156,7 +172,7 @@ namespace HyperVBackupRCT
                 {
                     blockSize = 1;
                 }
-                else //rct backup found -> increment blockSize counter
+                else if (backup.type != "lb") //rct backup found -> increment blockSize counter
                 {
                     blockSize++;
                 }
@@ -172,7 +188,7 @@ namespace HyperVBackupRCT
 
             //remove first full backup
             ConfigHandler.BackupConfigHandler.removeBackup(path, chain[0].uuid); //remove from config
-            System.IO.File.Delete(System.IO.Path.Combine(path, chain[0].uuid + ".nxm")); //remove backup file
+            System.IO.Directory.Delete(System.IO.Path.Combine(path, chain[0].uuid + ".nxm"), true); //remove backup file
 
             //remove rct backups
             for (int i = 1; i < chain.Count; i++)
@@ -184,9 +200,9 @@ namespace HyperVBackupRCT
                 }
                 else
                 {
-                    //remove rct backup
+                    //remove rct or lb backup
                     ConfigHandler.BackupConfigHandler.removeBackup(path, chain[i].uuid); //remove from config
-                    System.IO.File.Delete(System.IO.Path.Combine(path, chain[i].uuid + ".nxm")); //remove backup file
+                    System.IO.Directory.Delete(System.IO.Path.Combine(path, chain[i].uuid + ".nxm"), true); //remove backup file
                 }
             }
 
@@ -194,7 +210,7 @@ namespace HyperVBackupRCT
         }
 
         //merge two backups to keep max snapshot count
-        private void mergeOldest(string path, List<ConfigHandler.BackupConfigHandler.BackupInfo> chain, Compression compressionType)
+        private void mergeOldest(string path, List<ConfigHandler.BackupConfigHandler.BackupInfo> chain)
         {
             //when the first two backups are "full" backups then the first one can just be deleted
             if (chain[0].type == "full" && chain[1].type == "full")
@@ -204,7 +220,16 @@ namespace HyperVBackupRCT
                 return;
             }
 
-            //Given at this point: first backup is "full", the second one is "rct"
+            //Given at this point: first backup is "full", the second one is "rct" or "lb"
+
+            //is second backup within chain "lb" backup?
+            if (chain[1].type == "lb")
+            {
+                //remove lb backup from config, hdd and chainlist
+                ConfigHandler.BackupConfigHandler.removeBackup(path, chain[1].uuid); //remove from config
+                System.IO.Directory.Delete(System.IO.Path.Combine(path, chain[1].uuid + ".nxm"), true); //remove backup file
+                chain.RemoveAt(1);
+            }
 
             //create staging dir
             System.IO.Directory.CreateDirectory(System.IO.Path.Combine(path, "staging"));
@@ -212,24 +237,24 @@ namespace HyperVBackupRCT
             int eventId;
             eventId = this.eventHandler.raiseNewEvent("Rotiere Backups (Schritt 1 von 5)...", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
 
-            RestoreHelper.FullRestoreHandler restHandler = new RestoreHelper.FullRestoreHandler(this.eventHandler);
+            RestoreHelper.FullRestoreHandler restHandler = new RestoreHelper.FullRestoreHandler(null);
 
             //perform restore to staging directory (including merge with second backup)
-            restHandler.performFullRestoreProcess(path, System.IO.Path.Combine(path, "staging"), chain[1].instanceID, compressionType);
+            restHandler.performFullRestoreProcess(path, System.IO.Path.Combine(path, "staging"), "", chain[1].instanceID, false);
 
             this.eventHandler.raiseNewEvent("erfolgreich", true, false, eventId, EventStatus.successful);
             eventId = this.eventHandler.raiseNewEvent("Rotiere Backups (Schritt 2 von 5)...", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
 
             //remove first and second backup from backup chain
             ConfigHandler.BackupConfigHandler.removeBackup(path, chain[0].uuid); //remove from config
-            System.IO.File.Delete(System.IO.Path.Combine(path, chain[0].uuid + ".nxm")); //remove backup file
+            System.IO.Directory.Delete(System.IO.Path.Combine(path, chain[0].uuid + ".nxm"), true); //remove backup file
             ConfigHandler.BackupConfigHandler.removeBackup(path, chain[1].uuid); //remove from config
-            System.IO.File.Delete(System.IO.Path.Combine(path, chain[1].uuid + ".nxm")); //remove backup file
+            System.IO.Directory.Delete(System.IO.Path.Combine(path, chain[1].uuid + ".nxm"), true); //remove backup file
 
             //create new backup container from merged backups
             Guid g = Guid.NewGuid();
             string guidFolder = g.ToString();
-            Common.ZipArchive backupArchive = new Common.ZipArchive(System.IO.Path.Combine(path, guidFolder + ".nxm"), null);
+            Common.LZ4Archive backupArchive = new Common.LZ4Archive(System.IO.Path.Combine(path, guidFolder + ".nxm"), null);
             backupArchive.create();
             backupArchive.open(System.IO.Compression.ZipArchiveMode.Create);
 
@@ -276,7 +301,7 @@ namespace HyperVBackupRCT
             int eventId = this.eventHandler.raiseNewEvent("Initialisiere Umgebung...", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
 
             // Get the management service and the VM object.
-            using (ManagementObject vm = WmiUtilities.GetVirtualMachine(vmId, scope))
+            using (ManagementObject vm = WmiUtilities.GetVirtualMachine(this.vm.vmID, scope))
             using (ManagementObject service = WmiUtilities.GetVirtualMachineSnapshotService(scope))
             using (ManagementObject settings = WmiUtilities.GetVirtualMachineSnapshotSettings(scope))
             using (ManagementBaseObject inParams = service.GetMethodParameters("CreateSnapshot"))
@@ -377,7 +402,7 @@ namespace HyperVBackupRCT
         }
 
         //exports a snapshot
-        public void export(string path, ManagementObject currentSnapshot, ManagementObject rctBase, Compression compressionType)
+        public void export(string path, ManagementObject currentSnapshot, ManagementObject rctBase, ConfigHandler.OneJob job)
         {
             string basePath = path;
             string backupType = "";
@@ -391,24 +416,13 @@ namespace HyperVBackupRCT
             //create and open archive
             Common.IArchive archive;
             
-            switch (compressionType)
-            {
-                case Compression.zip:
-                    archive = new Common.ZipArchive(System.IO.Path.Combine(path, guidFolder + ".nxm"), this.eventHandler);
-                    break;
-                case Compression.lz4:
-                    archive = new Common.LZ4Archive(System.IO.Path.Combine(path, guidFolder + ".nxm"), this.eventHandler);
-                    break;
-                default: //default fallback to zip algorithm
-                    archive = new Common.ZipArchive(System.IO.Path.Combine(path, guidFolder + ".nxm"), this.eventHandler);
-                    break;
-            }
+           
+            archive = new Common.LZ4Archive(System.IO.Path.Combine(path, guidFolder + ".nxm"), this.eventHandler);
+            
             
             archive.create();
             archive.open(System.IO.Compression.ZipArchiveMode.Create);
 
-            
-            bool hasHDD = false;
 
             this.eventHandler.raiseNewEvent("erfolgreich", true, false, eventId, EventStatus.successful);
 
@@ -420,19 +434,30 @@ namespace HyperVBackupRCT
             List<ManagementObject> hdds = new List<ManagementObject>();
             while (iterator.MoveNext())
             {
-                hdds.Add((ManagementObject)iterator.Current);
+                //just add vhdx files to hdd list
+                if (((string[])iterator.Current["HostResource"])[0].EndsWith(".vhdx")){
+                    hdds.Add((ManagementObject)iterator.Current);
+                }
+            }
+            
+            //have hdds changed?
+            ChangedHDDsResponse hddsChangedResponse = hddsChanged(hdds, job);
+
+            //set to full backup when hdds have changed
+            if (hddsChangedResponse.hddsChanged)
+            {
+                rctBase = null;
+                this.eventHandler.raiseNewEvent("Veränderter Datenspeicher erkannt", false, false, NO_RELATED_EVENT, EventStatus.warning);
             }
 
             //now export the hdds
             foreach (ManagementObject hdd in hdds)
             {
                 string[] hddPath = (string[])hdd["HostResource"];
-                if (hddPath[0].EndsWith(".iso"))
+                if (!hddPath[0].EndsWith(".vhdx"))
                 {
                     continue;
                 }
-
-                hasHDD = true; //indicates that the vm has at least one snapshotable vhd
 
                 //copy a full snapshot?
                 if (rctBase == null)
@@ -456,7 +481,7 @@ namespace HyperVBackupRCT
                     }
                     
                     //do a rct backup copy
-                    performrctbackup(hddPath[0], ((string[])rctBase["ResilientChangeTrackingIdentifiers"])[hddCounter], archive, compressionType);
+                    performrctbackup(hddPath[0], ((string[])rctBase["ResilientChangeTrackingIdentifiers"])[hddCounter], archive);
 
                     backupType = "rct";
                 }
@@ -477,6 +502,14 @@ namespace HyperVBackupRCT
             }
             archive.close();
 
+            //if LB activated for job, start it before converting to reference point
+            
+            if (job.LiveBackup)
+            {
+                job.LiveBackupWorker = new nxmBackup.HVBackupCore.LiveBackupWorker(job);
+                job.LiveBackupWorker.startLB();
+            }
+
             //convert the snapshot to a reference point
             ManagementObject refP = this.convertToReferencePoint(currentSnapshot);
 
@@ -489,18 +522,119 @@ namespace HyperVBackupRCT
 
             ConfigHandler.BackupConfigHandler.addBackup(basePath, guidFolder, backupType, (string)refP["InstanceId"], parentiid, false);
 
+            //now add lb backup to config.xml
+            if (job.LiveBackup)
+            {
+                job.LiveBackupWorker.addToBackupConfig();
+            }
+
+            //hdds changed? write the new hdd config to job
+            if (hddsChangedResponse.hddsChanged)
+            {
+                //build hdd string list
+                List<string> hddStrings = new List<string>();
+                foreach (ManagementObject hdd in hdds)
+                {
+                    hddStrings.Add((string)hdd["InstanceID"]);
+                }
+                DBQueries.refreshHDDs(hddsChangedResponse.newHDDs, this.vm.vmID);
+                this.eventHandler.raiseNewEvent("Veränderter Datenspeicher inventarisiert", false, false, NO_RELATED_EVENT, EventStatus.info);
+            }
+
+        }
+
+        //checks whether vm hdds are the same within the job definition
+        private ChangedHDDsResponse hddsChanged(List<ManagementObject> mountedHDDs, ConfigHandler.OneJob job)
+        {
+            ChangedHDDsResponse retVal = new ChangedHDDsResponse();
+            JobVM currentVM = new JobVM();
+            //find the corresponding vm object
+            foreach(JobVM vm in job.JobVMs)
+            {
+                if (vm.vmID == this.vm.vmID)
+                {
+                    //found vm object
+                    currentVM = vm;
+                    break;
+                }
+            }
+
+
+            List<VMHDD> newHDDS = new List<VMHDD>(); //struct for new HDDs retVal
+
+            bool hddsHaveChanged = false;
+            //iterate through all currently mounted HDDs
+            foreach (ManagementObject mountedHDD in mountedHDDs)
+            {
+
+                bool hddFound = false;
+                //find corresponding HDD within job
+                foreach (VMHDD vmHDD in currentVM.vmHDDs)
+                {
+                    VMHDD hdd;
+                    hdd = buildHDDStructure(mountedHDD);
+                    newHDDS.Add(hdd);
+
+                    if (hdd.name == vmHDD.name)
+                    {
+                        hddFound = true;
+                        break;
+                    }
+                }
+
+                //add hdd to newHDDs list when currentVM.vmHDDS is empty
+                if (currentVM.vmHDDs.Count == 0)
+                {
+                    newHDDS.Add(buildHDDStructure(mountedHDD));
+                }
+
+                //hdd not found?
+                if (!hddFound)
+                {
+                    hddsHaveChanged = true;
+                }
+            }
+
+            //hdd count changed or hdds themself changed?
+            if (mountedHDDs.Count != currentVM.vmHDDs.Count || hddsHaveChanged)
+            {
+                retVal.hddsChanged = true;
+            }
+            else
+            {
+                retVal.hddsChanged = false;
+            }
+
+            retVal.newHDDs = newHDDS;
+            return retVal;
+        }
+
+        //builds a hdd structure from a given ManagementObject
+        private VMHDD buildHDDStructure(ManagementObject mo)
+        {
+            VMHDD newHDD = new VMHDD();
+            //get vhdx id from vhdx file
+            string vhdxPath = ((string[])mo["HostResource"])[0];
+
+
+            string hddID = Convert.ToBase64String(vhdxParser.getVHDXIDFromFile(vhdxPath));
+
+            newHDD.name = hddID;
+            newHDD.path = vhdxPath;
+
+            return newHDD;
         }
 
 
         //performs a rct backup copy
-        private void performrctbackup(string snapshothddPath, string rctID, Common.IArchive archive, Compression compressionType)
+        private void performrctbackup(string snapshothddPath, string rctID, Common.IArchive archive)
         {
             //read vhd size
             VirtualDiskHandler diskHandler = new VirtualDiskHandler(snapshothddPath);
             diskHandler.open(VirtualDiskHandler.VirtualDiskAccessMask.AttachReadOnly | VirtualDiskHandler.VirtualDiskAccessMask.GetInfo);
             VirtualDiskHandler.GetVirtualDiskInfoSize sizeStruct = diskHandler.getSize();
             ulong hddSize = sizeStruct.VirtualSize;
-            //ulong bufferSize = sizeStruct.SectorSize * 10000; //buffersize has to be a multiple of virtual sector size
+            ulong bufferSize = sizeStruct.SectorSize * 10000; //buffersize has to be a multiple of virtual sector size
             diskHandler.close();
 
 
@@ -524,24 +658,38 @@ namespace HyperVBackupRCT
                     //wait for the snapshot to be exported
                     WmiUtilities.ValidateOutput(outParams, scope);
 
+                    //get vhdx size
+                    UInt64 vhdxSize;
+                    System.IO.FileInfo fi = new System.IO.FileInfo(snapshothddPath);
+                    vhdxSize = (UInt64)fi.Length;
+
                     //get vhdx headers
                     BATTable batTable;
                     UInt32 vhdxBlockSize = 0;
                     UInt32 vhdxLogicalSectorSize = 0;
+                    RawBatTable rawBatTable;
+                    RawHeader rawHeader;
                     using (Common.vhdxParser vhdxParser = new vhdxParser(snapshothddPath))
                     {
                         Common.RegionTable regionTable = vhdxParser.parseRegionTable();
-                        batTable = vhdxParser.parseBATTable(regionTable);
                         Common.MetadataTable metadataTable = vhdxParser.parseMetadataTable(regionTable);
                         vhdxBlockSize = vhdxParser.getBlockSize(metadataTable);
-                        vhdxLogicalSectorSize = vhdxParser.getBlockSize(metadataTable);
+                        vhdxLogicalSectorSize = vhdxParser.getLogicalSectorSize(metadataTable);
+
+                        UInt32 vhdxChunkRatio = (UInt32)((Math.Pow(2, 23) * vhdxLogicalSectorSize) / vhdxBlockSize); //see vhdx file format specs
+
+                        batTable = vhdxParser.parseBATTable(regionTable, vhdxChunkRatio, true);
+
+                        //get raw bat table
+                        rawBatTable = vhdxParser.getRawBatTable(regionTable);
+
+                        //get raw header
+                        rawHeader = vhdxParser.getRawHeader();
                     }
 
                     //reopen virtual disk
-                    System.IO.FileStream sourceHDDStream = new System.IO.FileStream(snapshothddPath, System.IO.FileMode.Open, System.IO.FileAccess.Read);
-                    //diskHandler.open(VirtualDiskHandler.VirtualDiskAccessMask.AttachReadOnly | VirtualDiskHandler.VirtualDiskAccessMask.GetInfo);
-                    //diskHandler.attach(VirtualDiskHandler.ATTACH_VIRTUAL_DISK_FLAG.ATTACH_VIRTUAL_DISK_FLAG_NO_LOCAL_HOST | VirtualDiskHandler.ATTACH_VIRTUAL_DISK_FLAG.ATTACH_VIRTUAL_DISK_FLAG_READ_ONLY);
-
+                    diskHandler.open(VirtualDiskHandler.VirtualDiskAccessMask.AttachReadOnly | VirtualDiskHandler.VirtualDiskAccessMask.GetInfo);
+                    diskHandler.attach(VirtualDiskHandler.ATTACH_VIRTUAL_DISK_FLAG.ATTACH_VIRTUAL_DISK_FLAG_NO_LOCAL_HOST | VirtualDiskHandler.ATTACH_VIRTUAL_DISK_FLAG.ATTACH_VIRTUAL_DISK_FLAG_READ_ONLY);
                     //output ok, build block structure
                     int blockCount = ((ulong[])outParams["ChangedByteOffsets"]).Length;
                     ChangedBlock[] changedBlocks = new ChangedBlock[blockCount];
@@ -557,12 +705,12 @@ namespace HyperVBackupRCT
                     //write backup output
                     DiffHandler diffWriter = new DiffHandler(this.eventHandler);
 
-                    diffWriter.writeDiffFile(changedBlocks, sourceHDDStream, vhdxBlockSize, vhdxLogicalSectorSize, archive, compressionType, System.IO.Path.GetFileName(snapshothddPath), batTable);
+                    diffWriter.writeDiffFile(changedBlocks, diskHandler, vhdxBlockSize, archive, System.IO.Path.GetFileName(snapshothddPath), batTable, bufferSize, rawBatTable, rawHeader, vhdxSize);
 
-                    sourceHDDStream.Close();
+                    
                     //close vhd file
-                    //diskHandler.detach();
-                    //diskHandler.close();
+                    diskHandler.detach();
+                    diskHandler.close();
 
                 }
 
@@ -578,7 +726,7 @@ namespace HyperVBackupRCT
             ManagementScope scope = new ManagementScope("\\\\localhost\\root\\virtualization\\v2", null);
 
             // Get the necessary wmi objects
-            using (ManagementObject vm = WmiUtilities.GetVirtualMachine(vmId, scope))
+            using (ManagementObject vm = WmiUtilities.GetVirtualMachine(this.vm.vmID, scope))
             {
                 //get all snapshots
                 var iterator = vm.GetRelationships("Msvm_SnapshotOfVirtualSystem").GetEnumerator();
@@ -632,7 +780,7 @@ namespace HyperVBackupRCT
             ManagementScope scope = new ManagementScope("\\\\localhost\\root\\virtualization\\v2", null);
 
             // Get the necessary wmi objects
-            using (ManagementObject vm = WmiUtilities.GetVirtualMachine(vmId, scope))
+            using (ManagementObject vm = WmiUtilities.GetVirtualMachine(this.vm.vmID, scope))
             {
                 //get all reference points
                 var iterator = vm.GetRelationships("Msvm_ReferencePointOfVirtualSystem").GetEnumerator();
@@ -694,7 +842,7 @@ namespace HyperVBackupRCT
             ManagementScope scope = new ManagementScope("\\\\localhost\\root\\virtualization\\v2", null);
 
             // Get the management service and the VM object.
-            using (ManagementObject vm = WmiUtilities.GetVirtualMachine(vmId, scope))
+            using (ManagementObject vm = WmiUtilities.GetVirtualMachine(this.vm.vmID, scope))
             using (ManagementObject service = WmiUtilities.GetVirtualMachineSnapshotService(scope))
             using (ManagementObject settings = WmiUtilities.GetVirtualMachineSnapshotSettings(scope))
             using (ManagementBaseObject inParams = service.GetMethodParameters("DestroySnapshotTree"))
@@ -726,9 +874,14 @@ namespace HyperVBackupRCT
             {
                 this.removeReferencePoint(snapshot);
             }
-
         }
 
+        //struct for hddsChanged retVal
+        private struct ChangedHDDsResponse
+        {
+            public bool hddsChanged;
+            public List<VMHDD> newHDDs;
+        }
 
 
 

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Npgsql;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,28 +9,64 @@ namespace Common
 {
     public class DBQueries
     {
+        //deletes the old hdds from a given vm and adds new ones
+        public static void refreshHDDs(List<VMHDD> hdds, string vmid)
+        {
+            using (DBConnection dbConn = new DBConnection())
+            {
+                NpgsqlTransaction transaction = dbConn.beginTransaction();
+
+                //delete vm hdd relation
+                Dictionary<string, object> parameters = new Dictionary<string, object>();
+                parameters.Add("vmid", vmid);
+                dbConn.doWriteQuery("DELETE FROM vmhddrelation WHERE vmid=@vmid;", parameters, transaction);
+
+                //add new hdds and their relations to vm
+                foreach(VMHDD hdd in hdds)
+                {
+                    //add hdd
+                    parameters.Clear();
+                    parameters.Add("name", hdd.name);
+                    parameters.Add("path", hdd.path);
+                    List<Dictionary<string,string>> result = dbConn.doReadQuery("INSERT INTO hdds (name, path) VALUES (@name, @path) RETURNING id;", parameters, transaction);
+                    int newHDDID = int.Parse(result[0]["id"]);
+
+                    //add relation
+                    parameters.Clear();
+                    parameters.Add("vmid", vmid);
+                    parameters.Add("hddid", newHDDID);
+                    dbConn.doWriteQuery("INSERT INTO vmhddrelation (vmid,hddid) VALUES (@vmid, @hddid);", parameters, transaction);
+
+                }
+
+                //commit transaction
+                transaction.Commit();
+
+            }
+        }
+
         // Adds a new job execution before performing backup process.
-        public static int addJobExecution(string jobId, string type)
+        public static int addJobExecution(int jobId, string type)
         {
             try
             {
                 using (DBConnection dbConn = new DBConnection())
                 {
-                    List<Dictionary<string, string>> jobExecutionIds = dbConn.doReadQuery("INSERT INTO JobExecutions (jobId, isRunning, transferRate, alreadyRead, alreadyWritten, successful, warnings, errors, type) " +
-                        "VALUES(@jobId, @isRunning, @transferRate, @alreadyRead, @alreadyWritten, @successful, @warnings, @errors, @type);SELECT SCOPE_IDENTITY() AS id;",
-                        new Dictionary<string, string>() {
+                    List<Dictionary<string, string>> jobExecutionIds = dbConn.doReadQuery("INSERT INTO jobexecutions (jobid, isrunning, transferrate, alreadyread, alreadywritten, successful, warnings, errors, type) " +
+                        "VALUES(@jobId, @isRunning, @transferRate, @alreadyRead, @alreadyWritten, @successful, @warnings, @errors, @type) RETURNING id;",
+                        new Dictionary<string, object>() {
                             { "jobId", jobId },
-                            { "isRunning", "1" },
-                            { "transferRate", "0" },
-                            { "alreadyRead", "0" },
-                            { "alreadyWritten", "0" },
-                            { "successful", "0" },
-                            { "warnings", "0" },
-                            { "errors", "0" },
+                            { "isRunning", true },
+                            { "transferRate", 0 },
+                            { "alreadyRead", 0 },
+                            { "alreadyWritten", 0 },
+                            { "successful", true },
+                            { "warnings", 0 },
+                            { "errors", 0 },
                             { "type", type }
                         }, null);
 
-                    if (jobExecutionIds.Count != 1)
+                    if (jobExecutionIds == null || jobExecutionIds.Count != 1)
                     {
                         throw new Exception("Error during insert operation (no insert id)");
                     }
@@ -72,8 +109,8 @@ namespace Common
             {
                 using (DBConnection dbConn = new DBConnection())
                 {
-                    List<Dictionary<string, string>> jobExecutionEventIds = dbConn.doReadQuery("INSERT INTO JobExecutionEvents (vmId, info, jobExecutionId, status) VALUES (@vmId, @info, @jobExecutionId, (SELECT id FROM EventStatus WHERE text= @status));SELECT SCOPE_IDENTITY() AS id;",
-                        new Dictionary<string, string>() { { "vmId", vmName }, { "info", eventProperties.text }, { "jobExecutionId", eventProperties.jobExecutionId.ToString()}, {"status", eventProperties.eventStatus} }, null);
+                    List<Dictionary<string, string>> jobExecutionEventIds = dbConn.doReadQuery("INSERT INTO jobexecutionevents (vmid, info, jobexecutionid, status) VALUES (@vmId, @info, @jobExecutionId, (SELECT id FROM EventStatus WHERE text= @status)) RETURNING id;",
+                        new Dictionary<string, object>() { { "vmId", vmName }, { "info", eventProperties.text }, { "jobExecutionId", eventProperties.jobExecutionId}, {"status", eventProperties.eventStatus} }, null);
 
                     if (jobExecutionEventIds == null || jobExecutionEventIds.Count == 0)
                     {
@@ -100,7 +137,7 @@ namespace Common
                 using (DBConnection dbConn = new DBConnection())
                 {
                     int affectedRows = dbConn.doWriteQuery("UPDATE JobExecutionEvents SET info=@info, status=(SELECT id FROM EventStatus WHERE text= @status) WHERE id=@id;",
-                        new Dictionary<string, string>() { { "info", eventProperties.text }, { "id", eventProperties.eventIdToUpdate.ToString() }, { "status", eventProperties.eventStatus } }, null);
+                        new Dictionary<string, object>() { { "info", eventProperties.text }, { "id", eventProperties.eventIdToUpdate }, { "status", eventProperties.eventStatus } }, null);
 
                     if (affectedRows == 0)
                     {
@@ -122,7 +159,7 @@ namespace Common
                 using (DBConnection dbConn = new DBConnection())
                 {
                     int affectedRows = dbConn.doWriteQuery("UPDATE JobExecutionEvents SET info=concat(info,@info), status=(SELECT id FROM EventStatus WHERE text= @status)  WHERE id=@id;",
-                        new Dictionary<string, string>() { { "info", eventProperties.text }, { "id", eventProperties.eventIdToUpdate.ToString() }, { "status", eventProperties.eventStatus } }, null);
+                        new Dictionary<string, object>() { { "info", eventProperties.text }, { "id", eventProperties.eventIdToUpdate }, { "status", eventProperties.eventStatus } }, null);
 
                     if (affectedRows == 0)
                     {
@@ -137,7 +174,7 @@ namespace Common
         }
 
         //gets all events for a given job
-        public static List<Dictionary<string,string>> getEvents (string jobId, string type)
+        public static List<Dictionary<string,string>> getEvents (int jobId, string type)
         {
             //not an update: do insert
             try
@@ -146,7 +183,7 @@ namespace Common
                 {
                     //get jobExecutions first
                     List<Dictionary<string, string>> jobExecutions = dbConn.doReadQuery("SELECT max(id) id FROM JobExecutions WHERE jobId = @jobId AND type = @type;",
-                        new Dictionary<string, string>() { { "jobId", jobId }, {"type", type } }, null);
+                        new Dictionary<string, object>() { { "jobId", jobId }, {"type", type } }, null);
 
                     //check if executionId is available
                     string jobExecutionId = jobExecutions[0]["id"];
@@ -156,8 +193,8 @@ namespace Common
                     }
 
 
-                    List<Dictionary<string, string>> jobExecutionEventIds = dbConn.doReadQuery("SELECT vmId, timeStamp, info, EventStatus.text AS status FROM JobExecutionEvents INNER JOIN EventStatus ON EventStatus.id = JobExecutionEvents.status WHERE jobExecutionId = @jobExecutionId;",
-                        new Dictionary<string, string>() { { "jobExecutionId", jobExecutionId } }, null);
+                    List<Dictionary<string, string>> jobExecutionEventIds = dbConn.doReadQuery("SELECT jobexecutionevents.id, vmid, timestamp, info, eventstatus.text AS status FROM jobexecutionevents INNER JOIN eventstatus ON eventstatus.id = jobexecutionevents.status WHERE jobexecutionid = @jobexecutionid ORDER BY jobexecutionevents.id DESC;",
+                        new Dictionary<string, object>() { { "jobExecutionId", int.Parse(jobExecutionId) } }, null);
 
                     if (jobExecutionEventIds.Count == 0)
                     {
@@ -184,7 +221,7 @@ namespace Common
                 using (DBConnection dbConn = new DBConnection())
                 {
 
-                    int affectedRows = dbConn.doWriteQuery("UPDATE Jobs SET deleted=1 WHERE id=@id", new Dictionary<string, string>() { { "id", jobDBId.ToString() } }, null);
+                    int affectedRows = dbConn.doWriteQuery("UPDATE Jobs SET deleted=TRUE WHERE id=@id", new Dictionary<string, object>() { { "id", jobDBId } }, null);
                     return affectedRows == 1;
 
                 }
@@ -203,7 +240,7 @@ namespace Common
                 using (DBConnection dbConn = new DBConnection())
                 {
                     int affectedRows = dbConn.doWriteQuery("UPDATE JobExecutions SET stopTime=@stopTime, isRunning=@isRunning, transferRate=@transferRate, alreadyRead=@alreadyRead, alreadyWritten=@alreadyWritten, successful=@successful, warnings=@warnings, errors=@errors WHERE id=@id;",
-                        new Dictionary<string, string>() { { "stopTime", executionProperties.stopTime.ToString() }, { "isRunning", executionProperties.isRunning.ToString() }, { "transferRate", executionProperties.transferRate.ToString() }, { "alreadyRead", executionProperties.alreadyRead.ToString() }, { "alreadyWritten", executionProperties.alreadyWritten.ToString() }, { "successful", executionProperties.successful.ToString() }, { "warnings", executionProperties.warnings.ToString() }, { "errors", executionProperties.errors.ToString() }, { "id", jobExecutionId.ToString() } }, null);
+                        new Dictionary<string, object>() { { "stopTime", executionProperties.stopTime.ToString() }, { "isRunning", executionProperties.isRunning.ToString() }, { "transferRate", executionProperties.transferRate.ToString() }, { "alreadyRead", executionProperties.alreadyRead.ToString() }, { "alreadyWritten", executionProperties.alreadyWritten.ToString() }, { "successful", executionProperties.successful.ToString() }, { "warnings", executionProperties.warnings.ToString() }, { "errors", executionProperties.errors.ToString() }, { "id", jobExecutionId.ToString() } }, null);
 
                     if (affectedRows == 0)
                     {

@@ -12,7 +12,8 @@ namespace JobEngine
         public bool startJobEngine()
         {
             //read all jobs
-            List<ConfigHandler.OneJob> jobs = ConfigHandler.JobConfigHandler.readJobs();
+            ConfigHandler.JobConfigHandler.readJobsFromDB();
+            List<ConfigHandler.OneJob> jobs = ConfigHandler.JobConfigHandler.Jobs;
 
             if (jobs == null) //DB error occured
             {

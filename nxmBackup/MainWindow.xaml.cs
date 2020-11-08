@@ -15,6 +15,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using HyperVBackupRCT;
 using RestoreHelper;
 
 namespace nxmBackup
@@ -42,6 +43,16 @@ namespace nxmBackup
 
             fillListViewJobs();
 
+            //cleanUp(); //just for debugging purpose
+
+        }
+
+        //just for debugging purpose:
+        //deletes every type of snapshot for a given vm
+        private void cleanUp()
+        {
+            //SnapshotHandler h = new SnapshotHandler("94921741-1567-4C42-84BF-4385F7E4BF9E", -1);
+            //h.cleanUp();
         }
 
         //init jobs
@@ -58,7 +69,7 @@ namespace nxmBackup
                 return;
             }
 
-            jobs = ConfigHandler.JobConfigHandler.readJobs();
+            jobs = ConfigHandler.JobConfigHandler.Jobs;
 
             jobsObservable.Clear();
 
@@ -97,6 +108,11 @@ namespace nxmBackup
 
         private void btnRestore_Click(object sender, RoutedEventArgs e)
         {
+            if (lvJobs.SelectedItem == null)
+            {
+                MessageBox.Show("Es wurde kein Job ausgewählt.", "Fehlgeschlagen", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
             RestoreOptions restoreOptionsWindows = new RestoreOptions((ConfigHandler.OneJob)lvJobs.SelectedItem);
             restoreOptionsWindows.ShowDialog();
         }
@@ -168,7 +184,7 @@ namespace nxmBackup
                 //just load events if a job is selected
                 if (this.selectedJobId > -1)
                 {
-                    List<Dictionary<string, string>> events = Common.DBQueries.getEvents(this.selectedJobId.ToString(), "backup");
+                    List<Dictionary<string, string>> events = Common.DBQueries.getEvents(this.selectedJobId, "backup");
 
                     lvEvents.Dispatcher.Invoke(new UpdateEvents(this.UpdateEventList), new object[] { events });
 
@@ -198,7 +214,7 @@ namespace nxmBackup
             lvEvents.Items.Clear();
             foreach (Dictionary<string, string> oneEvent in events)
             {
-                if (oneEvent["vmId"] == this.selectedVMId)
+                if (oneEvent["vmid"] == this.selectedVMId)
                 {
                     EventListEntry ele = new EventListEntry();
                     ele.Text = oneEvent["info"];
@@ -216,6 +232,7 @@ namespace nxmBackup
                             ele.Icon = "Graphics/error.png";
                             break;
                         case "warning":
+                        case "info":
                             ele.Icon = "Graphics/warning.png";
                             break;
                     }
@@ -232,5 +249,21 @@ namespace nxmBackup
             public string Text { get; set; }
         }
 
+        private void MainGUI_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            //look for active lb worker and close it
+            foreach(ConfigHandler.OneJob job in this.jobs)
+            {
+                if (job.LiveBackup && job.LiveBackupWorker != null)
+                {
+                    job.LiveBackupWorker.stopLB();
+                }
+            }
+        }
+
+        private void lvJobs_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            this.selectedVMId = "";
+        }
     }
 }

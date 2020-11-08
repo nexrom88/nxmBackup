@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:nxmBackup"
         mc:Ignorable="d"
         Title="NXM Server Backup" Height="722" Width="734"
-        xmlns:System="clr-namespace:System;assembly=mscorlib" MinWidth="800" MinHeight="800">
+        xmlns:System="clr-namespace:System;assembly=mscorlib" MinWidth="800" MinHeight="800" Closing="MainGUI_Closing">
     <Window.Resources>
         <System:String x:Key="btnPadding">8,8,8,8</System:String>
         <System:Int16 x:Key="btnHeight">90</System:Int16>
@@ -67,7 +67,7 @@
                     </StackPanel>
                 </StackPanel>
                 <StackPanel DockPanel.Dock="Left">
-                    <ListView Name="lvJobs" MinHeight="50" Padding="0"  Height="150" BorderThickness="0" SelectionChanged="lvJobs_SelectionChanged">
+                    <ListView Name="lvJobs" MinHeight="50" Padding="0"  Height="150" BorderThickness="0" SelectionChanged="lvJobs_SelectionChanged" MouseUp="lvJobs_MouseUp">
                         <ListView.View>
                             <GridView>
                                 <GridViewColumn Header="Name" DisplayMemberBinding="{Binding Name}"></GridViewColumn>

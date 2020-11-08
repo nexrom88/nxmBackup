@@ -33,7 +33,7 @@ namespace BlockCompression
         List<CacheEntry> cache = new List<CacheEntry>();
         public bool CachingMode { get; set; }
 
-        public LZ4BlockStream(System.IO.FileStream filestream, AccessMode mode)
+        public LZ4BlockStream(FileStream filestream, AccessMode mode)
         {
             this.CachingMode = false;
             this.encoderSettings.CompressionLevel = K4os.Compression.LZ4.LZ4Level.L00_FAST;

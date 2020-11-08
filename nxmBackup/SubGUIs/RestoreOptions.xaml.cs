@@ -65,6 +65,9 @@ namespace RestoreHelper
                     case "rct":
                         restorePoint.Type = "Inkrementiell";
                         break;
+                    case "lb":
+                        restorePoint.Type = "LiveBackup";
+                        break;
                 }
                 
                 restorePoints.Add(restorePoint);
@@ -113,13 +116,37 @@ namespace RestoreHelper
             switch (restoreType)
             {
                 case "full":
-                    int jobExecutionId = Common.DBQueries.addJobExecution(this.job.DbId.ToString(), "restore");
-                    RestoreHelper.FullRestoreHandler restoreHandler = new RestoreHelper.FullRestoreHandler(new Common.EventHandler(((ComboBoxItem)cbVMs.SelectedItem).Tag.ToString(), jobExecutionId));
-                    restoreHandler.performFullRestoreProcess(sourcePath, "g:\\target", restorePoint.InstanceId, this.job.Compression);
+                case "fullImport":
+                    //look for selected job object
+                    string vmId = ((ComboBoxItem)cbVMs.SelectedItem).Tag.ToString();
+                    Common.JobVM targetVM = new Common.JobVM();
+                    foreach(Common.JobVM vm in this.job.JobVMs)
+                    {
+                        if (vm.vmID == vmId)
+                        {
+                            targetVM = vm;
+                            break;
+                        }
+                    }
+
+                    //import to HyperV?
+                    bool importToHyperV = false;
+                    if (restoreType == "fullImport")
+                    {
+                        importToHyperV = true;
+                    }
+
+                    int jobExecutionId = Common.DBQueries.addJobExecution(this.job.DbId, "restore");
+                    RestoreHelper.FullRestoreHandler fullRestoreHandler = new RestoreHelper.FullRestoreHandler(new Common.EventHandler(targetVM, jobExecutionId));
+                    fullRestoreHandler.performFullRestoreProcess(sourcePath, "f:\\target", ((ComboBoxItem)cbVMs.SelectedItem).Content.ToString() + "_restored", restorePoint.InstanceId, importToHyperV);
                     break;
                 case "flr":
                     RestoreHelper.FileLevelRestoreHandler flrHandler = new RestoreHelper.FileLevelRestoreHandler();
-                    flrHandler.performGuestFilesRestore(sourcePath, restorePoint.InstanceId, this.job.Compression);
+                    flrHandler.performGuestFilesRestore(sourcePath, restorePoint.InstanceId);
+                    break;
+                case "lr":
+                    RestoreHelper.LiveRestore lrHandler = new LiveRestore();
+                    lrHandler.performLiveRestore(sourcePath, ((ComboBoxItem)cbVMs.SelectedItem).Content.ToString() + "_LiveRestore", restorePoint.InstanceId);
                     break;
             }
 

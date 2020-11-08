@@ -28,89 +28,137 @@ namespace Common
             UInt64[] vhdxOffsets = new UInt64[(endEntry - startEntry) + 1];
             for (UInt32 i = startEntry; i <= endEntry; i++)
             {
-                vhdxOffsets[i - startEntry] = vhdxBATTable.entries[(int)i].FileOffsetMB;
+                switch (vhdxBATTable.entries[(int)i].state)
+                {
+                    case 6: //block is fully present
+                        vhdxOffsets[i - startEntry] = vhdxBATTable.entries[(int)i].FileOffsetMB * 1048576; // multiple with 1024^2 to get byte offset
+                        break;
+                    default: //block is not present
+                        vhdxOffsets[i - startEntry] = 0;
+                        break;
+                }
+                
             }
+
 
             return vhdxOffsets;
         }
 
         //writes the diff file using cbt information
         [Obsolete]
-        public void writeDiffFile(ChangedBlock[] changedBlocks, FileStream sourceHDDStream, UInt32 vhdxBlockSize, UInt32 vhdxLogicalSectorSize, Common.IArchive archive, Compression compressionType, string hddName, Common.BATTable vhdxBATTable)
+        public void writeDiffFile(ChangedBlock[] changedBlocks, VirtualDiskHandler diskHandler, UInt32 vhdxBlockSize, Common.IArchive archive, string hddName, Common.BATTable vhdxBATTable, UInt64 bufferSize, RawBatTable rawBatTable, RawHeader rawHeader, UInt64 vhdxSize)
         {
 
             //calculate changed bytes count for progress calculation
             ulong totalBytesCount = 0;
             ulong bytesReadCount = 0;
             int lastPercentage = -1;
-            foreach(ChangedBlock bl in changedBlocks)
+            foreach (ChangedBlock bl in changedBlocks)
             {
                 totalBytesCount += bl.length;
             }
             int relatedEventId = this.eventHandler.raiseNewEvent("Erstelle Inkrement - 0%", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
 
+            //fetch disk file handle
+            IntPtr diskHandle = diskHandler.getHandle();
 
             //open destination file
             BlockCompression.LZ4BlockStream outStream = (BlockCompression.LZ4BlockStream)archive.createAndGetFileStream(hddName + ".cb");
+            //FileStream outStream = new FileStream("f:\\" + hddName + ".cb", FileMode.Create);
 
+            //open filestream to make it possible for readfile to read blocks (check why?)
+            FileStream inputStream = new FileStream(diskHandle, FileAccess.Read, false, (int)bufferSize, true);
 
             //write block count to destination file
             outStream.Write(BitConverter.GetBytes((UInt32)changedBlocks.Length), 0, 4);
 
-            ulong bytesReadBlock;
+            //write vhdx block size
+            outStream.Write(BitConverter.GetBytes(vhdxBlockSize), 0, 4);
+
+            //write vhdx size
+            outStream.Write(BitConverter.GetBytes(vhdxSize), 0, 8);
+
+            //write raw vhdx header
+            outStream.Write(rawHeader.rawData, 0, rawHeader.rawData.Length);
+
+            //write raw bat table:
+
+            //write raw bat table header
+            outStream.Write(BitConverter.GetBytes(rawBatTable.vhdxOffset), 0, 8); //bat vhdx offset
+            outStream.Write(BitConverter.GetBytes((UInt64)rawBatTable.rawData.Length), 0, 8); //bat length
+
+            //write raw bat table payload
+            outStream.Write(rawBatTable.rawData, 0, rawBatTable.rawData.Length);
+
+
+            ulong bytesRead;
 
             //read and write blocks
             foreach (ChangedBlock block in changedBlocks)
             {
                 byte[] buffer;
-                bytesReadBlock = 0;
+                bytesRead = 0;
 
                 //write block header to diff file
                 //write block
                 outStream.Write(BitConverter.GetBytes(block.offset), 0, 8); //write offset
                 outStream.Write(BitConverter.GetBytes(block.length), 0, 8); //write length
 
-                UInt32 vhdxBlockOffsetsCount = (UInt32)Math.Ceiling((float)block.length / (float)vhdxBlockSize);
-                outStream.Write(BitConverter.GetBytes(vhdxBlockOffsetsCount), 0, 4); //write vhdxBlockOffsetCount
-                
-                //get vhdxBlockOffsets
-                UInt64[] vhdxOffsets = getVhdxBlockOffsets(block.offset, block.length, vhdxBATTable, vhdxBlockSize);
+                //get vhdx blocks
+                UInt64[] vhdxBlocks = getVhdxBlockOffsets(block.offset, block.length, vhdxBATTable, vhdxBlockSize);
 
-                //write vhdxBlockOffsetsCount
-                outStream.Write(BitConverter.GetBytes(vhdxOffsets.Length), 0, 4);
+                //write vhdx blocks
+                outStream.Write(BitConverter.GetBytes((UInt32)vhdxBlocks.Length), 0, 4); //vhdx block offsets count
 
-                //write vhdx block offsets
-                foreach (UInt64 offset in vhdxOffsets)
+
+                //iterate through all block offsets
+                UInt64 remainingLength = block.length;
+                for (int i = 0; i < vhdxBlocks.Length; i++)
                 {
-                    outStream.Write(BitConverter.GetBytes(offset), 0, 8);
+                    UInt64 currentOffset = vhdxBlocks[i];
+                    UInt64 currentLength = vhdxBlockSize;
+
+                    //first element? adjust offset and length
+                    if (i == 0)
+                    {
+                        UInt64 offsetDelta = block.offset % vhdxBlockSize;
+                        currentOffset += offsetDelta;
+                        currentLength -= offsetDelta;
+                    }
+
+                    //last element? adjust length;
+                    if (i + 1 == vhdxBlocks.Length)
+                    {
+                        currentLength = remainingLength;
+                    }
+
+                    remainingLength -= currentLength;
+
+                    outStream.Write(BitConverter.GetBytes((UInt64)currentOffset), 0, 8); //write one offset
+                    outStream.Write(BitConverter.GetBytes((UInt64)currentLength), 0, 8); //write one length
+
                 }
 
 
-                for (int i = 0; i < vhdxOffsets.Length; i++)
+                while (bytesRead < block.length)
                 {
-                    UInt64 startBlockOffset = 0; //where to start read within block 
-                    UInt64 endBlockOffset = vhdxBlockSize; //where to end read within block
-
-                    //first block?
-                    if (i == 0)
+                    //still whole buffersize to read?
+                    if (bytesRead + bufferSize <= block.length)
                     {
-                        startBlockOffset = block.offset % vhdxBlockSize;
+                        //read whole buffer size           
+                        buffer = diskHandler.read(block.offset + bytesRead, bufferSize);
+                        bytesRead += bufferSize;
                     }
-
-                    //last block?
-                    if (i + 1 == vhdxOffsets.Length) {
-                        endBlockOffset = startBlockOffset + (block.length - bytesReadBlock) - 1;
+                    else //end of block? read remaining bytes
+                    {
+                        ulong bytesRemaining = block.length - bytesRead;
+                        buffer = diskHandler.read(block.offset + bytesRead, bytesRemaining);
+                        bytesRead += bytesRemaining;
                     }
-
-                    UInt32 bytesToRead = (UInt32)(endBlockOffset - startBlockOffset) + 1;
-                    buffer = new byte[bytesToRead];
-                    sourceHDDStream.Seek((Int64)(vhdxOffsets[i] + startBlockOffset), SeekOrigin.Begin);
-                    sourceHDDStream.Read(buffer, 0, (Int32)bytesToRead);
 
                     //write the current buffer to diff file
                     outStream.Write(buffer, 0, buffer.Length); //write data
                     bytesReadCount += (uint)buffer.Length;
-                    bytesReadBlock += (UInt64)buffer.Length;
 
                     //calculate progress
                     int percentage = (int)(((double)bytesReadCount / (double)totalBytesCount) * 100.0);
@@ -127,15 +175,66 @@ namespace Common
             this.eventHandler.raiseNewEvent("Erstelle Inkrement - 100%", false, true, relatedEventId, EventStatus.successful);
 
             //close destination stream
+            GC.KeepAlive(inputStream);
             outStream.Close();
+            inputStream.Close();
 
         }
 
 
-        //merges a rct diff file with a vhdx
-        public void merge(Stream diffStream, string destinationSnapshot)
+        //merges a lb file with a vhdx
+        public void merge_lb(System.IO.FileStream lbStream, string destinationSnapshot)
         {
-            int relatedEventId = this.eventHandler.raiseNewEvent("Verarbeite Inkrement...", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
+            int relatedEventId = -1;
+            if (this.eventHandler != null)
+            {
+                relatedEventId = this.eventHandler.raiseNewEvent("Verarbeite LiveBackup...", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
+            }
+
+            //parse lb file
+            HyperVBackupRCT.LBStructure parsedLBFile = HyperVBackupRCT.LBParser.parseLBFile(lbStream, false);
+
+            //open destination stream
+            FileStream destinationStream = new FileStream(destinationSnapshot, FileMode.Open, FileAccess.ReadWrite);
+
+            ulong blockCounter = 0;
+            int lastProgress = 0;
+            //iterate through each lb block
+            foreach (HyperVBackupRCT.LBBlock currentBlock in parsedLBFile.blocks)
+            {
+                //read current block payload from source stream
+                lbStream.Seek((long)currentBlock.lbFileOffset, SeekOrigin.Begin);
+                byte[] blockPayload = new byte[currentBlock.length];
+                lbStream.Read(blockPayload, 0, (int)currentBlock.length);
+
+                //write current block payload to dest stream
+                destinationStream.Seek((long)currentBlock.offset, SeekOrigin.Begin);
+                destinationStream.Write(blockPayload, 0, (int)currentBlock.length);
+
+                blockCounter++;
+
+                //show progress
+                int progress = (int)(((float)blockCounter / (float)(parsedLBFile.blocks.Count)) * 100.0);
+                if (progress != lastProgress)
+                {
+                    lastProgress = progress;
+                    this.eventHandler.raiseNewEvent("Verarbeite LiveBackup... " + progress, false, true, relatedEventId, EventStatus.inProgress);
+                }
+            }
+
+            //close dest stream
+            destinationStream.Close();
+
+        }
+
+        //merges a rct diff file with a vhdx
+        public void merge_rct(BlockCompression.LZ4BlockStream diffStream, string destinationSnapshot)
+        {
+            int relatedEventId = -1;
+            if (this.eventHandler != null)
+            {
+                relatedEventId = this.eventHandler.raiseNewEvent("Verarbeite Inkrement...", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
+            }
 
             //open file streams
             VirtualDiskHandler diskHandler = new VirtualDiskHandler(destinationSnapshot);
@@ -147,58 +246,18 @@ namespace Common
 
             FileStream snapshotStream = new FileStream(diskHandler.getHandle(), FileAccess.Write, false, sectorSize, true);
 
-            //read block count
-            byte[] buffer = new byte[4];
-            diffStream.Read(buffer, 0, 4);
-            UInt32 blockCount = BitConverter.ToUInt32(buffer, 0);
+            HyperVBackupRCT.CbStructure cbStruct = HyperVBackupRCT.CBParser.parseCBFile(diffStream, false);
 
             //restored bytes count for progress calculation
             long bytesRestored = 0;
             string lastProgress = "";
 
             //iterate through all blocks
-            for (int i = 0; i < blockCount; i++)
+            byte[] buffer;
+            for (int i = 0; i < cbStruct.blockCount; i++)
             {
-                ulong offset;
-                ulong length;
                 ulong bytesRead = 0;
                 ulong writeOffset = 0;
-
-                //read block offset
-                buffer = new byte[8];
-                //ensure to read 8 bytes, lz4 sometimes reads less
-                while (bytesRead < 8)
-                {
-                    bytesRead += (ulong)diffStream.Read(buffer, (int)bytesRead, 8 - (int)bytesRead);
-                }
-                offset = BitConverter.ToUInt64(buffer, 0);
-
-                //read block length
-                //ensure to read 8 bytes, lz4 sometimes reads less
-                bytesRead = 0;
-                while (bytesRead < 8)
-                {
-                    bytesRead += (ulong)diffStream.Read(buffer, (int)bytesRead, 8 - (int)bytesRead);
-                }
-                length = BitConverter.ToUInt64(buffer, 0);
-
-                //jump over vhdx block offsets
-
-                //read vhdxBlockOffsetsCount
-                bytesRead = 0;
-                while (bytesRead < 4)
-                {
-                    bytesRead += (ulong)diffStream.Read(buffer, (int)bytesRead, 4 - (int)bytesRead);
-                }
-                UInt32 vhdxBlockOffsetsCount = BitConverter.ToUInt32(buffer, 0);
-
-                //read and ignore entries
-                bytesRead = 0;
-                while (bytesRead < 8* vhdxBlockOffsetsCount)
-                {
-                    bytesRead += (ulong)diffStream.Read(buffer, (int)bytesRead, 8 * (int)vhdxBlockOffsetsCount - (int)bytesRead);
-                }
-
 
                 //read data block buffered, has to be 2^X
                 int bufferSize = 16777216;
@@ -206,19 +265,20 @@ namespace Common
                 
                 buffer = new byte[bufferSize];
 
-                while ((ulong)bytesRead < length) //read blockwise until everything is read
+                while ((ulong)bytesRead < cbStruct.blocks[i].changedBlockLength) //read blockwise until everything is read
                 {
                     int bytesReadBlock = 0;
 
                     //shrink buffer size?
-                    if (length - (ulong)bytesRead < (ulong)bufferSize)
+                    if (cbStruct.blocks[i].changedBlockLength - (ulong)bytesRead < (ulong)bufferSize)
                     {
-                        bufferSize = (int)(length - (ulong)bytesRead);
+                        bufferSize = (int)(cbStruct.blocks[i].changedBlockLength - (ulong)bytesRead);
                         buffer = new byte[bufferSize];
                     }
 
 
                     //read until buffer is full (by using lz4 it can occur that readBytes < bufferSize)
+                    diffStream.Seek((Int64)cbStruct.blocks[i].cbFileOffset + (Int64)bytesRead, SeekOrigin.Begin);
                     while (bytesReadBlock < bufferSize)
                     {
                         int currentBytesCount = diffStream.Read(buffer, bytesReadBlock, bufferSize - bytesReadBlock);
@@ -230,21 +290,25 @@ namespace Common
                     }
 
                     //write block to target file
-                    diskHandler.write(offset + writeOffset, buffer);
+                    diskHandler.write(cbStruct.blocks[i].changedBlockOffset + writeOffset, buffer);
                     writeOffset += (ulong)bufferSize;
 
                     //show progress
                     string progress = Common.PrettyPrinter.prettyPrintBytes(bytesRestored);
-                    if (progress != lastProgress)
+                    if (progress != lastProgress && this.eventHandler != null)
                     {
-                        this.eventHandler.raiseNewEvent("Verarbeite Inkrement... " + progress, false, true, NO_RELATED_EVENT, EventStatus.inProgress);
+                        this.eventHandler.raiseNewEvent("Verarbeite Inkrement... " + progress, false, true, relatedEventId, EventStatus.inProgress);
                         lastProgress = progress;
                     }
 
                 }
 
             }
-            this.eventHandler.raiseNewEvent("Verarbeite Inkrement... erfolgreich", false, true, NO_RELATED_EVENT, EventStatus.successful);
+
+            if (this.eventHandler != null)
+            {
+                this.eventHandler.raiseNewEvent("Verarbeite Inkrement... erfolgreich", false, true, NO_RELATED_EVENT, EventStatus.successful);
+            }
             GC.KeepAlive(snapshotStream);
             diskHandler.detach();
             diskHandler.close();
@@ -287,19 +351,3 @@ namespace Common
 
     }
 }
-
-
-//cb file type
-//
-//uint32 = 4 bytes = changed block count
-//
-//one block:
-//ulong = 8 bytes = changed block offset
-//ulong = 8 bytes = changed block length
-
-//uint = 4 bytes = vhdx block offsets count
-//ulong = 8 bytes = vhdx block offset 1
-//ulong = 8 bytes = vhdx block offset 2
-//...
-
-//data block (size = changed block length)

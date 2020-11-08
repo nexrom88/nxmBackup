@@ -8,18 +8,28 @@ namespace Common
 {
     public class EventHandler
     {
-        private string vmId;
+        private string vmId = "";
         private int executionId;
 
-        public EventHandler (string vmId, int jobExecutionId)
+        public EventHandler (JobVM vm, int jobExecutionId)
         {
             this.executionId = jobExecutionId;
-            this.vmId = vmId;
+            if (vm != null)
+            {
+                this.vmId = vm.vmID;
+
+            }  
         }
 
         //builds a EventProperties object and raises the "newEvent" event
         public int raiseNewEvent(string text, bool setDone, bool isUpdate, int relatedEventId, EventStatus status)
         {
+            //do not write to DB when execution ID < 0
+            if (this.executionId < 0)
+            {
+                return 0;
+            }
+
             Common.EventProperties props = new Common.EventProperties();
             props.text = text;
             props.eventStatus = status.ToString();

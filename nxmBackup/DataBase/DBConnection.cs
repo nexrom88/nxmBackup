@@ -4,31 +4,32 @@ using System.Data.SqlClient;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Npgsql;
 
 namespace Common
 {
     public class DBConnection : IDisposable
     {
-        private string server = ".\\SQLEXPRESS";
+        private string server = "localhost";
         private string database = "nxmBackup";
         private string user = "nxm";
         private string password = "test123";
 
-        private SqlConnection connection;
+        private NpgsqlConnection connection;
 
         public DBConnection()
         {
             //start SQL Server connection
             //build connection string
             string connectionString = $"Server={this.server};Database={this.database};User Id={this.user};Password={this.password};";
-            this.connection = new SqlConnection(connectionString);
+            this.connection = new NpgsqlConnection(connectionString);
 
             //open DB connection
             connection.Open();
         }
 
         //opens a transaction
-        public SqlTransaction beginTransaction()
+        public NpgsqlTransaction beginTransaction()
         {
             return connection.BeginTransaction();
         }
@@ -46,23 +47,23 @@ namespace Common
         }
 
         //sends a sql query
-        public List<Dictionary<string, string>> doReadQuery(string query, Dictionary<string, string> parameters, SqlTransaction transaction)
+        public List<Dictionary<string, string>> doReadQuery(string query, Dictionary<string, object> parameters, NpgsqlTransaction transaction)
         {
             try
             {
 
 
-                SqlCommand command;
+                NpgsqlCommand command;
 
                 if (transaction == null)
                 {
                     //query without transaction
-                    command = new SqlCommand(query, connection);
+                    command = new NpgsqlCommand(query, connection);
                 }
                 else
                 {
                     //query within transaction
-                    command = new SqlCommand(query, connection, transaction);
+                    command = new NpgsqlCommand(query, connection, transaction);
                 }
 
                 //add all query parameters
@@ -75,7 +76,7 @@ namespace Common
                 }
 
 
-                SqlDataReader reader = command.ExecuteReader();
+                NpgsqlDataReader reader = command.ExecuteReader();
 
                 //retVal is a list of dictionaries
                 List<Dictionary<string, string>> result = new List<Dictionary<string, string>>();
@@ -112,19 +113,19 @@ namespace Common
         }
 
         // Do operation.
-        public int doWriteQuery(string query, Dictionary<string, string> parameters, SqlTransaction transaction)
+        public int doWriteQuery(string query, Dictionary<string, object> parameters, NpgsqlTransaction transaction)
         {
-            SqlCommand command;
+            NpgsqlCommand command;
 
             if (transaction == null)
             {
                 //query without transaction
-                command = new SqlCommand(query, connection);
+                command = new NpgsqlCommand(query, connection);
             }
             else
             {
                 //query within transaction
-                command = new SqlCommand(query, connection, transaction);
+                command = new NpgsqlCommand(query, connection, transaction);
             }
 
             //add all query parameters
