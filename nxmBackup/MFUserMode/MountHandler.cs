@@ -9,11 +9,14 @@ using HVBackupCore;
 using nxmBackup.HVBackupCore;
 using System.Linq.Expressions;
 using System.Net.Http.Headers;
+using System.Runtime.InteropServices;
 
 namespace nxmBackup.MFUserMode
 {
     public class MountHandler
     {
+        [DllImport("Kernel32.dll", CharSet = CharSet.Unicode)]
+        private static extern uint QueryDosDevice([In] string lpDeviceName, [Out] StringBuilder lpTargetPath, [In] int ucchMax);
 
         private MFUserMode kmConnection;
         private bool processStopped = false;
@@ -97,6 +100,9 @@ namespace nxmBackup.MFUserMode
         //sends a target vhdx to km for lr
         private void sendVHDXTargetPathToKM(string path)
         {
+            //replace driveletter with DOS device path
+            path = replaceDriveLetterByDevicePath(path);
+
             //get unicode bytes
             byte[] buffer = Encoding.Unicode.GetBytes(path);
 
@@ -107,6 +113,15 @@ namespace nxmBackup.MFUserMode
 
 
             this.kmConnection.writeMessage(sendBuffer);
+        }
+
+        //replaces the drive letter with nt device path
+        private string replaceDriveLetterByDevicePath(string path)
+        {
+            StringBuilder builder = new StringBuilder(255);
+            QueryDosDevice(path.Substring(0, 2), builder, 255);
+            path = path.Substring(3);
+            return builder.ToString() + "\\" + path;
         }
 
         //transfer vm config files from backup archive

@@ -8,12 +8,14 @@ using Newtonsoft.Json;
 using HyperVBackupRCT;
 using nxmBackup.MFUserMode;
 using System.ComponentModel;
+using System.Runtime.InteropServices;
 
 namespace TestProject
 {
     class Program
     {
-
+        [DllImport("Kernel32.dll", CharSet = CharSet.Unicode)]
+        private static extern uint QueryDosDevice([In] string lpDeviceName, [Out] StringBuilder lpTargetPath, [In] int ucchMax);
 
         static void Main(string[] args)
         {
@@ -21,11 +23,11 @@ namespace TestProject
             if (um.connectToKM("\\nxmLRPort", "\\BaseNamedObjects\\nxmmflr"))
             {
 
-                byte[] data = Encoding.Unicode.GetBytes("c:\\test\\test.vhdx");
+                byte[] data = Encoding.Unicode.GetBytes(replaceDriveLetterByDevicePath("c:\\test\\test.vhdx"));
                 byte[] sendData = new byte[data.Length + 1];
                 Array.Copy(data, sendData, data.Length);
-                sendData[sendData.Length - 1] = 0;
-                
+                sendData[sendData.Length - 2] = 0;
+
                 um.writeMessage(data);
                 um.closeConnection();
             }
@@ -129,9 +131,16 @@ namespace TestProject
         }
 
 
-        
+
+        //replaces the drive letter with nt device path
+        private static string replaceDriveLetterByDevicePath(string path)
+        {
+            StringBuilder builder = new StringBuilder(255);
+            QueryDosDevice(path.Substring(0, 2), builder, 255);
+            path = path.Substring(3);
+            return builder.ToString() + "\\" + path;
+        }
 
 
-        
     }
 }
