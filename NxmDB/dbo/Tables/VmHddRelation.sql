@@ -1,0 +1,8 @@
+﻿CREATE TABLE [dbo].[VmHddRelation]
+(
+	[Id] INT NOT NULL PRIMARY KEY Identity, 
+    [VMId] NCHAR(50) NOT NULL, 
+    [HDDId] INT NOT NULL, 
+    CONSTRAINT [FK_VmHddRelation_HDDs] FOREIGN KEY ([HDDId]) REFERENCES [HDDs]([Id]), 
+    CONSTRAINT [FK_VmHddRelation_VMs] FOREIGN KEY ([VMId]) REFERENCES [VMs]([Id])
+)

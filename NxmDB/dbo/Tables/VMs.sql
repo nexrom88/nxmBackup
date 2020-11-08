@@ -1,0 +1,5 @@
+﻿CREATE TABLE [dbo].[VMs]
+(
+	[Id] NCHAR(50) NOT NULL PRIMARY KEY, 
+    [Name] NCHAR(50) NULL
+)

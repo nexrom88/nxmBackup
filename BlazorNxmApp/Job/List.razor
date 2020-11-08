@@ -1,0 +1,51 @@
+﻿@page "/Job/List"
+@inject IJobData jobData
+@using BlazorNxmApp.Models
+
+<h3>List</h3>
+
+@if (jobList is null)
+{
+    <h4>Loading records...</h4>
+}
+else
+{
+    <table class="table table-striped">
+        <thead class="thead-dark" >
+            <tr>
+                <th>Name</th>
+                <th>BasePath</th>
+                <th>Interval</th>
+                <th>Next run</th>
+                <th>Last run</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach(var job in jobList)
+            {
+            <tr>
+                <td>@job.Name</td>
+                <td>@job.BasePath</td>
+                <td>@job.Interval</td>
+                <td>dummy</td>
+                <td>dummy</td>
+                <td><a href="/Job/Details/@job.Id"></a></td>
+            </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<JobModel> jobList;
+
+    protected override async Task OnInitializedAsync()
+    {
+        jobList = await jobData.GetJobs();
+
+
+    }
+
+
+}

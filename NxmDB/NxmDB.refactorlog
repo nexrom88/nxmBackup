@@ -1,0 +1,38 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Operations Version="1.0" xmlns="http://schemas.microsoft.com/sqlserver/dac/Serialization/2012/02">
+  <Operation Name="Rename Refactor" Key="fdd611d1-6735-4e3d-81c1-6fd3e42eb2f3" ChangeDateTime="08/22/2020 11:46:03">
+    <Property Name="ElementName" Value="[dbo].[Jobs].[Blocksize]" />
+    <Property Name="ElementType" Value="SqlSimpleColumn" />
+    <Property Name="ParentElementName" Value="[dbo].[Jobs]" />
+    <Property Name="ParentElementType" Value="SqlTable" />
+    <Property Name="NewName" Value="BlockSize" />
+  </Operation>
+  <Operation Name="Rename Refactor" Key="ae881b86-358b-41b5-a325-6bc37b90ee9a" ChangeDateTime="08/22/2020 11:46:09">
+    <Property Name="ElementName" Value="[dbo].[Jobs].[Basepath]" />
+    <Property Name="ElementType" Value="SqlSimpleColumn" />
+    <Property Name="ParentElementName" Value="[dbo].[Jobs]" />
+    <Property Name="ParentElementType" Value="SqlTable" />
+    <Property Name="NewName" Value="BasePath" />
+  </Operation>
+  <Operation Name="Rename Refactor" Key="fa8eb49b-a2cc-4495-9c6a-4b13ad659a4b" ChangeDateTime="08/22/2020 11:58:39">
+    <Property Name="ElementName" Value="[dbo].[FK_JobExecutionEvents_ToTable]" />
+    <Property Name="ElementType" Value="SqlForeignKeyConstraint" />
+    <Property Name="ParentElementName" Value="[dbo].[JobExecutionEvents]" />
+    <Property Name="ParentElementType" Value="SqlTable" />
+    <Property Name="NewName" Value="[FK_JobExecutionEvents_JobExecution]" />
+  </Operation>
+  <Operation Name="Rename Refactor" Key="4fbc5ac5-c6cc-4d71-8804-c28a84c642ac" ChangeDateTime="08/22/2020 12:10:46">
+    <Property Name="ElementName" Value="[dbo].[FK_JobExecutionEvents_ToTable]" />
+    <Property Name="ElementType" Value="SqlForeignKeyConstraint" />
+    <Property Name="ParentElementName" Value="[dbo].[JobExecutionEvents]" />
+    <Property Name="ParentElementType" Value="SqlTable" />
+    <Property Name="NewName" Value="[FK_JobExecutionEvents_EventStatus]" />
+  </Operation>
+  <Operation Name="Rename Refactor" Key="8c70dabc-e715-4e57-bdd0-61bb000a2b9f" ChangeDateTime="09/11/2020 14:09:30">
+    <Property Name="ElementName" Value="[dbo].[JobVmRelation].[VMId]" />
+    <Property Name="ElementType" Value="SqlSimpleColumn" />
+    <Property Name="ParentElementName" Value="[dbo].[JobVmRelation]" />
+    <Property Name="ParentElementType" Value="SqlTable" />
+    <Property Name="NewName" Value="VmId" />
+  </Operation>
+</Operations>

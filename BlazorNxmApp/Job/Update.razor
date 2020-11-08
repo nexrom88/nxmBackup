@@ -1,0 +1,125 @@
+﻿@page "/Job/Update/{Id:int}"
+@inject IJobData jobData
+@inject NavigationManager navigationManager
+@using System.IO
+@using System.DirectoryServices
+
+<h3>Job Update</h3>
+
+<EditForm Model="@job" OnValidSubmit="HandleValidSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary Model="@job" />
+    <div class="form-group">
+        <label class="control-label">Job Name</label>
+        <InputText @bind-Value="job.Name" class="form-control" />
+        <ValidationMessage For="@(() => job.Name)" class="text-danger" />
+    </div>
+    <div class="form-group">
+        <label class="control-label">Directory</label>
+        <InputText @bind-Value="job.BasePath" class="form-control" />
+        <ValidationMessage For="@(() => job.BasePath)" class="text-danger" />
+        <div class="mt-1">
+            <button type="button" class="btn btn-secondary" @onclick="LoadLogicalDriveDirectories">Load Drive Directories</button>
+            <button type="button" class="btn btn-secondary" @onclick="@(() => LoadLastDirectory(currentPath))">Back</button>
+            <button type="button" class="btn btn-outline-secondary" @onclick="SaveSelectedDirectoryPath">Select</button>
+        </div>
+        <label class="mt-1">Current Path: @currentPath</label>
+        <div class="@classDirectoryBox list-group bg-secondary rounded">
+            @foreach (var node in tree)
+            {
+                <div class="list-group-item list-group-item-action" @onclick="@(() => LoadSubDirectory(@node))">
+                    <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-folder" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M9.828 4a3 3 0 0 1-2.12-.879l-.83-.828A1 1 0 0 0 6.173 2H2.5a1 1 0 0 0-1 .981L1.546 4h-1L.5 3a2 2 0 0 1 2-2h3.672a2 2 0 0 1 1.414.586l.828.828A2 2 0 0 0 9.828 3v1z" />
+                        <path fill-rule="evenodd" d="M13.81 4H2.19a1 1 0 0 0-.996 1.09l.637 7a1 1 0 0 0 .995.91h10.348a1 1 0 0 0 .995-.91l.637-7A1 1 0 0 0 13.81 4zM2.19 3A2 2 0 0 0 .198 5.181l.637 7A2 2 0 0 0 2.826 14h10.348a2 2 0 0 0 1.991-1.819l.637-7A2 2 0 0 0 13.81 3H2.19z" />
+                    </svg>
+                    @node
+                </div>
+            }
+        </div>
+    </div>
+    <div class="form-group">
+        <input type="submit" value="Update Job" class="btn btn-primary" />
+    </div>
+</EditForm>
+
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private JobModel job = new JobModel();
+    private string basePath = "";
+    IFileListEntry file;
+    private List<string> tree = new List<string>();
+    private List<string> lastTree = new List<string>();
+    private string classDirectoryBox = "directory-box directory-box-hidden";
+    private string currentPath = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        job = await jobData.GetJobById(Id);
+
+        job.Name = job.Name.Trim();
+        job.BasePath = job.BasePath.Trim();
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        job.MaxElements = 2;
+        job.BlockSize = 2;
+        job.RotationTypeId = 2;
+        job.Day = "Mittwoch";
+        job.Hour = 2;
+        job.Minute = 0;
+        job.Interval = "daily";
+        job.IsRunning = false;
+        job.Deleted = false;
+
+        await jobData.UpdateJob(job);
+        navigationManager.NavigateTo("job/list");
+    }
+
+    private void LoadLogicalDriveDirectories()
+    {
+        //tree = new List<string>(Directory.GetDirectories(@"c:\", "*", SearchOption.TopDirectoryOnly));
+        tree = System.IO.Directory.GetLogicalDrives().ToList();
+        classDirectoryBox = "directory-box directory-box-show";
+    }
+
+    private void LoadSubDirectory(string path)
+    {
+        lastTree = new List<string>(tree);
+        try
+        {
+            tree = new List<string>(Directory.GetDirectories(path, "*", SearchOption.TopDirectoryOnly));
+            currentPath = path;
+        }
+        catch (Exception exp)
+        {
+        }
+    }
+
+    private void LoadLastDirectory(string path)
+    {
+        if (path == "") return;
+
+        DirectoryInfo parentDirectory = Directory.GetParent(path);
+        if (parentDirectory != null)
+        {
+            tree = new List<string>(Directory.GetDirectories(parentDirectory.FullName, "*", SearchOption.TopDirectoryOnly));
+            currentPath = parentDirectory.FullName;
+        }
+        else
+        {
+            tree = System.IO.Directory.GetLogicalDrives().ToList();
+            currentPath = "";
+        }
+    }
+
+
+    private void SaveSelectedDirectoryPath()
+    {
+        job.BasePath = currentPath;
+    }
+
+}

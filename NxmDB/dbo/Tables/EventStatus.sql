@@ -1,0 +1,5 @@
+﻿CREATE TABLE [dbo].[EventStatus]
+(
+	[Id] INT NOT NULL PRIMARY KEY IDENTITY, 
+    [Text] NCHAR(20) NOT NULL
+)
