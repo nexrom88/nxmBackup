@@ -214,6 +214,9 @@
     <Compile Include="SubGUIs\LBDatePickerWindow.xaml.cs">
       <DependentUpon>LBDatePickerWindow.xaml</DependentUpon>
     </Compile>
+    <Compile Include="SubGUIs\LRWindow.xaml.cs">
+      <DependentUpon>LRWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="SubGUIs\RestoreOptions.xaml.cs">
       <DependentUpon>RestoreOptions.xaml</DependentUpon>
     </Compile>
@@ -246,6 +249,10 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Include="SubGUIs\LBDatePickerWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="SubGUIs\LRWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 using nxmBackup.MFUserMode;
 using System.Threading;
 using ConfigHandler;
+using System.Windows;
+using nxmBackup.SubGUIs;
 
 namespace RestoreHelper
 {
@@ -73,11 +75,31 @@ namespace RestoreHelper
 
             string backupBasePath = System.IO.Path.Combine(basePath, restoreChain[restoreChain.Count -1].uuid + ".nxm");
 
-            MountHandler mountHandler = new MountHandler();
+            MountHandler mountHandler = new MountHandler(MountHandler.RestoreMode.lr);
 
             MountHandler.mountState mountState = MountHandler.mountState.pending;
             Thread mountThread = new Thread(() => mountHandler.startMfHandlingForLR(hddFiles, backupBasePath, ref mountState));
             mountThread.Start();
+
+            //wait for mounting process
+            while (mountState == MountHandler.mountState.pending)
+            {
+                Thread.Sleep(200);
+            }
+
+            //error while mounting
+            if (mountState == MountHandler.mountState.error)
+            {
+                MessageBox.Show("Backup konnte nicht eingehängt werden", "Restore Fehler", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            //start restore window
+            LRWindow h = new LRWindow();
+            h.ShowDialog();
+
+            mountThread.Abort();
+            mountHandler.stopMfHandling();
 
         }
 

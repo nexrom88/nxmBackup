@@ -186,16 +186,52 @@ namespace nxmBackup.MFUserMode
                 return;
 
             }
-            //get lr operation mode (0 = read, 1 = write)
+
+            FILTER_REPLY_MESSAGE reply = new FILTER_REPLY_MESSAGE();
+
+            byte[] data = new byte[BUFFER_SIZE];
+            //move data to managed memory
+            for (int i = 0; i < BUFFER_SIZE; i++)
+            {
+                data[i] = dataReceive.messageContent[i];
+            }
+
+            byte requestType = data[0];
+
+            long offset = BitConverter.ToInt64(data, 1);
+            long length = BitConverter.ToInt64(data, 9);
+
+
+            //get lr operation mode (0 = write, 1 = read)
             LROperationMode operationMode = new LROperationMode();
-            switch (dataReceive.messageContent[0])
+            switch (data[0])
             {
                 case 0:
-                    operationMode = LROperationMode.read;
-                    break;
-                case 1:
                     operationMode = LROperationMode.write;
                     break;
+                case 1:
+                    operationMode = LROperationMode.read;
+                    break;
+            }
+
+            //perform a read request?
+            if (operationMode == LROperationMode.read)
+            {
+                //read payload data from backup chain
+                data = new byte[length];
+                this.readableBackupChain.readFromChain(offset, length, data, 0);
+                this.readableBackupChain.readFromLB(offset, length, data);
+
+                //write payload data to shared memory
+                Marshal.Copy(data, 0, this.sharedMemoryHandler.SharedMemoryPointer, data.Length);
+
+                //build reply struct
+                reply.replyHeader.messageId = dataReceive.messageHeader.messageId;
+                reply.replyHeader.status = 0;
+
+                int size = sizeof(FILTER_REPLY_MESSAGE);
+
+                status = FilterReplyMessage(this.kmHandle, ref reply, size);
             }
 
         }

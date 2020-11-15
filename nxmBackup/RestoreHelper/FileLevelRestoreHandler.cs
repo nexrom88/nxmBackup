@@ -100,7 +100,7 @@ namespace RestoreHelper
             //get hdd files from backup chain
             string[] hddFiles = BackupConfigHandler.getHDDFilesFromChain(restoreChain, basePath, selectedHDD);
 
-            MountHandler mountHandler = new MountHandler();
+            MountHandler mountHandler = new MountHandler(MountHandler.RestoreMode.flr);
 
             MountHandler.mountState mountState = MountHandler.mountState.pending;
             Thread mountThread = new Thread(() => mountHandler.startMfHandlingForFLR(hddFiles, ref mountState));

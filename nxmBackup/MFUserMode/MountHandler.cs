@@ -23,6 +23,12 @@ namespace nxmBackup.MFUserMode
         private System.IO.FileStream destStream;
         private BackupChainReader readableChain;
         private string mountFile;
+        private RestoreMode restoreMode;
+
+        public MountHandler(RestoreMode mode)
+        {
+            this.restoreMode = mode;
+        }
 
         public string MountFile { get => mountFile; }
 
@@ -73,9 +79,19 @@ namespace nxmBackup.MFUserMode
             this.destStream.Close();
             this.destStream.Dispose();
 
-            //restore vm config files
-            
-            transferVMConfig(basePath, mountDirectory);
+            //restore vm config files            
+            string configFile = transferVMConfig(basePath, mountDirectory);
+
+            //return if no config file found
+            if (configFile == "")
+            {
+                mountState = mountState.error;
+                System.IO.File.Delete(this.mountFile);
+                return;
+            }
+
+            //import to hyperv
+            RestoreHelper.VMImporter.importVM(configFile, "", true, "LR");
 
             //connect to MF Kernel Mode
             this.kmConnection = new MFUserMode(this.readableChain);
@@ -124,10 +140,12 @@ namespace nxmBackup.MFUserMode
             return builder.ToString() + "\\" + path;
         }
 
-        //transfer vm config files from backup archive
-        public void transferVMConfig(string archivePath, string destination)
+        //transfer vm config files from backup archive and return vmcx file
+        public string transferVMConfig(string archivePath, string destination)
         {
             List<string> hddFiles = new List<string>();
+
+            string configFile = "";
 
             Common.IArchive archive;
 
@@ -161,9 +179,16 @@ namespace nxmBackup.MFUserMode
                 //start the transfer
                 archive.getFile(entry, fileDestination);
 
+                //is config file?
+                if (fileDestination.EndsWith (".vmcx", StringComparison.OrdinalIgnoreCase))
+                {
+                    configFile = fileDestination;
+                }
+
             }
 
             archive.close();
+            return configFile;
         }
 
         //starts the mount process for FLR
@@ -324,8 +349,19 @@ namespace nxmBackup.MFUserMode
             //close km connection
             this.kmConnection.closeConnection();
 
-            //delete dummy file
-            System.IO.File.Delete(this.MountFile);
+            //delete dummy files
+            if (this.restoreMode == RestoreMode.flr)
+            {
+                System.IO.File.Delete(this.MountFile);
+            }
+
+            if (this.restoreMode == RestoreMode.lr)
+            {
+                string mountDir = Directory.GetParent(System.IO.Path.GetDirectoryName(this.MountFile)).FullName;
+                System.IO.Directory.Delete(mountDir + "\\Virtual Hard Disks", true);
+                System.IO.Directory.Delete(mountDir + "\\Virtual Machines", true);
+            }
+
         }
     
         public enum mountState
@@ -333,6 +369,12 @@ namespace nxmBackup.MFUserMode
             pending,
             connected,
             error
+        }
+
+        public enum RestoreMode
+        {
+            lr,
+            flr
         }
 
        
