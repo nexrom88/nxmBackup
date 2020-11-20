@@ -19,18 +19,18 @@ namespace TestProject
 
         static void Main(string[] args)
         {
-            MFUserMode um = new MFUserMode();
-            if (um.connectToKM("\\nxmLRPort", "\\BaseNamedObjects\\nxmmflr"))
-            {
+            //MFUserMode um = new MFUserMode();
+            //if (um.connectToKM("\\nxmLRPort", "\\BaseNamedObjects\\nxmmflr"))
+            //{
 
-                byte[] data = Encoding.Unicode.GetBytes(replaceDriveLetterByDevicePath("c:\\test\\test.vhdx"));
-                byte[] sendData = new byte[data.Length + 1];
-                Array.Copy(data, sendData, data.Length);
-                sendData[sendData.Length - 2] = 0;
+            //    byte[] data = Encoding.Unicode.GetBytes(replaceDriveLetterByDevicePath("c:\\test\\test.vhdx"));
+            //    byte[] sendData = new byte[data.Length + 1];
+            //    Array.Copy(data, sendData, data.Length);
+            //    sendData[sendData.Length - 2] = 0;
 
-                um.writeMessage(data);
-                um.closeConnection();
-            }
+            //    um.writeMessage(data);
+            //    um.closeConnection();
+            //}
 
 
 
@@ -47,10 +47,11 @@ namespace TestProject
             //RestoreHelper.VMImporter.importVM(@"F:\target\Virtual Machines\78D3C2AC-AEE7-4752-8648-0C3BCA41AE1A.vmcx", @"F:\target", false);
 
 
-            //Common.vhdxParser parser = new Common.vhdxParser(@"C:\VMs\Win10.vhdx");
-            //Common.RegionTable regionTable = parser.parseRegionTable();
-            //Common.MetadataTable metadataTable = parser.parseMetadataTable(regionTable);
-            //byte[] id = parser.getVirtualDiskID(metadataTable);
+            Common.vhdxParser parser = new Common.vhdxParser(@"F:\target\Win10.vhdx");
+            Common.RawLog log = parser.getRawLog();
+            Common.RegionTable regionTable = parser.parseRegionTable();
+            Common.MetadataTable metadataTable = parser.parseMetadataTable(regionTable);
+            byte[] id = parser.getVirtualDiskID(metadataTable);
 
             //MFUserMode. um = new MFUserMode.MFUserMode();
             //um.connectToKM("\\nxmLBPort", "\\BaseNamedObjects\\nxmmflb");

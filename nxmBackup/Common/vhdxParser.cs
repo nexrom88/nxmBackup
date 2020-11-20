@@ -92,6 +92,40 @@ namespace Common
             return header;
         }
 
+        //gets the raw log section
+        public RawLog getRawLog()
+        {
+            RawLog rawLog = new RawLog();
+
+            //jump the Header1
+            this.sourceStream.Seek(65536, SeekOrigin.Begin); //64KB * 1024
+
+            //jump to Header entry number 18
+            this.sourceStream.Seek(68, SeekOrigin.Current); //4 * 17
+
+            //read log length
+            byte[] buffer = new byte[4];
+            this.sourceStream.Read(buffer, 0, 4);
+            UInt64 logLength = BitConverter.ToUInt32(buffer, 0);
+
+            //read log offset
+            this.sourceStream.Read(buffer, 0, 4);
+            UInt64 logOffset = BitConverter.ToUInt32(buffer, 0);
+
+            //jump to log offset
+            this.sourceStream.Seek((Int32)logOffset, SeekOrigin.Begin);
+
+            //read log section
+            buffer = new byte[logLength];
+            this.sourceStream.Read(buffer, 0, buffer.Length);
+
+            rawLog.rawData = buffer;
+            rawLog.logLength = logLength;
+            rawLog.logOffset = logOffset;
+
+            return rawLog;
+        }
+
         //reads blockSize from MetadataTable
         public UInt32 getBlockSize(MetadataTable metadataTable)
         {
@@ -277,6 +311,8 @@ namespace Common
             return batTable;
         }
 
+        //
+
         //parses the region table
         public RegionTable parseRegionTable()
         {
@@ -421,6 +457,12 @@ namespace Common
 
     public struct RawHeader
     {
+        public byte[] rawData;
+    }
+
+    public struct RawLog
+    {
+        public UInt64 logOffset, logLength;
         public byte[] rawData;
     }
 

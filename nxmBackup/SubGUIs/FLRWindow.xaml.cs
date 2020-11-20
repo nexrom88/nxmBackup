@@ -72,7 +72,7 @@ namespace RestoreHelper
 
 
             Thread initThread = new Thread(() => init());
-            initThread.Start();
+            //initThread.Start();
 
             //hide progress grid
             gridProgress.Visibility = Visibility.Hidden;
