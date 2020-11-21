@@ -121,7 +121,7 @@ namespace Common
 
             rawLog.rawData = buffer;
             rawLog.logLength = logLength;
-            rawLog.logOffset = logOffset;
+            rawLog.vhdxOffset = logOffset;
 
             return rawLog;
         }
@@ -462,7 +462,7 @@ namespace Common
 
     public struct RawLog
     {
-        public UInt64 logOffset, logLength;
+        public UInt64 vhdxOffset, logLength;
         public byte[] rawData;
     }
 

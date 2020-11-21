@@ -46,7 +46,7 @@ namespace Common
 
         //writes the diff file using cbt information
         [Obsolete]
-        public void writeDiffFile(ChangedBlock[] changedBlocks, VirtualDiskHandler diskHandler, UInt32 vhdxBlockSize, Common.IArchive archive, string hddName, Common.BATTable vhdxBATTable, UInt64 bufferSize, RawBatTable rawBatTable, RawHeader rawHeader, UInt64 vhdxSize)
+        public void writeDiffFile(ChangedBlock[] changedBlocks, VirtualDiskHandler diskHandler, UInt32 vhdxBlockSize, Common.IArchive archive, string hddName, Common.BATTable vhdxBATTable, UInt64 bufferSize, RawBatTable rawBatTable, RawHeader rawHeader, RawLog rawLog, UInt64 vhdxSize)
         {
 
             //calculate changed bytes count for progress calculation
@@ -89,6 +89,13 @@ namespace Common
 
             //write raw bat table payload
             outStream.Write(rawBatTable.rawData, 0, rawBatTable.rawData.Length);
+
+            //write raw log section header
+            outStream.Write(BitConverter.GetBytes(rawLog.vhdxOffset), 0, 8); //log vhdx offset
+            outStream.Write(BitConverter.GetBytes((UInt64)rawLog.logLength), 0, 8); //log length
+
+            //write raw log section payload
+            outStream.Write(rawLog.rawData, 0, rawLog.rawData.Length);
 
 
             ulong bytesRead;

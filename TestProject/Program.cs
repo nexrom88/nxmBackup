@@ -38,20 +38,20 @@ namespace TestProject
             //CbStructure parsedFile = CBParser.parseCBFile(@"F:\nxm\Job_1VM\DF86F44C-037D-4111-8EF8-3DC2B3C2F553\31be3d96-d520-452e-b1f3-2b6fe88964cc.nxm\Win10.vhdx.cb", true);
             //string output = JsonConvert.SerializeObject(parsedFile);
 
-            //Common.JobVM vm = new Common.JobVM();
-            //vm.vmID = "CCC0F353-7B94-4F6C-B51D-8BDD2D7BC86B";
-            //HyperVBackupRCT.SnapshotHandler sh = new HyperVBackupRCT.SnapshotHandler(vm, -1);
-            //sh.cleanUp();
+            Common.JobVM vm = new Common.JobVM();
+            vm.vmID = "0F387D95-6FDF-4CBA-B5AA-B8C2ABAF2F9B";
+            HyperVBackupRCT.SnapshotHandler sh = new HyperVBackupRCT.SnapshotHandler(vm, -1);
+            sh.cleanUp();
 
 
             //RestoreHelper.VMImporter.importVM(@"F:\target\Virtual Machines\78D3C2AC-AEE7-4752-8648-0C3BCA41AE1A.vmcx", @"F:\target", false);
 
 
-            Common.vhdxParser parser = new Common.vhdxParser(@"F:\target\Win10.vhdx");
-            Common.RawLog log = parser.getRawLog();
-            Common.RegionTable regionTable = parser.parseRegionTable();
-            Common.MetadataTable metadataTable = parser.parseMetadataTable(regionTable);
-            byte[] id = parser.getVirtualDiskID(metadataTable);
+            //Common.vhdxParser parser = new Common.vhdxParser(@"F:\target\Win10.vhdx");
+            //Common.RawLog log = parser.getRawLog();
+            //Common.RegionTable regionTable = parser.parseRegionTable();
+            //Common.MetadataTable metadataTable = parser.parseMetadataTable(regionTable);
+            //byte[] id = parser.getVirtualDiskID(metadataTable);
 
             //MFUserMode. um = new MFUserMode.MFUserMode();
             //um.connectToKM("\\nxmLBPort", "\\BaseNamedObjects\\nxmmflb");

@@ -48,6 +48,18 @@ namespace HyperVBackupRCT
             blockStream.Read(rawBatTable.rawData, 0, (Int32)batLength);
             parsedCBFile.batTable = rawBatTable;
 
+            //read log section header
+            blockStream.Read(buffer, 0, 16);
+            RawLog rawLog = new RawLog();
+            rawLog.vhdxOffset = BitConverter.ToUInt64(buffer, 0);
+            rawLog.logLength = BitConverter.ToUInt64(buffer, 8);
+            rawLog.rawData = new byte[rawLog.logLength];
+
+            //read log payload
+            blockStream.Read(rawLog.rawData, 0, (Int32)rawLog.logLength);
+            parsedCBFile.logSection = rawLog;
+
+
 
             buffer = new byte[16];
             //iterate through each block
@@ -120,6 +132,8 @@ namespace HyperVBackupRCT
 
         public RawBatTable batTable;
 
+        public RawLog logSection;
+
         public List<CbBlock> blocks;
     }
 
@@ -153,6 +167,11 @@ namespace HyperVBackupRCT
 //ulong = 8 bytes = bat vhdx offset
 //ulong = 8 bytes = bat length in bytes
 //bat table data (size = bat length)
+//
+//log section
+//ulong = 8 bytes = log vhdx offset
+//ulong = 8 bytes = log length
+//log section data (size = log length)
 //
 //one block:
 //ulong = 8 bytes = changed block offset

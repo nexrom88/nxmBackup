@@ -81,6 +81,48 @@ namespace HVBackupCore
                 }
             }
 
+
+            //read from log section on flr on rct backup?
+            if (nonFullBackups.Count > firstRCTIndex)
+            {
+                UInt64 vhdxLogOffset = NonFullBackups[firstRCTIndex].cbStructure.logSection.vhdxOffset;
+                UInt64 vhdxLogEndOffset = vhdxLogOffset + (UInt64)NonFullBackups[firstRCTIndex].cbStructure.logSection.logLength;
+                if (vhdxLogOffset <= (UInt64)offset && (UInt64)offset < vhdxLogEndOffset)
+                {
+                    //how much bytes can be read here from raw log section and where?
+                    UInt64 readableBytes = (vhdxLogEndOffset - (UInt64)offset) + 1;
+                    UInt64 readOffset = (UInt64)offset - vhdxLogOffset;
+
+                    //do not read more than necessary
+                    if (readableBytes > (UInt64)length)
+                    {
+                        readableBytes = (UInt64)length;
+                    }
+
+                    //copy bytes
+                    for (UInt64 i = 0; i < readableBytes; i++)
+                    {
+                        buffer[(UInt64)bufferOffset + i] = NonFullBackups[firstRCTIndex].cbStructure.logSection.rawData[readOffset + i];
+                    }
+
+                    //request completed?
+                    if ((Int64)readableBytes == length)
+                    {
+                        return;
+                    }
+                    else
+                    {
+                        //bytes missing
+                        readFromChain(offset + (Int64)readableBytes, length - (Int64)readableBytes, buffer, bufferOffset + (Int32)readableBytes, callDepth + 1);
+
+                        return;
+                    }
+                }
+            }
+
+
+
+
             //payload reads:
 
             //iterate through all non-full backups first to see if data is within rct backup
