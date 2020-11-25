@@ -295,6 +295,7 @@ namespace nxmBackup.MFUserMode
             reply.replyHeader.messageId = dataReceive.messageHeader.messageId;
             reply.replyHeader.status = 0;
 
+
             int size = sizeof(FILTER_REPLY_MESSAGE);
 
             status = FilterReplyMessage(this.kmHandle, ref reply, size);
