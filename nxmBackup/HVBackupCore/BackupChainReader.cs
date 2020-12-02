@@ -122,6 +122,46 @@ namespace HVBackupCore
 
 
 
+            //read from metaDataTable on flr on rct backup?
+            if (nonFullBackups.Count > firstRCTIndex)
+            {
+                UInt64 vhdxMetaOffset = NonFullBackups[firstRCTIndex].cbStructure.metaDataTable.vhdxOffset;
+                UInt64 vhdxMetaEndOffset = vhdxMetaOffset + (UInt64)NonFullBackups[firstRCTIndex].cbStructure.metaDataTable.length;
+                if (vhdxMetaOffset <= (UInt64)offset && (UInt64)offset < vhdxMetaEndOffset)
+                {
+                    //how much bytes can be read here from raw log section and where?
+                    UInt64 readableBytes = (vhdxMetaEndOffset - (UInt64)offset) + 1;
+                    UInt64 readOffset = (UInt64)offset - vhdxMetaOffset;
+
+                    //do not read more than necessary
+                    if (readableBytes > (UInt64)length)
+                    {
+                        readableBytes = (UInt64)length;
+                    }
+
+                    //copy bytes
+                    for (UInt64 i = 0; i < readableBytes; i++)
+                    {
+                        buffer[(UInt64)bufferOffset + i] = NonFullBackups[firstRCTIndex].cbStructure.metaDataTable.rawData[readOffset + i];
+                    }
+
+                    //request completed?
+                    if ((Int64)readableBytes == length)
+                    {
+                        return;
+                    }
+                    else
+                    {
+                        //bytes missing
+                        readFromChain(offset + (Int64)readableBytes, length - (Int64)readableBytes, buffer, bufferOffset + (Int32)readableBytes, callDepth + 1);
+
+                        return;
+                    }
+                }
+            }
+
+
+
 
             //payload reads:
 

@@ -59,6 +59,17 @@ namespace HyperVBackupRCT
             blockStream.Read(rawLog.rawData, 0, (Int32)rawLog.logLength);
             parsedCBFile.logSection = rawLog;
 
+            //read metaDataTable header
+            blockStream.Read(buffer, 0, 16);
+            RawMetadataTable rawMeta = new RawMetadataTable();
+            rawMeta.vhdxOffset = BitConverter.ToUInt64(buffer, 0);
+            rawMeta.length = BitConverter.ToUInt64(buffer, 8);
+            rawMeta.rawData = new byte[rawMeta.length];
+
+            //read metaDataTable payload
+            blockStream.Read(rawMeta.rawData, 0, (Int32)rawMeta.length);
+            parsedCBFile.metaDataTable = rawMeta;
+
 
 
             buffer = new byte[16];
@@ -134,6 +145,8 @@ namespace HyperVBackupRCT
 
         public RawLog logSection;
 
+        public RawMetadataTable metaDataTable;
+
         public List<CbBlock> blocks;
     }
 
@@ -172,6 +185,11 @@ namespace HyperVBackupRCT
 //ulong = 8 bytes = log vhdx offset
 //ulong = 8 bytes = log length
 //log section data (size = log length)
+//
+//metadata table:
+//ulong = 8 bytes = meta vhdx offset
+//ulong = 8 bytes = meta length
+//meta section data (size = meta length)
 //
 //one block:
 //ulong = 8 bytes = changed block offset

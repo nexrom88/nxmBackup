@@ -198,6 +198,40 @@ namespace Common
             return BitConverter.ToUInt32(buffer, 0);
         }
 
+        //gets the raw MetadataTable
+        public RawMetadataTable getRawMetadataTable(RegionTable table)
+        {
+            RawMetadataTable rawMetadataTable = new RawMetadataTable();
+
+            MetadataTable metadataTable = new MetadataTable();
+            metadataTable.entries = new List<MetadataTableEntry>();
+            UInt64 metadataTableOffset = 0;
+            UInt32 metadataTableLength = 0;
+
+            //read offset and length for BAT table
+            foreach (RegionTableEntry entry in table.entries)
+            {
+                if (entry.guid[0] == 0x06)
+                {
+                    metadataTableOffset = entry.fileOffset;
+                    metadataTableLength = entry.length;
+                    break;
+                }
+            }
+
+            rawMetadataTable.length = metadataTableLength;
+            rawMetadataTable.vhdxOffset = metadataTableOffset;
+
+            //read whole table
+            this.sourceStream.Seek((long)metadataTableOffset, SeekOrigin.Begin);
+            byte[] buffer = new byte[metadataTableLength];
+            this.sourceStream.Read(buffer, 0, buffer.Length);
+            rawMetadataTable.rawData = buffer;
+
+            return rawMetadataTable;
+        }
+
+
         //parses the metadata region
         public MetadataTable parseMetadataTable(RegionTable table)
         {
@@ -457,6 +491,12 @@ namespace Common
 
     public struct RawHeader
     {
+        public byte[] rawData;
+    }
+
+    public struct RawMetadataTable
+    {
+        public UInt64 vhdxOffset, length;
         public byte[] rawData;
     }
 
