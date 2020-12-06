@@ -169,7 +169,7 @@ namespace RestoreHelper
                 //try to read files and folders
                 entries = System.IO.Directory.GetFileSystemEntries(path, "*", System.IO.SearchOption.TopDirectoryOnly);
             }
-            catch
+            catch (Exception ex)
             {
                 entries = new string[0];
             }
