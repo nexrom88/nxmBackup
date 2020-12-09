@@ -20,6 +20,11 @@ namespace Common
         //translates one changed block to vhdxOffsets
         private UInt64[] getVhdxBlockOffsets(ulong blockOffset, ulong blockLength, Common.BATTable vhdxBATTable, UInt32 vhdxBlockSize)
         {
+            if ((float)blockOffset % (float)vhdxBlockSize != 0)
+            {
+                blockOffset = blockOffset;
+            }
+
             //calculate start BAT entry
             UInt32 startEntry = (UInt32)Math.Floor((float)blockOffset / (float)vhdxBlockSize);
             UInt32 endEntry = (UInt32)Math.Floor(((float)blockOffset + (float)blockLength) / (float)vhdxBlockSize);
