@@ -286,6 +286,14 @@ namespace nxmBackup.MFUserMode
             //write payload data to shared memory
             Marshal.Copy(data, 0, this.sharedMemoryHandler.SharedMemoryPointer, data.Length);
 
+            //if (System.IO.File.Exists("c:\\output.bin"))
+            //{
+            //    FileStream str = System.IO.File.OpenWrite("c:\\output.bin");
+            //    str.Seek(0, SeekOrigin.End);
+            //    str.Write(data, 0, data.Length);
+            //    str.Close();
+            //}
+
             //byte[] temp = new byte[100];
             //for (int i = 0; i < 100; i++)
             //{
