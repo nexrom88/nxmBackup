@@ -17,8 +17,8 @@ namespace Common
             this.eventHandler = eventHandler;
         }
 
-        //translates one changed block to vhdxOffsets
-        private UInt64[] getVhdxBlockOffsets(ulong blockOffset, ulong blockLength, Common.BATTable vhdxBATTable, UInt32 vhdxBlockSize)
+        //translates one changed block to vhdxBlocks
+        private UInt64[] getVhdxBlocks(ulong blockOffset, ulong blockLength, Common.BATTable vhdxBATTable, UInt32 vhdxBlockSize)
         {
             //calculate start BAT entry
             UInt32 startEntry = (UInt32)Math.Floor((float)blockOffset / (float)vhdxBlockSize);
@@ -32,6 +32,7 @@ namespace Common
                 {
                     case 6: //block is fully present
                         vhdxOffsets[i - startEntry] = vhdxBATTable.entries[(int)i].FileOffsetMB * 1048576; // multiple with 1024^2 to get byte offset
+
                         break;
                     default: //block is not present
                         vhdxOffsets[i - startEntry] = 0;
@@ -118,7 +119,7 @@ namespace Common
                 outStream.Write(BitConverter.GetBytes(block.length), 0, 8); //write length
 
                 //get vhdx blocks
-                UInt64[] vhdxBlocks = getVhdxBlockOffsets(block.offset, block.length, vhdxBATTable, vhdxBlockSize);
+                UInt64[] vhdxBlocks = getVhdxBlocks(block.offset, block.length, vhdxBATTable, vhdxBlockSize);
 
                 //write vhdx blocks
                 outStream.Write(BitConverter.GetBytes((UInt32)vhdxBlocks.Length), 0, 4); //vhdx block offsets count
@@ -144,6 +145,7 @@ namespace Common
                     {
                         currentLength = remainingLength;
                     }
+
 
                     remainingLength -= currentLength;
 
@@ -361,6 +363,11 @@ namespace Common
 
         }
 
+
+    }
+
+    public struct vhdxBlock
+    {
 
     }
 }
