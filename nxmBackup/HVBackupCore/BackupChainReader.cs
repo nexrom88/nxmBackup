@@ -250,7 +250,6 @@ namespace HVBackupCore
                         }
                     }
                 }
-                break;
 
 
 
