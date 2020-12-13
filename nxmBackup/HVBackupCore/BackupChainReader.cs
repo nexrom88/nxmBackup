@@ -198,7 +198,7 @@ namespace HVBackupCore
                             UInt64 cbOffset = ((UInt64)offset - currentLocation.vhdxOffset) + skippedBytes + nonFullBackup.cbStructure.blocks[i].cbFileOffset;
 
                             //can everything be read?
-                            if (cbOffset + (UInt64)length <= nonFullBackup.cbStructure.blocks[i].cbFileOffset + nonFullBackup.cbStructure.blocks[i].changedBlockLength)
+                            if ((UInt64)offset + (UInt64)length <= currentLocation.vhdxOffset + currentLocation.vhdxLength)
                             {
                                 nonFullBackup.sourceStreamRCT.Seek((Int64)cbOffset, System.IO.SeekOrigin.Begin);
 
@@ -212,7 +212,8 @@ namespace HVBackupCore
                                 nonFullBackup.sourceStreamRCT.Seek((Int64)cbOffset, System.IO.SeekOrigin.Begin);
 
                                 //calculate available bytes
-                                UInt64 availableBytes = (UInt64)length - ((cbOffset + (UInt64)length) - (nonFullBackup.cbStructure.blocks[i].cbFileOffset + nonFullBackup.cbStructure.blocks[i].changedBlockLength));
+                                //UInt64 availableBytes = (UInt64)length - ((cbOffset + (UInt64)length) - (nonFullBackup.cbStructure.blocks[i].cbFileOffset + nonFullBackup.cbStructure.blocks[i].changedBlockLength));
+                                UInt64 availableBytes = (currentLocation.vhdxOffset + currentLocation.vhdxLength) - (UInt64)offset;
 
                                 nonFullBackup.sourceStreamRCT.Read(buffer, bufferOffset, (Int32)availableBytes);
 
