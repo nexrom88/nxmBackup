@@ -229,14 +229,14 @@ namespace HVBackupCore
                         else if ((UInt64)offset + (UInt64)length > currentLocation.vhdxOffset && (UInt64)offset + (UInt64)length < currentLocation.vhdxOffset + currentLocation.vhdxLength)
                         {
                             //where to start reading within cb file?
-                            UInt64 cbOffset = nonFullBackup.cbStructure.blocks[i].cbFileOffset;
+                            UInt64 cbOffset = nonFullBackup.cbStructure.blocks[i].cbFileOffset + skippedBytes;
 
                             //how much to read?
                             UInt64 readLength = ((UInt64)offset + (UInt64)length) - currentLocation.vhdxOffset;
 
 
                             nonFullBackup.sourceStreamRCT.Seek((Int64)cbOffset, System.IO.SeekOrigin.Begin);
-                            nonFullBackup.sourceStreamRCT.Read(buffer, bufferOffset + ((int)length - (int)readLength), (Int32)readLength);
+                            nonFullBackup.sourceStreamRCT.Read(buffer, (bufferOffset + (int)length) - (int)readLength, (Int32)readLength);
 
 
                             //read the here-ignored start bytes
