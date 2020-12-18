@@ -166,7 +166,7 @@
     </ApplicationDefinition>
     <Compile Include="BlockCompression\LZ4Blockstream.cs" />
     <Compile Include="Common\ChangedBlock.cs" />
-    <Compile Include="Common\DiffHandler.cs" />
+    <Compile Include="HVBackupCore\DiffHandler.cs" />
     <Compile Include="Common\EventHandler.cs" />
     <Compile Include="Common\EventProperties.cs" />
     <Compile Include="Common\IArchive.cs" />

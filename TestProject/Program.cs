@@ -40,7 +40,7 @@ namespace TestProject
 
             Common.JobVM vm = new Common.JobVM();
             vm.vmID = "0F387D95-6FDF-4CBA-B5AA-B8C2ABAF2F9B";
-            HyperVBackupRCT.SnapshotHandler sh = new HyperVBackupRCT.SnapshotHandler(vm, -1);
+            nxmBackup.HVBackupCore.SnapshotHandler sh = new nxmBackup.HVBackupCore.SnapshotHandler(vm, -1);
             sh.cleanUp();
 
 

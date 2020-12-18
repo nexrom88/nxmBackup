@@ -83,7 +83,7 @@ namespace RestoreHelper
             restoreChain.RemoveAt(restoreChain.Count - 1);
 
             //iterate through all incremental backups
-            Common.DiffHandler diffRestore = new Common.DiffHandler(this.eventHandler);
+            nxmBackup.HVBackupCore.DiffHandler diffRestore = new nxmBackup.HVBackupCore.DiffHandler(this.eventHandler);
             while (restoreChain.Count > 0)
             {
                 ConfigHandler.BackupConfigHandler.BackupInfo currentBackup = restoreChain[restoreChain.Count - 1];

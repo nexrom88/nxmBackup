@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 using Common;
 
 
-namespace HyperVBackupRCT
+namespace nxmBackup.HVBackupCore
 {
 
     public class SnapshotHandler
