@@ -564,16 +564,16 @@ namespace nxmBackup.HVBackupCore
 
             bool hddsHaveChanged = false;
             //iterate through all currently mounted HDDs
-            foreach (ManagementObject mountedHDD in mountedHDDs)
+            foreach (ManagementObject mountedHDD in mountedHDDs) 
             {
+                VMHDD hdd;
+                hdd = buildHDDStructure(mountedHDD);
+                newHDDS.Add(hdd);
 
                 bool hddFound = false;
                 //find corresponding HDD within job
                 foreach (VMHDD vmHDD in currentVM.vmHDDs)
-                {
-                    VMHDD hdd;
-                    hdd = buildHDDStructure(mountedHDD);
-                    newHDDS.Add(hdd);
+                {              
 
                     if (hdd.name == vmHDD.name)
                     {
@@ -581,13 +581,6 @@ namespace nxmBackup.HVBackupCore
                         break;
                     }
                 }
-
-                //add hdd to newHDDs list when currentVM.vmHDDS is empty
-                if (currentVM.vmHDDs.Count == 0)
-                {
-                    newHDDS.Add(buildHDDStructure(mountedHDD));
-                }
-
                 //hdd not found?
                 if (!hddFound)
                 {
