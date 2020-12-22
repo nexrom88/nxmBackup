@@ -90,8 +90,7 @@ namespace nxmBackup.MFUserMode
                 return;
             }
 
-            //import to hyperv
-            RestoreHelper.VMImporter.importVM(configFile, "", true, "LR");
+
 
             //connect to MF Kernel Mode
             this.kmConnection = new MFUserMode(this.readableChain);
@@ -99,6 +98,9 @@ namespace nxmBackup.MFUserMode
             {
                 //send target vhdx path to km
                 sendVHDXTargetPathToKM(this.mountFile);
+
+                //import to hyperv
+                //RestoreHelper.VMImporter.importVM(configFile, "", true, "LR");
 
                 mountState = mountState.connected;
 
@@ -123,9 +125,10 @@ namespace nxmBackup.MFUserMode
             byte[] buffer = Encoding.Unicode.GetBytes(path);
 
             //build send buffer, to zero-terminate unicode string
-            byte[] sendBuffer = new byte[buffer.Length + 1];
+            byte[] sendBuffer = new byte[buffer.Length + 2];
             Array.Copy(buffer, sendBuffer, buffer.Length);
             sendBuffer[sendBuffer.Length - 1] = 0;
+            sendBuffer[sendBuffer.Length - 2] = 0;
 
 
             this.kmConnection.writeMessage(sendBuffer);
