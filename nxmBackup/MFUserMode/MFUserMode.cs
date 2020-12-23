@@ -234,6 +234,12 @@ namespace nxmBackup.MFUserMode
                 status = FilterReplyMessage(this.kmHandle, ref reply, size);
             }
 
+            //perform a write request
+            if (operationMode == LROperationMode.write)
+            {
+
+            }
+
         }
 
 
