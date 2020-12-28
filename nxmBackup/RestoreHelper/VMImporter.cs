@@ -16,7 +16,7 @@ namespace RestoreHelper
     {
 
         //imports a given vm and sets vm name
-        public static void importVM(string vmDefinitionPath, string snapshotFolderPath, bool newId, string name)
+        public static void importVM(string vmDefinitionPath, string basePath, bool newId, string name)
         {
             ManagementScope scope = new ManagementScope(@"root\virtualization\v2");
 
@@ -32,7 +32,7 @@ namespace RestoreHelper
                 //
 
                 inParams["SystemDefinitionFile"] = vmDefinitionPath;
-                inParams["SnapshotFolder"] = snapshotFolderPath;
+                inParams["SnapshotFolder"] = "";
                 inParams["GenerateNewSystemIdentifier"] = newId;
 
                 using (ManagementBaseObject outParams =
@@ -44,6 +44,9 @@ namespace RestoreHelper
                     //rename the vm
                     renameVM(vm, name);
 
+                    //set vhdx
+                    setVHDX(vm, basePath);
+
                     string vmID = vm["Name"].ToString();
 
                     //realize the planned vm
@@ -51,6 +54,62 @@ namespace RestoreHelper
 
                 }
             }
+        }
+
+        //sets the vhdx path for a planned vm
+        private static void setVHDX(ManagementObject vm, string basePath)
+        {
+            //get all vhdx files within basepath first
+            string hddPath = System.IO.Path.Combine(basePath, "Virtual Hard Disks");
+            string[] vhdxFiles = System.IO.Directory.GetFiles(hddPath, "*.vhdx");
+
+            ManagementScope scope = new ManagementScope(@"root\virtualization\v2");
+            ManagementObject settings = WmiUtilities.GetVirtualMachineSettings(vm);
+
+
+
+            foreach (string vhdxFile in vhdxFiles)
+            {
+                //Build SyntheticDisk
+                ManagementObject synthetic = wmiUtilitiesForHyperVImport.GetResourceAllocationsettingDataDefault(scope, ResourceSubType.DiskSynthetic);
+
+                //add synthetic disk to vm
+                using (ManagementObject VMsettings = WmiUtilities.GetVirtualSystemManagementService(scope))
+                using (ManagementBaseObject inParams = VMsettings.GetMethodParameters("AddResourceSettings"))
+                {
+                    string[] resources = new string[1];
+                    resources[0] = synthetic.GetText(TextFormat.CimDtd20);
+
+                    inParams["AffectedConfiguration"] = settings.Path.Path;
+
+                    inParams["ResourceSettings"] = resources;
+                    VMsettings.InvokeMethod("AddResourceSettings", inParams, null);
+                }
+
+                //build VirtualHardDisk
+                ManagementObject hardDisk = wmiUtilitiesForHyperVImport.GetResourceAllocationsettingDataDefault(scope, ResourceSubType.VirtualDisk);
+                string[] hostResourcesArray = new string[1];
+                hostResourcesArray[0] = vhdxFile;
+                hardDisk["Parent"] = synthetic.Path.Path;
+                //hardDisk["HostResource"] = hostResourcesArray;
+                hardDisk["Connection"] = hostResourcesArray;
+
+
+                //add virtual hard disk to vm
+                using (ManagementObject VMsettings = WmiUtilities.GetVirtualSystemManagementService(scope))
+                using (ManagementBaseObject inParams = VMsettings.GetMethodParameters("AddResourceSettings"))
+                {
+                    string[] resourceSettingsArray = new string[1];
+                    resourceSettingsArray[0] = synthetic.GetText(TextFormat.CimDtd20);
+                    inParams["AffectedConfiguration"] = settings.Path.Path;
+                    inParams["ResourceSettings"] = resourceSettingsArray;
+                    VMsettings.InvokeMethod("AddResourceSettings", inParams, null);
+                }
+
+
+                //ManagementObject[] hdds = WmiUtilities.GetVhdSettings(vm);
+            }
+            
         }
 
         //renames a virtual machine

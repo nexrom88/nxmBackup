@@ -100,7 +100,7 @@ namespace nxmBackup.MFUserMode
                 sendVHDXTargetPathToKM(this.mountFile);
 
                 //import to hyperv
-                //RestoreHelper.VMImporter.importVM(configFile, "", true, "LR");
+                RestoreHelper.VMImporter.importVM(configFile, mountDirectory, true, "LR");
 
                 mountState = mountState.connected;
 
