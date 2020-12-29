@@ -72,6 +72,7 @@ namespace RestoreHelper
             {
                 //Build SyntheticDisk
                 ManagementObject synthetic = wmiUtilitiesForHyperVImport.GetResourceAllocationsettingDataDefault(scope, ResourceSubType.DiskSynthetic);
+                string syntheticDiskPath;
 
                 //add synthetic disk to vm
                 using (ManagementObject VMsettings = WmiUtilities.GetVirtualSystemManagementService(scope))
@@ -83,16 +84,16 @@ namespace RestoreHelper
                     inParams["AffectedConfiguration"] = settings.Path.Path;
 
                     inParams["ResourceSettings"] = resources;
-                    VMsettings.InvokeMethod("AddResourceSettings", inParams, null);
+                    ManagementBaseObject outParams = VMsettings.InvokeMethod("AddResourceSettings", inParams, null);
+                    syntheticDiskPath = ((string[])outParams["ResultingResourceSettings"])[0];
                 }
 
                 //build VirtualHardDisk
                 ManagementObject hardDisk = wmiUtilitiesForHyperVImport.GetResourceAllocationsettingDataDefault(scope, ResourceSubType.VirtualDisk);
                 string[] hostResourcesArray = new string[1];
                 hostResourcesArray[0] = vhdxFile;
-                hardDisk["Parent"] = synthetic.Path.Path;
-                //hardDisk["HostResource"] = hostResourcesArray;
-                hardDisk["Connection"] = hostResourcesArray;
+                hardDisk["Parent"] = syntheticDiskPath;
+                hardDisk["HostResource"] = hostResourcesArray;
 
 
                 //add virtual hard disk to vm
@@ -100,7 +101,7 @@ namespace RestoreHelper
                 using (ManagementBaseObject inParams = VMsettings.GetMethodParameters("AddResourceSettings"))
                 {
                     string[] resourceSettingsArray = new string[1];
-                    resourceSettingsArray[0] = synthetic.GetText(TextFormat.CimDtd20);
+                    resourceSettingsArray[0] = hardDisk.GetText(TextFormat.CimDtd20);
                     inParams["AffectedConfiguration"] = settings.Path.Path;
                     inParams["ResourceSettings"] = resourceSettingsArray;
                     VMsettings.InvokeMethod("AddResourceSettings", inParams, null);
