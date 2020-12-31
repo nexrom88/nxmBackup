@@ -100,7 +100,8 @@ namespace nxmBackup.MFUserMode
                 sendVHDXTargetPathToKM(this.mountFile);
 
                 //import to hyperv
-                RestoreHelper.VMImporter.importVM(configFile, mountDirectory, true, "LR");
+                System.Threading.Thread mountThread = new System.Threading.Thread(() => startImportVMProcess(configFile, mountDirectory, true, "LR"));
+                mountThread.Start();
 
                 mountState = mountState.connected;
 
@@ -114,6 +115,16 @@ namespace nxmBackup.MFUserMode
                 mountState = mountState.error;
             }
         }
+
+        //starts the vm import process
+        private void startImportVMProcess(string configFile, string mountDirectory, bool newId, string newName)
+        {
+            System.Threading.Thread.Sleep(1000);
+            RestoreHelper.VMImporter.importVM(configFile, mountDirectory, true, "LR");
+        }
+        
+
+        
 
         //sends a target vhdx to km for lr
         private void sendVHDXTargetPathToKM(string path)

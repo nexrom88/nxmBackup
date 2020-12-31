@@ -228,47 +228,26 @@ namespace Common
         }
 
 
-        public static ManagementObject GetResourceAllocationsettingData
+        public static List<ManagementObject> GetStorageAllocationsettingData
         (
-            ManagementObject vm,
-            UInt16 resourceType,
-            string resourceSubType,
-            string otherResourceType
+            ManagementObject vm
             )
         {
             //vm->vmsettings->RASD for IDE controller
-            ManagementObject RASD = null;
+            List<ManagementObject> retValList = new List<ManagementObject>();
             ManagementObjectCollection settingDatas = vm.GetRelated("Msvm_VirtualSystemsettingData");
             foreach (ManagementObject settingData in settingDatas)
             {
                 //retrieve the rasd
-                ManagementObjectCollection RASDs = settingData.GetRelated("Msvm_ResourceAllocationsettingData");
+                ManagementObjectCollection RASDs = settingData.GetRelated("Msvm_StorageAllocationsettingData");
                 foreach (ManagementObject rasdInstance in RASDs)
                 {
-                    if (Convert.ToUInt16(rasdInstance["ResourceType"]) == resourceType)
-                    {
-                        //found the matching type
-                        if (resourceType == ResourceType.Other)
-                        {
-                            if (rasdInstance["OtherResourceType"].ToString() == otherResourceType)
-                            {
-                                RASD = rasdInstance;
-                                break;
-                            }
-                        }
-                        else
-                        {
-                            if (rasdInstance["ResourceSubType"].ToString() == resourceSubType)
-                            {
-                                RASD = rasdInstance;
-                                break;
-                            }
-                        }
-                    }
+                    retValList.Add(rasdInstance);                      
+                        
                 }
 
             }
-            return RASD;
+            return retValList;
         }
     }
 

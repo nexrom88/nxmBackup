@@ -59,17 +59,57 @@ namespace RestoreHelper
         //sets the vhdx path for a planned vm
         private static void setVHDX(ManagementObject vm, string basePath)
         {
-            //get all vhdx files within basepath first
+            ManagementScope scope = new ManagementScope(@"root\virtualization\v2");
+            ManagementBaseObject outParams;
+
+            //remove all current disks first
+            List<ManagementObject> currentHDDs = wmiUtilitiesForHyperVImport.GetStorageAllocationsettingData(vm);
+
+            //iterate through all current hdds
+            foreach(ManagementObject currentHDD in currentHDDs)
+            {
+                //get parent (synthetic disk)
+                ManagementObjectCollection parent = currentHDD.GetRelated("Msvm_ResourceAllocationsettingData");
+
+                using (ManagementObject VMsettings = WmiUtilities.GetVirtualSystemManagementService(scope))
+                using (ManagementBaseObject inParams = VMsettings.GetMethodParameters("RemoveResourceSettings"))
+                {
+                    //delete disk
+                    ManagementObject[] resources = new ManagementObject[1];
+                    resources[0] = currentHDD;
+                    inParams["ResourceSettings"] = resources;
+                    outParams = VMsettings.InvokeMethod("RemoveResourceSettings", inParams, null);
+      
+                    WmiUtilities.ValidateOutput(outParams, scope);
+
+                    //delete synthetic parent disk
+
+                    //get enumerator and just take first element
+                    var enumerator = parent.GetEnumerator();
+                    enumerator.MoveNext();
+
+                    resources[0] = (ManagementObject)enumerator.Current;
+                    inParams["ResourceSettings"] = resources;
+                    outParams = VMsettings.InvokeMethod("RemoveResourceSettings", inParams, null);
+
+                    WmiUtilities.ValidateOutput(outParams, scope);
+                }
+                    
+            }
+
+
+            //get all vhdx files within basepath
             string hddPath = System.IO.Path.Combine(basePath, "Virtual Hard Disks");
             string[] vhdxFiles = System.IO.Directory.GetFiles(hddPath, "*.vhdx");
 
-            ManagementScope scope = new ManagementScope(@"root\virtualization\v2");
+            
             ManagementObject settings = WmiUtilities.GetVirtualMachineSettings(vm);
 
 
 
             foreach (string vhdxFile in vhdxFiles)
             {
+
                 //Build SyntheticDisk
                 ManagementObject synthetic = wmiUtilitiesForHyperVImport.GetResourceAllocationsettingDataDefault(scope, ResourceSubType.DiskSynthetic);
                 string syntheticDiskPath;
@@ -84,7 +124,7 @@ namespace RestoreHelper
                     inParams["AffectedConfiguration"] = settings.Path.Path;
 
                     inParams["ResourceSettings"] = resources;
-                    ManagementBaseObject outParams = VMsettings.InvokeMethod("AddResourceSettings", inParams, null);
+                    outParams = VMsettings.InvokeMethod("AddResourceSettings", inParams, null);
                     syntheticDiskPath = ((string[])outParams["ResultingResourceSettings"])[0];
                 }
 
