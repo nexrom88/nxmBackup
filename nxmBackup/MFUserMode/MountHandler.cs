@@ -101,14 +101,23 @@ namespace nxmBackup.MFUserMode
 
                 //import to hyperv
                 System.Threading.Thread mountThread = new System.Threading.Thread(() => startImportVMProcess(configFile, mountDirectory, true, "LR"));
-                mountThread.Start();
+                //mountThread.Start();
 
                 mountState = mountState.connected;
 
+                //create file for write cache
+                WriteCache writeCache = new WriteCache();
+                System.IO.FileStream writeCacheStream = new FileStream(this.mountFile + ".wc", FileMode.Create, FileAccess.ReadWrite);
+                writeCache.writeCacheStream = writeCacheStream;
+                writeCache.positions = new List<WriteCachePosition>();
+
                 while (!this.processStopped)
                 {
-                    this.kmConnection.handleLRMessage();
+                    this.kmConnection.handleLRMessage(writeCache);
                 }
+
+                writeCacheStream.Close();
+                
             }
             else
             {
@@ -371,6 +380,7 @@ namespace nxmBackup.MFUserMode
 
             if (this.restoreMode == RestoreMode.lr)
             {
+                return;
                 string mountDir = Directory.GetParent(System.IO.Path.GetDirectoryName(this.MountFile)).FullName;
                 System.IO.Directory.Delete(mountDir + "\\Virtual Hard Disks", true);
                 System.IO.Directory.Delete(mountDir + "\\Virtual Machines", true);
@@ -389,6 +399,19 @@ namespace nxmBackup.MFUserMode
         {
             lr,
             flr
+        }
+
+        public struct WriteCache
+        {
+            public List<WriteCachePosition> positions;
+            public System.IO.FileStream writeCacheStream;
+        }
+
+        public struct WriteCachePosition
+        {
+            public UInt64 offset;
+            public UInt64 length;
+            public UInt64 filePosition;
         }
 
        
