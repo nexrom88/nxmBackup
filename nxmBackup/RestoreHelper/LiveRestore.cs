@@ -94,6 +94,7 @@ namespace RestoreHelper
                 return;
             }
 
+
             //start restore window
             LRWindow h = new LRWindow();
             h.ShowDialog();
@@ -102,6 +103,7 @@ namespace RestoreHelper
             mountHandler.stopMfHandling();
 
         }
+
 
         private ConfigHandler.BackupConfigHandler.BackupInfo getBackup(List<ConfigHandler.BackupConfigHandler.BackupInfo> backupChain, string instanceID)
         {

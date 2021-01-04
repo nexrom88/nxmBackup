@@ -237,28 +237,28 @@ namespace nxmBackup.MFUserMode
             }
 
             //perform a write request
-            if (operationMode == LROperationMode.write)
-            {
-                //get data from shared memory
-                Marshal.Copy(this.sharedMemoryHandler.SharedMemoryPointer, data, 0, data.Length);
+            //if (operationMode == LROperationMode.write)
+            //{
+            //    //get data from shared memory
+            //    Marshal.Copy(this.sharedMemoryHandler.SharedMemoryPointer, data, 0, data.Length);
 
-                //write data to writecache
-                writeCache.writeCacheStream.Seek(0, SeekOrigin.End);
-                writeCache.writeCacheStream.Write(data, 0, data.Length);
-                MountHandler.WriteCachePosition newCachePosition = new MountHandler.WriteCachePosition();
-                newCachePosition.filePosition = (UInt64)writeCache.writeCacheStream.Position;
-                newCachePosition.length = (UInt64)length;
-                newCachePosition.offset = (UInt64)offset;
-                writeCache.positions.Add(newCachePosition);
+            //    //write data to writecache
+            //    writeCache.writeCacheStream.Seek(0, SeekOrigin.End);
+            //    writeCache.writeCacheStream.Write(data, 0, data.Length);
+            //    MountHandler.WriteCachePosition newCachePosition = new MountHandler.WriteCachePosition();
+            //    newCachePosition.filePosition = (UInt64)writeCache.writeCacheStream.Position;
+            //    newCachePosition.length = (UInt64)length;
+            //    newCachePosition.offset = (UInt64)offset;
+            //    writeCache.positions.Add(newCachePosition);
 
-                //build reply struct, to ack message
-                reply.replyHeader.messageId = dataReceive.messageHeader.messageId;
-                reply.replyHeader.status = 0;
+            //    //build reply struct, to ack message
+            //    reply.replyHeader.messageId = dataReceive.messageHeader.messageId;
+            //    reply.replyHeader.status = 0;
 
-                int size = sizeof(FILTER_REPLY_MESSAGE);
+            //    int size = sizeof(FILTER_REPLY_MESSAGE);
 
-                status = FilterReplyMessage(this.kmHandle, ref reply, size);
-            }
+            //    status = FilterReplyMessage(this.kmHandle, ref reply, size);
+            //}
 
         }
 

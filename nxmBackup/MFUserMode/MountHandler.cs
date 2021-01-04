@@ -10,6 +10,8 @@ using nxmBackup.HVBackupCore;
 using System.Linq.Expressions;
 using System.Net.Http.Headers;
 using System.Runtime.InteropServices;
+using System.Management;
+using Common;
 
 namespace nxmBackup.MFUserMode
 {
@@ -129,11 +131,48 @@ namespace nxmBackup.MFUserMode
         private void startImportVMProcess(string configFile, string mountDirectory, bool newId, string newName)
         {
             System.Threading.Thread.Sleep(1000);
-            RestoreHelper.VMImporter.importVM(configFile, mountDirectory, true, "LR");
-        }
-        
+            string vmName = "LR";
+            
+            //import vm to hyperv
+            RestoreHelper.VMImporter.importVM(configFile, mountDirectory, true, vmName);
 
-        
+            //create helper snapshot to redirect writes to avhdx file
+            createHelperSnapshot(vmName);
+        }
+
+        //create helper snapshot
+        private void createHelperSnapshot(string vmName)
+        {
+            const UInt16 SnapshotTypeRecovery = 32768;
+            ManagementScope scope = new ManagementScope("\\\\localhost\\root\\virtualization\\v2", null);
+
+            // Get the management service and the VM object.
+            using (ManagementObject vm = WmiUtilities.GetVirtualMachine(vmName, scope))
+            using (ManagementObject service = WmiUtilities.GetVirtualMachineSnapshotService(scope))
+            using (ManagementObject settings = WmiUtilities.GetVirtualMachineSnapshotSettings(scope))
+            using (ManagementBaseObject inParams = service.GetMethodParameters("CreateSnapshot"))
+            {
+                //set settings
+                settings["ConsistencyLevel"] = ConsistencyLevel.CrashConsistent;
+                settings["IgnoreNonSnapshottableDisks"] = true;
+                inParams["AffectedSystem"] = vm.Path.Path;
+                inParams["SnapshotSettings"] = settings.GetText(TextFormat.WmiDtd20);
+                inParams["SnapshotType"] = SnapshotTypeRecovery;
+
+                using (ManagementBaseObject outParams = service.InvokeMethod(
+                    "CreateSnapshot",
+                    inParams,
+                    null))
+                {
+                    //wait for the snapshot to be created
+                    WmiUtilities.ValidateOutput(outParams, scope);
+
+                }
+
+                
+            }
+        }
+
 
         //sends a target vhdx to km for lr
         private void sendVHDXTargetPathToKM(string path)
