@@ -171,7 +171,7 @@ namespace nxmBackup.MFUserMode
         }
 
         //reads one lr message
-        public unsafe void handleLRMessage(MountHandler.WriteCache writeCache)
+        public unsafe void handleLRMessage()
         {
             DATA_RECEIVE dataReceive = new DATA_RECEIVE();
 
@@ -222,7 +222,7 @@ namespace nxmBackup.MFUserMode
                 //read payload data from backup chain
                 this.readableBackupChain.readFromChain(offset, length, data, 0);
                 this.readableBackupChain.readFromLB(offset, length, data);
-                this.readableBackupChain.readFromWC(offset, length, data, writeCache);
+                //this.readableBackupChain.readFromWC(offset, length, data, writeCache);
 
                 //write payload data to shared memory
                 Marshal.Copy(data, 0, this.sharedMemoryHandler.SharedMemoryPointer, data.Length);

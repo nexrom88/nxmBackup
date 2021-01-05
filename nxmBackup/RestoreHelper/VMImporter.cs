@@ -15,8 +15,8 @@ namespace RestoreHelper
     public class VMImporter
     {
 
-        //imports a given vm and sets vm name
-        public static void importVM(string vmDefinitionPath, string basePath, bool newId, string name)
+        //imports a given vm, sets vm name nd returns vm ID
+        public static string importVM(string vmDefinitionPath, string basePath, bool newId, string name)
         {
             ManagementScope scope = new ManagementScope(@"root\virtualization\v2");
 
@@ -51,6 +51,8 @@ namespace RestoreHelper
 
                     //realize the planned vm
                     ManagementObject realizedVM =  realizePlannedVM(vmID);
+
+                    return vmID;
 
                 }
             }

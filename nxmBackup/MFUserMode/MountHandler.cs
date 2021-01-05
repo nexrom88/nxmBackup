@@ -103,22 +103,22 @@ namespace nxmBackup.MFUserMode
 
                 //import to hyperv
                 System.Threading.Thread mountThread = new System.Threading.Thread(() => startImportVMProcess(configFile, mountDirectory, true, "LR"));
-                //mountThread.Start();
+                mountThread.Start();
 
                 mountState = mountState.connected;
 
                 //create file for write cache
-                WriteCache writeCache = new WriteCache();
-                System.IO.FileStream writeCacheStream = new FileStream(this.mountFile + ".wc", FileMode.Create, FileAccess.ReadWrite);
-                writeCache.writeCacheStream = writeCacheStream;
-                writeCache.positions = new List<WriteCachePosition>();
+                //WriteCache writeCache = new WriteCache();
+                //System.IO.FileStream writeCacheStream = new FileStream(this.mountFile + ".wc", FileMode.Create, FileAccess.ReadWrite);
+                //writeCache.writeCacheStream = writeCacheStream;
+                //writeCache.positions = new List<WriteCachePosition>();
 
                 while (!this.processStopped)
                 {
-                    this.kmConnection.handleLRMessage(writeCache);
+                    this.kmConnection.handleLRMessage();
                 }
 
-                writeCacheStream.Close();
+                //writeCacheStream.Close();
                 
             }
             else
@@ -134,20 +134,20 @@ namespace nxmBackup.MFUserMode
             string vmName = "LR";
             
             //import vm to hyperv
-            RestoreHelper.VMImporter.importVM(configFile, mountDirectory, true, vmName);
+            string vmID =RestoreHelper.VMImporter.importVM(configFile, mountDirectory, true, vmName);
 
             //create helper snapshot to redirect writes to avhdx file
-            createHelperSnapshot(vmName);
+            createHelperSnapshot(vmID);
         }
 
         //create helper snapshot
-        private void createHelperSnapshot(string vmName)
+        private void createHelperSnapshot(string vmID)
         {
             const UInt16 SnapshotTypeRecovery = 32768;
             ManagementScope scope = new ManagementScope("\\\\localhost\\root\\virtualization\\v2", null);
 
             // Get the management service and the VM object.
-            using (ManagementObject vm = WmiUtilities.GetVirtualMachine(vmName, scope))
+            using (ManagementObject vm = WmiUtilities.GetVirtualMachine(vmID, scope))
             using (ManagementObject service = WmiUtilities.GetVirtualMachineSnapshotService(scope))
             using (ManagementObject settings = WmiUtilities.GetVirtualMachineSnapshotSettings(scope))
             using (ManagementBaseObject inParams = service.GetMethodParameters("CreateSnapshot"))
