@@ -152,9 +152,8 @@ namespace nxmBackup.MFUserMode
 
             // Get the management service and the VM object.
             using (ManagementObject vm = WmiUtilities.GetVirtualMachine(vmID, scope))
-            using (ManagementObject service = WmiUtilities.GetVirtualMachineSnapshotService(scope))
             using (ManagementObject settings = WmiUtilities.GetVirtualMachineSnapshotSettings(scope))
-            using (ManagementBaseObject inParams = service.GetMethodParameters("CreateSnapshot"))
+            using (ManagementBaseObject inParams = settings.GetMethodParameters("CreateSnapshot"))
             {
                 //set settings
                 settings["ConsistencyLevel"] = ConsistencyLevel.CrashConsistent;
@@ -163,7 +162,7 @@ namespace nxmBackup.MFUserMode
                 inParams["SnapshotSettings"] = settings.GetText(TextFormat.WmiDtd20);
                 inParams["SnapshotType"] = SnapshotTypeRecovery;
 
-                using (ManagementBaseObject outParams = service.InvokeMethod(
+                using (ManagementBaseObject outParams = settings.InvokeMethod(
                     "CreateSnapshot",
                     inParams,
                     null))
