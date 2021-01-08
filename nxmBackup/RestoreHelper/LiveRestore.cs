@@ -8,6 +8,7 @@ using System.Threading;
 using ConfigHandler;
 using System.Windows;
 using nxmBackup.SubGUIs;
+using System.Management;
 
 namespace RestoreHelper
 {
@@ -99,11 +100,33 @@ namespace RestoreHelper
             LRWindow h = new LRWindow();
             h.ShowDialog();
 
+            //turns off and deletes vm
+            deleteVM(mountHandler.LrVMID);
+
             mountThread.Abort();
             mountHandler.stopMfHandling();
 
         }
 
+
+        //turns off and deletes vm
+        private void deleteVM(string vmId)
+        {
+            ManagementScope scope = new ManagementScope(@"root\virtualization\v2");
+            
+            //power off vm
+            using (ManagementObject vm = Common.WmiUtilities.GetVirtualMachine(vmId, scope))
+            using (ManagementBaseObject inParams = vm.GetMethodParameters("RequestStateChange"))
+            {
+                inParams["RequestedState"] = 3; //power off
+                ManagementBaseObject outParams = vm.InvokeMethod("RequestStateChange", inParams, null);
+                Common.WmiUtilities.ValidateOutput(outParams, scope);
+            }
+
+            //delete vm
+
+
+        }
 
         private ConfigHandler.BackupConfigHandler.BackupInfo getBackup(List<ConfigHandler.BackupConfigHandler.BackupInfo> backupChain, string instanceID)
         {

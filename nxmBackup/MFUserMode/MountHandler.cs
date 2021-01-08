@@ -26,6 +26,7 @@ namespace nxmBackup.MFUserMode
         private BackupChainReader readableChain;
         private string mountFile;
         private RestoreMode restoreMode;
+        private string lrVMID; //vm id, just for lr
 
         public MountHandler(RestoreMode mode)
         {
@@ -33,6 +34,8 @@ namespace nxmBackup.MFUserMode
         }
 
         public string MountFile { get => mountFile; }
+
+        public string LrVMID { get => lrVMID;}
 
         //starts the mount process for LR
         public void startMfHandlingForLR(string[] sourceFiles, string basePath, ref mountState mountState)
@@ -135,6 +138,7 @@ namespace nxmBackup.MFUserMode
             
             //import vm to hyperv
             string vmID =RestoreHelper.VMImporter.importVM(configFile, mountDirectory, true, vmName);
+            this.lrVMID = vmID;
 
             //create helper snapshot to redirect writes to avhdx file
             createHelperSnapshot(vmID);
@@ -419,7 +423,6 @@ namespace nxmBackup.MFUserMode
 
             if (this.restoreMode == RestoreMode.lr)
             {
-                return;
                 string mountDir = Directory.GetParent(System.IO.Path.GetDirectoryName(this.MountFile)).FullName;
                 System.IO.Directory.Delete(mountDir + "\\Virtual Hard Disks", true);
                 System.IO.Directory.Delete(mountDir + "\\Virtual Machines", true);
