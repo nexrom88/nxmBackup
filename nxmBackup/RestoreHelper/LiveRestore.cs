@@ -113,18 +113,27 @@ namespace RestoreHelper
         private void deleteVM(string vmId)
         {
             ManagementScope scope = new ManagementScope(@"root\virtualization\v2");
-            
+
             //power off vm
+            bool succeeded = false;
             using (ManagementObject vm = Common.WmiUtilities.GetVirtualMachine(vmId, scope))
             using (ManagementBaseObject inParams = vm.GetMethodParameters("RequestStateChange"))
             {
                 inParams["RequestedState"] = 3; //power off
                 ManagementBaseObject outParams = vm.InvokeMethod("RequestStateChange", inParams, null);
-                Common.WmiUtilities.ValidateOutput(outParams, scope);
+                succeeded = Common.WmiUtilities.ValidateOutput(outParams, scope, false, false);
             }
 
             //delete vm
 
+            using (ManagementObject vm = Common.WmiUtilities.GetVirtualMachine(vmId, scope))
+            using (ManagementObject service = Common.WmiUtilities.GetVirtualSystemManagementService(scope))
+            using (ManagementBaseObject inParams = service.GetMethodParameters("DestroySystem"))
+            {
+                inParams["AffectedSystem"] = vm;
+                ManagementBaseObject outParams = service.InvokeMethod("DestroySystem", inParams, null);
+                Common.WmiUtilities.ValidateOutput(outParams, scope, false, false);
+            }
 
         }
 
