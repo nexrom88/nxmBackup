@@ -264,52 +264,7 @@ namespace HVBackupCore
         }
 
 
-        //try read from writechache (lr)
-        public void readFromWC(Int64 offset, Int64 length, byte[] buffer, nxmBackup.MFUserMode.MountHandler.WriteCache writeCache)
-        {
-            //iterate through blocks within writeCache
-            foreach (nxmBackup.MFUserMode.MountHandler.WriteCachePosition cachePosition in writeCache.positions)
-            {
-                UInt64 sourceOffset = 0, destOffset = 0, sourceAndDestLength = 0;
-
-                System.IO.FileStream cacheStream = writeCache.writeCacheStream;
-
-                //start offset is within current block?
-                if (cachePosition.offset <= (UInt64)offset && (UInt64)offset < cachePosition.offset + cachePosition.length)
-                {
-                    //where and how much to read from this block?
-                    destOffset = 0;
-                    sourceOffset = (UInt64)offset - cachePosition.offset;
-                    sourceAndDestLength = (cachePosition.offset + cachePosition.length) - (UInt64)offset;
-
-                    //adjust blockLength
-                    if (sourceAndDestLength > (UInt64)length)
-                    {
-                        sourceAndDestLength = (UInt64)length;
-                    }
-
-
-                //end offset is within current block
-                }
-                else if (cachePosition.offset < (UInt64)offset + (UInt64)length && (UInt64)offset + (UInt64)length < cachePosition.offset + cachePosition.length)
-                {
-                    sourceOffset = 0;
-                    sourceAndDestLength = ((UInt64)offset + (UInt64)length) - cachePosition.offset;
-                    destOffset = cachePosition.offset - (UInt64)offset;
-                }
-
-                //copy to dest array
-                if (sourceAndDestLength != 0)
-                {
-                    //read from lb
-                    byte[] sourceBuffer = new byte[sourceAndDestLength];
-                    writeCache.writeCacheStream.Seek((Int64)(cachePosition.filePosition + sourceOffset), System.IO.SeekOrigin.Begin);
-                    writeCache.writeCacheStream.Read(sourceBuffer, 0, (int)sourceAndDestLength);
-
-                    Buffer.BlockCopy(sourceBuffer, 0, buffer, (int)destOffset, (int)sourceAndDestLength);
-                }
-            }
-        }
+        
 
         //try read from lb
         public void readFromLB(Int64 offset, Int64 length, byte[] buffer)
