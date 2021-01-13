@@ -146,7 +146,7 @@ namespace RestoreHelper
                     break;
                 case "lr":
                     RestoreHelper.LiveRestore lrHandler = new LiveRestore();
-                    lrHandler.performLiveRestore(sourcePath, ((ComboBoxItem)cbVMs.SelectedItem).Content.ToString() + "_LiveRestore", restorePoint.InstanceId);
+                    lrHandler.performLiveRestore(sourcePath, ((ComboBoxItem)cbVMs.SelectedItem).Content.ToString(), restorePoint.InstanceId);
                     break;
             }
 

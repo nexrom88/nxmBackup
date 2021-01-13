@@ -79,7 +79,7 @@ namespace RestoreHelper
             MountHandler mountHandler = new MountHandler(MountHandler.RestoreMode.lr);
 
             MountHandler.mountState mountState = MountHandler.mountState.pending;
-            Thread mountThread = new Thread(() => mountHandler.startMfHandlingForLR(hddFiles, backupBasePath, ref mountState));
+            Thread mountThread = new Thread(() => mountHandler.startMfHandlingForLR(hddFiles, backupBasePath, vmName, ref mountState));
             mountThread.Start();
 
             //wait for mounting process
@@ -100,32 +100,38 @@ namespace RestoreHelper
             LRWindow h = new LRWindow();
             h.ShowDialog();
 
-            //turns off and deletes vm
-            deleteVM(mountHandler.LrVMID);
+            //turns off VM
+            powerOffVM(mountHandler.LrVMID);
 
             mountThread.Abort();
             mountHandler.stopMfHandling();
 
+            deleteVM(mountHandler.LrVMID);
+
         }
 
 
-        //turns off and deletes vm
-        private void deleteVM(string vmId)
+        //turns off vm
+        private void powerOffVM(string vmId)
         {
             ManagementScope scope = new ManagementScope(@"root\virtualization\v2");
 
             //power off vm
-            bool succeeded = false;
             using (ManagementObject vm = Common.WmiUtilities.GetVirtualMachine(vmId, scope))
             using (ManagementBaseObject inParams = vm.GetMethodParameters("RequestStateChange"))
             {
                 inParams["RequestedState"] = 3; //power off
                 ManagementBaseObject outParams = vm.InvokeMethod("RequestStateChange", inParams, null);
-                succeeded = Common.WmiUtilities.ValidateOutput(outParams, scope, false, false);
+                Common.WmiUtilities.ValidateOutput(outParams, scope, false, false);
             }
 
-            //delete vm
+        }
 
+        private void deleteVM(string vmId)
+        {
+            ManagementScope scope = new ManagementScope(@"root\virtualization\v2");
+
+            //delete vm
             using (ManagementObject vm = Common.WmiUtilities.GetVirtualMachine(vmId, scope))
             using (ManagementObject service = Common.WmiUtilities.GetVirtualSystemManagementService(scope))
             using (ManagementBaseObject inParams = service.GetMethodParameters("DestroySystem"))
@@ -134,7 +140,6 @@ namespace RestoreHelper
                 ManagementBaseObject outParams = service.InvokeMethod("DestroySystem", inParams, null);
                 Common.WmiUtilities.ValidateOutput(outParams, scope, false, false);
             }
-
         }
 
         private ConfigHandler.BackupConfigHandler.BackupInfo getBackup(List<ConfigHandler.BackupConfigHandler.BackupInfo> backupChain, string instanceID)

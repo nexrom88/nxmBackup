@@ -38,7 +38,7 @@ namespace nxmBackup.MFUserMode
         public string LrVMID { get => lrVMID;}
 
         //starts the mount process for LR
-        public void startMfHandlingForLR(string[] sourceFiles, string basePath, ref mountState mountState)
+        public void startMfHandlingForLR(string[] sourceFiles, string basePath, string vmName, ref mountState mountState)
         {
             //build readable backup chain structure first
             this.readableChain = buildReadableBackupChain(sourceFiles);
@@ -105,7 +105,7 @@ namespace nxmBackup.MFUserMode
                 sendVHDXTargetPathToKM(this.mountFile);
 
                 //import to hyperv
-                System.Threading.Thread mountThread = new System.Threading.Thread(() => startImportVMProcess(configFile, mountDirectory, true, "LR"));
+                System.Threading.Thread mountThread = new System.Threading.Thread(() => startImportVMProcess(configFile, mountDirectory, true, vmName + "_LiveRestore"));
                 mountThread.Start();
 
                 mountState = mountState.connected;
@@ -134,10 +134,9 @@ namespace nxmBackup.MFUserMode
         private void startImportVMProcess(string configFile, string mountDirectory, bool newId, string newName)
         {
             System.Threading.Thread.Sleep(1000);
-            string vmName = "LR";
             
             //import vm to hyperv
-            string vmID =RestoreHelper.VMImporter.importVM(configFile, mountDirectory, true, vmName);
+            string vmID =RestoreHelper.VMImporter.importVM(configFile, mountDirectory, true, newName);
             this.lrVMID = vmID;
 
             //create helper snapshot to redirect writes to avhdx file
