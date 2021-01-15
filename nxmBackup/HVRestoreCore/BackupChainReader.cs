@@ -48,6 +48,8 @@ namespace HVRestoreCore
             {
                 UInt64 vhdxBatOffset = NonFullBackups[firstRCTIndex].cbStructure.batTable.vhdxOffset;
                 UInt64 vhdxBatEndOffset = vhdxBatOffset + (UInt64)NonFullBackups[firstRCTIndex].cbStructure.batTable.rawData.Length;
+
+                //start is within bat table
                 if (vhdxBatOffset <= (UInt64)offset && (UInt64)offset < vhdxBatEndOffset)
                 {
                     //how much bytes can be read here from raw bat table and where?
@@ -87,6 +89,8 @@ namespace HVRestoreCore
             {
                 UInt64 vhdxLogOffset = NonFullBackups[firstRCTIndex].cbStructure.logSection.vhdxOffset;
                 UInt64 vhdxLogEndOffset = vhdxLogOffset + (UInt64)NonFullBackups[firstRCTIndex].cbStructure.logSection.logLength;
+
+                //start is within log section
                 if (vhdxLogOffset <= (UInt64)offset && (UInt64)offset < vhdxLogEndOffset)
                 {
                     //how much bytes can be read here from raw log section and where?
@@ -127,6 +131,8 @@ namespace HVRestoreCore
             {
                 UInt64 vhdxMetaOffset = NonFullBackups[firstRCTIndex].cbStructure.metaDataTable.vhdxOffset;
                 UInt64 vhdxMetaEndOffset = vhdxMetaOffset + (UInt64)NonFullBackups[firstRCTIndex].cbStructure.metaDataTable.length;
+
+                //start is within metadatatable
                 if (vhdxMetaOffset <= (UInt64)offset && (UInt64)offset < vhdxMetaEndOffset)
                 {
                     //how much bytes can be read here from raw log section and where?
