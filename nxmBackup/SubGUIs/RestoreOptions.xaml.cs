@@ -137,15 +137,15 @@ namespace RestoreHelper
                     }
 
                     int jobExecutionId = Common.DBQueries.addJobExecution(this.job.DbId, "restore");
-                    RestoreHelper.FullRestoreHandler fullRestoreHandler = new RestoreHelper.FullRestoreHandler(new Common.EventHandler(targetVM, jobExecutionId));
+                    HVRestoreCore.FullRestoreHandler fullRestoreHandler = new HVRestoreCore.FullRestoreHandler(new Common.EventHandler(targetVM, jobExecutionId));
                     fullRestoreHandler.performFullRestoreProcess(sourcePath, "f:\\target", ((ComboBoxItem)cbVMs.SelectedItem).Content.ToString() + "_restored", restorePoint.InstanceId, importToHyperV);
                     break;
                 case "flr":
-                    RestoreHelper.FileLevelRestoreHandler flrHandler = new RestoreHelper.FileLevelRestoreHandler();
+                    HVRestoreCore.FileLevelRestoreHandler flrHandler = new HVRestoreCore.FileLevelRestoreHandler();
                     flrHandler.performGuestFilesRestore(sourcePath, restorePoint.InstanceId);
                     break;
                 case "lr":
-                    RestoreHelper.LiveRestore lrHandler = new LiveRestore();
+                    HVRestoreCore.LiveRestore lrHandler = new HVRestoreCore.LiveRestore();
                     lrHandler.performLiveRestore(sourcePath, ((ComboBoxItem)cbVMs.SelectedItem).Content.ToString(), restorePoint.InstanceId);
                     break;
             }

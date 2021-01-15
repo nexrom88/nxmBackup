@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using System.Management;
 using System.IO;
 
-namespace RestoreHelper
+namespace HVRestoreCore
 {
     public class GuestFilesHandler
     {

@@ -10,7 +10,7 @@ using System.Management;
 using Common;
 using System.Threading;
 
-namespace RestoreHelper
+namespace HVRestoreCore
 {
     public class VMImporter
     {

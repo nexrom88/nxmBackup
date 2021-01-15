@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using HyperVBackupRCT;
 using nxmBackup.HVBackupCore;
 
-namespace HVBackupCore
+namespace HVRestoreCore
 {
     public class BackupChainReader
     {

@@ -185,7 +185,7 @@
     <Compile Include="DataBase\DBQueries.cs" />
     <Compile Include="HVBackupCore\CBParser.cs" />
     <Compile Include="HVBackupCore\ConsistencyLevel.cs" />
-    <Compile Include="HVBackupCore\BackupChainReader.cs" />
+    <Compile Include="HVRestoreCore\BackupChainReader.cs" />
     <Compile Include="HVBackupCore\LBParser.cs" />
     <Compile Include="HVBackupCore\LiveBackupWorker.cs" />
     <Compile Include="HVBackupCore\SnapshotHandler.cs" />
@@ -194,11 +194,11 @@
     <Compile Include="MFUserMode\MFUserMode.cs" />
     <Compile Include="MFUserMode\MountHandler.cs" />
     <Compile Include="MFUserMode\SharedMemory.cs" />
-    <Compile Include="RestoreHelper\FileLevelRestoreHandler.cs" />
-    <Compile Include="RestoreHelper\FullRestoreHandler.cs" />
-    <Compile Include="RestoreHelper\GuestFilesHandler.cs" />
-    <Compile Include="RestoreHelper\LiveRestore.cs" />
-    <Compile Include="RestoreHelper\VMImporter.cs" />
+    <Compile Include="HVRestoreCore\FileLevelRestoreHandler.cs" />
+    <Compile Include="HVRestoreCore\FullRestoreHandler.cs" />
+    <Compile Include="HVRestoreCore\GuestFilesHandler.cs" />
+    <Compile Include="HVRestoreCore\LiveRestore.cs" />
+    <Compile Include="HVRestoreCore\VMImporter.cs" />
     <Compile Include="SubGUIs\AddJobWindow.xaml.cs">
       <DependentUpon>AddJobWindow.xaml</DependentUpon>
     </Compile>

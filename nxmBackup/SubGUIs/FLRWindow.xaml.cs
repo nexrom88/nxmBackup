@@ -16,7 +16,7 @@ using System.Security.Principal;
 using System.Threading;
 using WpfAnimatedGif;
 
-namespace RestoreHelper
+namespace HVRestoreCore
 {
     /// <summary>
     /// Interaktionslogik für MainWindow.xaml

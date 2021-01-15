@@ -1,14 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using HyperVBackupRCT;
-using HVBackupCore;
+using HVRestoreCore;
 using nxmBackup.HVBackupCore;
-using System.Linq.Expressions;
-using System.Net.Http.Headers;
 using System.Runtime.InteropServices;
 using System.Management;
 using Common;
@@ -136,7 +132,7 @@ namespace nxmBackup.MFUserMode
             System.Threading.Thread.Sleep(1000);
             
             //import vm to hyperv
-            string vmID =RestoreHelper.VMImporter.importVM(configFile, mountDirectory, true, newName);
+            string vmID = HVRestoreCore.VMImporter.importVM(configFile, mountDirectory, true, newName);
             this.lrVMID = vmID;
 
             //create helper snapshot to redirect writes to avhdx file
