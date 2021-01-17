@@ -33,11 +33,22 @@ namespace HVRestoreCore
             {
                 if (offset < 1048576) // within vhdx header?
                 {
-                    for (Int64 i = 0; i < length; i++)
+                    long bytesToRead = length;
+                    if (offset + length > 1048576)
+                    {
+                        bytesToRead = (offset + length) - 1048576;
+                    }
+
+                    for (Int64 i = 0; i < bytesToRead; i++)
                     {
                         buffer[bufferOffset + i] = NonFullBackups[firstRCTIndex].cbStructure.rawHeader.rawData[offset + i];
                     }
 
+                    //read tail
+                    if(bytesToRead < length)
+                    {
+                        readFromChain(offset + bytesToRead, length - bytesToRead, buffer, bufferOffset + (int)bytesToRead, callDepth++);
+                    }
 
                     return;
                 }
@@ -200,6 +211,11 @@ namespace HVRestoreCore
                         //is offset within location? (start within location)
                         if ((UInt64)offset >= currentLocation.vhdxOffset && (UInt64)offset < currentLocation.vhdxOffset + currentLocation.vhdxLength)
                         {
+                            if (skippedBytes != 0)
+                            {
+                                skippedBytes = 0;
+                            }
+
                             //where to start reading within cb file?
                             UInt64 cbOffset = ((UInt64)offset - currentLocation.vhdxOffset) + skippedBytes + nonFullBackup.cbStructure.blocks[i].cbFileOffset;
 
