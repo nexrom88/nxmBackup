@@ -316,7 +316,11 @@ namespace Common
 
             //read whole table
             byte[] buffer = new byte[batLength];
-            this.sourceStream.Read(buffer, 0, (int)batLength);
+            int bytesRead = this.sourceStream.Read(buffer, 0, (int)batLength);
+            if (bytesRead != batLength)
+            {
+                bytesRead = 0;
+            }
 
             //each entry consists of 64bit, iterate
             UInt32 entryCount = batLength / 64;
@@ -362,9 +366,10 @@ namespace Common
             this.sourceStream.Seek(192 * 1024, SeekOrigin.Begin);
 
             //reserve buffer
-            int regionSize = 256 * 1024 - 128 * 1024;
+            int regionSize = 256 * 1024 - 192 * 1024;
             byte[] buffer = new byte[regionSize];
             this.sourceStream.Read(buffer, 0, regionSize);
+
 
             RegionTable regionTable = new RegionTable();
 

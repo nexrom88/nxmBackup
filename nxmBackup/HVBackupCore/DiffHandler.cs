@@ -37,7 +37,8 @@ namespace nxmBackup.HVBackupCore
 
                         break;
                     default: //block is not present
-                        vhdxOffsets[i - startEntry] = 0;
+                        uint offsetIndex = i - startEntry;
+                        vhdxOffsets[offsetIndex] = 0;
                         break;
                 }
                 
