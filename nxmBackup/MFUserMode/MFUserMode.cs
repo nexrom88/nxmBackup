@@ -62,6 +62,9 @@ namespace nxmBackup.MFUserMode
         //the handle to the km connection
         private IntPtr kmHandle;
 
+        //minifilter instance name
+        private const string mfName = "nxmmf";
+
 
         //shared memory with km
         SharedMemory sharedMemoryHandler = new SharedMemory();
@@ -76,9 +79,38 @@ namespace nxmBackup.MFUserMode
         {
         }
 
+        //loads the minifilter driver
+        private bool loadMF()
+        {
+            //first unload if already running
+            unloadMF();
+
+            //start mf
+            System.Diagnostics.Process process = System.Diagnostics.Process.Start("fltmc.exe", "load " + mfName);
+            process.WaitForExit();
+            int errorCode = process.ExitCode;
+            return errorCode == 0;
+        }
+
+        //unloads the minifilter driver
+        private bool unloadMF()
+        {
+            System.Diagnostics.Process process = System.Diagnostics.Process.Start("fltmc.exe", "unload " + mfName);
+            process.WaitForExit();
+            int errorCode = process.ExitCode;
+            return errorCode == 0;
+        }
+
         //starts the connection to kernel Mode driver
         public bool connectToKM(string portName, string sectionName)
         {
+            //load mf first
+            if (!loadMF())
+            {
+                return false;
+            }
+
+            //start km connection
             this.kmHandle = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(IntPtr)));
             uint result = FilterConnectCommunicationPort(portName, 0, IntPtr.Zero, 0, IntPtr.Zero,  out kmHandle);
 
@@ -104,6 +136,9 @@ namespace nxmBackup.MFUserMode
             {
                 this.sharedMemoryHandler.unmapSharedBuffer();
             }
+
+            //unload mf
+            unloadMF();
         }
 
         //writes one "standalone" message to km (no response)
