@@ -101,10 +101,19 @@ namespace nxmBackup.MFUserMode
                 sendVHDXTargetPathToKM(this.mountFile);
 
                 //import to hyperv
-                System.Threading.Thread mountThread = new System.Threading.Thread(() => startImportVMProcess(configFile, mountDirectory, true, vmName + "_LiveRestore"));
-                mountThread.Start();
+                //System.Threading.Thread mountThread = new System.Threading.Thread(() => startImportVMProcess(configFile, mountDirectory, true, vmName + "_LiveRestore"));
+                //mountThread.Start();
+                bool importSuccessful = startImportVMProcess(configFile, mountDirectory, true, vmName + "_LiveRestore");
 
-                mountState = mountState.connected;
+                if (importSuccessful)
+                {
+                    mountState = mountState.connected;
+                }
+                else
+                {
+                    mountState = mountState.error;
+                    return;
+                }
 
                 //create file for write cache
                 //WriteCache writeCache = new WriteCache();
@@ -127,16 +136,25 @@ namespace nxmBackup.MFUserMode
         }
 
         //starts the vm import process
-        private void startImportVMProcess(string configFile, string mountDirectory, bool newId, string newName)
+        private bool startImportVMProcess(string configFile, string mountDirectory, bool newId, string newName)
         {
             System.Threading.Thread.Sleep(1000);
-            
-            //import vm to hyperv
-            string vmID = HVRestoreCore.VMImporter.importVM(configFile, mountDirectory, true, newName);
-            this.lrVMID = vmID;
 
-            //create helper snapshot to redirect writes to avhdx file
-            createHelperSnapshot(vmID);
+            //import vm to hyperv
+            try
+            {
+                string vmID = HVRestoreCore.VMImporter.importVM(configFile, mountDirectory, false, newName);
+                this.lrVMID = vmID;
+
+                //create helper snapshot to redirect writes to avhdx file
+                createHelperSnapshot(vmID);
+                return true;
+            }
+            catch(Exception ex)
+            {
+                return false;
+            }
+
         }
 
         //create helper snapshot

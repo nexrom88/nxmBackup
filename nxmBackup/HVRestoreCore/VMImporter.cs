@@ -73,6 +73,12 @@ namespace HVRestoreCore
                 //get parent (synthetic disk)
                 ManagementObjectCollection parent = currentHDD.GetRelated("Msvm_ResourceAllocationsettingData");
 
+                //ignore when there is no synthetic disk
+                if (parent.Count == 0)
+                {
+                    continue;
+                }
+
                 using (ManagementObject VMsettings = WmiUtilities.GetVirtualSystemManagementService(scope))
                 using (ManagementBaseObject inParams = VMsettings.GetMethodParameters("RemoveResourceSettings"))
                 {
