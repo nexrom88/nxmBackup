@@ -102,18 +102,18 @@ namespace HVRestoreCore
 
             MountHandler mountHandler = new MountHandler(MountHandler.RestoreMode.flr);
 
-            MountHandler.mountState mountState = MountHandler.mountState.pending;
+            MountHandler.ProcessState mountState = MountHandler.ProcessState.pending;
             Thread mountThread = new Thread(() => mountHandler.startMfHandlingForFLR(hddFiles, ref mountState));
             mountThread.Start();
 
             //wait for mounting process
-            while (mountState == MountHandler.mountState.pending)
+            while (mountState == MountHandler.ProcessState.pending)
             {
                 Thread.Sleep(200);
             }
 
             //error while mounting
-            if (mountState == MountHandler.mountState.error)
+            if (mountState == MountHandler.ProcessState.error)
             {
                 MessageBox.Show("Backup konnte nicht eingehängt werden", "Restore Fehler", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;

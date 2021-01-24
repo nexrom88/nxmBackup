@@ -23,6 +23,7 @@ namespace nxmBackup.MFUserMode
         private string mountFile;
         private RestoreMode restoreMode;
         private string lrVMID; //vm id, just for lr
+        public ProcessState mountState;
 
         public MountHandler(RestoreMode mode)
         {
@@ -34,7 +35,7 @@ namespace nxmBackup.MFUserMode
         public string LrVMID { get => lrVMID;}
 
         //starts the mount process for LR
-        public void startMfHandlingForLR(string[] sourceFiles, string basePath, string vmName, ref mountState mountState)
+        public void startMfHandlingForLR(string[] sourceFiles, string basePath, string vmName)
         {
             //build readable backup chain structure first
             this.readableChain = buildReadableBackupChain(sourceFiles);
@@ -68,7 +69,7 @@ namespace nxmBackup.MFUserMode
             this.mountFile = getMountHDDPath(decompressedFileSize, vhdxName);
             if (this.mountFile == null)
             {
-                mountState = mountState.error;
+                mountState = ProcessState.error;
                 return;
             }
 
@@ -86,7 +87,7 @@ namespace nxmBackup.MFUserMode
             //return if no config file found
             if (configFile == "")
             {
-                mountState = mountState.error;
+                mountState = ProcessState.error;
                 System.IO.File.Delete(this.mountFile);
                 return;
             }
@@ -101,42 +102,25 @@ namespace nxmBackup.MFUserMode
                 sendVHDXTargetPathToKM(this.mountFile);
 
                 //import to hyperv
-                //System.Threading.Thread mountThread = new System.Threading.Thread(() => startImportVMProcess(configFile, mountDirectory, true, vmName + "_LiveRestore"));
-                //mountThread.Start();
-                bool importSuccessful = startImportVMProcess(configFile, mountDirectory, true, vmName + "_LiveRestore");
-
-                if (importSuccessful)
-                {
-                    mountState = mountState.connected;
-                }
-                else
-                {
-                    mountState = mountState.error;
-                    return;
-                }
-
-                //create file for write cache
-                //WriteCache writeCache = new WriteCache();
-                //System.IO.FileStream writeCacheStream = new FileStream(this.mountFile + ".wc", FileMode.Create, FileAccess.ReadWrite);
-                //writeCache.writeCacheStream = writeCacheStream;
-                //writeCache.positions = new List<WriteCachePosition>();
+                System.Threading.Thread mountThread = new System.Threading.Thread(() => startImportVMProcess(configFile, mountDirectory, true, vmName + "_LiveRestore"));
+                mountThread.Start();
+                
 
                 while (!this.processStopped)
                 {
                     this.kmConnection.handleLRMessage();
                 }
 
-                //writeCacheStream.Close();
                 
             }
             else
             {
-                mountState = mountState.error;
+                this.mountState = ProcessState.error;
             }
         }
 
         //starts the vm import process
-        private bool startImportVMProcess(string configFile, string mountDirectory, bool newId, string newName)
+        private void startImportVMProcess(string configFile, string mountDirectory, bool newId, string newName)
         {
             System.Threading.Thread.Sleep(1000);
 
@@ -148,11 +132,11 @@ namespace nxmBackup.MFUserMode
 
                 //create helper snapshot to redirect writes to avhdx file
                 createHelperSnapshot(vmID);
-                return true;
+                this.mountState = ProcessState.successful;
             }
             catch(Exception ex)
             {
-                return false;
+                this.mountState = ProcessState.error;
             }
 
         }
@@ -271,7 +255,7 @@ namespace nxmBackup.MFUserMode
         }
 
         //starts the mount process for FLR
-        public void startMfHandlingForFLR (string[] sourceFiles, ref mountState mountState)
+        public void startMfHandlingForFLR (string[] sourceFiles, ref ProcessState mountState)
         {
             //build readable backup chain structure first
             this.readableChain = buildReadableBackupChain(sourceFiles);
@@ -300,7 +284,7 @@ namespace nxmBackup.MFUserMode
             this.mountFile = getMountHDDPath(decompressedFileSize, "mount.vhdx");
             if (this.mountFile == null)
             {
-                mountState = mountState.error;
+                mountState = ProcessState.error;
                 return;
             }
 
@@ -315,7 +299,7 @@ namespace nxmBackup.MFUserMode
             this.kmConnection = new MFUserMode(this.readableChain);
             if (this.kmConnection.connectToKM("\\nxmFLRPort", "\\BaseNamedObjects\\nxmmfflr"))
             {
-                mountState = mountState.connected;
+                mountState = ProcessState.successful;
 
                 while (!this.processStopped)
                 {
@@ -324,7 +308,7 @@ namespace nxmBackup.MFUserMode
             }
             else
             {
-                mountState = mountState.error;
+                mountState = ProcessState.error;
             }
         }
 
@@ -443,10 +427,10 @@ namespace nxmBackup.MFUserMode
 
         }
     
-        public enum mountState
+        public enum ProcessState
         {
             pending,
-            connected,
+            successful,
             error
         }
 
