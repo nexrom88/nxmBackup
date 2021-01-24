@@ -127,7 +127,7 @@ namespace nxmBackup.MFUserMode
             //import vm to hyperv
             try
             {
-                string vmID = HVRestoreCore.VMImporter.importVM(configFile, mountDirectory, false, newName);
+                string vmID = HVRestoreCore.VMImporter.importVM(configFile, mountDirectory, newId, newName);
                 this.lrVMID = vmID;
 
                 //create helper snapshot to redirect writes to avhdx file
