@@ -134,7 +134,7 @@ namespace nxmBackup.MFUserMode
             //close shared memory view if necessary
             if (this.sharedMemoryHandler.SharedMemoryPointer != IntPtr.Zero)
             {
-                this.sharedMemoryHandler.unmapSharedBuffer();
+                this.sharedMemoryHandler.unmapSharedBuffer(true);
             }
 
             //unload mf
@@ -341,6 +341,10 @@ namespace nxmBackup.MFUserMode
                 this.readableBackupChain.readFromChain(offset, length, data, 0);
                 this.readableBackupChain.readFromLB(offset, length, data);
 
+            }
+            else
+            {
+                string a = "s";
             }
 
 
