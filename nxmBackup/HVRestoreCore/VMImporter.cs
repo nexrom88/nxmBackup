@@ -47,6 +47,9 @@ namespace HVRestoreCore
                     //set vhdx
                     setVHDX(vm, basePath);
 
+                    //disconnect ethernet
+                    disconnectEthernet(vm);
+
                     string vmID = vm["Name"].ToString();
 
                     //realize the planned vm
@@ -56,6 +59,16 @@ namespace HVRestoreCore
 
                 }
             }
+        }
+
+        //disconnects the current ethernet adapters
+        private static void disconnectEthernet(ManagementObject vm)
+        {
+            ManagementScope scope = new ManagementScope(@"root\virtualization\v2");
+            ManagementBaseObject outParams;
+
+            //get all ethernet adapters
+            List<ManagementObject> currentHDDs = wmiUtilitiesForHyperVImport.(vm);
         }
 
         //sets the vhdx path for a planned vm
