@@ -49,7 +49,7 @@ namespace Common
         }
 
         //adds a given file to the archive
-        public void addFile(string file, string path)
+        public bool addFile(string file, string path)
         {
             path = path.Replace("/", "\\");
             string fileName = Path.GetFileName(file);
@@ -65,6 +65,11 @@ namespace Common
 
             //open LZ4 stream
             BlockCompression.LZ4BlockStream compressionStream = new BlockCompression.LZ4BlockStream(baseDestStream, BlockCompression.AccessMode.write, this.useEncryption, this.aesKey);
+
+            if (!compressionStream.init())
+            {
+                return false;
+            }
 
             //create buffer and read counter
             byte[] buffer = new byte[4096];
@@ -112,6 +117,7 @@ namespace Common
             }
             compressionStream.Dispose();
             baseSourceStream.Close();
+            return true;
 
         }
 
@@ -151,12 +157,17 @@ namespace Common
 
             //open LZ4 stream
             BlockCompression.LZ4BlockStream compressionStream = new BlockCompression.LZ4BlockStream(baseDestStream, BlockCompression.AccessMode.write, this.useEncryption, this.aesKey);
-            
+
+            if (!compressionStream.init())
+            {
+                return null;
+            }
+
             return compressionStream;
         }
 
         //decompresses an entry to a given destination
-        public void getFile(string archivePath, string destinationPath)
+        public bool getFile(string archivePath, string destinationPath)
         {
             string lastProgress = "";
             string fileName = Path.GetFileName(destinationPath);
@@ -176,6 +187,10 @@ namespace Common
 
             //open decoder stream
             BlockCompression.LZ4BlockStream blockCompressionStream = new BlockCompression.LZ4BlockStream(sourceStream, BlockCompression.AccessMode.read, this.useEncryption, this.aesKey);
+            if (!blockCompressionStream.init())
+            {
+                return false;
+            }
             //LZ4DecoderStream compressionStream = LZ4Stream.Decode(sourceStream, 0);
 
             Directory.CreateDirectory(Path.GetDirectoryName(destinationPath));
@@ -212,6 +227,7 @@ namespace Common
             destStream.Close();
             blockCompressionStream.Close();
             sourceStream.Close();
+            return true;
 
         }
 
@@ -251,6 +267,11 @@ namespace Common
 
             //open decoder stream
             BlockCompression.LZ4BlockStream blockCompressionStream = new BlockCompression.LZ4BlockStream(sourceStream, BlockCompression.AccessMode.read, this.useEncryption, this.aesKey);
+
+            if (!blockCompressionStream.init())
+            {
+                return null;
+            }
 
             return blockCompressionStream;
 

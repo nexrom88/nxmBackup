@@ -50,6 +50,12 @@ namespace nxmBackup.MFUserMode
             {
                 FileStream sourceStream = new System.IO.FileStream(sourceFiles[sourceFiles.Length - 1], System.IO.FileMode.Open, System.IO.FileAccess.Read);
                 byte[] buffer = new byte[8];
+
+                //read iv length to jump over iv
+                sourceStream.Read(buffer, 0, 4);
+                int ivLength = BitConverter.ToInt32(buffer, 0);
+                sourceStream.Seek(ivLength + 6, SeekOrigin.Current); //+6 to jump over signature too
+
                 sourceStream.Read(buffer, 0, 8);
                 decompressedFileSize = BitConverter.ToUInt64(buffer, 0);
                 sourceStream.Close();
@@ -363,6 +369,11 @@ namespace nxmBackup.MFUserMode
                     nonFullBackup.backupType = BackupChainReader.NonFullBackupType.rct;
                     FileStream inputStream = new FileStream(sourceFiles[i], FileMode.Open, FileAccess.Read);
                     BlockCompression.LZ4BlockStream blockStream = new BlockCompression.LZ4BlockStream(inputStream, BlockCompression.AccessMode.read, this.useEncryption, this.aesKey);
+                    if (!blockStream.init())
+                    {
+                        return null;
+                    }
+
                     nonFullBackup.sourceStreamRCT = blockStream;
 
                 }
@@ -383,6 +394,11 @@ namespace nxmBackup.MFUserMode
             BackupChainReader.ReadableFullBackup readableFullBackup = new BackupChainReader.ReadableFullBackup();
             FileStream inputStreamFull = new FileStream(sourceFiles[sourceFiles.Length - 1], FileMode.Open, FileAccess.Read);
             BlockCompression.LZ4BlockStream blockStreamFull = new BlockCompression.LZ4BlockStream(inputStreamFull, BlockCompression.AccessMode.read, this.useEncryption, this.aesKey);
+            if (!blockStreamFull.init())
+            {
+                return null;
+            }
+
             readableFullBackup.sourceStream = blockStreamFull;
             chain.FullBackup = readableFullBackup;
 

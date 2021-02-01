@@ -28,8 +28,8 @@ namespace Common
                     parameters.Clear();
                     parameters.Add("name", hdd.name);
                     parameters.Add("path", hdd.path);
-                    List<Dictionary<string,string>> result = dbConn.doReadQuery("INSERT INTO hdds (name, path) VALUES (@name, @path) RETURNING id;", parameters, transaction);
-                    int newHDDID = int.Parse(result[0]["id"]);
+                    List<Dictionary<string,object>> result = dbConn.doReadQuery("INSERT INTO hdds (name, path) VALUES (@name, @path) RETURNING id;", parameters, transaction);
+                    int newHDDID = (int)(result[0]["id"]);
 
                     //add relation
                     parameters.Clear();
@@ -52,7 +52,7 @@ namespace Common
             {
                 using (DBConnection dbConn = new DBConnection())
                 {
-                    List<Dictionary<string, string>> jobExecutionIds = dbConn.doReadQuery("INSERT INTO jobexecutions (jobid, isrunning, transferrate, alreadyread, alreadywritten, successful, warnings, errors, type) " +
+                    List<Dictionary<string, object>> jobExecutionIds = dbConn.doReadQuery("INSERT INTO jobexecutions (jobid, isrunning, transferrate, alreadyread, alreadywritten, successful, warnings, errors, type) " +
                         "VALUES(@jobId, @isRunning, @transferRate, @alreadyRead, @alreadyWritten, @successful, @warnings, @errors, @type) RETURNING id;",
                         new Dictionary<string, object>() {
                             { "jobId", jobId },
@@ -71,7 +71,7 @@ namespace Common
                         throw new Exception("Error during insert operation (no insert id)");
                     }
 
-                    return int.Parse(jobExecutionIds[0]["id"]);
+                    return (int)(jobExecutionIds[0]["id"]);
                 }
             }
             catch (Exception exp)
@@ -109,7 +109,7 @@ namespace Common
             {
                 using (DBConnection dbConn = new DBConnection())
                 {
-                    List<Dictionary<string, string>> jobExecutionEventIds = dbConn.doReadQuery("INSERT INTO jobexecutionevents (vmid, info, jobexecutionid, status) VALUES (@vmId, @info, @jobExecutionId, (SELECT id FROM EventStatus WHERE text= @status)) RETURNING id;",
+                    List<Dictionary<string, object>> jobExecutionEventIds = dbConn.doReadQuery("INSERT INTO jobexecutionevents (vmid, info, jobexecutionid, status) VALUES (@vmId, @info, @jobExecutionId, (SELECT id FROM EventStatus WHERE text= @status)) RETURNING id;",
                         new Dictionary<string, object>() { { "vmId", vmName }, { "info", eventProperties.text }, { "jobExecutionId", eventProperties.jobExecutionId}, {"status", eventProperties.eventStatus} }, null);
 
                     if (jobExecutionEventIds == null || jobExecutionEventIds.Count == 0)
@@ -118,7 +118,7 @@ namespace Common
                     }
                     else
                     {
-                        return int.Parse(jobExecutionEventIds[0]["id"]);
+                        return (int)(jobExecutionEventIds[0]["id"]);
                     }
                 }
             }
@@ -174,7 +174,7 @@ namespace Common
         }
 
         //gets all events for a given job
-        public static List<Dictionary<string,string>> getEvents (int jobId, string type)
+        public static List<Dictionary<string,object>> getEvents (int jobId, string type)
         {
             //not an update: do insert
             try
@@ -182,18 +182,18 @@ namespace Common
                 using (DBConnection dbConn = new DBConnection())
                 {
                     //get jobExecutions first
-                    List<Dictionary<string, string>> jobExecutions = dbConn.doReadQuery("SELECT max(id) id FROM JobExecutions WHERE jobId = @jobId AND type = @type;",
+                    List<Dictionary<string, object>> jobExecutions = dbConn.doReadQuery("SELECT max(id) id FROM JobExecutions WHERE jobId = @jobId AND type = @type;",
                         new Dictionary<string, object>() { { "jobId", jobId }, {"type", type } }, null);
 
                     //check if executionId is available
-                    string jobExecutionId = jobExecutions[0]["id"];
+                    string jobExecutionId = jobExecutions[0]["id"].ToString();
                     if (jobExecutionId == "" || jobExecutionId == "null")
                     {
-                        return new List<Dictionary<string, string>>();
+                        return new List<Dictionary<string, object>>();
                     }
 
 
-                    List<Dictionary<string, string>> jobExecutionEventIds = dbConn.doReadQuery("SELECT jobexecutionevents.id, vmid, timestamp, info, eventstatus.text AS status FROM jobexecutionevents INNER JOIN eventstatus ON eventstatus.id = jobexecutionevents.status WHERE jobexecutionid = @jobexecutionid ORDER BY jobexecutionevents.id DESC;",
+                    List<Dictionary<string, object>> jobExecutionEventIds = dbConn.doReadQuery("SELECT jobexecutionevents.id, vmid, timestamp, info, eventstatus.text AS status FROM jobexecutionevents INNER JOIN eventstatus ON eventstatus.id = jobexecutionevents.status WHERE jobexecutionid = @jobexecutionid ORDER BY jobexecutionevents.id DESC;",
                         new Dictionary<string, object>() { { "jobExecutionId", int.Parse(jobExecutionId) } }, null);
 
                     if (jobExecutionEventIds.Count == 0)
@@ -209,7 +209,7 @@ namespace Common
             catch (Exception exp)
             {
                 EventHandler.writeToLog(exp.ToString(), new System.Diagnostics.StackTrace());
-                return new List<Dictionary<string, string>>();
+                return new List<Dictionary<string, object>>();
             }
         }
 

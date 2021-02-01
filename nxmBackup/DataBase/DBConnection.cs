@@ -47,7 +47,7 @@ namespace Common
         }
 
         //sends a sql query
-        public List<Dictionary<string, string>> doReadQuery(string query, Dictionary<string, object> parameters, NpgsqlTransaction transaction)
+        public List<Dictionary<string, object>> doReadQuery(string query, Dictionary<string, object> parameters, NpgsqlTransaction transaction)
         {
             try
             {
@@ -79,19 +79,19 @@ namespace Common
                 NpgsqlDataReader reader = command.ExecuteReader();
 
                 //retVal is a list of dictionaries
-                List<Dictionary<string, string>> result = new List<Dictionary<string, string>>();
+                List<Dictionary<string, object>> result = new List<Dictionary<string, object>>();
 
                 try
                 {
                     //iterate through all results
                     while (reader.HasRows && reader.Read())
                     {
-                        Dictionary<string, string> resultRow = new Dictionary<string, string>();
+                        Dictionary<string, object> resultRow = new Dictionary<string, object>();
                         //read all columns
                         for (int i = 0; i < reader.FieldCount; i++)
                         {
                             string columnName = reader.GetName(i);
-                            resultRow.Add(columnName, reader[columnName].ToString().Trim()); ;
+                            resultRow.Add(columnName, reader[columnName]);
                         }
 
                         //add dictionary to result list

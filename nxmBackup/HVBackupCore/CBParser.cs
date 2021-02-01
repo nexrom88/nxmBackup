@@ -129,7 +129,15 @@ namespace HyperVBackupRCT
         public static CbStructure parseCBFile(string path, bool closeAfterFinish, bool useEncryption, byte[] aesKey)
         {
             FileStream inputStream = new FileStream(path, FileMode.Open, FileAccess.Read);
-            return parseCBFile(new BlockCompression.LZ4BlockStream(inputStream, BlockCompression.AccessMode.read, useEncryption, aesKey), closeAfterFinish);
+
+            BlockCompression.LZ4BlockStream compressionStream = new BlockCompression.LZ4BlockStream(inputStream, BlockCompression.AccessMode.read, useEncryption, aesKey);
+
+            if (!compressionStream.init())
+            {
+                return new CbStructure();
+            }
+
+            return parseCBFile(compressionStream, closeAfterFinish);
         }
     }
 

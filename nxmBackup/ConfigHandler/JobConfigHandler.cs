@@ -28,7 +28,7 @@ namespace ConfigHandler
             //open DB connection
             using (Common.DBConnection connection = new Common.DBConnection())
             {
-                List<Dictionary<string, string>> jobsDB = connection.doReadQuery("SELECT jobs.id, jobs.name, jobs.isRunning, jobs.basepath, jobs.maxelements, jobs.blocksize, jobs.day, jobs.hour, jobs.minute, jobs.interval, jobs.livebackup, rotationtype.name AS rotationname FROM jobs INNER JOIN rotationtype ON jobs.rotationtypeid=rotationtype.id WHERE jobs.deleted=FALSE;", null, null);
+                List<Dictionary<string, object>> jobsDB = connection.doReadQuery("SELECT jobs.id, jobs.name, jobs.isRunning, jobs.basepath, jobs.maxelements, jobs.blocksize, jobs.day, jobs.hour, jobs.minute, jobs.interval, jobs.livebackup, jobs.useencryption, jobs.aeskey, rotationtype.name AS rotationname FROM jobs INNER JOIN rotationtype ON jobs.rotationtypeid=rotationtype.id WHERE jobs.deleted=FALSE;", null, null);
 
                 //check that jobs != null
                 if (jobsDB == null) //DB error
@@ -38,20 +38,26 @@ namespace ConfigHandler
 
                 int lbHDDObjectID = 1;
                 //iterate through all jobs
-                foreach (Dictionary<string, string> jobDB in jobsDB)
+                foreach (Dictionary<string, object> jobDB in jobsDB)
                 {
                     //build structure
                     OneJob newJob = new OneJob();
-                    newJob.DbId = int.Parse(jobDB["id"]);
-                    newJob.BasePath = jobDB["basepath"];
-                    newJob.Name = jobDB["name"];
-                    newJob.BlockSize = int.Parse(jobDB["blocksize"]);
-                    newJob.IsRunning = bool.Parse(jobDB["isrunning"]);
-                    newJob.LiveBackup = bool.Parse(jobDB["livebackup"]);
+                    newJob.DbId = (int)jobDB["id"];
+                    newJob.BasePath = jobDB["basepath"].ToString();
+                    newJob.Name = jobDB["name"].ToString();
+                    newJob.BlockSize = (int)jobDB["blocksize"];
+                    newJob.IsRunning = (bool)jobDB["isrunning"];
+                    newJob.LiveBackup = (bool)jobDB["livebackup"];
+                    newJob.UseEncryption = (bool)jobDB["useencryption"];
+
+                    if (newJob.UseEncryption)
+                    {
+                        newJob.AesKey = (byte[])jobDB["aeskey"];
+                    }
 
                     // build nextRun string
-                    newJob.NextRun = $"{int.Parse(jobDB["hour"]).ToString("00")}:{int.Parse(jobDB["minute"]).ToString("00")}";
-                    if (jobDB["day"] != "") newJob.NextRun += $" ({jobDB["day"]})";
+                    newJob.NextRun = $"{((int)jobDB["hour"]).ToString("00")}:{((int)jobDB["minute"]).ToString("00")}";
+                    if (jobDB["day"].ToString() != "") newJob.NextRun += $" ({jobDB["day"]})";
 
                     var rota = new Rotation();
                     //build rotation structure
@@ -65,7 +71,7 @@ namespace ConfigHandler
                             break;
                     }
 
-                    rota.maxElementCount = int.Parse(jobDB["maxelements"]);
+                    rota.maxElementCount = (int)jobDB["maxelements"];
                     newJob.Rotation = rota;
 
 
@@ -83,37 +89,37 @@ namespace ConfigHandler
                             interval.intervalBase = IntervalBase.weekly;
                             break;
                     }
-                    interval.day = jobDB["day"];
-                    interval.minute = int.Parse(jobDB["minute"]);
-                    interval.hour = int.Parse(jobDB["hour"]);
+                    interval.day = jobDB["day"].ToString();
+                    interval.minute = (int)jobDB["minute"];
+                    interval.hour = (int)jobDB["hour"];
                     newJob.Interval = interval;
 
                     //query VMs
                     Dictionary<string, object> paramaters = new Dictionary<string, object>();
-                    paramaters.Add("jobid", int.Parse(jobDB["id"]));
-                    List<Dictionary<string, string>> vms = connection.doReadQuery("SELECT VMs.id, VMs.name FROM vms INNER JOIN jobvmrelation ON JobVMRelation.jobid=@jobid AND jobvmrelation.vmid=VMs.id", paramaters, null);
+                    paramaters.Add("jobid", (int)jobDB["id"]);
+                    List<Dictionary<string, object>> vms = connection.doReadQuery("SELECT VMs.id, VMs.name FROM vms INNER JOIN jobvmrelation ON JobVMRelation.jobid=@jobid AND jobvmrelation.vmid=VMs.id", paramaters, null);
                     newJob.JobVMs = new List<JobVM>();
 
                     //iterate through all vms
-                    foreach (Dictionary<string, string> vm in vms)
+                    foreach (Dictionary<string, object> vm in vms)
                     {
                         JobVM newVM = new JobVM();
-                        newVM.vmID = vm["id"];
-                        newVM.vmName = vm["name"];
+                        newVM.vmID = vm["id"].ToString();
+                        newVM.vmName = vm["name"].ToString();
 
                         //read vm hdds
                         paramaters.Clear();
                         paramaters.Add("vmid", vm["id"]);
-                        List<Dictionary<string, string>> hdds = connection.doReadQuery("SELECT hdds.name, hdds.path FROM hdds INNER JOIN vmhddrelation ON hdds.id=vmhddrelation.hddid WHERE vmhddrelation.vmid=@vmid;", paramaters, null);
+                        List<Dictionary<string, object>> hdds = connection.doReadQuery("SELECT hdds.name, hdds.path FROM hdds INNER JOIN vmhddrelation ON hdds.id=vmhddrelation.hddid WHERE vmhddrelation.vmid=@vmid;", paramaters, null);
 
                         newVM.vmHDDs = new List<VMHDD>();
 
                         //iterate through all hdds
-                        foreach(Dictionary<string,string> oneHDD in hdds)
+                        foreach(Dictionary<string,object> oneHDD in hdds)
                         {
                             VMHDD newHDD = new VMHDD();
-                            newHDD.name = oneHDD["name"];
-                            newHDD.path = oneHDD["path"];
+                            newHDD.name = oneHDD["name"].ToString();
+                            newHDD.path = oneHDD["path"].ToString();
                             newHDD.lbObjectID = lbHDDObjectID;
                             newVM.vmHDDs.Add(newHDD);
                             lbHDDObjectID++;
@@ -128,16 +134,16 @@ namespace ConfigHandler
                     //get last jobExecution attributes
 
                     paramaters.Clear();
-                    paramaters.Add("jobid", int.Parse(jobDB["id"]));
-                    List<Dictionary<string, string>> jobExecutions = connection.doReadQuery("SELECT * FROM jobexecutions WHERE jobexecutions.jobid=@jobid and jobexecutions.id = (SELECT MAX(id) FROM jobexecutions WHERE jobexecutions.jobid=@jobid)", paramaters, null);
+                    paramaters.Add("jobid", (int)jobDB["id"]);
+                    List<Dictionary<string, object>> jobExecutions = connection.doReadQuery("SELECT * FROM jobexecutions WHERE jobexecutions.jobid=@jobid and jobexecutions.id = (SELECT MAX(id) FROM jobexecutions WHERE jobexecutions.jobid=@jobid)", paramaters, null);
 
                     if (jobExecutions.Count > 1) MessageBox.Show("db error: jobExecutions hat mehr als 1 result");
                     else
                     {
-                        foreach (Dictionary<string, string> jobExecution in jobExecutions)
+                        foreach (Dictionary<string, object> jobExecution in jobExecutions)
                         {
-                            newJob.LastRun = jobExecution["startstamp"];
-                            newJob.Successful = jobExecution["successful"];
+                            newJob.LastRun = jobExecution["startstamp"].ToString();
+                            newJob.Successful = jobExecution["successful"].ToString();
                         }
                             
                     }
@@ -162,13 +168,13 @@ namespace ConfigHandler
                 //start DB transaction
                 NpgsqlTransaction transaction = connection.beginTransaction();
 
-                List<Dictionary<string, string>> values;
+                List<Dictionary<string, object>> values;
 
                 parameters = new Dictionary<string, object>();
                 //get rotationtype ID
                 parameters.Add("name", job.Rotation.type.ToString().ToLower());
                 values = connection.doReadQuery("SELECT id FROM RotationType WHERE name=@name", parameters, transaction);
-                int rotationID = int.Parse(values[0]["id"]);
+                int rotationID = (int)(values[0]["id"]);
 
                 //create job entry
                 parameters = new Dictionary<string, object>();
@@ -182,10 +188,13 @@ namespace ConfigHandler
                 parameters.Add("maxelements", job.Rotation.maxElementCount);
                 parameters.Add("rotationtypeID", rotationID);
                 parameters.Add("livebackup", job.LiveBackup);
+                parameters.Add("useencryption", job.UseEncryption);
+                parameters.Add("aeskey", job.AesKey);
 
-                values = connection.doReadQuery("INSERT INTO jobs (name, interval, minute, hour, day, basepath, blocksize, maxelements, livebackup, rotationtypeid) VALUES(@name, @interval, @minute, @hour, @day, @basepath, @blocksize, @maxelements, @livebackup, @rotationtypeID) RETURNING id;", parameters, transaction);
 
-                int jobID = int.Parse(values[0]["id"]);
+                values = connection.doReadQuery("INSERT INTO jobs (name, interval, minute, hour, day, basepath, blocksize, maxelements, livebackup, rotationtypeid, useencryption, aeskey) VALUES(@name, @interval, @minute, @hour, @day, @basepath, @blocksize, @maxelements, @livebackup, @rotationtypeID, @useencryption, @aeskey) RETURNING id;", parameters, transaction);
+
+                int jobID = (int)(values[0]["id"]);
 
                 //create vms relation
                 createJobVMRelation(job, jobID, connection, transaction);
@@ -212,8 +221,8 @@ namespace ConfigHandler
                     Dictionary<string, object> parameters = new Dictionary<string, object>();
                     parameters.Add("name", currentHDD.name);
                     parameters.Add("path", currentHDD.path);
-                    List<Dictionary<string, string>> result = connection.doReadQuery("INSERT INTO hdds (name, path) VALUES (@name, @path) RETURNING id;", parameters, transaction);
-                    hddIDs.Add(int.Parse(result[0]["id"]));
+                    List<Dictionary<string, object>> result = connection.doReadQuery("INSERT INTO hdds (name, path) VALUES (@name, @path) RETURNING id;", parameters, transaction);
+                    hddIDs.Add((int)(result[0]["id"]));
                 }
 
                 //add vm hdd relations
@@ -222,7 +231,7 @@ namespace ConfigHandler
                     Dictionary<string, object> parameters = new Dictionary<string, object>();
                     parameters.Add("vmid", vm.vmID);
                     parameters.Add("hddid", hddID);
-                    List<Dictionary<string, string>> result = connection.doReadQuery("INSERT INTO vmhddrelation (vmid, hddid) VALUES (@vmid, @hddid);", parameters, transaction);
+                    List<Dictionary<string, object>> result = connection.doReadQuery("INSERT INTO vmhddrelation (vmid, hddid) VALUES (@vmid, @hddid);", parameters, transaction);
                 }
 
             }
@@ -237,10 +246,11 @@ namespace ConfigHandler
                 //check whether vm already exists
                 Dictionary<string, object> parameters = new Dictionary<string, object>();
                 parameters.Add("id", vm.vmID);
-                List<Dictionary<string, string>> result = connection.doReadQuery("SELECT COUNT(*) AS count From vms WHERE id=@id", parameters, transaction);
+                List<Dictionary<string, object>> result = connection.doReadQuery("SELECT COUNT(*) AS count From vms WHERE id=@id", parameters, transaction);
 
+                object a = result[0]["count"];
                 //does vm already exist in DB?
-                if (int.Parse(result[0]["count"]) == 0)
+                if (Convert.ToInt32(result[0]["count"]) == 0)
                 {
                     //vm does not exist
                     parameters = new Dictionary<string, object>();
@@ -265,8 +275,8 @@ namespace ConfigHandler
             {
                 Dictionary<string, object> parameters = new Dictionary<string, object>();
                 parameters.Add("jobId", jobId.ToString());
-                List<Dictionary<string, string>> result = connection.doReadQuery("SELECT isRunning FROM Jobs WHERE id=@jobId", parameters, null);
-                if (result != null && result.Count > 0 && result[0]["id"] != "") return bool.Parse(result[0]["id"]);
+                List<Dictionary<string, object>> result = connection.doReadQuery("SELECT isRunning FROM Jobs WHERE id=@jobId", parameters, null);
+                if (result != null && result.Count > 0 && result[0]["id"].ToString() != "") return (bool)(result[0]["id"]);
                 else return false;
             }
         }

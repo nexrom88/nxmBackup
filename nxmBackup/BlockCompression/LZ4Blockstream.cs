@@ -28,6 +28,7 @@ namespace BlockCompression
         //need for read
         private ulong position = 0;
         private ulong decompressedFileSize = 0;
+        private long decompressedFileSizeOffset = 0;
 
         //used for block caching
         private ulong maxBlocksInCache = 30;
@@ -38,6 +39,7 @@ namespace BlockCompression
         AesManaged aesProvider;
         ICryptoTransform encryptor;
         ICryptoTransform decryptor;
+        private byte[] aesKey;
 
 
         public bool CachingMode { get; set; }
@@ -50,9 +52,11 @@ namespace BlockCompression
             this.mode = mode;
             this.mStream = new MemoryStream((int)this.DecompressedBlockSize);
             this.useEncryption = useEncryption;
+            this.aesKey = aesKey;
+
         }
 
-        public bool init(FileStream filestream, AccessMode mode, bool useEncryption, byte[] aesKey)
+        public bool init()
         { 
             //if "write-mode" then create new file and fill the first 2 X 8 header bytes
             if (this.mode == AccessMode.write)
@@ -63,6 +67,7 @@ namespace BlockCompression
                 if (this.useEncryption)
                 {
                     this.aesProvider = new AesManaged();
+                    this.aesProvider.KeySize = 256;
                     this.aesProvider.Key = aesKey;
                     this.aesProvider.GenerateIV();
                     this.encryptor = this.aesProvider.CreateEncryptor(this.aesProvider.Key, this.aesProvider.IV);
@@ -95,6 +100,7 @@ namespace BlockCompression
 
 
                 //we don't know "decompressed file size" yet, fill it with zeroes
+                this.decompressedFileSizeOffset = this.fileStream.Position;
                 for (int i = 0; i < 8; i++)
                 {
                     this.fileStream.WriteByte(0);
@@ -138,6 +144,7 @@ namespace BlockCompression
 
                     //init crypto
                     this.aesProvider = new AesManaged();
+                    this.aesProvider.KeySize = 256;
                     this.aesProvider.Key = aesKey;
                     this.aesProvider.IV = iv;
                     this.decryptor = this.aesProvider.CreateDecryptor(this.aesProvider.Key, this.aesProvider.IV);
@@ -151,6 +158,7 @@ namespace BlockCompression
                     CryptoStream cryptoStream = new CryptoStream(memStream, this.decryptor, CryptoStreamMode.Read);
                     signature = memStream.ToArray();
                     string signatureString = System.Text.Encoding.ASCII.GetString(signature);
+                    this.decompressedFileSizeOffset = this.fileStream.Position;
                     cryptoStream.Close();
                     memStream.Close();
                     cryptoStream.Dispose();
@@ -168,6 +176,7 @@ namespace BlockCompression
                     //read unencrypted signature
                     byte[] signature = System.Text.Encoding.ASCII.GetBytes("nxmlz4");
                     this.fileStream.Read(signature, 0, signature.Length);
+                    this.decompressedFileSizeOffset = this.fileStream.Position;
 
                     string signatureString = System.Text.Encoding.ASCII.GetString(signature);
 
@@ -266,7 +275,7 @@ namespace BlockCompression
             if (this.mode == AccessMode.write)
             {
                 closeBlock();
-                this.fileStream.Seek(0, SeekOrigin.Begin);
+                this.fileStream.Seek(this.decompressedFileSizeOffset, SeekOrigin.Begin);
                 byte[] buffer = BitConverter.GetBytes(this.totalDecompressedByteCount);
                 this.fileStream.Write(buffer, 0, 8);
             }
@@ -319,7 +328,7 @@ namespace BlockCompression
         {
             //search the "starting" block:
             //read current block header
-            this.fileStream.Position = 16;
+            this.fileStream.Position = 16 + this.decompressedFileSizeOffset; // jump over header
             byte[] headerData = new byte[8];
             ulong decompressedFileByteOffset = 0;
             ulong compressedBlockSize = 0;
@@ -602,6 +611,7 @@ namespace BlockCompression
 //4 bytes: aes IV length
 //IV length bytes: aes IV
 //6 bytes: signature string "nxmlz4"
+//
 //8 bytes: decompressed file size in bytes
 //8 bytes: decompressed block size in bytes
 //
