@@ -15,6 +15,14 @@ namespace HVRestoreCore
     public class FileLevelRestoreHandler
     {
         private const int NO_RELATED_EVENT = -1;
+        private bool useEncryption;
+        private byte[] aesKey;
+
+        public FileLevelRestoreHandler(bool useEncryption, byte[] aesKey)
+        {
+            this.useEncryption = useEncryption;
+            this.aesKey = aesKey;
+        }
 
 
         //performs a guest files restore
@@ -100,7 +108,7 @@ namespace HVRestoreCore
             //get hdd files from backup chain
             string[] hddFiles = BackupConfigHandler.getHDDFilesFromChain(restoreChain, basePath, selectedHDD);
 
-            MountHandler mountHandler = new MountHandler(MountHandler.RestoreMode.flr);
+            MountHandler mountHandler = new MountHandler(MountHandler.RestoreMode.flr, this.useEncryption, this.aesKey);
 
             MountHandler.ProcessState mountState = MountHandler.ProcessState.pending;
             Thread mountThread = new Thread(() => mountHandler.startMfHandlingForFLR(hddFiles, ref mountState));

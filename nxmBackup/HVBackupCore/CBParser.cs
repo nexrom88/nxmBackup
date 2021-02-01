@@ -126,10 +126,10 @@ namespace HyperVBackupRCT
         }
 
         //parses a given cb file compressed by using LZ4 BC by a given filepath
-        public static CbStructure parseCBFile(string path, bool closeAfterFinish)
+        public static CbStructure parseCBFile(string path, bool closeAfterFinish, bool useEncryption, byte[] aesKey)
         {
             FileStream inputStream = new FileStream(path, FileMode.Open, FileAccess.Read);
-            return parseCBFile(new BlockCompression.LZ4BlockStream(inputStream, BlockCompression.AccessMode.read), closeAfterFinish);
+            return parseCBFile(new BlockCompression.LZ4BlockStream(inputStream, BlockCompression.AccessMode.read, useEncryption, aesKey), closeAfterFinish);
         }
     }
 

@@ -24,9 +24,13 @@ namespace nxmBackup.MFUserMode
         private RestoreMode restoreMode;
         private string lrVMID; //vm id, just for lr
         public ProcessState mountState;
+        private bool useEncryption;
+        private byte[] aesKey;
 
-        public MountHandler(RestoreMode mode)
+        public MountHandler(RestoreMode mode, bool useEncryption, byte[] aesKey)
         {
+            this.useEncryption = useEncryption;
+            this.aesKey = aesKey;
             this.restoreMode = mode;
         }
 
@@ -213,7 +217,7 @@ namespace nxmBackup.MFUserMode
             Common.IArchive archive;
 
 
-            archive = new Common.LZ4Archive(archivePath, null);
+            archive = new Common.LZ4Archive(archivePath, null, this.useEncryption, this.aesKey);
 
 
             archive.open(System.IO.Compression.ZipArchiveMode.Read);
@@ -354,11 +358,11 @@ namespace nxmBackup.MFUserMode
                 if (sourceFiles[i].EndsWith(".cb"))
                 {
                     //parse cb file
-                    CbStructure cbStruct = CBParser.parseCBFile(sourceFiles[i], true);
+                    CbStructure cbStruct = CBParser.parseCBFile(sourceFiles[i], true, this.useEncryption, this.aesKey);
                     nonFullBackup.cbStructure = cbStruct;
                     nonFullBackup.backupType = BackupChainReader.NonFullBackupType.rct;
                     FileStream inputStream = new FileStream(sourceFiles[i], FileMode.Open, FileAccess.Read);
-                    BlockCompression.LZ4BlockStream blockStream = new BlockCompression.LZ4BlockStream(inputStream, BlockCompression.AccessMode.read);
+                    BlockCompression.LZ4BlockStream blockStream = new BlockCompression.LZ4BlockStream(inputStream, BlockCompression.AccessMode.read, this.useEncryption, this.aesKey);
                     nonFullBackup.sourceStreamRCT = blockStream;
 
                 }
@@ -378,7 +382,7 @@ namespace nxmBackup.MFUserMode
             //build readable full backup
             BackupChainReader.ReadableFullBackup readableFullBackup = new BackupChainReader.ReadableFullBackup();
             FileStream inputStreamFull = new FileStream(sourceFiles[sourceFiles.Length - 1], FileMode.Open, FileAccess.Read);
-            BlockCompression.LZ4BlockStream blockStreamFull = new BlockCompression.LZ4BlockStream(inputStreamFull, BlockCompression.AccessMode.read);
+            BlockCompression.LZ4BlockStream blockStreamFull = new BlockCompression.LZ4BlockStream(inputStreamFull, BlockCompression.AccessMode.read, this.useEncryption, this.aesKey);
             readableFullBackup.sourceStream = blockStreamFull;
             chain.FullBackup = readableFullBackup;
 

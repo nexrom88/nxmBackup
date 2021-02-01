@@ -285,6 +285,8 @@ namespace ConfigHandler
     public class OneJob : System.ComponentModel.INotifyPropertyChanged
     {
         private int dbId;
+        private bool useEncryption;
+        private byte[] aesKey;
         private string name;
         private Interval interval;
         private List<JobVM> jobVMs;
@@ -302,6 +304,8 @@ namespace ConfigHandler
 
         public string Name { get => name; set => name = value; }
         public Interval Interval { get => interval; set => interval = value; }
+        public bool UseEncryption { get => useEncryption; set => useEncryption = value; }
+        public byte[] AesKey { get => aesKey; set => aesKey = value; }
         public List<JobVM> JobVMs { get => jobVMs; set => jobVMs = value; }
         public string BasePath { get => basePath; set => basePath = value; }
         public int BlockSize { get => blockSize; set => blockSize = value; }

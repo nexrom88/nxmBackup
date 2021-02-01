@@ -12,10 +12,14 @@ namespace HVRestoreCore
     {
         private Common.EventHandler eventHandler;
         private const int NO_RELATED_EVENT = -1;
+        private bool useEncryption;
+        private byte[] aesKey;
 
-        public FullRestoreHandler(Common.EventHandler eventHandler)
+        public FullRestoreHandler(Common.EventHandler eventHandler, bool useEncryption, byte[] aesKey)
         {
             this.eventHandler = eventHandler;
+            this.useEncryption = useEncryption;
+            this.aesKey = aesKey;
         }
 
         //performs a full restore process
@@ -94,7 +98,7 @@ namespace HVRestoreCore
                     Common.IArchive archive;
 
 
-                    archive = new Common.LZ4Archive(System.IO.Path.Combine(basePath, currentBackup.uuid + ".nxm"), null);
+                    archive = new Common.LZ4Archive(System.IO.Path.Combine(basePath, currentBackup.uuid + ".nxm"), null, this.useEncryption, this.aesKey);
 
 
                     archive.open(System.IO.Compression.ZipArchiveMode.Read);
@@ -182,7 +186,7 @@ namespace HVRestoreCore
             Common.IArchive archive;
 
            
-            archive = new Common.LZ4Archive(archivePath, this.eventHandler);
+            archive = new Common.LZ4Archive(archivePath, this.eventHandler, this.useEncryption, this.aesKey);
              
 
             archive.open(System.IO.Compression.ZipArchiveMode.Read);

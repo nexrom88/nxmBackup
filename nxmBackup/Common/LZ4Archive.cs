@@ -14,13 +14,16 @@ namespace Common
         private string path;
         private Common.EventHandler eventHandler;
         private const int NO_RELATED_EVENT = -1;
+        private bool useEncryption;
+        private byte[] aesKey;
 
 
-        public LZ4Archive(string path,Common.EventHandler eventHandler)
+        public LZ4Archive(string path,Common.EventHandler eventHandler, bool useEncryption, byte[] aesKey)
         {
             this.path = path;
             this.eventHandler = eventHandler;
-
+            this.useEncryption = useEncryption;
+            this.aesKey = aesKey;
         }
 
         //adds a whole folder to the archive
@@ -61,7 +64,7 @@ namespace Common
             System.IO.FileStream baseDestStream = new FileStream(System.IO.Path.Combine(this.path, path + "\\" + fileName) , FileMode.Create);
 
             //open LZ4 stream
-            BlockCompression.LZ4BlockStream compressionStream = new BlockCompression.LZ4BlockStream(baseDestStream, BlockCompression.AccessMode.write);
+            BlockCompression.LZ4BlockStream compressionStream = new BlockCompression.LZ4BlockStream(baseDestStream, BlockCompression.AccessMode.write, this.useEncryption, this.aesKey);
 
             //create buffer and read counter
             byte[] buffer = new byte[4096];
@@ -147,7 +150,7 @@ namespace Common
             System.IO.FileStream baseDestStream = new FileStream(System.IO.Path.Combine(this.path, path), FileMode.Create);
 
             //open LZ4 stream
-            BlockCompression.LZ4BlockStream compressionStream = new BlockCompression.LZ4BlockStream(baseDestStream, BlockCompression.AccessMode.write);
+            BlockCompression.LZ4BlockStream compressionStream = new BlockCompression.LZ4BlockStream(baseDestStream, BlockCompression.AccessMode.write, this.useEncryption, this.aesKey);
             
             return compressionStream;
         }
@@ -172,7 +175,7 @@ namespace Common
             System.IO.FileStream sourceStream = new FileStream(sourcePath, FileMode.Open);
 
             //open decoder stream
-            BlockCompression.LZ4BlockStream blockCompressionStream = new BlockCompression.LZ4BlockStream(sourceStream, BlockCompression.AccessMode.read);
+            BlockCompression.LZ4BlockStream blockCompressionStream = new BlockCompression.LZ4BlockStream(sourceStream, BlockCompression.AccessMode.read, this.useEncryption, this.aesKey);
             //LZ4DecoderStream compressionStream = LZ4Stream.Decode(sourceStream, 0);
 
             Directory.CreateDirectory(Path.GetDirectoryName(destinationPath));
@@ -247,7 +250,7 @@ namespace Common
             FileStream sourceStream = new FileStream(System.IO.Path.Combine(this.path, path), FileMode.Open);
 
             //open decoder stream
-            BlockCompression.LZ4BlockStream blockCompressionStream = new BlockCompression.LZ4BlockStream(sourceStream, BlockCompression.AccessMode.read);
+            BlockCompression.LZ4BlockStream blockCompressionStream = new BlockCompression.LZ4BlockStream(sourceStream, BlockCompression.AccessMode.read, this.useEncryption, this.aesKey);
 
             return blockCompressionStream;
 

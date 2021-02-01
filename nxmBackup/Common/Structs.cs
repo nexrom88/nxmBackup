@@ -6,6 +6,13 @@ using System.Threading.Tasks;
 
 namespace Common
 {
+    //defines properties for enryption
+    public struct EncryptionProperties
+    {
+        public bool useEncryption;
+        public byte[] aesKey;
+    }
+
     //defines rotation type
     public struct Rotation
     {

@@ -42,7 +42,7 @@ namespace TestProject
             vm.vmID = "3ADC3271-9A30-4DA7-AD5B-F7C23C70ECBA"; //ubuntu
             //vm.vmID = "94921741-1567-4C42-84BF-4385F7E4BF9E"; //centos
             //vm.vmID = "0F387D95-6FDF-4CBA-B5AA-B8C2ABAF2F9B"; //windows
-            nxmBackup.HVBackupCore.SnapshotHandler sh = new nxmBackup.HVBackupCore.SnapshotHandler(vm, -1);
+            nxmBackup.HVBackupCore.SnapshotHandler sh = new nxmBackup.HVBackupCore.SnapshotHandler(vm, -1, false, null);
             sh.cleanUp();
 
 

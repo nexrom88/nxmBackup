@@ -14,6 +14,16 @@ namespace HVRestoreCore
 {
     public class LiveRestore
     {
+        private bool useEncryption;
+        private byte[] aesKey;
+
+        public LiveRestore(bool useEncryption, byte[] aesKey)
+        {
+            this.useEncryption = useEncryption;
+            this.aesKey = aesKey;
+        }
+
+
         public void performLiveRestore(string basePath, string vmName, string instanceID)
         {
          
@@ -76,7 +86,7 @@ namespace HVRestoreCore
 
             string backupBasePath = System.IO.Path.Combine(basePath, restoreChain[restoreChain.Count -1].uuid + ".nxm");
 
-            MountHandler mountHandler = new MountHandler(MountHandler.RestoreMode.lr);
+            MountHandler mountHandler = new MountHandler(MountHandler.RestoreMode.lr, this.useEncryption, this.aesKey);
 
             Thread mountThread = new Thread(() => mountHandler.startMfHandlingForLR(hddFiles, backupBasePath, vmName));
             mountThread.Start();
