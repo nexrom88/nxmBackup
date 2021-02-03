@@ -54,7 +54,7 @@ namespace nxmBackup.MFUserMode
                 //read iv length to jump over iv
                 sourceStream.Read(buffer, 0, 4);
                 int ivLength = BitConverter.ToInt32(buffer, 0);
-                sourceStream.Seek(ivLength + 6, SeekOrigin.Current); //+6 to jump over signature too
+                sourceStream.Seek(ivLength + 16, SeekOrigin.Current); //+16 to jump over signature too
 
                 sourceStream.Read(buffer, 0, 8);
                 decompressedFileSize = BitConverter.ToUInt64(buffer, 0);

@@ -86,18 +86,30 @@ namespace nxmBackup.MFUserMode
             unloadMF();
 
             //start mf
-            System.Diagnostics.Process process = System.Diagnostics.Process.Start("fltmc.exe", "load " + mfName);
-            process.WaitForExit();
-            int errorCode = process.ExitCode;
+            System.Diagnostics.ProcessStartInfo psi = new System.Diagnostics.ProcessStartInfo("fltmc.exe");
+            psi.Arguments = "load " + mfName;
+            psi.UseShellExecute = true;
+            psi.RedirectStandardError = true;
+            psi.RedirectStandardOutput = true;
+            psi.UseShellExecute = false;
+            System.Diagnostics.Process proc = System.Diagnostics.Process.Start(psi);
+            proc.WaitForExit();
+            int errorCode = proc.ExitCode;
             return errorCode == 0;
         }
 
         //unloads the minifilter driver
         private bool unloadMF()
         {
-            System.Diagnostics.Process process = System.Diagnostics.Process.Start("fltmc.exe", "unload " + mfName);
-            process.WaitForExit();
-            int errorCode = process.ExitCode;
+            System.Diagnostics.ProcessStartInfo psi = new System.Diagnostics.ProcessStartInfo("fltmc.exe");
+            psi.Arguments = "unload " + mfName;
+            psi.UseShellExecute = true;
+            psi.RedirectStandardError = true;
+            psi.RedirectStandardOutput = true;
+            psi.UseShellExecute = false;
+            System.Diagnostics.Process proc = System.Diagnostics.Process.Start(psi);
+            proc.WaitForExit();
+            int errorCode = proc.ExitCode;
             return errorCode == 0;
         }
 

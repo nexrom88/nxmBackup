@@ -34,7 +34,7 @@ namespace BlockCompression
         private ulong maxBlocksInCache = 30;
         List<CacheEntry> cache = new List<CacheEntry>();
 
-        //used for encryption
+        //used for encryption (general)
         private bool useEncryption;
         AesManaged aesProvider;
         ICryptoTransform encryptor;
@@ -72,6 +72,7 @@ namespace BlockCompression
                     this.aesProvider.GenerateIV();
                     this.encryptor = this.aesProvider.CreateEncryptor(this.aesProvider.Key, this.aesProvider.IV);
                     MemoryStream memStream = new MemoryStream();
+
                     CryptoStream cryptoStream = new CryptoStream(memStream, this.encryptor, CryptoStreamMode.Write);
 
                     //write aes IV
@@ -80,12 +81,11 @@ namespace BlockCompression
                     this.fileStream.Write(this.aesProvider.IV, 0, this.aesProvider.IV.Length); //IV
 
                     //write signature
-                    cryptoStream.Write(this.aesProvider.IV, 0, this.aesProvider.IV.Length);
+                    cryptoStream.Write(signatureBytes, 0, 6);
+                    cryptoStream.FlushFinalBlock();
+
                     memStream.WriteTo(this.fileStream);
                     cryptoStream.Close();
-                    memStream.Close();
-                    cryptoStream.Dispose();
-                    memStream.Dispose();
 
                 }
                 else
@@ -96,6 +96,10 @@ namespace BlockCompression
 
                     //write signature
                     this.fileStream.Write(signatureBytes, 0, signatureBytes.Length);
+
+                    //signature consists of 16 bytes, write 10 dummy bytes
+                    byte[] signatureDummy = new byte[10];
+                    this.fileStream.Write(signatureDummy, 0, signatureDummy.Length);
                 }
 
 
@@ -151,13 +155,15 @@ namespace BlockCompression
 
                     //read encrypted signature
                     MemoryStream memStream = new MemoryStream();
-                    byte[] signature = System.Text.Encoding.ASCII.GetBytes("nxmlz4");
-                    this.fileStream.Read(signature, 0, signature.Length);
+                    byte[] signature = new byte[16];
+                    this.fileStream.Read(signature, 0, 16);
                     memStream.Write(signature, 0, signature.Length);
+                    memStream.Seek(0, SeekOrigin.Begin);
 
                     CryptoStream cryptoStream = new CryptoStream(memStream, this.decryptor, CryptoStreamMode.Read);
-                    signature = memStream.ToArray();
-                    string signatureString = System.Text.Encoding.ASCII.GetString(signature);
+                    signature = new byte[16];
+                    int readBytes = cryptoStream.Read(signature, 0, 16);
+                    string signatureString = System.Text.Encoding.ASCII.GetString(signature, 0, readBytes);
                     this.decompressedFileSizeOffset = this.fileStream.Position;
                     cryptoStream.Close();
                     memStream.Close();
@@ -174,8 +180,12 @@ namespace BlockCompression
                 else
                 {
                     //read unencrypted signature
-                    byte[] signature = System.Text.Encoding.ASCII.GetBytes("nxmlz4");
+                    byte[] signature = new byte[6];
                     this.fileStream.Read(signature, 0, signature.Length);
+
+                    //signature has 16 bytes, not just 6. Jump another 10 bytes
+                    this.fileStream.Seek(10, SeekOrigin.Current);
+
                     this.decompressedFileSizeOffset = this.fileStream.Position;
 
                     string signatureString = System.Text.Encoding.ASCII.GetString(signature);
@@ -243,7 +253,19 @@ namespace BlockCompression
             this.fileStream.Seek(-8, SeekOrigin.Current);
 
             //write "compressed block size"
-            byte[] buffer = BitConverter.GetBytes(this.mStream.Length);
+            byte[] buffer;
+            long compressedBlockSize = 0;
+            if (this.useEncryption)
+            {
+                //aes is 16 byte aligned
+                compressedBlockSize = this.mStream.Length;
+                compressedBlockSize += 16 -(compressedBlockSize % 16);
+                buffer = BitConverter.GetBytes(compressedBlockSize);
+            }
+            else
+            {
+                buffer = BitConverter.GetBytes(this.mStream.Length);
+            }
             this.fileStream.Write(buffer, 0, 8);
 
             //go back to file head
@@ -255,10 +277,11 @@ namespace BlockCompression
             //write block to file
             if (this.useEncryption)
             {
-                using(MemoryStream memStream = new MemoryStream())
+                using (MemoryStream memStream = new MemoryStream())
                 using (CryptoStream cryptoStream = new CryptoStream(memStream, this.encryptor, CryptoStreamMode.Write))
                 {
                     this.mStream.WriteTo(cryptoStream);
+                    cryptoStream.FlushFinalBlock();
                     memStream.WriteTo(this.fileStream);
                 }
             }
@@ -409,6 +432,7 @@ namespace BlockCompression
                     //fill memory stream with compressed block data
                     byte[] compData = new byte[compressedBlockSize];
                     this.fileStream.Read(compData, 0, (int)compressedBlockSize);
+                    int readableBytesCount = (int)compressedBlockSize;
 
                     //decryption necessary?
                     if (this.useEncryption)
@@ -416,13 +440,13 @@ namespace BlockCompression
                         using (MemoryStream memStream = new MemoryStream(compData, true))
                         using (CryptoStream cryptoStream = new CryptoStream(memStream, this.decryptor, CryptoStreamMode.Read))
                         {
-                            cryptoStream.Read(compData, 0, compData.Length);
+                            readableBytesCount = cryptoStream.Read(compData, 0, compData.Length);
                         }
 
                     }
 
                     this.mStream.Dispose();
-                    this.mStream = new MemoryStream(compData);
+                    this.mStream = new MemoryStream(compData, 0, readableBytesCount);
 
                     //init decompression stream
                     this.decompressionStream = LZ4Stream.Decode(this.mStream, 0, false);
@@ -610,7 +634,7 @@ namespace BlockCompression
 //----------header----------
 //4 bytes: aes IV length
 //IV length bytes: aes IV
-//6 bytes: signature string "nxmlz4"
+//16 bytes: signature string "nxmlz4" (16 bytes aligned, because of AES blocksize)
 //
 //8 bytes: decompressed file size in bytes
 //8 bytes: decompressed block size in bytes
