@@ -95,5 +95,10 @@ namespace nxmBackup
             }
         }
 
+        private void cbEncryption_Click(object sender, RoutedEventArgs e)
+        {
+            txtEncKey.IsEnabled = (bool)cbEncryption.IsChecked;
+
+        }
     }
 }

@@ -28,6 +28,7 @@ namespace nxmBackup
         private bool lb = false;
         private int blockSize = 2;
         private bool useEncryption;
+        private string encryptionPW;
 
 
         List<Common.WMIHelper.OneVM> vms;
@@ -173,15 +174,10 @@ namespace nxmBackup
             job.LiveBackup = this.lb;
             job.UseEncryption = this.useEncryption;
 
-            //generate aes key if necessary
+            //generate aes key by hasing pw by using SHA256
             if (this.useEncryption)
             {
-                using (AesManaged aes = new AesManaged())
-                {
-                    aes.KeySize = 256;
-                    aes.GenerateKey();
-                    job.AesKey = aes.Key;
-                }
+                job.AesKey = Common.SHA256Provider.computeHash(System.Text.Encoding.UTF8.GetBytes(this.encryptionPW));
             }
             else
             {
@@ -285,6 +281,8 @@ namespace nxmBackup
             this.rotation.maxElementCount = (int)detailWindow.slMaxElements.Value;
 
             this.useEncryption = (bool)detailWindow.cbEncryption.IsChecked;
+
+            this.encryptionPW = detailWindow.txtEncKey.Password;
         }
 
         private void cbCompression_SelectionChanged(object sender, SelectionChangedEventArgs e)

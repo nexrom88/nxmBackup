@@ -36,7 +36,7 @@ namespace BlockCompression
 
         //used for encryption (general)
         private bool useEncryption;
-        AesManaged aesProvider;
+        AesCryptoServiceProvider aesProvider;
         ICryptoTransform encryptor;
         ICryptoTransform decryptor;
         private byte[] aesKey;
@@ -66,7 +66,7 @@ namespace BlockCompression
                 //init crypto provider
                 if (this.useEncryption)
                 {
-                    this.aesProvider = new AesManaged();
+                    this.aesProvider = new AesCryptoServiceProvider();
                     this.aesProvider.KeySize = 256;
                     this.aesProvider.Key = aesKey;
                     this.aesProvider.GenerateIV();
@@ -147,7 +147,7 @@ namespace BlockCompression
                     this.fileStream.Read(iv, 0, ivLength);
 
                     //init crypto
-                    this.aesProvider = new AesManaged();
+                    this.aesProvider = new AesCryptoServiceProvider();
                     this.aesProvider.KeySize = 256;
                     this.aesProvider.Key = aesKey;
                     this.aesProvider.IV = iv;
