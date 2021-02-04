@@ -249,9 +249,32 @@ namespace Common
             }
             return retValList;
         }
+
+
+        public static List<ManagementObject> GetResourceAllocationsettingData
+(
+ManagementObject vm
+)
+        {
+            List<ManagementObject> retValList = new List<ManagementObject>();
+            ManagementObjectCollection settingDatas = vm.GetRelated("Msvm_VirtualSystemsettingData");
+            foreach (ManagementObject settingData in settingDatas)
+            {
+                if (settingData["SettingType"].ToString() == "3")
+                {
+                    
+                }
+
+            }
+            return retValList;
+        }
     }
 
-    public static class ResourceType
+
+
+}
+
+public static class ResourceType
     {
         public const UInt16 Other = 1;
         public const UInt16 ComputerSystem = 2;
@@ -332,4 +355,4 @@ namespace Common
         public const UInt32 SystemNotAvailable = 32777;
         public const UInt32 OutofMemory = 32778;
     }
-}
+

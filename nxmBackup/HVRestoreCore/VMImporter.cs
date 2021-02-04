@@ -48,7 +48,7 @@ namespace HVRestoreCore
                     setVHDX(vm, basePath);
 
                     //disconnect ethernet
-                    //disconnectEthernet(vm);
+                    disconnectEthernet(vm);
 
                     string vmID = vm["Name"].ToString();
 
@@ -62,14 +62,39 @@ namespace HVRestoreCore
         }
 
         //disconnects the current ethernet adapters
-        //private static void disconnectEthernet(ManagementObject vm)
-        //{
-        //    ManagementScope scope = new ManagementScope(@"root\virtualization\v2");
-        //    ManagementBaseObject outParams;
+        private static void disconnectEthernet(ManagementObject vm)
+        {
+            ManagementScope scope = new ManagementScope(@"root\virtualization\v2");
+            ManagementObject managementService = WmiUtilities.GetVirtualMachineManagementService(scope);
+            ManagementBaseObject outParams;
 
-        //    //get all ethernet adapters
-        //    List<ManagementObject> currentHDDs = wmiUtilitiesForHyperVImport.(vm);
-        //}
+            ManagementObjectCollection settingDatas = vm.GetRelated("Msvm_VirtualSystemSettingData");
+            
+            //iterate settings
+            foreach (ManagementObject settingData in settingDatas)
+            {
+                ManagementObjectCollection ethernetSettingData = settingData.GetRelated("Msvm_SyntheticEthernetPortSettingData", "Msvm_VirtualSystemSettingDataComponent", null, null, "PartComponent", "GroupComponent", false, null);
+                
+                //iterate nics
+                foreach(ManagementObject nic in ethernetSettingData)
+                {
+                    ManagementObjectCollection nicAllocations = nic.GetRelated("Msvm_EthernetPortAllocationSettingData");
+
+                    foreach (ManagementObject nicAllocation in nicAllocations)
+                    {
+                        nicAllocation["HostResource"] = new byte[0];
+                        ManagementBaseObject inParams = managementService.GetMethodParameters("ModifyResourceSettings");
+                        inParams["ResourceSettings"] = new string[] {nicAllocation.GetText(TextFormat.WmiDtd20) };
+                        outParams = managementService.InvokeMethod("ModifyResourceSettings", inParams, null);
+                        WmiUtilities.ValidateOutput(outParams, scope);
+                    }
+
+                }
+            }
+
+              
+
+        }
 
         //sets the vhdx path for a planned vm
         private static void setVHDX(ManagementObject vm, string basePath)

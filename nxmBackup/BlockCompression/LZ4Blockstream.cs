@@ -34,7 +34,7 @@ namespace BlockCompression
         private ulong maxBlocksInCache = 30;
         List<CacheEntry> cache = new List<CacheEntry>();
 
-        //used for encryption (general)
+        //used for encryption
         private bool useEncryption;
         AesCryptoServiceProvider aesProvider;
         ICryptoTransform encryptor;
