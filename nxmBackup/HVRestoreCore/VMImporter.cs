@@ -82,7 +82,7 @@ namespace HVRestoreCore
 
                     foreach (ManagementObject nicAllocation in nicAllocations)
                     {
-                        nicAllocation["HostResource"] = new byte[0];
+                        nicAllocation["EnabledState"] = 3;
                         ManagementBaseObject inParams = managementService.GetMethodParameters("ModifyResourceSettings");
                         inParams["ResourceSettings"] = new string[] {nicAllocation.GetText(TextFormat.WmiDtd20) };
                         outParams = managementService.InvokeMethod("ModifyResourceSettings", inParams, null);
