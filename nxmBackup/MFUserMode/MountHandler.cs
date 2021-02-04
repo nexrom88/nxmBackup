@@ -271,11 +271,19 @@ namespace nxmBackup.MFUserMode
             this.readableChain = buildReadableBackupChain(sourceFiles);
 
             ulong decompressedFileSize = 0;
-            //open source file and read "decompressed file size" (first 8 bytes) when flr on full backup
+            //open source file and read "decompressed file size" when flr on full backup
             if (sourceFiles.Length == 1)
             {
                 FileStream sourceStream = new System.IO.FileStream(sourceFiles[sourceFiles.Length - 1], System.IO.FileMode.Open, System.IO.FileAccess.Read);
                 byte[] buffer = new byte[8];
+
+                //read IV length
+                sourceStream.Read(buffer, 0, 4);
+                int ivLength = BitConverter.ToInt32(buffer, 0);
+
+                //jump over iv and signature (16 bytes)
+                sourceStream.Seek(ivLength + 16, SeekOrigin.Current);
+
                 sourceStream.Read(buffer, 0, 8);
                 decompressedFileSize = BitConverter.ToUInt64(buffer, 0);
                 sourceStream.Close();
@@ -441,8 +449,16 @@ namespace nxmBackup.MFUserMode
             if (this.restoreMode == RestoreMode.lr)
             {
                 string mountDir = Directory.GetParent(System.IO.Path.GetDirectoryName(this.MountFile)).FullName;
-                System.IO.Directory.Delete(mountDir + "\\Virtual Hard Disks", true);
-                System.IO.Directory.Delete(mountDir + "\\Virtual Machines", true);
+
+                try
+                {
+                    System.IO.Directory.Delete(mountDir + "\\Virtual Hard Disks", true);
+                    System.IO.Directory.Delete(mountDir + "\\Virtual Machines", true);
+                }
+                catch (Exception ex)
+                {
+
+                }
             }
 
         }
