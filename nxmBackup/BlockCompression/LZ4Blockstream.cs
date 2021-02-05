@@ -34,6 +34,9 @@ namespace BlockCompression
         private ulong maxBlocksInCache = 30;
         List<CacheEntry> cache = new List<CacheEntry>();
 
+        //used for struct cache (for read mode only)
+        private List<StructCacheEntry> structCache;
+
         //used for encryption
         private bool useEncryption;
         AesCryptoServiceProvider aesProvider;
@@ -125,7 +128,6 @@ namespace BlockCompression
 
             }else if (this.mode == AccessMode.read) //if read mode: read file header
             {
-
                 byte[] buffer = new byte[8];
 
                 //read IV length
@@ -206,10 +208,40 @@ namespace BlockCompression
                 this.fileStream.Read(buffer, 0, 8);
                 this.DecompressedBlockSize = BitConverter.ToUInt64(buffer, 0);
 
+                //build struct cache
+                buildStructCache();
                 
             }
 
             return true;
+        }
+
+        //builds the struct cache
+        private void buildStructCache()
+        {
+            this.structCache = new List<StructCacheEntry>();
+
+            //jump to first block
+            this.fileStream.Seek(16 + this.decompressedFileSizeOffset, SeekOrigin.Begin);
+
+            byte[] buffer = new byte[16];
+
+            while (this.fileStream.Position < this.fileStream.Length)
+            {
+                //build cache entry
+                StructCacheEntry cacheEntry = new StructCacheEntry();
+                this.fileStream.Read(buffer, 0, 16);
+                cacheEntry.fileOffset = (ulong)this.fileStream.Position;
+                cacheEntry.decompressedFileByteOffset = BitConverter.ToUInt64(buffer, 0);
+                cacheEntry.compressedBlockSize = BitConverter.ToUInt64(buffer, 8);
+
+                //add entry to cache
+                this.structCache.Add(cacheEntry);
+
+                //jump to next block
+                this.fileStream.Seek((long)cacheEntry.compressedBlockSize, SeekOrigin.Current);
+
+            }
         }
 
         //starts new block and closes the old one
@@ -351,52 +383,40 @@ namespace BlockCompression
         {
             //search the "starting" block:
             //read current block header
-            this.fileStream.Position = 16 + this.decompressedFileSizeOffset; // jump over header
             byte[] headerData = new byte[8];
             ulong decompressedFileByteOffset = 0;
+            ulong fileOffset = 0;
             ulong compressedBlockSize = 0;
             ulong totalUncompressedBytesRead = 0;
-            byte[] tempData = new byte[(ulong)count + this.DecompressedBlockSize];
             ulong startDiffOffset = 0;
+            ulong structCacheEntryOffset = 0;
             MemoryStream destMemoryStream;
 
-            //read first block header
-            this.fileStream.Read(headerData, 0, 8);
-            decompressedFileByteOffset = BitConverter.ToUInt64(headerData, 0);
-
-            this.fileStream.Read(headerData, 0, 8);
-            compressedBlockSize = BitConverter.ToUInt64(headerData, 0);
-
-            while (decompressedFileByteOffset + this.DecompressedBlockSize < (ulong)this.Position)
+            foreach (StructCacheEntry entry in this.structCache)
             {
-                
-                //jump to next block
-                this.fileStream.Seek((long)compressedBlockSize, SeekOrigin.Current);
+                decompressedFileByteOffset = entry.decompressedFileByteOffset;
+                compressedBlockSize = entry.compressedBlockSize;
 
-                //no forward seek possible? eof!
-                if (this.fileStream.Read(headerData, 0, 8) == 0)
+                //block found?
+                if (decompressedFileByteOffset + this.DecompressedBlockSize < (ulong)this.Position)
                 {
-                     return 0; //eof
+                    fileOffset = entry.fileOffset;
+                    break;
                 }
-                decompressedFileByteOffset = BitConverter.ToUInt64(headerData, 0);
+                else
+                {
+                    structCacheEntryOffset++;
+                }
 
-                if (this.fileStream.Read(headerData, 0, 8) == 0)
-                {
-                    return 0;
-                }
-                compressedBlockSize = BitConverter.ToUInt64(headerData, 0);
             }
 
             //start block found
 
             startDiffOffset = (ulong)this.Position - decompressedFileByteOffset;
 
-            //header must be read again within "for". Jump back
-            this.fileStream.Seek(-16, SeekOrigin.Current);
 
             //"starting" block found:
 
-            //decompress block
 
             //read all necessary blocks 
             double blocksToRead = Math.Ceiling((double)count / (double)this.DecompressedBlockSize) + 1;
@@ -407,17 +427,14 @@ namespace BlockCompression
                 //read complete block here within for:
 
                 //check if this is the block "after the last block (not readable)"
-                if (this.fileStream.Position == this.fileStream.Length)
+                if (structCacheEntryOffset + 1 >= (ulong)this.structCache.Count)
                 {
                     continue;
                 }
 
-                //read header
-                this.fileStream.Read(headerData, 0, 8);
-                decompressedFileByteOffset = BitConverter.ToUInt64(headerData, 0);
-
-                this.fileStream.Read(headerData, 0, 8);
-                compressedBlockSize = BitConverter.ToUInt64(headerData, 0);
+                //get header from struct cache
+                decompressedFileByteOffset = structCache[(int)structCacheEntryOffset].decompressedFileByteOffset;
+                compressedBlockSize = structCache[(int)structCacheEntryOffset].compressedBlockSize;
 
                 byte[] cacheBlock = null;
                 //check whether block exists within cache
@@ -431,6 +448,7 @@ namespace BlockCompression
                 {
                     //fill memory stream with compressed block data
                     byte[] compData = new byte[compressedBlockSize];
+                    this.fileStream.Seek((long)(this.structCache[(int)structCacheEntryOffset].fileOffset), SeekOrigin.Begin);
                     this.fileStream.Read(compData, 0, (int)compressedBlockSize);
                     int readableBytesCount = (int)compressedBlockSize;
 
@@ -476,7 +494,10 @@ namespace BlockCompression
                     {
                         addBlockToCache(decompressedFileByteOffset, compressedBlockSize, cacheBlock);
                     }
-                    
+
+                    //jump to next block
+                    structCacheEntryOffset++;
+
                     this.decompressionStream.Close();
                 }
                 else //cache match
@@ -484,7 +505,7 @@ namespace BlockCompression
                     destMemoryStream.Write(cacheBlock, 0, cacheBlock.Length);
 
                     //jump to next block
-                    this.fileStream.Seek((long)compressedBlockSize, SeekOrigin.Current);
+                    structCacheEntryOffset++;
                 }
             }
 
@@ -627,6 +648,15 @@ namespace BlockCompression
     {
         public ulong decompressedFileByteOffset;
         public ulong compressedBlockSize;
+    }
+
+
+    //one struct cache entry
+    public struct StructCacheEntry
+    {
+        public UInt64 fileOffset;
+        public UInt64 decompressedFileByteOffset;
+        public UInt64 compressedBlockSize;
     }
 }
 
