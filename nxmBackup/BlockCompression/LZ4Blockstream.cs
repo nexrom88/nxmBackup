@@ -242,6 +242,7 @@ namespace BlockCompression
                 this.fileStream.Seek((long)cacheEntry.compressedBlockSize, SeekOrigin.Current);
 
             }
+
         }
 
         //starts new block and closes the old one
@@ -398,7 +399,7 @@ namespace BlockCompression
                 compressedBlockSize = entry.compressedBlockSize;
 
                 //block found?
-                if (decompressedFileByteOffset + this.DecompressedBlockSize < (ulong)this.Position)
+                if (decompressedFileByteOffset + this.DecompressedBlockSize > (ulong)this.Position)
                 {
                     fileOffset = entry.fileOffset;
                     break;
@@ -427,7 +428,7 @@ namespace BlockCompression
                 //read complete block here within for:
 
                 //check if this is the block "after the last block (not readable)"
-                if (structCacheEntryOffset + 1 >= (ulong)this.structCache.Count)
+                if (structCacheEntryOffset + 1 > (ulong)this.structCache.Count)
                 {
                     continue;
                 }
@@ -514,6 +515,14 @@ namespace BlockCompression
 
             //write bytes to buffer[] and return read bytes
             int bytesdecompressed = destMemoryStream.Read(buffer, offset, count);
+            
+            //could not read all necessary bytes?
+            if (bytesdecompressed < count && bytesdecompressed > 0)
+            {
+                //read remainign bytes
+                Read(buffer, offset + bytesdecompressed, count - bytesdecompressed);
+            }
+            
             this.Position += (long)bytesdecompressed;
             return bytesdecompressed;
             
