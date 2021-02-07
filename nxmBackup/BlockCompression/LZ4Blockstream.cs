@@ -484,8 +484,11 @@ namespace BlockCompression
                         totalUncompressedBytesRead += (ulong)dataRead;
 
                         //add data to cache block
-                        destMemoryStream.Seek(dataRead * -1, SeekOrigin.Current);
-                        destMemoryStream.Read(cacheBlock, blockUncompressedBytesRead, dataRead);
+                        if (this.CachingMode)
+                        {
+                            destMemoryStream.Seek(dataRead * -1, SeekOrigin.Current);
+                            destMemoryStream.Read(cacheBlock, blockUncompressedBytesRead, dataRead);
+                        }
 
                         blockUncompressedBytesRead += dataRead;
 
