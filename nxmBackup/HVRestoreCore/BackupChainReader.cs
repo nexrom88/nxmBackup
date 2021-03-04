@@ -212,6 +212,11 @@ namespace HVRestoreCore
                         if ((UInt64)offset >= currentLocation.vhdxOffset && (UInt64)offset < currentLocation.vhdxOffset + currentLocation.vhdxLength)
                         {
 
+                            if (nonFullBackup.cbStructure.blocks[i].changedBlockOffset <= 19627152 && 19627152 < nonFullBackup.cbStructure.blocks[i].changedBlockOffset + nonFullBackup.cbStructure.blocks[i].changedBlockLength)
+                            {
+                                offset = offset;
+                            }
+
                             //where to start reading within cb file?
                             UInt64 cbOffset = ((UInt64)offset - currentLocation.vhdxOffset) + skippedBytes + nonFullBackup.cbStructure.blocks[i].cbFileOffset;
 
