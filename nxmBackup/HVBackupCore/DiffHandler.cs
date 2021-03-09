@@ -306,7 +306,7 @@ namespace nxmBackup.HVBackupCore
                         //add length to progress
                         bytesRestored += currentBytesCount;
                     }
-
+                    
                     //write block to target file
                     diskHandler.write(cbStruct.blocks[i].changedBlockOffset + writeOffset, buffer);
                     writeOffset += (ulong)bufferSize;

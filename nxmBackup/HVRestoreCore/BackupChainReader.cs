@@ -240,6 +240,14 @@ namespace HVRestoreCore
 
                                 nonFullBackup.sourceStreamRCT.Read(buffer, bufferOffset, (Int32)availableBytes);
 
+                                bool saveArray = false;
+                                if (saveArray)
+                                {
+                                    byte[] destArr = new byte[availableBytes];
+                                    Array.Copy(buffer, bufferOffset, destArr, 0, (int)availableBytes);
+                                    System.IO.File.WriteAllBytes("f:\\debug.raw", destArr);
+                                }
+
 
                                 //read remaining bytes recursive
                                 readFromChain(offset + (Int64)availableBytes, length - (Int64)availableBytes, buffer, bufferOffset + (Int32)availableBytes, callDepth +1);

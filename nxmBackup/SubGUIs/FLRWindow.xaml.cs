@@ -86,6 +86,7 @@ namespace HVRestoreCore
 
 
             List<GuestVolume> drives = gfHandler.getMountedDrives();
+            return;
 
             gfHandler.mountVHD();
 
