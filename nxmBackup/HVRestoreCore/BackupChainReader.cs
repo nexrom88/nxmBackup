@@ -21,12 +21,17 @@ namespace HVRestoreCore
         public void readFromChain(Int64 offset, Int64 length, byte[] buffer, Int32 bufferOffset, int callDepth = 0)
         {
 
+            if (23112736 > offset && offset + length  > 23112736)
+            {
+                offset = offset;
+            }
+
+
             int firstRCTIndex = 0;
             if (nonFullBackups.Count > 0 && nonFullBackups[0].backupType == NonFullBackupType.lb)
             {
                 firstRCTIndex = 1;
             }
-
 
             //read from vhdx header (first 1MB) on rct backup?
             if (nonFullBackups.Count > firstRCTIndex)
@@ -212,13 +217,14 @@ namespace HVRestoreCore
                         if ((UInt64)offset >= currentLocation.vhdxOffset && (UInt64)offset < currentLocation.vhdxOffset + currentLocation.vhdxLength)
                         {
 
-                            if (nonFullBackup.cbStructure.blocks[i].changedBlockOffset <= 19627152 && 19627152 < nonFullBackup.cbStructure.blocks[i].changedBlockOffset + nonFullBackup.cbStructure.blocks[i].changedBlockLength)
-                            {
-                                offset = offset;
-                            }
+                            //if (nonFullBackup.cbStructure.blocks[i].changedBlockOffset <= 19627152 && 19627152 < nonFullBackup.cbStructure.blocks[i].changedBlockOffset + nonFullBackup.cbStructure.blocks[i].changedBlockLength)
+                            //{
+                            //    offset = offset;
+                            //}
 
                             //where to start reading within cb file?
-                            UInt64 cbOffset = ((UInt64)offset - currentLocation.vhdxOffset) + skippedBytes + nonFullBackup.cbStructure.blocks[i].cbFileOffset;
+                            UInt64 skippedFirstBytes = (UInt64)offset - currentLocation.vhdxOffset;
+                            UInt64 cbOffset = skippedFirstBytes + skippedBytes + nonFullBackup.cbStructure.blocks[i].cbFileOffset;
 
                             //can everything be read?
                             if ((UInt64)offset + (UInt64)length <= currentLocation.vhdxOffset + currentLocation.vhdxLength)
@@ -259,6 +265,7 @@ namespace HVRestoreCore
                         //is offset + length within location? (end within location)
                         else if ((UInt64)offset + (UInt64)length > currentLocation.vhdxOffset && (UInt64)offset + (UInt64)length < currentLocation.vhdxOffset + currentLocation.vhdxLength)
                         {
+
                             //where to start reading within cb file?
                             UInt64 cbOffset = nonFullBackup.cbStructure.blocks[i].cbFileOffset + skippedBytes;
 

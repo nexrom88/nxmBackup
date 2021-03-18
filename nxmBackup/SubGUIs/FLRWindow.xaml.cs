@@ -70,7 +70,6 @@ namespace HVRestoreCore
             setLoadingState(true);
             setLoadingAnim();
 
-
             Thread initThread = new Thread(() => init());
             initThread.Start();
 
