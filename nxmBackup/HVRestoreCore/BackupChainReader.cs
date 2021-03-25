@@ -213,6 +213,7 @@ namespace HVRestoreCore
 
                         VhdxBlockLocation currentLocation = nonFullBackup.cbStructure.blocks[i].vhdxBlockLocations[j];
 
+                        Int64 distance = Math.Abs(offset - (long)currentLocation.vhdxOffset);
                         //is offset within location? (start within location)
                         if ((UInt64)offset >= currentLocation.vhdxOffset && (UInt64)offset < currentLocation.vhdxOffset + currentLocation.vhdxLength)
                         {
@@ -225,6 +226,7 @@ namespace HVRestoreCore
                             //where to start reading within cb file?
                             UInt64 skippedFirstBytes = (UInt64)offset - currentLocation.vhdxOffset;
                             UInt64 cbOffset = skippedFirstBytes + skippedBytes + nonFullBackup.cbStructure.blocks[i].cbFileOffset;
+                            //cbFileOffset == 4423960
 
                             //can everything be read?
                             if ((UInt64)offset + (UInt64)length <= currentLocation.vhdxOffset + currentLocation.vhdxLength)
@@ -283,6 +285,31 @@ namespace HVRestoreCore
                             return;
 
                         }
+
+                        //is location completely within block to read?
+                        else if ((UInt64)offset < currentLocation.vhdxOffset && (UInt64)offset + (UInt64)length > currentLocation.vhdxOffset + currentLocation.vhdxLength)
+                        {
+                            UInt64 blockStartSkippedBytes = currentLocation.vhdxOffset - (ulong)offset;
+                            UInt64 blockEndSkippedBytes = ((UInt64)offset + (UInt64)length) - (currentLocation.vhdxOffset + currentLocation.vhdxLength);
+
+                            //where to start reading within cb file?
+                            UInt64 cbOffset = nonFullBackup.cbStructure.blocks[i].cbFileOffset + skippedBytes;
+
+                            //how much to read?
+                            UInt64 readLength = currentLocation.vhdxLength;
+
+                            nonFullBackup.sourceStreamRCT.Seek((Int64)cbOffset, System.IO.SeekOrigin.Begin);
+                            nonFullBackup.sourceStreamRCT.Read(buffer, bufferOffset + (Int32)blockStartSkippedBytes , (Int32)readLength);
+
+                            //read skipped start bytes
+                            readFromChain(offset, (Int64)blockStartSkippedBytes, buffer, bufferOffset, callDepth + 1);
+
+                            //read skipped end bytes
+                            readFromChain(offset + (Int64)blockStartSkippedBytes + (Int64)readLength, (Int64)blockEndSkippedBytes, buffer, bufferOffset + (int)blockStartSkippedBytes + (int)readLength, callDepth + 1);
+
+                            return;
+                        }
+
                         else
                         {
                             skippedBytes += currentLocation.vhdxLength;
