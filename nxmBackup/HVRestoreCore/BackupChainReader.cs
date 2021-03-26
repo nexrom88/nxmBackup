@@ -362,6 +362,21 @@ namespace HVRestoreCore
                     sourceAndDestLength = ((UInt64)offset + (UInt64)length) - block.offset;
                     destOffset = block.offset - (UInt64)offset;
                 }
+                //is location completely within block to read?
+                else if ((UInt64)offset < block.offset && (UInt64)offset + (UInt64)length > block.offset + block.length)
+                {
+                    UInt64 blockStartSkippedBytes = block.offset - (ulong)offset;
+                    UInt64 blockEndSkippedBytes = ((UInt64)offset + (UInt64)length) - (block.offset + block.length);
+
+                    //where to start reading within cb file?
+                    sourceOffset = 0;
+
+                    //how much to read?
+                    sourceAndDestLength = block.length;
+
+                    //where to put the data?
+                    destOffset = block.offset - (UInt64)offset;
+                }
 
                 //copy to dest array
                 if (sourceAndDestLength != 0)
