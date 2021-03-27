@@ -21,6 +21,11 @@ namespace HVRestoreCore
         public void readFromChain(Int64 offset, Int64 length, byte[] buffer, Int32 bufferOffset, int callDepth = 0)
         {
 
+            if (offset <= 4194304 && offset + length > 4194304)
+            {
+                offset = offset;
+            }
+
             int firstRCTIndex = 0;
             if (nonFullBackups.Count > 0 && nonFullBackups[0].backupType == NonFullBackupType.lb)
             {
