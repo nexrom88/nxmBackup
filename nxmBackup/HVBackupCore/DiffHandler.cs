@@ -35,6 +35,11 @@ namespace nxmBackup.HVBackupCore
                     case 6: //block is fully present
                         vhdxOffsets[i - startEntry] = vhdxBATTable.entries[(int)i].FileOffsetMB * 1048576; // multiple with 1024^2 to get byte offset
 
+                        if (vhdxBATTable.entries[(int)i].FileOffsetMB * 1048576 == 0x400000)
+                        {
+                            i = i;
+                        }
+
                         break;
                     default: //block is not present
                         uint offsetIndex = i - startEntry;
