@@ -212,7 +212,7 @@ namespace HVRestoreCore
 
                         VhdxBlockLocation currentLocation = nonFullBackup.cbStructure.blocks[i].vhdxBlockLocations[j];
 
-                        Int64 distance = Math.Abs(offset - (long)currentLocation.vhdxOffset);
+
                         //is offset within location? (start within location)
                         if ((UInt64)offset >= currentLocation.vhdxOffset && (UInt64)offset < currentLocation.vhdxOffset + currentLocation.vhdxLength)
                         {
