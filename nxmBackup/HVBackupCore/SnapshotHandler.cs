@@ -695,17 +695,20 @@ namespace nxmBackup.HVBackupCore
                     //reopen virtual disk
                     diskHandler.open(VirtualDiskHandler.VirtualDiskAccessMask.AttachReadOnly | VirtualDiskHandler.VirtualDiskAccessMask.GetInfo);
                     diskHandler.attach(VirtualDiskHandler.ATTACH_VIRTUAL_DISK_FLAG.ATTACH_VIRTUAL_DISK_FLAG_NO_LOCAL_HOST | VirtualDiskHandler.ATTACH_VIRTUAL_DISK_FLAG.ATTACH_VIRTUAL_DISK_FLAG_READ_ONLY);
+
+
+
                     //output ok, build block structure
+                    int eventId = this.eventHandler.raiseNewEvent("Verarbeite Blöcke...", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
                     int blockCount = ((ulong[])outParams["ChangedByteOffsets"]).Length;
                     ChangedBlock[] changedBlocks = new ChangedBlock[blockCount];
 
                     for (int i = 0; i < blockCount; i++)
                     {
-                        ChangedBlock block = new ChangedBlock();
-                        block.offset = ((ulong[])outParams["ChangedByteOffsets"])[i];
-                        block.length = ((ulong[])outParams["ChangedByteLengths"])[i];
-                        changedBlocks[i] = block;
+                        changedBlocks[i].offset = ((ulong[])outParams["ChangedByteOffsets"])[i];
+                        changedBlocks[i].length = ((ulong[])outParams["ChangedByteLengths"])[i];
                     }
+                    this.eventHandler.raiseNewEvent("erfolgreich", true, false, eventId, EventStatus.successful);
 
                     //write backup output
                     DiffHandler diffWriter = new DiffHandler(this.eventHandler);

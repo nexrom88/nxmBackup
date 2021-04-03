@@ -37,7 +37,7 @@ namespace nxmBackup.HVBackupCore
 
                         vhdxOffsets[i - startEntry] = vhdxBATTable.entries[(int)i].FileOffsetMB * 1048576; // multiple with 1024^2 to get byte offset
 
-                        if (vhdxBATTable.entries[(int)i].FileOffsetMB * 1048576 == 0x400000)
+                        if (vhdxBATTable.entries[(int)i].FileOffsetMB * 1048576 <= 0x400000)
                         {
                             i = i;
                         }
@@ -146,7 +146,12 @@ namespace nxmBackup.HVBackupCore
                     if (i == 0)
                     {
                         UInt64 offsetDelta = block.offset % vhdxBlockSize;
-                        currentOffset += offsetDelta;
+
+                        //just adjust when block is available within vhdx (offset > 0)
+                        if (currentOffset > 0)
+                        {
+                            currentOffset += offsetDelta;
+                        }
                         currentLength -= offsetDelta;
                     }
 
@@ -158,6 +163,11 @@ namespace nxmBackup.HVBackupCore
 
 
                     remainingLength -= currentLength;
+
+                    if (currentOffset <= 0x400000)
+                    {
+                        currentOffset = currentOffset;
+                    }
 
                     outStream.Write(BitConverter.GetBytes((UInt64)currentOffset), 0, 8); //write one offset
                     outStream.Write(BitConverter.GetBytes((UInt64)currentLength), 0, 8); //write one length
