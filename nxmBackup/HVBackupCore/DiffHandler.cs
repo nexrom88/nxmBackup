@@ -164,11 +164,6 @@ namespace nxmBackup.HVBackupCore
 
                     remainingLength -= currentLength;
 
-                    if (currentOffset <= 0x400000)
-                    {
-                        currentOffset = currentOffset;
-                    }
-
                     outStream.Write(BitConverter.GetBytes((UInt64)currentOffset), 0, 8); //write one offset
                     outStream.Write(BitConverter.GetBytes((UInt64)currentLength), 0, 8); //write one length
 

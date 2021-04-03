@@ -340,11 +340,6 @@ namespace Common
                 batEntry = batEntry >> 17;
                 UInt64 fileOffsetMB = batEntry;
 
-                if (fileOffsetMB == 4)
-                {
-                    i = i;
-                }
-
                 newEntry.FileOffsetMB = fileOffsetMB;
                 newEntry.reserved = reserved;
 
