@@ -25,8 +25,8 @@ namespace HVRestoreCore
         {
             diskHandler = new Common.VirtualDiskHandler(this.vhdPath);
             diskHandler.open(Common.VirtualDiskHandler.VirtualDiskAccessMask.AttachReadOnly);
-            diskHandler.attach(Common.VirtualDiskHandler.ATTACH_VIRTUAL_DISK_FLAG.ATTACH_VIRTUAL_DISK_FLAG_NO_DRIVE_LETTER | Common.VirtualDiskHandler.ATTACH_VIRTUAL_DISK_FLAG.ATTACH_VIRTUAL_DISK_FLAG_READ_ONLY);
-            //diskHandler.attach(Common.VirtualDiskHandler.ATTACH_VIRTUAL_DISK_FLAG.ATTACH_VIRTUAL_DISK_FLAG_READ_ONLY);
+            //diskHandler.attach(Common.VirtualDiskHandler.ATTACH_VIRTUAL_DISK_FLAG.ATTACH_VIRTUAL_DISK_FLAG_NO_DRIVE_LETTER | Common.VirtualDiskHandler.ATTACH_VIRTUAL_DISK_FLAG.ATTACH_VIRTUAL_DISK_FLAG_READ_ONLY);
+            diskHandler.attach(Common.VirtualDiskHandler.ATTACH_VIRTUAL_DISK_FLAG.ATTACH_VIRTUAL_DISK_FLAG_READ_ONLY);
 
         }
 

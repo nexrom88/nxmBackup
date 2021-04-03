@@ -57,7 +57,7 @@ namespace nxmBackup.HVBackupCore
 
         //writes the diff file using cbt information
         [Obsolete]
-        public void writeDiffFile(ChangedBlock[] changedBlocks, VirtualDiskHandler diskHandler, UInt32 vhdxBlockSize, Common.IArchive archive, string hddName, Common.BATTable vhdxBATTable, UInt64 bufferSize, RawBatTable rawBatTable, RawHeader rawHeader, RawLog rawLog, RawMetadataTable rawMeta, UInt64 vhdxSize)
+        public bool writeDiffFile(ChangedBlock[] changedBlocks, VirtualDiskHandler diskHandler, UInt32 vhdxBlockSize, Common.IArchive archive, string hddName, Common.BATTable vhdxBATTable, UInt64 bufferSize, RawBatTable rawBatTable, RawHeader rawHeader, RawLog rawLog, RawMetadataTable rawMeta, UInt64 vhdxSize)
         {
 
             //calculate changed bytes count for progress calculation
@@ -191,6 +191,15 @@ namespace nxmBackup.HVBackupCore
                         bytesRead += bytesRemaining;
                     }
 
+                    //when buffer is empty -> error while reading
+                    if (buffer == null)
+                    {
+                        outStream.Close();
+                        inputStream.Close();
+                        this.eventHandler.raiseNewEvent("Erstelle Inkrement - Fehler", false, true, relatedEventId, EventStatus.error);
+                        return false;
+                    }
+
                     //write the current buffer to diff file
                     outStream.Write(buffer, 0, buffer.Length); //write data
                     bytesReadCount += (uint)buffer.Length;
@@ -213,7 +222,7 @@ namespace nxmBackup.HVBackupCore
             GC.KeepAlive(inputStream);
             outStream.Close();
             inputStream.Close();
-
+            return true;
         }
 
 
