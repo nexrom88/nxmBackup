@@ -269,7 +269,28 @@ namespace nxmBackup.MFUserMode
                 //read payload data from backup chain
                 this.readableBackupChain.readFromChain(offset, length, data, 0);
                 this.readableBackupChain.readFromLB(offset, length, data);
-                //this.readableBackupChain.readFromWC(offset, length, data, writeCache);
+
+                //byte[] debugBuffer = new byte[length];
+                //System.IO.FileStream debugStream =  System.IO.File.OpenRead(@"f:\Win10.vhdx");
+                //debugStream.Seek(offset, SeekOrigin.Begin);
+                //debugStream.Read(debugBuffer, 0, (Int32)length);
+                //debugStream.Close();
+                //bool identical = true;
+                //int i;
+                //for (i = 0; i < length; i++)
+                //{
+                //    if (data[i] != debugBuffer[i])
+                //    {
+                //        identical = false;
+                //        break;
+                //    }
+                //}
+
+                //if (!identical && offset >= 0x400000)
+                //{
+                //    identical = identical;
+                //}
+
 
                 //write payload data to shared memory
                 Marshal.Copy(data, 0, this.sharedMemoryHandler.SharedMemoryPointer, data.Length);

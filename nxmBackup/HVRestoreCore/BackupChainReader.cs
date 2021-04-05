@@ -26,6 +26,11 @@ namespace HVRestoreCore
                 firstRCTIndex = 1;
             }
 
+            if (offset >= 0x3fef3000)
+            {
+                offset = offset;
+            }
+
             //read from vhdx header (first 1MB) on rct backup?
             if (nonFullBackups.Count > firstRCTIndex)
             {
