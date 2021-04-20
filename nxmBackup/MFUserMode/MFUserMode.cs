@@ -271,7 +271,7 @@ namespace nxmBackup.MFUserMode
                 this.readableBackupChain.readFromLB(offset, length, data);
 
                 //byte[] debugBuffer = new byte[length];
-                //System.IO.FileStream debugStream =  System.IO.File.OpenRead(@"f:\Win10.vhdx");
+                //System.IO.FileStream debugStream = System.IO.File.OpenRead(@"f:\Win10.vhdx");
                 //debugStream.Seek(offset, SeekOrigin.Begin);
                 //debugStream.Read(debugBuffer, 0, (Int32)length);
                 //debugStream.Close();
@@ -286,9 +286,11 @@ namespace nxmBackup.MFUserMode
                 //    }
                 //}
 
-                //if (!identical && offset >= 0x400000)
+                //if (!identical && offset == 15979384832)
                 //{
                 //    identical = identical;
+                //    //offset = 194117632
+                //    //i = 16392
                 //}
 
 

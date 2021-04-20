@@ -26,7 +26,7 @@ namespace HVRestoreCore
                 firstRCTIndex = 1;
             }
 
-            if (offset >= 0x3fef3000)
+            if (offset == 15979384832)
             {
                 offset = offset;
             }
@@ -184,7 +184,7 @@ namespace HVRestoreCore
 
 
             //payload reads:
-
+            long smallestDist = long.MaxValue;
             //iterate through all non-full backups first to see if data is within rct backup
             foreach (ReadableNonFullBackup nonFullBackup in this.NonFullBackups)
             {
@@ -194,6 +194,7 @@ namespace HVRestoreCore
                     continue;
                 }
 
+                
 
                 //iterate through all changed blocks
                 for (int i = 0; i < nonFullBackup.cbStructure.blocks.Count; i++)
@@ -210,6 +211,13 @@ namespace HVRestoreCore
                         }
 
                         VhdxBlockLocation currentLocation = nonFullBackup.cbStructure.blocks[i].vhdxBlockLocations[j];
+
+                        long dist = Math.Abs(offset - (long)currentLocation.vhdxOffset);
+
+                        if (dist < smallestDist)
+                        {
+                            smallestDist = dist;
+                        }
 
 
                         //is offset within location? (start within location)
