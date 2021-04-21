@@ -185,6 +185,7 @@ namespace HVRestoreCore
 
             //payload reads:
             long smallestDist = long.MaxValue;
+            int smallestIndex = 0;
             //iterate through all non-full backups first to see if data is within rct backup
             foreach (ReadableNonFullBackup nonFullBackup in this.NonFullBackups)
             {
@@ -217,6 +218,7 @@ namespace HVRestoreCore
                         if (dist < smallestDist)
                         {
                             smallestDist = dist;
+                            smallestIndex = i;
                         }
 
 
