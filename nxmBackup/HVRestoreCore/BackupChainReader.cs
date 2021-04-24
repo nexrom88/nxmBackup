@@ -26,11 +26,6 @@ namespace HVRestoreCore
                 firstRCTIndex = 1;
             }
 
-            if (offset == 15979384832)
-            {
-                offset = offset;
-            }
-
             //read from vhdx header (first 1MB) on rct backup?
             if (nonFullBackups.Count > firstRCTIndex)
             {
@@ -205,7 +200,7 @@ namespace HVRestoreCore
                     for (int j = 0; j < nonFullBackup.cbStructure.blocks[i].vhdxBlockLocations.Count; j++)
                     {
                         //is vhdxBlocklocation 0? not possible here -> skip this vhdxblocklocation
-                        if (nonFullBackup.cbStructure.blocks[i].vhdxBlockLocations[j].vhdxOffset == 0)
+                        if (nonFullBackup.cbStructure.blocks[i].vhdxBlockLocations[j].vhdxOffset < 10)
                         {
                             skippedBytes += nonFullBackup.cbStructure.blocks[i].vhdxBlockLocations[j].vhdxLength;
                             continue;

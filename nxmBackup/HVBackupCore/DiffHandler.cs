@@ -40,7 +40,7 @@ namespace nxmBackup.HVBackupCore
                         break;
                     default: //block is not present
                         uint offsetIndex = i - startEntry;
-                        vhdxOffsets[offsetIndex] = 0;
+                        vhdxOffsets[offsetIndex] = vhdxBATTable.entries[(int)i].state;
                         break;
                 }
                 
