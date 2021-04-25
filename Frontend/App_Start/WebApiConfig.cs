@@ -22,7 +22,7 @@ namespace Frontend
 
             config.Routes.MapHttpRoute(
                 name: "TeamplatesApi",
-                routeTemplate: "templates/{controller}",
+                routeTemplate: "{controller}/{name}",
                 defaults: new { id = RouteParameter.Optional }
             );
         }

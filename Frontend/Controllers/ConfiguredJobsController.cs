@@ -4,15 +4,19 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Web.Http;
+using ConfigHandler;
 
 namespace Frontend.Controllers
 {
-    public class ConfiguredJobsController1 : ApiController
+    public class ConfiguredJobsController : ApiController //api/ConfiguredJobs
     {
         // GET api/<controller>
-        public IEnumerable<string> Get()
+        public HttpResponseMessage Get()
         {
-            return new string[] { "value1", "value2" };
+            HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.OK);
+            response.Content = new StringContent(Newtonsoft.Json.JsonConvert.SerializeObject(JobConfigHandler.Jobs));
+            return response;
+            
         }
 
         // GET api/<controller>/5

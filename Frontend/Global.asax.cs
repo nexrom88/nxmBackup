@@ -13,11 +13,17 @@ namespace Frontend
     {
         protected void Application_Start()
         {
+            //auto generated
             AreaRegistration.RegisterAllAreas();
             GlobalConfiguration.Configure(WebApiConfig.Register);
             FilterConfig.RegisterGlobalFilters(GlobalFilters.Filters);
             RouteConfig.RegisterRoutes(RouteTable.Routes);
             BundleConfig.RegisterBundles(BundleTable.Bundles);
+
+            //startup nxmBackup
+
+            //load jobs
+            ConfigHandler.JobConfigHandler.readJobsFromDB();
         }
     }
 }
