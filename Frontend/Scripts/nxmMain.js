@@ -30,11 +30,29 @@ function buildJobsList() {
 
         //deep-copy job template
         var currentTemplate = jobTemplate.slice();
-        $("#jobsList").append(Mustache.render(currentTemplate, { JobName: configuredJobs[i].Name }));
+
+        //add job to sidebar
+        $("#jobsList").append(Mustache.render(currentTemplate, { JobName: configuredJobs[i].Name, JobDbId: configuredJobs[i].DbId }));
+
       }
 
+      //register job click handler
+      $(".jobLink").click(function () {
+        var JobDbId = $(this).data("jobdbid");
+
+        //look for job
+        for (var i = 0; i < configuredJobs.length; i++) {
+          if (configuredJobs[i].DbId == JobDbId) {
+            buildVMList(configuredJobs[i]);
+          }
+        }
+
+      });
+
     });
+}
 
-
-
+//builds the vm list
+function buildVMList(currentJob) {
+  alert (currentJob.Name);
 }
