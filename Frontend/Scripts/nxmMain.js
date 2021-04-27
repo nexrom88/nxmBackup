@@ -54,5 +54,16 @@ function buildJobsList() {
 
 //builds the vm list
 function buildVMList(currentJob) {
-  alert (currentJob.Name);
+ 
+      //load vm details table
+      $.ajax({
+        url: "Templates/jobDetailsTable"
+      })
+        .done(function (tableData) {
+          $("#mainPanelHeader").html("Jobdetails (" + currentJob.Name + ")");
+          var details = Mustache.render(tableData, { nextRun: currentJob.NextRun, lastRun: currentJob.LastRun, lastState: currentJob.Successful });
+          $("#mainPanel").html(details);
+        });
+
+      
 }

@@ -294,8 +294,8 @@
     <Content Include="Scripts\umd\popper-utils.min.js" />
     <Content Include="Scripts\umd\popper.js" />
     <Content Include="Scripts\umd\popper.min.js" />
-    <Content Include="Templates\mainPanel-VMs.html" />
     <Content Include="Templates\navJobItem.html" />
+    <Content Include="Templates\jobDetailsTable.html" />
     <Content Include="Web.config" />
     <Content Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
