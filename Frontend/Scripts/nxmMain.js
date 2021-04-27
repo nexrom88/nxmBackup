@@ -43,7 +43,7 @@ function buildJobsList() {
         //look for job
         for (var i = 0; i < configuredJobs.length; i++) {
           if (configuredJobs[i].DbId == JobDbId) {
-            buildVMList(configuredJobs[i]);
+            buildJobDetailsPanel(configuredJobs[i]);
           }
         }
 
@@ -53,7 +53,7 @@ function buildJobsList() {
 }
 
 //builds the vm list
-function buildVMList(currentJob) {
+function buildJobDetailsPanel(currentJob) {
  
       //load vm details table
       $.ajax({
