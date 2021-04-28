@@ -14,3 +14,21 @@ select,
 textarea {
     max-width: 280px;
 }
+
+#vmContainer{
+    margin-left:0;
+    margin-right:0;
+}
+#jobDetailsTable{
+    margin-left:15px;
+}
+
+#vmDetailsCaption{
+    margin-bottom: 24px;
+    
+}
+
+#jobControlls{
+    margin-bottom: 24px;
+    padding-left: 15px;
+}
