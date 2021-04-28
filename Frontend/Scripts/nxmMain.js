@@ -1,6 +1,6 @@
 ﻿//on main window load
 var configuredJobs; //list of all active jobs
-var slectedJob; //the id of the currently selected job
+var selectedJob; //the id of the currently selected job
 var selectedVM; //the selected vm id within main panel
 var eventRefreshTimer; //timer for refreshing vm events
 
@@ -94,6 +94,12 @@ function buildJobDetailsPanel(currentJob) {
           //set vm click handler
           $(".vm").click(vmClickHandler);
 
+          //set start job button click handler
+          $("#startJobButton").click(startJobHandler);
+
+          //set delete job button click handler
+          $("#deleteJobButton").click(deleteJobHandler);
+
           //set state color
           if (currentJob.Successful == "erfolgreich") {
             $("#jobDetailsRow").css("background-color", "#ccffcc");
@@ -105,8 +111,58 @@ function buildJobDetailsPanel(currentJob) {
             $("#jobDetailsRow").css("background-color", "#ffffb3");
           }
 
+          //select first vm
+          $(".vm").first().click();
+
         });
               
+}
+
+
+//click handler for deleting job
+function deleteJobHandler(event) {
+  //api call
+  Swal.fire({
+    title: 'Job löschen?',
+    text: "Soll der aktuelle Job wirklich gelöscht werden?",
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonColor: '#3085d6',
+    cancelButtonColor: '#d33',
+    confirmButtonText: 'Löschen',
+    cancelButtonText: 'Abbrechen'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      $.ajax({
+        url: 'api/JobDelete',
+        contentType: "application/json; charset=utf-8",
+        data: String(selectedJob),
+        type: 'POST',
+        cache: false,
+        success: function (result) {
+          Swal.fire(
+            'Job gelöscht',
+            'Der ausgewählte Job wurde glöscht',
+            'success'
+          );
+          location.reload();
+        }
+      });
+
+      
+    }
+  });
+}
+
+//click handler for starting job manually
+function startJobHandler(event) {
+  //api call
+  $.ajax({
+    url: "api/JobStart/" + selectedJob
+  })
+    .done(function (data) {
+      
+    });
 }
 
 //click handler for clicking a vm within main panel

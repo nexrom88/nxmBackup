@@ -5,12 +5,14 @@ namespace JobEngine
 {
     public class JobHandler
     {
-        private List<System.Timers.Timer> timers = new List<System.Timers.Timer>();
         private List<JobTimer> jobTimers = new List<JobTimer>();
 
         //starts the job engine
         public bool startJobEngine()
         {
+            //stop all already running timers
+            stopAllTimers();
+
             //read all jobs
             ConfigHandler.JobConfigHandler.readJobsFromDB();
             List<ConfigHandler.OneJob> jobs = ConfigHandler.JobConfigHandler.Jobs;
@@ -26,11 +28,21 @@ namespace JobEngine
                 JobTimer timer = new JobTimer(job);
                 this.jobTimers.Add(timer);
                 System.Timers.Timer t = new System.Timers.Timer(60000);
+                timer.underlyingTimer = t;
                 t.Elapsed += timer.tick;
                 t.Start();
             }
             return true;
 
+        }
+
+        //stops all timers
+        public void stopAllTimers()
+        {
+            foreach (JobTimer timer in this.jobTimers)
+            {
+                timer.underlyingTimer.Stop();
+            }
         }
 
         //manually starts a given job

@@ -21,9 +21,8 @@ namespace Frontend
             BundleConfig.RegisterBundles(BundleTable.Bundles);
 
             //startup nxmBackup
-
-            //load jobs
-            ConfigHandler.JobConfigHandler.readJobsFromDB();
+            //start job engine
+            App_Start.GUIJobHandler.initJob();
         }
     }
 }

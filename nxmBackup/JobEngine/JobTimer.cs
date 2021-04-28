@@ -12,6 +12,7 @@ namespace JobEngine
     {
         private ConfigHandler.OneJob job;
         private bool inProgress = false;
+        public System.Timers.Timer underlyingTimer;
 
         public JobTimer(ConfigHandler.OneJob job) 
         {

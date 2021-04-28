@@ -23,9 +23,15 @@ namespace Frontend
             bundles.Add(new ScriptBundle("~/bundles/bootstrap").Include(
                       "~/Scripts/bootstrap.js"));
 
+            bundles.Add(new ScriptBundle("~/bundles/sweetalert2").Include(
+                       "~/Scripts/sweetalert2.js"));
+
             //own Scripts
             bundles.Add(new ScriptBundle("~/bundles/nxmMain").Include(
                       "~/Scripts/nxmMain.js"));
+
+            bundles.Add(new ScriptBundle("~/bundles/globalAjaxHandler").Include(
+                      "~/Scripts/globalAjaxHandler.js"));
 
             bundles.Add(new StyleBundle("~/Content/css").Include(
                       "~/Content/bootstrap.css",

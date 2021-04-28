@@ -25,6 +25,9 @@ namespace Frontend
                 routeTemplate: "{controller}/{name}",
                 defaults: new { id = RouteParameter.Optional }
             );
+
+            //enable auth filter
+            
         }
     }
 }
