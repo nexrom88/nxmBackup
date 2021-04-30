@@ -35,6 +35,13 @@ namespace nxmBackup.HVBackupCore
             ManagementObject snapshot = createSnapshot(cLevel, allowSnapshotFallback);
             ManagementObject refP = null;
 
+            //error occured while taking snapshot?
+            if (snapshot == null)
+            {
+                this.eventHandler.raiseNewEvent("Backupvorgang fehlgeschlagen", false, false, NO_RELATED_EVENT, EventStatus.error);
+                return false;
+            }
+
             //add job name and vm name to destination
             destination = System.IO.Path.Combine(destination, job.Name + "\\" + this.vm.vmID);
 
@@ -304,65 +311,73 @@ namespace nxmBackup.HVBackupCore
             ManagementScope scope = new ManagementScope("\\\\localhost\\root\\virtualization\\v2", null);
             int eventId = this.eventHandler.raiseNewEvent("Initialisiere Umgebung...", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
 
-            // Get the management service and the VM object.
-            using (ManagementObject vm = WmiUtilities.GetVirtualMachine(this.vm.vmID, scope))
-            using (ManagementObject service = WmiUtilities.GetVirtualMachineSnapshotService(scope))
-            using (ManagementObject settings = WmiUtilities.GetVirtualMachineSnapshotSettings(scope))
-            using (ManagementBaseObject inParams = service.GetMethodParameters("CreateSnapshot"))
+            try
             {
-                //set settings
-                settings["ConsistencyLevel"] = cLevel == ConsistencyLevel.ApplicationAware ? 1 : 2;
-                settings["IgnoreNonSnapshottableDisks"] = true;
-                inParams["AffectedSystem"] = vm.Path.Path;
-                inParams["SnapshotSettings"] = settings.GetText(TextFormat.WmiDtd20);
-                inParams["SnapshotType"] = SnapshotTypeRecovery;
-
-                this.eventHandler.raiseNewEvent("erfolgreich", true, false, eventId, EventStatus.successful);
-                eventId = this.eventHandler.raiseNewEvent("Erzeuge Recovery Snapshot...", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
-
-                using (ManagementBaseObject outParams = service.InvokeMethod(
-                    "CreateSnapshot",
-                    inParams,
-                    null))
+                // Get the management service and the VM object.
+                using (ManagementObject vm = WmiUtilities.GetVirtualMachine(this.vm.vmID, scope))
+                using (ManagementObject service = WmiUtilities.GetVirtualMachineSnapshotService(scope))
+                using (ManagementObject settings = WmiUtilities.GetVirtualMachineSnapshotSettings(scope))
+                using (ManagementBaseObject inParams = service.GetMethodParameters("CreateSnapshot"))
                 {
-                    //wait for the snapshot to be created
-                    try
-                    {
-
-                        WmiUtilities.ValidateOutput(outParams, scope);
-
-                    }
-                    catch (Exception ex)
-                    {
-                        //snapshot fallback possible and allowed?
-                        if (cLevel == ConsistencyLevel.ApplicationAware && allowSnapshotFallback)
-                        {
-                            this.eventHandler.raiseNewEvent("fehlgeschlagen", true, false, eventId, EventStatus.error);
-                            this.eventHandler.raiseNewEvent("'Application Aware Processing' steht nicht zur Verfügung. Versuche Fallback.", false, false, NO_RELATED_EVENT, EventStatus.successful);
-                            return createSnapshot(ConsistencyLevel.CrashConsistent, false);
-                        }
-                        else
-                        {
-                            //snapshot failed
-                            return null;
-                        }
-                    }
+                    //set settings
+                    settings["ConsistencyLevel"] = cLevel == ConsistencyLevel.ApplicationAware ? 1 : 2;
+                    settings["IgnoreNonSnapshottableDisks"] = true;
+                    inParams["AffectedSystem"] = vm.Path.Path;
+                    inParams["SnapshotSettings"] = settings.GetText(TextFormat.WmiDtd20);
+                    inParams["SnapshotType"] = SnapshotTypeRecovery;
 
                     this.eventHandler.raiseNewEvent("erfolgreich", true, false, eventId, EventStatus.successful);
+                    eventId = this.eventHandler.raiseNewEvent("Erzeuge Recovery Snapshot...", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
 
-                    //get the job and the snapshot object
-                    ManagementObject job = new ManagementObject((string)outParams["job"]);
-
-                    //get the snapshot
-                    ManagementObject snapshot = null;
-                    var iterator = job.GetRelated("Msvm_VirtualSystemSettingData").GetEnumerator();
-                    while (iterator.MoveNext())
+                    using (ManagementBaseObject outParams = service.InvokeMethod(
+                        "CreateSnapshot",
+                        inParams,
+                        null))
                     {
-                        snapshot = (System.Management.ManagementObject)iterator.Current;
-                    }
-                    return snapshot;
+                        //wait for the snapshot to be created
+                        try
+                        {
 
+                            WmiUtilities.ValidateOutput(outParams, scope);
+
+                        }
+                        catch (Exception ex)
+                        {
+                            //snapshot fallback possible and allowed?
+                            if (cLevel == ConsistencyLevel.ApplicationAware && allowSnapshotFallback)
+                            {
+                                this.eventHandler.raiseNewEvent("fehlgeschlagen", true, false, eventId, EventStatus.error);
+                                this.eventHandler.raiseNewEvent("'Application Aware Processing' steht nicht zur Verfügung. Versuche Fallback.", false, false, NO_RELATED_EVENT, EventStatus.successful);
+                                return createSnapshot(ConsistencyLevel.CrashConsistent, false);
+                            }
+                            else
+                            {
+                                //snapshot failed
+                                return null;
+                            }
+                        }
+
+                        this.eventHandler.raiseNewEvent("erfolgreich", true, false, eventId, EventStatus.successful);
+
+                        //get the job and the snapshot object
+                        ManagementObject job = new ManagementObject((string)outParams["job"]);
+
+                        //get the snapshot
+                        ManagementObject snapshot = null;
+                        var iterator = job.GetRelated("Msvm_VirtualSystemSettingData").GetEnumerator();
+                        while (iterator.MoveNext())
+                        {
+                            snapshot = (System.Management.ManagementObject)iterator.Current;
+                        }
+                        return snapshot;
+
+                    }
                 }
+            }catch (Exception ex)
+            {
+                //error while taking snapshot
+                this.eventHandler.raiseNewEvent("fehlgeschlagen", true, false, eventId, EventStatus.error);
+                return null;
             }
         }
 
