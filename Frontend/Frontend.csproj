@@ -123,9 +123,11 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="App_Start\Authentication.cs" />
     <Compile Include="App_Start\BundleConfig.cs" />
     <Compile Include="App_Start\FilterConfig.cs" />
     <Compile Include="App_Start\GUIJobHandler.cs" />
+    <Compile Include="App_Start\OneSession.cs" />
     <Compile Include="App_Start\RouteConfig.cs" />
     <Compile Include="App_Start\WebApiConfig.cs" />
     <Compile Include="Areas\HelpPage\ApiDescriptionExtensions.cs" />
@@ -162,6 +164,7 @@
     <Compile Include="Controllers\BackupJobEventController.cs" />
     <Compile Include="Controllers\JobStartController.cs" />
     <Compile Include="Controllers\JobDeleteController.cs" />
+    <Compile Include="Filter\AuthFilter.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
@@ -330,7 +333,6 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
-    <Folder Include="Filter\" />
     <Folder Include="Models\" />
   </ItemGroup>
   <ItemGroup>

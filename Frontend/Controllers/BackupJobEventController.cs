@@ -11,6 +11,7 @@ namespace Frontend.Controllers
     {
 
         // gets the events for one job
+        [Frontend.Filter.AuthFilter]
         public HttpResponseMessage Get(int id)
         {
             List<Dictionary<string, object>> retVal = Common.DBQueries.getEvents(id, "backup");
