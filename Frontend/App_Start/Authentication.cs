@@ -19,6 +19,23 @@ namespace Frontend.App_Start
             }
         }
 
+        //checks if a given session id is authenticated
+        public static bool isAuthenticated(string session)
+        {
+            cleanUp();
+            lock (lockObject)
+            {
+                foreach (OneSession oneSession in sessions)
+                {
+                    if (oneSession.sessionID == session)
+                    {
+                        return true;
+                    }
+                }
+                return false;
+            }
+        }
+
         //adds a given session
         public static void addSession (string sessionID)
         {

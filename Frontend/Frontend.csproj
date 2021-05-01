@@ -160,10 +160,12 @@
     <Compile Include="Areas\HelpPage\XmlDocumentationProvider.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\ConfiguredJobsController.cs" />
+    <Compile Include="Controllers\LoginController.cs" />
     <Compile Include="Controllers\TemplatesController.cs" />
     <Compile Include="Controllers\BackupJobEventController.cs" />
     <Compile Include="Controllers\JobStartController.cs" />
     <Compile Include="Controllers\JobDeleteController.cs" />
+    <Compile Include="Controllers\LogoutController.cs" />
     <Compile Include="Filter\AuthFilter.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>

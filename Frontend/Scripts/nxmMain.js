@@ -4,6 +4,21 @@ var selectedJob; //the id of the currently selected job
 var selectedVM; //the selected vm id within main panel
 var eventRefreshTimer; //timer for refreshing vm events
 
+//global handler for http status 401 (login required)
+$.ajaxSetup({
+  statusCode: {
+    401: function (jqxhr, textStatus, errorThrown) {
+      //stop possible running eventRefreshTimer
+      clearInterval(eventRefreshTimer);
+
+      document.body.innerHTML = "";
+
+      //show login form
+      showLoginForm();
+    }
+  }
+});
+
 $(window).on('load', function () {
 
 
@@ -15,8 +30,23 @@ $(window).on('load', function () {
       configuredJobs = jQuery.parseJSON(data);
       buildJobsList();
     });
+
+  //register logout handler
+  $("#logout").click(function () {
+    logOut();
+  });
 });
 
+
+//performs logout
+function logOut() {
+  $.ajax({
+    url: "api/Logout"
+  })
+    .done(function (data) {
+      location.reload();
+    });
+}
 
 //builds the jobs sidebar
 function buildJobsList() {
@@ -178,7 +208,7 @@ function vmClickHandler(event) {
   showCurrentEvents();
 
   //start refresh timer
-  eventRefreshTime = setInterval(showCurrentEvents, 4000);
+  eventRefreshTimer = setInterval(showCurrentEvents, 4000);
 }
 
 //refresh handler for clicking vm in main panel
@@ -235,4 +265,42 @@ function showCurrentEvents() {
         });
 
     });
+}
+
+//show login form
+function showLoginForm() {
+  Swal.fire({
+    title: 'Login',
+    html: `<input type="text" id="login" class="swal2-input" placeholder="Benutzername">
+  <input type="password" id="password" class="swal2-input" placeholder="Passwort">`,
+    confirmButtonText: 'Anmelden',
+    focusConfirm: false,
+    preConfirm: () => {
+      const login = Swal.getPopup().querySelector('#login').value
+      const password = Swal.getPopup().querySelector('#password').value
+      if (!login || !password) {
+        Swal.showValidationMessage(`Ungültige Anmeldedaten erkannt.`)
+      }
+      var encodedLogin = String(btoa(login + ":" + password));
+      //do ajax login request
+      $.ajax({
+        url: 'api/Login',
+        contentType: "application/json",
+        data: "'" + encodedLogin + "'",
+        type: 'POST',
+        cache: false,
+        success: function (result) {
+          location.reload();
+        },
+        error: function (jqXHR, exception) {
+          Swal.showValidationMessage(`Ungültige Anmeldedaten erkannt.`);
+        }
+      });
+      return false;
+
+    }
+  }).then((result) => {
+    
+  });
+  
 }
