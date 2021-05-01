@@ -6,6 +6,7 @@ using System.Web.Mvc;
 
 namespace Frontend.Controllers
 {
+    [Frontend.Filter.AuthFilter]
     public class HomeController : Controller
     {
         public ActionResult Index()

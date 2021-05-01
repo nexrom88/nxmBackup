@@ -17,6 +17,7 @@ namespace Frontend.Controllers
             if (cookie != null)
             {
                 string session = cookie["session_id"].Value;
+                App_Start.Authentication.removeSession(session);
             }
         }
 

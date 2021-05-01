@@ -8,6 +8,7 @@ using System.Threading;
 
 namespace Frontend.Controllers
 {
+    [Frontend.Filter.AuthFilter]
     public class JobStartController : ApiController
     {
         // GET api/<controller>

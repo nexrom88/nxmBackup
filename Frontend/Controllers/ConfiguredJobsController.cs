@@ -8,6 +8,7 @@ using ConfigHandler;
 
 namespace Frontend.Controllers
 {
+    [Frontend.Filter.AuthFilter]
     public class ConfiguredJobsController : ApiController //api/ConfiguredJobs
     {
         // GET api/<controller>

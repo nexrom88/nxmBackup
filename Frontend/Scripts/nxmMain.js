@@ -44,6 +44,7 @@ function logOut() {
     url: "api/Logout"
   })
     .done(function (data) {
+      $.removeCookie("session_id");
       location.reload();
     });
 }
@@ -271,10 +272,9 @@ function showCurrentEvents() {
 function showLoginForm() {
   Swal.fire({
     title: 'Login',
-    html: `<input type="text" id="login" class="swal2-input" placeholder="Benutzername">
-  <input type="password" id="password" class="swal2-input" placeholder="Passwort">`,
-    confirmButtonText: 'Anmelden',
-    focusConfirm: false,
+    html: `<input type="text" id="login" class="swal2-input" placeholder="Username">
+  <input type="password" id="password" class="swal2-input" placeholder="Password">`,
+    showLoaderOnConfirm: true,
     preConfirm: () => {
       const login = Swal.getPopup().querySelector('#login').value
       const password = Swal.getPopup().querySelector('#password').value
@@ -282,25 +282,33 @@ function showLoginForm() {
         Swal.showValidationMessage(`Ungültige Anmeldedaten erkannt.`)
       }
       var encodedLogin = String(btoa(login + ":" + password));
-      //do ajax login request
-      $.ajax({
-        url: 'api/Login',
-        contentType: "application/json",
-        data: "'" + encodedLogin + "'",
-        type: 'POST',
-        cache: false,
-        success: function (result) {
-          location.reload();
-        },
-        error: function (jqXHR, exception) {
-          Swal.showValidationMessage(`Ungültige Anmeldedaten erkannt.`);
-        }
-      });
-      return false;
+      ajaxLogin(encodedLogin);
 
+      return false;
     }
   }).then((result) => {
     
   });
   
+}
+
+//async function for loagin ajax call
+function ajaxLogin(encodedLogin) {
+  try {
+    $.ajax({
+      url: 'api/Login',
+      contentType: "application/json",
+      data: "'" + encodedLogin + "'",
+      type: 'POST',
+      cache: false,
+      success: function (result) {
+        location.reload();
+      },
+      error: function (jqXHR, exception) {
+        Swal.showValidationMessage(`Ungültige Anmeldedaten erkannt.`);
+      }
+    });
+  } catch (error) {
+    console.error(error);
+  }
 }

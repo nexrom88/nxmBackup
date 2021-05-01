@@ -7,11 +7,11 @@ using System.Web.Http;
 
 namespace Frontend.Controllers
 {
+    [Frontend.Filter.AuthFilter]
     public class BackupJobEventController : ApiController
     {
 
         // gets the events for one job
-        [Frontend.Filter.AuthFilter]
         public HttpResponseMessage Get(int id)
         {
             List<Dictionary<string, object>> retVal = Common.DBQueries.getEvents(id, "backup");
