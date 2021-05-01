@@ -269,26 +269,48 @@ function showCurrentEvents() {
 }
 
 //show login form
-function showLoginForm() {
+function showLoginForm(showError) {
   Swal.fire({
     title: 'Login',
-    html: `<input type="text" id="login" class="swal2-input" placeholder="Username">
-  <input type="password" id="password" class="swal2-input" placeholder="Password">`,
+    html: `<input type="text" id="loginText" class="swal2-input" placeholder="Username">
+  <input type="password" id="passwordText" class="swal2-input" placeholder="Password">`,
     showLoaderOnConfirm: true,
+    confirmButtonText: "Anmelden",
+    allowEnterKey: true,
     preConfirm: () => {
-      const login = Swal.getPopup().querySelector('#login').value
-      const password = Swal.getPopup().querySelector('#password').value
+      const login = Swal.getPopup().querySelector('#loginText').value;
+      const password = Swal.getPopup().querySelector('#passwordText').value;
+
       if (!login || !password) {
-        Swal.showValidationMessage(`Ungültige Anmeldedaten erkannt.`)
+        Swal.showValidationMessage(`Anmeldung ist fehlgeschlagen`);
       }
       var encodedLogin = String(btoa(login + ":" + password));
-      ajaxLogin(encodedLogin);
 
-      return false;
+
+      return encodedLogin;
     }
   }).then((result) => {
-    
+    Swal.fire({
+      title: 'Anmeldung',
+      text: 'Anmeldung wird ausgeführt...',
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      allowEnterKey: false,
+      onOpen: () => {
+        swal.showLoading()
+      }
+    })
+    ajaxLogin(result.value);
   });
+
+  $("#loginText").focus();
+
+  //register enter handler
+  //$(".swal2-popup")
+
+  if (showError) {
+    Swal.showValidationMessage(`Anmeldung ist fehlgeschlagen`);
+  }
   
 }
 
@@ -305,7 +327,7 @@ function ajaxLogin(encodedLogin) {
         location.reload();
       },
       error: function (jqXHR, exception) {
-        Swal.showValidationMessage(`Ungültige Anmeldedaten erkannt.`);
+        showLoginForm(true);
       }
     });
   } catch (error) {
