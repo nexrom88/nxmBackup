@@ -35,6 +35,11 @@ $(window).on('load', function () {
   $("#logout").click(function () {
     logOut();
   });
+
+  //register "add Job" Button handler
+  $("#addJobButton").click(function () {
+    $("#newJobOverlay").css("display", "block");
+  });
 });
 
 

@@ -14,6 +14,9 @@ namespace Frontend
             bundles.Add(new ScriptBundle("~/bundles/jquery.cookie").Include(
                         "~/Scripts/jquery.cookie.js"));
 
+            bundles.Add(new ScriptBundle("~/bundles/jstree").Include(
+                        "~/Scripts/jsTree3/jsTree.js"));
+
             // Verwenden Sie die Entwicklungsversion von Modernizr zum Entwickeln und Erweitern Ihrer Kenntnisse. Wenn Sie dann
             // bereit ist für die Produktion, verwenden Sie das Buildtool unter https://modernizr.com, um nur die benötigten Tests auszuwählen.
             bundles.Add(new ScriptBundle("~/bundles/modernizr").Include(
@@ -37,6 +40,7 @@ namespace Frontend
 
             bundles.Add(new StyleBundle("~/Content/css").Include(
                       "~/Content/bootstrap.css",
+                      "~/Content/jsTree/themes/default/style.min.css",
                       "~/Content/site.css"));
         }
     }

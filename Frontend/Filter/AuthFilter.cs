@@ -13,6 +13,7 @@ namespace Frontend.Filter
     {
         public override void OnActionExecuting(HttpActionContext actionContext)
         {
+            return;
             //read session cookie
             var accessToken = actionContext.Request.Headers.GetCookies("session_id");
 
