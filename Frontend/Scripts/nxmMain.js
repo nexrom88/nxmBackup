@@ -306,7 +306,11 @@ function showLoginForm(showError) {
   $("#loginText").focus();
 
   //register enter handler
-  //$(".swal2-popup")
+  $(".swal2-popup").on("keypress", function (event) {
+    if (event.which == 13) {
+      $(".swal2-confirm").click();
+    }
+  });
 
   if (showError) {
     Swal.showValidationMessage(`Anmeldung ist fehlgeschlagen`);
