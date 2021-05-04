@@ -16,6 +16,16 @@ namespace Frontend.Controllers
         // POST api/<controller>
         public HttpResponseMessage Post([FromBody] string value)
         {
+            HttpResponseMessage response;
+
+            //check value
+            if (value == null || value == "undefined")
+            {
+                response = new HttpResponseMessage();
+                response.StatusCode = HttpStatusCode.Forbidden;
+                return response;
+            }
+
             //auth data is user:pass base64 decoded
             byte[] authBytes = Convert.FromBase64String(value);
             string authString = System.Text.Encoding.UTF8.GetString(authBytes);
@@ -32,7 +42,7 @@ namespace Frontend.Controllers
                 authorized = checkCredentials(username, password, ContextType.Domain);
             }
 
-            HttpResponseMessage response;
+
             //check user data
             if (authorized)
             {
