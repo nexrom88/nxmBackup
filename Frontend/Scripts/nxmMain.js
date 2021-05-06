@@ -39,6 +39,14 @@ $(window).on('load', function () {
   //register "add Job" Button handler
   $("#addJobButton").click(function () {
     $("#newJobOverlay").css("display", "block");
+
+    //load page 1
+    $.ajax({
+      url: "Templates/newJobPage1"
+    })
+      .done(function (data) {
+        $("#newJobPage").html(data);
+      });
   });
 });
 

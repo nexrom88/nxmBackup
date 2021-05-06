@@ -33,6 +33,10 @@ textarea {
     padding-left: 15px;
 }
 
+#newJobPage{
+    padding-top: 5%;
+}
+
 
 #newJobOverlay {
     position: fixed; /* Sit on top of the page content */
@@ -54,6 +58,14 @@ textarea {
 #newJobContainer{
     background-color: white;
     margin-top: 5%;
+    width:40%;
+    margin-left:auto;
+    margin-right:auto;
+}
+
+.center_div {
+    margin: 0 auto;
+    width: 80% /* value of your choice which suits your alignment */
 }
 
 #newJobHeader{
