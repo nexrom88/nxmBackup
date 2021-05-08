@@ -329,6 +329,7 @@
     <Content Include="Templates\jobDetailsPanel.html" />
     <Content Include="Templates\newJobPage1.html" />
     <Content Include="Templates\newJobPage2.html" />
+    <Content Include="Templates\newJobPage3.html" />
     <Content Include="Web.config" />
     <Content Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>

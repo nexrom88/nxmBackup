@@ -81,3 +81,7 @@ textarea {
 #txtEncryptionPassword{
     display:none;
 }
+
+.subHeadline{
+    text-align:center;
+}

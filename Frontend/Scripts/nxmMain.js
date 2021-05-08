@@ -54,6 +54,7 @@ function showNewJobPage(pageNumber) {
       switch (pageNumber) {
         case 1:
           $("#newJobPage").html(data);
+          registerNextPageClickHandler(pageNumber);
           //click handler for encryption checkBox
           $("#cbEncryption").click(function () {
             if ($("#cbEncryption").prop("checked")) {
@@ -69,21 +70,41 @@ function showNewJobPage(pageNumber) {
             url: "api/vms"
           })
             .done(function (vmdata) {
-              var renderedData = Mustache.render(data, jQuery.parseJSON(vmdata));
+              var parsedJSON = jQuery.parseJSON(vmdata)
+              var renderedData = Mustache.render(data, { vms: parsedJSON });
               $("#newJobPage").html(renderedData);
+              registerNextPageClickHandler(pageNumber);
+
+              //vm click handler
+              $(".vm").click(function (event) {
+                $(this).toggleClass("active");
+              });
+
             });
 
           break;
-      }
+        case 3:
+          $("#newJobPage").html(data);
 
-      //next page click handler
-      $("#newJobNextButton").click(function () {
-        pageNumber += 1;
-        showNewJobPage(pageNumber);
-      });
+          //set interval select change event handler
+          $("#sbJobInterval").on("change", function (event) {
+            alert($(this).children("option:selected").data("interval"));
+          });
+
+          break;
+      }
+     
 
     });
     
+}
+
+//click handler for nextPageButton
+function registerNextPageClickHandler(currentPage) {
+  $("#newJobNextButton").click(function () {
+    currentPage += 1;
+    showNewJobPage(currentPage);
+  });
 }
 
 //performs logout

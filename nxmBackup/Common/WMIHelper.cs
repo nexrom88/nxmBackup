@@ -169,7 +169,7 @@ namespace Common
             get
             {
                 var version = Environment.OSVersion.Version;
-                return version.Major >= 6 && version.Minor >= 2;
+                return version.Major >= 10 || (version.Major >= 6 && version.Minor >= 2);
             }
         }
 
