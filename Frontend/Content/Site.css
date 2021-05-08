@@ -33,10 +33,6 @@ textarea {
     padding-left: 15px;
 }
 
-#newJobPage{
-    padding-top: 5%;
-}
-
 
 #newJobOverlay {
     position: fixed; /* Sit on top of the page content */
@@ -70,4 +66,18 @@ textarea {
 
 #newJobHeader{
     text-align:center;
+}
+
+#newJobNextButton {
+    margin-top: 5%;
+    margin-bottom: 5%;
+    width: 50%;
+}
+
+.newJobElement{
+    margin-top: 5%;
+}
+
+#txtEncryptionPassword{
+    display:none;
 }

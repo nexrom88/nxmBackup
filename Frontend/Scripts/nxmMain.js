@@ -39,17 +39,52 @@ $(window).on('load', function () {
   //register "add Job" Button handler
   $("#addJobButton").click(function () {
     $("#newJobOverlay").css("display", "block");
+    showNewJobPage(1);
 
-    //load page 1
-    $.ajax({
-      url: "Templates/newJobPage1"
-    })
-      .done(function (data) {
-        $("#newJobPage").html(data);
-      });
   });
 });
 
+//shows a given page number when adding a new job
+function showNewJobPage(pageNumber) {
+  //load page
+  $.ajax({
+    url: "Templates/newJobPage" + pageNumber
+  })
+    .done(function (data) {
+      switch (pageNumber) {
+        case 1:
+          $("#newJobPage").html(data);
+          //click handler for encryption checkBox
+          $("#cbEncryption").click(function () {
+            if ($("#cbEncryption").prop("checked")) {
+              $("#txtEncryptionPassword").css("display", "inline-block");
+            } else {
+              $("#txtEncryptionPassword").css("display", "none");
+            }
+          });
+          break;
+        case 2:
+          //load vms
+          $.ajax({
+            url: "api/vms"
+          })
+            .done(function (vmdata) {
+              var renderedData = Mustache.render(data, jQuery.parseJSON(vmdata));
+              $("#newJobPage").html(renderedData);
+            });
+
+          break;
+      }
+
+      //next page click handler
+      $("#newJobNextButton").click(function () {
+        pageNumber += 1;
+        showNewJobPage(pageNumber);
+      });
+
+    });
+    
+}
 
 //performs logout
 function logOut() {
