@@ -28,6 +28,9 @@ namespace Frontend
             bundles.Add(new ScriptBundle("~/bundles/bootstrap").Include(
                       "~/Scripts/bootstrap.js"));
 
+            bundles.Add(new ScriptBundle("~/bundles/bsInputSpinner").Include(
+                        "~/Scripts/bsInputSpinner.js"));
+
             bundles.Add(new ScriptBundle("~/bundles/sweetalert2").Include(
                        "~/Scripts/sweetalert2.js"));
 

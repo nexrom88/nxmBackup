@@ -3,16 +3,32 @@
     <div class="newJobElement center_div">
         <label class="enter_div newJobElement" for="sbJobInterval">Zeitinterval</label>
         <select id="sbJobInterval" class="form-control">
-            <option data-interval="hourly" selected>Stündlich</option>
+            <option data-interval="hourly">Stündlich</option>
             <option data-interval="daily">Täglich</option>
-            <option data-interval="weekly">Wöchentlich</option>
+            <option data-interval="weekly" selected>Wöchentlich</option>
         </select>
     </div>
     <h5 class="center_div subHeadline newJobElement">Zeitplan-Details</h5>
     <div class="newJobElement center_div">
-        <label class="enter_div newJobElement" for="sbJobIntervalMinute">Minute</label>
-        <select id="sbJobIntervalMinute" class="form-control">
-           
+        <label class="enter_div" for="spJobIntervalMinute">Minute</label>
+        <input id="spJobIntervalMinute" type="number" value="0" min="0" max="59" step="1" />
+    </div>
+
+    <div class="newJobElement center_div">
+        <label class="enter_div" for="spJobIntervalHour">Stunde</label>
+        <input id="spJobIntervalHour" type="number" value="0" min="0" max="23" step="1" />
+    </div>
+
+    <div class="newJobElement center_div">
+        <label class="enter_div" for="sbJobDay">Tag</label>
+        <select id="sbJobDay" class="form-control">
+            <option data-interval="monday" selected>Montag</option>
+            <option data-interval="tuesday">Dienstag</option>
+            <option data-interval="wednesday">Mittwoch</option>
+            <option data-interval="thursday" selected>Donnerstag</option>
+            <option data-interval="friday">Freitag</option>
+            <option data-interval="saturday">Samstag</option>
+            <option data-interval="sunday">Sonntag</option>
         </select>
     </div>
 

@@ -86,9 +86,28 @@ function showNewJobPage(pageNumber) {
         case 3:
           $("#newJobPage").html(data);
 
+          //enable input number spinner
+          $("input[type='number']").inputSpinner();
+
           //set interval select change event handler
           $("#sbJobInterval").on("change", function (event) {
-            alert($(this).children("option:selected").data("interval"));
+            var interval = $(this).children("option:selected").data("interval");
+
+            //disable/enable controls
+            switch (interval) {
+              case "hourly":
+                $("#spJobIntervalHour").prop("disabled", true);
+                $("#sbJobDay").prop("disabled", true);
+                break;
+              case "daily":
+                $("#spJobIntervalHour").removeAttr("disabled");
+                $("#sbJobDay").prop("disabled", true);
+                break;
+              case "weekly":
+                $("#spJobIntervalHour").removeAttr("disabled");
+                $("#sbJobDay").removeAttr("disabled");
+                break;
+            }
           });
 
           break;
