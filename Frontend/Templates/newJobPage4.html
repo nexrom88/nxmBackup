@@ -1,0 +1,25 @@
+﻿<form>
+    <h5 class="center_div subHeadline">Sicherungsrotation festlegen</h5>
+
+    <div class="newJobElement center_div">
+        <label class="enter_div" for="spBlockSize">Vollbackup nach Anzahl Backups</label>
+        <input id="spBlockSize" type="number" value="2" min="2" max="20" step="1" />
+    </div>
+
+    <div class="newJobElement center_div">
+        <label class="enter_div" for="sbRotationType">Rotationstyp</label>
+        <select id="sbRotationType" class="form-control">
+            <option data-rotationtype="merge" selected>Zusammenführen</option>
+            <option data-rotationtype="blockrotation">Blockrotation</option>
+        </select>
+    </div>
+
+    <div class="newJobElement center_div">
+        <label id="lblMaxElements" class="enter_div" for="spMaxElements">Anzahl aufzubewahrender Backups</label>
+        <input id="spMaxElements" type="number" value="1" min="1" max="50" step="1" />
+    </div>
+
+    <div class="text-center">
+        <button id="newJobNextButton" type="button" class="btn btn-primary">Weiter</button>
+    </div>
+</form>

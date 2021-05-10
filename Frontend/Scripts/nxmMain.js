@@ -85,6 +85,7 @@ function showNewJobPage(pageNumber) {
           break;
         case 3:
           $("#newJobPage").html(data);
+          registerNextPageClickHandler(pageNumber);
 
           //enable input number spinner
           $("input[type='number']").inputSpinner();
@@ -108,6 +109,29 @@ function showNewJobPage(pageNumber) {
                 $("#sbJobDay").removeAttr("disabled");
                 break;
             }
+          });
+
+          break;
+        case 4:
+          $("#newJobPage").html(data);
+          registerNextPageClickHandler(pageNumber);
+
+          //enable input number spinner
+          $("input[type='number']").inputSpinner();
+
+          //set "rotation type" select event handler
+          $("#sbRotationType").on("change", function (event) {
+            var rotationType = $(this).children("option:selected").data("rotationtype");
+
+            switch (rotationType) {
+              case "merge":
+                $("#lblMaxElements").html("Anzahl aufzubewahrender Backups");
+                break;
+              case "blockrotation":
+                $("#lblMaxElements").html("Anzahl aufzubewahrender Blöcke");
+                break;
+            }
+
           });
 
           break;
