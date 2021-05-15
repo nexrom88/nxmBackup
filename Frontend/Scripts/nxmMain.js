@@ -135,11 +135,44 @@ function showNewJobPage(pageNumber) {
           });
 
           break;
+
+        case 5:
+          $("#newJobPage").html(data);
+          registerNextPageClickHandler(pageNumber);
+          $('#folderBrowser').jstree({
+            'core': {
+              'check_callback': true,
+              'data': {}
+            }
+          });
+          //init treeview
+          navigateToDirectory("/");
+
+          break;
       }
      
 
     });
     
+}
+
+//folder browser: navigate to directory
+function navigateToDirectory(directory) {
+  $.ajax({
+    url: 'api/Directory',
+    contentType: "application/json; charset=utf-8",
+    data: JSON.stringify({ path: directory }),
+    type: 'POST',
+    cache: false,
+    success: function (result) {
+      var directories = JSON.parse(result);
+      for (var i = 0; i < directories.length; i++) {
+        $('#folderBrowser').jstree("create_node", "#", { "id": i, "text": directories[i] }, "last", false, false);
+      }
+
+
+    }
+  });
 }
 
 //click handler for nextPageButton
