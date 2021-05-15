@@ -27,9 +27,15 @@ namespace Frontend.Controllers
                     returnDirectories[i] = drives[i].RootDirectory.FullName;
                 }
             }
-            else
+            else //request is "normal" folder
             {
-
+                string[] folders = System.IO.Directory.GetDirectories(requestedPath);
+                returnDirectories = new string[folders.Length];
+                for (int i = 0; i < folders.Length; i++)
+                {
+                    DirectoryInfo dir = new DirectoryInfo(folders[i]);
+                    returnDirectories[i] = dir.Name;
+                }
             }
 
             HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.OK);

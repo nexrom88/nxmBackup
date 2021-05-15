@@ -44,6 +44,7 @@ namespace Frontend
             bundles.Add(new StyleBundle("~/Content/css").Include(
                       "~/Content/bootstrap.css",
                       "~/Content/jsTree/themes/default/style.min.css",
+                      "~/Content/font-awesome.css",
                       "~/Content/site.css"));
         }
     }

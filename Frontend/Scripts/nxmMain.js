@@ -142,11 +142,22 @@ function showNewJobPage(pageNumber) {
           $('#folderBrowser').jstree({
             'core': {
               'check_callback': true,
-              'data': {}
-            }
+              'data': null
+            },
+            types: {
+              "drive": {
+                "icon": "fa fa-hdd-o"
+              },
+              "folder": {
+                "icon": "fa fa-folder-open-o"
+              },
+              "default": {
+              }
+            }, plugins: ["types"]
           });
+
           //init treeview
-          navigateToDirectory("/");
+          navigateToDirectory("/", "drive", "#");
 
           break;
       }
@@ -157,7 +168,7 @@ function showNewJobPage(pageNumber) {
 }
 
 //folder browser: navigate to directory
-function navigateToDirectory(directory) {
+function navigateToDirectory(directory, nodeType, currentNodeID) {
   $.ajax({
     url: 'api/Directory',
     contentType: "application/json; charset=utf-8",
@@ -166,10 +177,15 @@ function navigateToDirectory(directory) {
     cache: false,
     success: function (result) {
       var directories = JSON.parse(result);
-      for (var i = 0; i < directories.length; i++) {
-        $('#folderBrowser').jstree("create_node", "#", { "id": i, "text": directories[i] }, "last", false, false);
+      for (var i = 0; i < 1; i++) {
+        $('#folderBrowser').jstree("create_node", currentNodeID, { id: "dirnode" +i, text: directories[i], type: nodeType });
       }
 
+      //node select handler
+      $("#folderBrowser").on("select_node.jstree", function (e, data) {
+        var selectedPath = data.instance.get_path(data.node, '\\');
+        navigateToDirectory(selectedPath, "folder", data.node.id);
+      });
 
     }
   });
