@@ -177,8 +177,8 @@ function navigateToDirectory(directory, nodeType, currentNodeID) {
     cache: false,
     success: function (result) {
       var directories = JSON.parse(result);
-      for (var i = 0; i < 1; i++) {
-        $('#folderBrowser').jstree("create_node", currentNodeID, { id: "dirnode" +i, text: directories[i], type: nodeType });
+      for (var i = 0; i < directories.length; i++) {
+        $('#folderBrowser').jstree().create_node("#", { id: "dirnode" + i, text: directories[i], type: nodeType }, "last", false, false);
       }
 
       //node select handler
