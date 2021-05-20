@@ -190,6 +190,9 @@ function navigateToDirectory(directory, nodeType, currentNodeID) {
         navigateToDirectory(selectedPath, "folder", data.node.id);
       });
 
+      //open current node
+      $("#folderBrowser").jstree("open_node", $("#" + currentNodeID));
+
     }
   });
 }

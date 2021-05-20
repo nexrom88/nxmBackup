@@ -15,6 +15,7 @@ namespace Frontend.Controllers
         public HttpResponseMessage Post([FromBody] NavPath value)
         {
             string requestedPath = value.path;
+            List<string> tempDrivesList = new List<string>();
             string[] returnDirectories = null;
 
             //request root path?
@@ -24,12 +25,24 @@ namespace Frontend.Controllers
                 returnDirectories = new string[drives.Length];
                 for (int i = 0; i < drives.Length; i++)
                 {
-                    returnDirectories[i] = drives[i].RootDirectory.FullName;
+                    //just add drive if accessible
+                    try
+                    {
+                        System.IO.Directory.GetDirectories(drives[i].RootDirectory.FullName);
+                    }catch(Exception ex)
+                    {
+                        continue;
+                    }
+
+                    tempDrivesList.Add(drives[i].RootDirectory.FullName);
                 }
+
+                returnDirectories = tempDrivesList.ToArray();
             }
             else //request is "normal" folder
             {
-                string[] folders = System.IO.Directory.GetDirectories(requestedPath);
+                    string[] folders = System.IO.Directory.GetDirectories(requestedPath);
+
                 returnDirectories = new string[folders.Length];
                 for (int i = 0; i < folders.Length; i++)
                 {
