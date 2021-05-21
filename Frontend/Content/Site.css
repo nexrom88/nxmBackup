@@ -90,5 +90,11 @@ textarea {
 }
 
 #folderBrowserContainer{
-    overflow-y:scroll;
+    
+}
+
+#page5Form{
+    max-height:500px;
+    overflow-y:auto;
+    overflow-x:auto;
 }
