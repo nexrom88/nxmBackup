@@ -161,6 +161,12 @@ function showNewJobPage(pageNumber) {
           maxNodeID = 0;
           navigateToDirectory("/", "drive", "#");
 
+          //node select handler
+          $("#folderBrowser").on("select_node.jstree", function (e, data) {
+            var selectedPath = data.instance.get_path(data.node, '\\');
+            navigateToDirectory(selectedPath, "folder", data.node.id);
+          });
+
           break;
       }
      
@@ -171,6 +177,14 @@ function showNewJobPage(pageNumber) {
 
 //folder browser: navigate to directory
 function navigateToDirectory(directory, nodeType, currentNodeID) {
+
+  //when data already loaded, do not load again
+  if (currentNodeID != "#") {
+    if ($("#" + currentNodeID).data("loaded")) {
+      return;
+    }
+  }
+
   $.ajax({
     url: 'api/Directory',
     contentType: "application/json; charset=utf-8",
@@ -184,11 +198,12 @@ function navigateToDirectory(directory, nodeType, currentNodeID) {
       }
       maxNodeID += directories.length;
 
-      //node select handler
-      $("#folderBrowser").on("select_node.jstree", function (e, data) {
-        var selectedPath = data.instance.get_path(data.node, '\\');
-        navigateToDirectory(selectedPath, "folder", data.node.id);
-      });
+
+
+      //set loaded attrib to current node
+      if (currentNodeID != "#") {
+        $("#" + currentNodeID).data("loaded", true);
+      }
 
       //open current node
       $("#folderBrowser").jstree("open_node", $("#" + currentNodeID));
