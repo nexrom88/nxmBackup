@@ -5,6 +5,7 @@ var selectedVM; //the selected vm id within main panel
 var eventRefreshTimer; //timer for refreshing vm events
 var maxNodeID; //counter for treeview nodes
 var selectedDirectory; //the currently selected directory within folder browser
+var newJobObj; //new job object
 
 //global handler for http status 401 (login required)
 $.ajaxSetup({
@@ -41,6 +42,8 @@ $(window).on('load', function () {
   //register "add Job" Button handler
   $("#addJobButton").click(function () {
     $("#newJobOverlay").css("display", "block");
+
+    newJobObj = {};
     showNewJobPage(1);
 
   });
@@ -80,7 +83,18 @@ function showNewJobPage(pageNumber) {
               //vm click handler
               $(".vm").click(function (event) {
                 $(this).toggleClass("active");
+
+                //enable next-button
+                if ($(".vm.active").length > 0) {
+                  $("#newJobNextButton").removeAttr("disabled");
+                } else {
+                  $("#newJobNextButton").attr("disabled", "disabled");
+                }
+
               });
+
+              //set next-button to disabled
+              $("#newJobNextButton").attr("disabled", "disabled");
 
             });
 
@@ -220,17 +234,93 @@ function registerNextPageClickHandler(currentPage) {
   $("#newJobNextButton").click(function () {
 
     //parse inputs
-    switch(currentPage){
-    case 5:
+    switch (currentPage) {
+      case 1:
+        var jobName = $("#txtJobName").val();
+
+        //no valid jobname given
+        if (!jobName) {
+          $("#txtJobName").css("background-color", "#ff4d4d");
+          return;
+        } else { //valid jobname given
+          $("#txtJobName").css("background-color", "initial");
+          newJobObj["name"] = jobName;
+        }
+
+        //using encryption but no password given?
+        if ($("#cbEncryption").prop("checked") && !$("#txtEncryptionPassword").val()) {
+          $("#txtEncryptionPassword").css("background-color", "#ff4d4d");
+          return;
+        } else {
+          $("#txtEncryptionPassword").css("background-color", "initial");
+        }
+
+        //use live backup?
+        newJobObj["livebackup"] = $("#cbLiveBackup").prop("checked");
+
+        //use encryption?
+        newJobObj["useencryption"] = $("#cbEncryption").prop("checked");
+        newJobObj["encpassword"] = $("#txtEncryptionPassword").val();
+
+        break;
+      case 2:
+        var selectedVMs = $(".vm.active");
+        newJobObj["vms"] = [];
+
+        //add vm IDs to newJob object
+        for (var i = 0; i < selectedVMs.length; i++) {
+          newJobObj["vms"].push($(selectedVMs[i]).data("vmid"));
+        }
+
+        break;
+
+      case 3:
+        //get job interval
+        newJobObj["interval"] = $("#sbJobInterval option:selected").data("interval");
+
+        //get minute
+        newJobObj["minute"] = $("#spJobIntervalMinute").val();
+
+        //get hour
+        newJobObj["hour"] = $("#spJobIntervalHour").val();
+
+        //get day
+        newJobObj["day"] = $("#sbJobDay option:selected").data("day");
+
+        break;
+
+      case 4:
+        //get block-size
+        newJobObj["blocksize"] = $("#spBlockSize").val();
+
+        //get rotation-type
+        newJobObj["rotationtype"] = $("#sbRotationType option:selected").data("rotationtype");
+
+        //get max-elements
+        newJobObj["maxelements"] = $("#spMaxElements").val();
+
+        break;
+
+      case 5:
         //get selected node
-        selectedDirectory = "";
-      break;
+        newJobObj["target"] = selectedDirectory;
+
+        //done creating new job, send to server
+        saveNewJob();
+        $("#newJobOverlay").css("display", "none");
+        return;
+        break;
     }
 
 
     currentPage += 1;
     showNewJobPage(currentPage);
   });
+}
+
+//sends the new job data to server
+function saveNewJob() {
+  
 }
 
 //performs logout
