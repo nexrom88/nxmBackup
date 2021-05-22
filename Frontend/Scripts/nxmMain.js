@@ -4,6 +4,7 @@ var selectedJob; //the id of the currently selected job
 var selectedVM; //the selected vm id within main panel
 var eventRefreshTimer; //timer for refreshing vm events
 var maxNodeID; //counter for treeview nodes
+var selectedDirectory; //the currently selected directory within folder browser
 
 //global handler for http status 401 (login required)
 $.ajaxSetup({
@@ -160,10 +161,12 @@ function showNewJobPage(pageNumber) {
           //init treeview
           maxNodeID = 0;
           navigateToDirectory("/", "drive", "#");
+          selectedDirectory = "";
 
           //node select handler
           $("#folderBrowser").on("select_node.jstree", function (e, data) {
             var selectedPath = data.instance.get_path(data.node, '\\');
+            selectedDirectory = selectedPath;
             navigateToDirectory(selectedPath, "folder", data.node.id);
           });
 
@@ -215,6 +218,16 @@ function navigateToDirectory(directory, nodeType, currentNodeID) {
 //click handler for nextPageButton
 function registerNextPageClickHandler(currentPage) {
   $("#newJobNextButton").click(function () {
+
+    //parse inputs
+    switch(currentPage){
+    case 5:
+        //get selected node
+        selectedDirectory = "";
+      break;
+    }
+
+
     currentPage += 1;
     showNewJobPage(currentPage);
   });
