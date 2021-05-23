@@ -320,7 +320,21 @@ function registerNextPageClickHandler(currentPage) {
 
 //sends the new job data to server
 function saveNewJob() {
-  
+  $.ajax({
+    url: 'api/JobCreate',
+    contentType: "application/json; charset=utf-8",
+    data: JSON.stringify(newJobObj),
+    type: 'POST',
+    cache: false,
+    success: function (result) {
+      Swal.fire(
+        'Job erstellt',
+        'Der neue Backupjob wurde erfolgreich erstellt',
+        'success'
+      );
+      location.reload();
+    }
+  });
 }
 
 //performs logout
