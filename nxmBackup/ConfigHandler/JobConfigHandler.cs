@@ -197,10 +197,10 @@ namespace ConfigHandler
                 int jobID = (int)(values[0]["id"]);
 
                 //create vms relation
-                createJobVMRelation(job, jobID, connection, transaction);
+                List<string> alreadyExistedvmIDs = createJobVMRelation(job, jobID, connection, transaction);
 
                 //create hdds relation
-                createVMHDDRelation(job.JobVMs, connection, transaction);
+                createVMHDDRelation(job.JobVMs, connection, transaction, alreadyExistedvmIDs);
 
                 //commit transaction
                 transaction.Commit();
@@ -209,11 +209,17 @@ namespace ConfigHandler
         }
 
         //creates a vm-hdd relation for all selected vms within a job. vm must be in DB already
-        private static void createVMHDDRelation(List<JobVM> vms, Common.DBConnection connection, NpgsqlTransaction transaction)
+        private static void createVMHDDRelation(List<JobVM> vms, Common.DBConnection connection, NpgsqlTransaction transaction, List<string> alreadyExistedvmIDs)
         {
             //iterate through all vms
             foreach (JobVM vm in vms)
             {
+                //did vm already exist? ignore it here
+                if (alreadyExistedvmIDs.Contains(vm.vmID))
+                {
+                    continue;
+                }
+
                 List<int> hddIDs = new List<int>();
                 //add hdd DB entries
                 foreach(VMHDD currentHDD in vm.vmHDDs)
@@ -237,9 +243,11 @@ namespace ConfigHandler
             }
         }
 
-        //creates a job-vms relation
-        private static void createJobVMRelation(OneJob job, int jobID, Common.DBConnection connection, NpgsqlTransaction transaction)
+        //creates a job-vms relation, return already existed vm ids
+        private static List<string> createJobVMRelation(OneJob job, int jobID, Common.DBConnection connection, NpgsqlTransaction transaction)
         {
+            List<string> alreadyExistedvmIDs = new List<string>();
+
             //iterate through all vms
             foreach (JobVM vm in job.JobVMs)
             {
@@ -258,6 +266,10 @@ namespace ConfigHandler
                     parameters.Add("name", vm.vmName);
                     connection.doReadQuery("INSERT INTO vms(id, name) VALUES (@id, @name);", parameters, transaction);
                 }
+                else
+                {
+                    alreadyExistedvmIDs.Add(vm.vmID);
+                }
 
                 //vm exists now, now create relation
                 parameters = new Dictionary<string, object>();
@@ -265,6 +277,8 @@ namespace ConfigHandler
                 parameters.Add("vmid", vm.vmID);
                 connection.doReadQuery("INSERT INTO JobVMRelation(jobid, vmid) VALUES (@jobid, @vmid)", parameters, transaction);
             }
+
+            return alreadyExistedvmIDs;
 
         }
 
