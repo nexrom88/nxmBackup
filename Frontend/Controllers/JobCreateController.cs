@@ -68,15 +68,16 @@ namespace Frontend.Controllers
             List<Common.WMIHelper.OneVM> currentVMs = Common.WMIHelper.listVMs();
 
             List<Common.JobVM> vms = new List<Common.JobVM>();
-            foreach (string vmid in value.vms)
+            foreach (NewFrontendVM frontendVM in value.vms)
             {
                 Common.JobVM vm = new Common.JobVM();
-                vm.vmID = vmid;
+                vm.vmID = frontendVM.id;
+                vm.vmName = frontendVM.name;
 
                 //search for vm
                 foreach(Common.WMIHelper.OneVM oneVM in currentVMs)
                 {
-                    if (oneVM.id == vmid)
+                    if (oneVM.id == frontendVM.id)
                     {
                         List<Common.WMIHelper.OneVMHDD> hdds = oneVM.hdds;
                         List<Common.VMHDD> newHDDS = new List<Common.VMHDD>();
@@ -123,7 +124,13 @@ namespace Frontend.Controllers
             public string maxelements { get; set; }
             public string blocksize { get; set; }
             public string rotationtype { get; set; }
-            public string[] vms { get; set; }
+            public NewFrontendVM[] vms { get; set; }
+        }
+
+        public class NewFrontendVM
+        {
+            public string name { get; set; }
+            public string id { get; set; }
         }
     }
 }

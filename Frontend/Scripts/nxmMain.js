@@ -269,7 +269,10 @@ function registerNextPageClickHandler(currentPage) {
 
         //add vm IDs to newJob object
         for (var i = 0; i < selectedVMs.length; i++) {
-          newJobObj["vms"].push($(selectedVMs[i]).data("vmid"));
+          var vm = {};
+          vm.id = $(selectedVMs[i]).data("vmid");
+          vm.name = $(selectedVMs[i]).data("vmname");
+          newJobObj["vms"].push(vm);
         }
 
         break;
