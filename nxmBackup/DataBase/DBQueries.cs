@@ -19,7 +19,7 @@ namespace Common
                 //delete vm hdd relation
                 Dictionary<string, object> parameters = new Dictionary<string, object>();
                 parameters.Add("vmid", vmid);
-                dbConn.doWriteQuery("DELETE FROM vmhddrelation WHERE vmid=@vmid;", parameters, transaction);
+                List<Dictionary<string, object>> result = dbConn.doReadQuery("DELETE FROM vmhddrelation WHERE vmid=@vmid;", parameters, transaction);
 
                 //add new hdds and their relations to vm
                 foreach(VMHDD hdd in hdds)
@@ -28,14 +28,14 @@ namespace Common
                     parameters.Clear();
                     parameters.Add("name", hdd.name);
                     parameters.Add("path", hdd.path);
-                    List<Dictionary<string,object>> result = dbConn.doReadQuery("INSERT INTO hdds (name, path) VALUES (@name, @path) RETURNING id;", parameters, transaction);
+                    result = dbConn.doReadQuery("INSERT INTO hdds (name, path) VALUES (@name, @path) RETURNING id;", parameters, transaction);
                     int newHDDID = (int)(result[0]["id"]);
 
                     //add relation
                     parameters.Clear();
                     parameters.Add("vmid", vmid);
                     parameters.Add("hddid", newHDDID);
-                    dbConn.doWriteQuery("INSERT INTO vmhddrelation (vmid,hddid) VALUES (@vmid, @hddid);", parameters, transaction);
+                    result = dbConn.doReadQuery("INSERT INTO vmhddrelation (vmid,hddid) VALUES (@vmid, @hddid);", parameters, transaction);
 
                 }
 

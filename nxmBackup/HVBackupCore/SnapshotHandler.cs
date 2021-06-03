@@ -558,6 +558,24 @@ namespace nxmBackup.HVBackupCore
                 }
                 DBQueries.refreshHDDs(hddsChangedResponse.newHDDs, this.vm.vmID);
                 this.eventHandler.raiseNewEvent("Veränderter Datenspeicher inventarisiert", false, false, NO_RELATED_EVENT, EventStatus.info);
+
+                //update job object
+                JobVM currentVM = null;
+                //find the corresponding vm object
+                foreach (JobVM vm in job.JobVMs)
+                {
+                    if (vm.vmID == this.vm.vmID)
+                    {
+                        //found vm object
+                        currentVM = vm;
+                        break;
+                    }
+                }
+
+                if (currentVM != null)
+                {
+                    currentVM.vmHDDs.AddRange(hddsChangedResponse.newHDDs);
+                }
             }
 
         }
