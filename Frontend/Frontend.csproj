@@ -259,6 +259,7 @@
     <Content Include="Scripts\mustache.js" />
     <Content Include="Scripts\nxmMain.js" />
     <Content Include="Scripts\modernizr-2.8.3.js" />
+    <Content Include="Scripts\nxmRestore.js" />
     <Content Include="Scripts\popper-utils.js" />
     <Content Include="Scripts\popper-utils.min.js" />
     <Content Include="Scripts\popper.js" />
@@ -339,6 +340,7 @@
     <Content Include="Templates\newJobPage3.html" />
     <Content Include="Templates\newJobPage4.html" />
     <Content Include="Templates\newJobPage5.html" />
+    <Content Include="Templates\restoreOptions.html" />
     <Content Include="Web.config" />
     <Content Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>

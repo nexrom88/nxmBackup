@@ -35,6 +35,9 @@ namespace Frontend
                        "~/Scripts/sweetalert2.js"));
 
             //own Scripts
+            bundles.Add(new ScriptBundle("~/bundles/nxmRestore").Include(
+                 "~/Scripts/nxmRestore.js"));
+
             bundles.Add(new ScriptBundle("~/bundles/nxmMain").Include(
                       "~/Scripts/nxmMain.js"));
 

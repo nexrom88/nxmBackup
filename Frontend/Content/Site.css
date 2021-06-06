@@ -34,14 +34,14 @@ textarea {
 }
 
 
-#newJobOverlay {
+.overlayPopUp {
     position: fixed; /* Sit on top of the page content */
     display: none; /* Hidden by default */
     width: 100%; /* Full width (cover the whole page) */
     height: 100%; /* Full height (cover the whole page) */
-    margin:auto;
+    margin: auto;
     left: 0;
-    right:0;
+    right: 0;
     top: 0;
     bottom: 0;
     /*right: 0;
@@ -51,7 +51,7 @@ textarea {
     cursor: pointer; /* Add a pointer on hover */
 }
 
-#newJobContainer {
+.overlayContainer {
     background-color: white;
     margin-top: 5%;
     width: 40%;
@@ -70,6 +70,10 @@ textarea {
     text-align:center;
 }
 
+#restoreHeader {
+    text-align: center;
+}
+
 #newJobNextButton {
     margin-top: 5%;
     margin-bottom: 5%;
@@ -77,6 +81,10 @@ textarea {
 }
 
 .newJobElement{
+    margin-top: 5%;
+}
+
+.restoreElement {
     margin-top: 5%;
 }
 

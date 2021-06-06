@@ -433,6 +433,9 @@ function buildJobDetailsPanel(currentJob) {
           //set delete job button click handler
           $("#deleteJobButton").click(deleteJobHandler);
 
+          //set restore button click handler
+          $("#restoreButton").click(startRestoreHandler); //startRestoreHandler function is defined within nxmRestore.js
+
           //set state color
           if (currentJob.Successful == "erfolgreich") {
             $("#jobDetailsRow").css("background-color", "#ccffcc");
