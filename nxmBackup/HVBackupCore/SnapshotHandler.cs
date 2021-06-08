@@ -574,7 +574,7 @@ namespace nxmBackup.HVBackupCore
 
                 if (currentVM != null)
                 {
-                    currentVM.vmHDDs.AddRange(hddsChangedResponse.newHDDs);
+                    currentVM.vmHDDs = hddsChangedResponse.newHDDs;
                 }
             }
 
