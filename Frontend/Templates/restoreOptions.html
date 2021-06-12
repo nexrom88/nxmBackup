@@ -15,8 +15,26 @@
         <label class="enter_div" for="sbSourceVM">Quell-VM:</label>
         <select id="sbSourceVM" class="form-control">
             {{#vms}}
-            <option data-type="full" selected>Komplette VM-Wiederherstellung</option>
+            <option data-vmid="{{vmid}}" selected>{{name}}</option>
             {{/vms}}
         </select>
     </div>
+
+    <hr class="restoreElement" />
+
+    <label class="enter_div" for="restorePointTable">Wiederherstellungspunkt auswählen:</label>
+
+    <table class="table" id="restorePointTable">
+        <thead>
+            <tr>
+                <th scope="col">Datum/Uhrzeit</th>
+                <th scope="col">Backuptyp</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr id="jobDetailsRow">
+                
+            </tr>
+        </tbody>
+    </table>
 </form>
