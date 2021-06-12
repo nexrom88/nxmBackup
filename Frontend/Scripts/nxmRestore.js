@@ -32,6 +32,11 @@ function startRestoreHandler() {
 
     $("#restoreOptions").html(vmsHTML);
 
+    //on select event handler
+    $(".sbSourceVM").change(function () {
+      loadRestorePoints();
+    });
+
     loadRestorePoints();
   });
 
@@ -46,8 +51,28 @@ function loadRestorePoints() {
   restoreDetails["basePath"] = selectedRestoreJob["BasePath"];
 
   //get selected vm
-  var selectedVM = $("#sbSourceVM option:selected").text();
+  var selectedVM = $("#sbSourceVM option:selected").data("vmid");
   restoreDetails["vmName"] = selectedVM;
+
+  //send ajax request
+  $.ajax({
+    url: 'api/BackupChain',
+    contentType: "application/json; charset=utf-8",
+    data: JSON.stringify(restoreDetails),
+    type: 'POST',
+    cache: false,
+    success: function (result) {
+
+      //load table template
+      $.ajax({
+        url: "Templates/restorePointsTable"
+      })
+        .done(function (data) {
+          $("#restorePointTable").html(Mustache.render(data, { restorePoints: result }));
+        });
+
+    }
+  });
 
 
 }

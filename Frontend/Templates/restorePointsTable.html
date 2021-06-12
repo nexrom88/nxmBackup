@@ -1,0 +1,14 @@
+﻿<thead>
+    <tr>
+        <th scope="col">Datum/Uhrzeit</th>
+        <th scope="col">Backuptyp</th>
+    </tr>
+</thead>
+<tbody>
+    {{#restorePoints}}
+    <tr>
+        <td>{{timeStamp}}</td>
+        <td>{{type}}</td>
+    </tr>
+    {{/restorePoints}}
+</tbody>
