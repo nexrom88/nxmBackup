@@ -102,3 +102,12 @@ textarea {
     overflow-y:auto;
     overflow-x:auto;
 }
+
+#restorePointTable .active {
+    background-color: #b3b3ff;
+}
+
+#startRestoreButton{
+    margin-top:5%;
+    margin-bottom: 5%;
+}
