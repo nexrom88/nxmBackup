@@ -11,13 +11,14 @@ namespace Frontend.Controllers
     public class BackupStartController : ApiController
     {
         // POST api/<controller>
-        public void Post([FromBody] BackupStartDetails value)
+        public void Post([FromBody] BackupStartDetails backupStartDetails)
         {
+            backupStartDetails = null;
         }
 
         public class BackupStartDetails
         {
-            public bool type { get; set; }
+            public string type { get; set; }
             public string sourcePath { get; set; }
             public string destPath { get; set; }
             public string vmName { get; set; }

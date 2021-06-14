@@ -32,6 +32,11 @@ function startRestoreHandler() {
 
     $("#restoreOptions").html(vmsHTML);
 
+    //on start restore handler
+    $("#startRestoreButton").click(function () {
+      startRestore();
+    });
+
     //on select event handler
     $(".sbSourceVM").change(function () {
       loadRestorePoints();
@@ -53,11 +58,6 @@ function loadRestorePoints() {
   //get selected vm
   var selectedVM = $("#sbSourceVM option:selected").data("vmid");
   restoreDetails["vmName"] = selectedVM;
-
-  //start restore button handler
-  $("#startRestoreButton").click(function () {
-    startRestore();
-  });
 
   //send ajax request
   $.ajax({
@@ -123,10 +123,33 @@ function convertBackupProperties(properties) {
 
 //starts the restore process
 function startRestore() {
+  //check whether backup is selected
+  var instanceID = $('#restorePointTable tr.active').data("instanceid");
+  if (!instanceID) {
+    Swal.fire({
+      title: 'Fehler',
+      text: 'Es wurde kein Wiederherstellungspunkt ausgewählt!',
+      icon: 'error'
+    });
+    return;
+  }
+
   var jobStartDetails = {};
   jobStartDetails["sourcePath"] = selectedRestoreJob["BasePath"];
   jobStartDetails["vmName"] = $("#sbSourceVM option:selected").text() + "_restored";
   jobStartDetails["destPath"] = "f:\\\\target";
-  jobStartDetails["instanceID"] = $('.restoreBackup .active').data("instaceid");
-  var a = "";
+  jobStartDetails["instanceID"] = instanceID;
+  jobStartDetails["type"] = $("#sbRestoreType option:selected").data("type");
+
+  //do ajax call
+  $.ajax({
+    url: "api/BackupStart",
+    contentType: "application/json; charset=utf-8",
+    data: JSON.stringify(jobStartDetails),
+    type: 'POST',
+    cache: false,
+  })
+    .done(function (data) {
+    });
+  
 }
