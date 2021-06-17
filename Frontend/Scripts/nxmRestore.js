@@ -137,9 +137,11 @@ function startRestore() {
   var jobStartDetails = {};
   jobStartDetails["sourcePath"] = selectedRestoreJob["BasePath"];
   jobStartDetails["vmName"] = $("#sbSourceVM option:selected").text() + "_restored";
+  jobStartDetails["vmID"] = $("#sbSourceVM option:selected").data("vmid");
   jobStartDetails["destPath"] = "f:\\\\target";
   jobStartDetails["instanceID"] = instanceID;
   jobStartDetails["type"] = $("#sbRestoreType option:selected").data("type");
+  jobStartDetails["jobID"] = selectedRestoreJob["DbId"];
 
   //do ajax call
   $.ajax({
