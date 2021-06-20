@@ -134,20 +134,20 @@ function startRestore() {
     return;
   }
 
-  var jobStartDetails = {};
-  jobStartDetails["sourcePath"] = selectedRestoreJob["BasePath"];
-  jobStartDetails["vmName"] = $("#sbSourceVM option:selected").text() + "_restored";
-  jobStartDetails["vmID"] = $("#sbSourceVM option:selected").data("vmid");
-  jobStartDetails["destPath"] = "f:\\\\target";
-  jobStartDetails["instanceID"] = instanceID;
-  jobStartDetails["type"] = $("#sbRestoreType option:selected").data("type");
-  jobStartDetails["jobID"] = selectedRestoreJob["DbId"];
+  var restartStartDetails = {};
+  restartStartDetails["basePath"] = selectedRestoreJob["BasePath"];
+  restartStartDetails["vmName"] = $("#sbSourceVM option:selected").text() + "_restored";
+  restartStartDetails["vmID"] = $("#sbSourceVM option:selected").data("vmid");
+  restartStartDetails["destPath"] = "f:\\\\target";
+  restartStartDetails["instanceID"] = instanceID;
+  restartStartDetails["type"] = $("#sbRestoreType option:selected").data("type");
+  restartStartDetails["jobID"] = selectedRestoreJob["DbId"];
 
   //do ajax call
   $.ajax({
     url: "api/BackupStart",
     contentType: "application/json; charset=utf-8",
-    data: JSON.stringify(jobStartDetails),
+    data: JSON.stringify(restartStartDetails),
     type: 'POST',
     cache: false,
   })

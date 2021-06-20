@@ -11,13 +11,13 @@ namespace Frontend.Controllers
     public class BackupStartController : ApiController
     {
         // POST api/<controller>
-        public void Post([FromBody] BackupStartDetails backupStartDetails)
+        public void Post([FromBody] RestoreStartDetails restoreStartDetails)
         {
             ConfigHandler.OneJob jobObject = null;
             //look for the matching job object
             foreach(ConfigHandler.OneJob job in ConfigHandler.JobConfigHandler.Jobs)
             {
-                if (job.DbId == backupStartDetails.jobID)
+                if (job.DbId == restoreStartDetails.jobID)
                 {
                     jobObject = job;
                 }
@@ -27,30 +27,36 @@ namespace Frontend.Controllers
             Common.JobVM vmObject = null;
             foreach(Common.JobVM vm in jobObject.JobVMs)
             {
-                if (vm.vmID == backupStartDetails.vmID)
+                if (vm.vmID == restoreStartDetails.vmID)
                 {
                     vmObject = vm;
                 }
             }
 
-           
+            //build source patch
+            string sourcePath = restoreStartDetails.basePath + "\\" + jobObject.Name + "\\" + restoreStartDetails.vmID;
 
-            switch (backupStartDetails.type)
+
+            switch (restoreStartDetails.type)
             {
                 case "full":
                 case "fullImport":
-                    int jobExecutionId = Common.DBQueries.addJobExecution(backupStartDetails.jobID, "restore");
+                    int jobExecutionId = Common.DBQueries.addJobExecution(restoreStartDetails.jobID, "restore");
                     HVRestoreCore.FullRestoreHandler fullRestoreHandler = new HVRestoreCore.FullRestoreHandler(new Common.EventHandler(vmObject, jobExecutionId), jobObject.UseEncryption, jobObject.AesKey);
                     //fullRestoreHandler.performFullRestoreProcess(sourcePath, "f:\\target", ((ComboBoxItem)cbVMs.SelectedItem).Content.ToString() + "_restored", restorePoint.InstanceId, importToHyperV);
 
                     break;
+                case "lr":
+                    HVRestoreCore.LiveRestore lrHandler = new HVRestoreCore.LiveRestore(jobObject.UseEncryption, jobObject.AesKey);
+                    lrHandler.performLiveRestore(sourcePath, vmObject.vmName, restoreStartDetails.instanceID);
+                    break;
             }
         }
 
-        public class BackupStartDetails
+        public class RestoreStartDetails
         {
             public string type { get; set; }
-            public string sourcePath { get; set; }
+            public string basePath { get; set; }
             public string destPath { get; set; }
             public string vmName { get; set; }
             public string instanceID { get; set; }
