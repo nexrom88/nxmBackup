@@ -8,11 +8,13 @@ using System.Web.Http;
 namespace Frontend.Controllers
 {
     [Frontend.Filter.AuthFilter]
-    public class BackupStartController : ApiController
+    public class RestoreController : ApiController
     {
         // POST api/<controller>
-        public void Post([FromBody] RestoreStartDetails restoreStartDetails)
+        public HttpResponseMessage Post([FromBody] RestoreStartDetails restoreStartDetails)
         {
+            HttpResponseMessage response = new HttpResponseMessage();
+
             ConfigHandler.OneJob jobObject = null;
             //look for the matching job object
             foreach(ConfigHandler.OneJob job in ConfigHandler.JobConfigHandler.Jobs)
@@ -47,9 +49,36 @@ namespace Frontend.Controllers
 
                     break;
                 case "lr":
-                    HVRestoreCore.LiveRestore lrHandler = new HVRestoreCore.LiveRestore(jobObject.UseEncryption, jobObject.AesKey);
-                    lrHandler.performLiveRestore(sourcePath, vmObject.vmName, restoreStartDetails.instanceID);
+                    //stop request if job is already running
+                    if (App_Start.RunningRestoreJobs.CurrentLiveRestore != null)
+                    {
+                        response.StatusCode = HttpStatusCode.BadRequest;
+                    }
+                    else
+                    {
+                        HVRestoreCore.LiveRestore lrHandler = new HVRestoreCore.LiveRestore(jobObject.UseEncryption, jobObject.AesKey);
+
+                        //set global object
+                        App_Start.RunningRestoreJobs.CurrentLiveRestore = lrHandler;
+
+                        System.Threading.Thread lrThread = new System.Threading.Thread(() => lrHandler.performLiveRestore(sourcePath, vmObject.vmName, restoreStartDetails.instanceID, false));
+                        lrThread.Start();
+                        response.StatusCode = HttpStatusCode.OK;
+                    }
                     break;
+            }
+
+            return response;
+        }
+
+        //gets triggered when a restore job should get stopped
+        public void Delete()
+        {
+            //stop lr
+            if (App_Start.RunningRestoreJobs.CurrentLiveRestore != null)
+            {
+                App_Start.RunningRestoreJobs.CurrentLiveRestore.stopRequest = true;
+                App_Start.RunningRestoreJobs.CurrentLiveRestore = null;
             }
         }
 

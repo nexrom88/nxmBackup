@@ -146,7 +146,7 @@ namespace RestoreHelper
                     break;
                 case "lr":
                     HVRestoreCore.LiveRestore lrHandler = new HVRestoreCore.LiveRestore(this.job.UseEncryption, this.job.AesKey);
-                    lrHandler.performLiveRestore(sourcePath, ((ComboBoxItem)cbVMs.SelectedItem).Content.ToString(), restorePoint.InstanceId);
+                    lrHandler.performLiveRestore(sourcePath, ((ComboBoxItem)cbVMs.SelectedItem).Content.ToString(), restorePoint.InstanceId, true);
                     break;
             }
 

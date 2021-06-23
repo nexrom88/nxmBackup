@@ -130,6 +130,7 @@
     <Compile Include="App_Start\GUIJobHandler.cs" />
     <Compile Include="App_Start\OneSession.cs" />
     <Compile Include="App_Start\RouteConfig.cs" />
+    <Compile Include="App_Start\RunningRestoreJobs.cs" />
     <Compile Include="App_Start\WebApiConfig.cs" />
     <Compile Include="Areas\HelpPage\ApiDescriptionExtensions.cs" />
     <Compile Include="Areas\HelpPage\App_Start\HelpPageConfig.cs" />
@@ -160,7 +161,7 @@
     <Compile Include="Areas\HelpPage\SampleGeneration\TextSample.cs" />
     <Compile Include="Areas\HelpPage\XmlDocumentationProvider.cs" />
     <Compile Include="Controllers\BackupChainController.cs" />
-    <Compile Include="Controllers\BackupStartController.cs" />
+    <Compile Include="Controllers\RestoreController.cs" />
     <Compile Include="Controllers\DirectoryController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\ConfiguredJobsController.cs" />

@@ -17,6 +17,9 @@ namespace HVRestoreCore
         private bool useEncryption;
         private byte[] aesKey;
 
+        //gets set to true when stop is requested
+        public bool stopRequest { get; set; }
+
         public LiveRestore(bool useEncryption, byte[] aesKey)
         {
             this.useEncryption = useEncryption;
@@ -24,7 +27,7 @@ namespace HVRestoreCore
         }
 
 
-        public void performLiveRestore(string basePath, string vmName, string instanceID)
+        public void performLiveRestore(string basePath, string vmName, string instanceID, bool wpfMode)
         {
          
 
@@ -106,10 +109,20 @@ namespace HVRestoreCore
                 return;
             }
 
-
-            //start restore window
-            LRWindow h = new LRWindow();
-            h.ShowDialog();
+            if (wpfMode)
+            {
+                //start restore window
+                LRWindow h = new LRWindow();
+                h.ShowDialog();
+            }
+            else
+            {
+                //wait for stop request
+                while (!stopRequest)
+                {
+                    Thread.Sleep(100);
+                }
+            }
 
             //turns off VM
             powerOffVM(mountHandler.LrVMID);

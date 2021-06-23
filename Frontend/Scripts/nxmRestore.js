@@ -145,13 +145,43 @@ function startRestore() {
 
   //do ajax call
   $.ajax({
-    url: "api/BackupStart",
+    url: "api/Restore",
     contentType: "application/json; charset=utf-8",
     data: JSON.stringify(restartStartDetails),
     type: 'POST',
     cache: false,
   })
     .done(function (data) {
+      handleRunningLiveRestore();
+    })
+    .fail(function (data) {
+
+      //http error code 400: job already running
+      if (data["status"] == 400) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Fehler',
+          text: 'Die Wiederherstellung kann nicht gestartet werden, da ein anderer Job bereits läuft',
+        })
+      }
     });
   
+}
+
+//handles a currently running live restore
+function handleRunningLiveRestore() {
+  //show dialog box
+  Swal.fire({
+    title: 'LiveRestore läuft',
+    text: "Der LiveRestore läuft. Schließen Sie dieses Hinweisfenster um den LiveRestore wieder zu beenden",
+    icon: 'warning',
+    confirmButtonColor: '#3085d6',
+    confirmButtonText: 'LiveRestore beenden'
+  }).then((result) => {
+    //send delete request to stop job
+    $.ajax({
+      url: 'api/Restore',
+      type: 'DELETE'
+    });
+  })
 }
