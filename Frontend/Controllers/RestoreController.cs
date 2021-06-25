@@ -61,9 +61,28 @@ namespace Frontend.Controllers
                         //set global object
                         App_Start.RunningRestoreJobs.CurrentLiveRestore = lrHandler;
 
+
                         System.Threading.Thread lrThread = new System.Threading.Thread(() => lrHandler.performLiveRestore(sourcePath, vmObject.vmName, restoreStartDetails.instanceID, false));
                         lrThread.Start();
-                        response.StatusCode = HttpStatusCode.OK;
+
+                        //wait for init
+                        while (lrHandler.State == HVRestoreCore.LiveRestore.lrState.initializing)
+                        {
+                            System.Threading.Thread.Sleep(100);
+                        }
+
+                        if (lrHandler.State == HVRestoreCore.LiveRestore.lrState.running)
+                        {
+                            //set heartbeat timer to now
+                            App_Start.RunningRestoreJobs.LastHeartbeat = DateTimeOffset.Now.ToUnixTimeSeconds();
+
+                            response.StatusCode = HttpStatusCode.OK;
+                        }
+                        else
+                        {
+                            App_Start.RunningRestoreJobs.CurrentLiveRestore = null;
+                            response.StatusCode = HttpStatusCode.InternalServerError;
+                        }
                     }
                     break;
             }
@@ -80,6 +99,13 @@ namespace Frontend.Controllers
                 App_Start.RunningRestoreJobs.CurrentLiveRestore.stopRequest = true;
                 App_Start.RunningRestoreJobs.CurrentLiveRestore = null;
             }
+        }
+
+        //receives the restore heartbeat
+        public void Put()
+        {
+            App_Start.RunningRestoreJobs.LastHeartbeat = DateTimeOffset.Now.ToUnixTimeSeconds();
+            Console.Beep();
         }
 
         public class RestoreStartDetails

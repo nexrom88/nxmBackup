@@ -20,17 +20,18 @@ namespace HVRestoreCore
         //gets set to true when stop is requested
         public bool stopRequest { get; set; }
 
+        public lrState State { get; set; }
+
         public LiveRestore(bool useEncryption, byte[] aesKey)
         {
             this.useEncryption = useEncryption;
             this.aesKey = aesKey;
+            State = lrState.initializing;
         }
 
 
         public void performLiveRestore(string basePath, string vmName, string instanceID, bool wpfMode)
         {
-         
-
             //get full backup chain
             List<ConfigHandler.BackupConfigHandler.BackupInfo> backupChain = ConfigHandler.BackupConfigHandler.readChain(basePath);
 
@@ -103,11 +104,14 @@ namespace HVRestoreCore
             //error while mounting
             if (mountHandler.mountState == MountHandler.ProcessState.error)
             {
-                MessageBox.Show("Backup konnte nicht eingehängt werden", "Restore Fehler", MessageBoxButton.OK, MessageBoxImage.Error);
+                State = lrState.error;
+                //MessageBox.Show("Backup konnte nicht eingehängt werden", "Restore Fehler", MessageBoxButton.OK, MessageBoxImage.Error);
                 mountThread.Abort();
                 mountHandler.stopMfHandling();
                 return;
             }
+
+            State = lrState.running;
 
             if (wpfMode)
             {
@@ -123,6 +127,8 @@ namespace HVRestoreCore
                     Thread.Sleep(100);
                 }
             }
+
+            State = lrState.stopped;
 
             //turns off VM
             powerOffVM(mountHandler.LrVMID);
@@ -178,6 +184,11 @@ namespace HVRestoreCore
 
             //backup not found, return empty backup element
             return new ConfigHandler.BackupConfigHandler.BackupInfo();
+        }
+
+        public enum lrState
+        {
+            initializing, running, error, stopped
         }
     }
 }

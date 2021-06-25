@@ -23,6 +23,9 @@ namespace Frontend
             //startup nxmBackup
             //start job engine
             App_Start.GUIJobHandler.initJob();
+
+            //start restore heartbeat timer
+            App_Start.RunningRestoreJobs.startHeartBeatCheckTimer();
         }
     }
 }

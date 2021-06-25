@@ -134,6 +134,9 @@ function startRestore() {
     return;
   }
 
+  //disable start restore button
+  $("#startRestoreButton").prop("disabled", true);
+
   var restartStartDetails = {};
   restartStartDetails["basePath"] = selectedRestoreJob["BasePath"];
   restartStartDetails["vmName"] = $("#sbSourceVM option:selected").text() + "_restored";
@@ -142,6 +145,18 @@ function startRestore() {
   restartStartDetails["instanceID"] = instanceID;
   restartStartDetails["type"] = $("#sbRestoreType option:selected").data("type");
   restartStartDetails["jobID"] = selectedRestoreJob["DbId"];
+
+
+  //show loading screen
+  Swal.fire({
+    title: 'Initialisierung',
+    html: 'Wiederherstellung wird gestartet...',
+    allowEscapeKey: false,
+    allowOutsideClick: false,
+    didOpen: () => {
+      Swal.showLoading()
+    }
+  });
 
   //do ajax call
   $.ajax({
@@ -152,9 +167,24 @@ function startRestore() {
     cache: false,
   })
     .done(function (data) {
-      handleRunningLiveRestore();
+      //close loading screen
+      Swal.close();
+
+      //re-enable start restore button
+      $("#startRestoreButton").prop("disabled", false);
+
+      switch (restartStartDetails["type"]) {
+        case "lr":
+          handleRunningLiveRestore();
+          break;
+      }
     })
     .fail(function (data) {
+      //close loading screen
+      swal.close();
+
+      //re-enable start restore button
+      $("#startRestoreButton").prop("disabled", false);
 
       //http error code 400: job already running
       if (data["status"] == 400) {
@@ -163,19 +193,41 @@ function startRestore() {
           title: 'Fehler',
           text: 'Die Wiederherstellung kann nicht gestartet werden, da ein anderer Job bereits läuft',
         })
-      }
+      };
+
+      //http error code 500: backup could not be mounted
+      if (data["status"] == 500) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Fehler',
+          text: 'Die Wiederherstellung kann aufgrund eines Serverfehlers nicht gestartet werden',
+        })
+      };
+
     });
   
 }
 
 //handles a currently running live restore
 function handleRunningLiveRestore() {
+
+  //send restore heartbeat frequently (3 secs)
+  var timerID = setInterval(function () {
+    $.ajax({
+      url: 'api/Restore',
+      type: 'PUT'
+    });
+  }, 3000);
+
+
   //show dialog box
   Swal.fire({
     title: 'LiveRestore läuft',
     text: "Der LiveRestore läuft. Schließen Sie dieses Hinweisfenster um den LiveRestore wieder zu beenden",
     icon: 'warning',
     confirmButtonColor: '#3085d6',
+    allowOutsideClick: false,
+    allowEscapeKey: false,
     confirmButtonText: 'LiveRestore beenden'
   }).then((result) => {
     //send delete request to stop job
@@ -183,5 +235,8 @@ function handleRunningLiveRestore() {
       url: 'api/Restore',
       type: 'DELETE'
     });
-  })
+
+    clearInterval(timerID);
+  });
+
 }
