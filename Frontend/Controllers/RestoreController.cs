@@ -105,7 +105,6 @@ namespace Frontend.Controllers
         public void Put()
         {
             App_Start.RunningRestoreJobs.LastHeartbeat = DateTimeOffset.Now.ToUnixTimeSeconds();
-            Console.Beep();
         }
 
         public class RestoreStartDetails

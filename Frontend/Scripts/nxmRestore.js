@@ -211,13 +211,7 @@ function startRestore() {
 //handles a currently running live restore
 function handleRunningLiveRestore() {
 
-  //send restore heartbeat frequently (3 secs)
-  var timerID = setInterval(function () {
-    $.ajax({
-      url: 'api/Restore',
-      type: 'PUT'
-    });
-  }, 3000);
+ var restoreWebWorker = new Worker("Scripts/restoreHeartbeatWebWorker.js")
 
 
   //show dialog box
@@ -236,7 +230,8 @@ function handleRunningLiveRestore() {
       type: 'DELETE'
     });
 
-    clearInterval(timerID);
+    restoreWebWorker.terminate();
+    restoreWebWorker = null;
   });
 
 }

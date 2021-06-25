@@ -44,6 +44,9 @@ namespace Frontend
             bundles.Add(new ScriptBundle("~/bundles/nxmMain").Include(
                       "~/Scripts/nxmMain.js"));
 
+            bundles.Add(new ScriptBundle("~/bundles/restoreHeartbeatWebWorker").Include(
+          "~/Scripts/restoreHeartbeatWebWorker.js"));
+
             bundles.Add(new ScriptBundle("~/bundles/globalAjaxHandler").Include(
                       "~/Scripts/globalAjaxHandler.js"));
 
