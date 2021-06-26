@@ -17,7 +17,7 @@ namespace Frontend.Controllers
 
             ConfigHandler.OneJob jobObject = null;
             //look for the matching job object
-            foreach(ConfigHandler.OneJob job in ConfigHandler.JobConfigHandler.Jobs)
+            foreach (ConfigHandler.OneJob job in ConfigHandler.JobConfigHandler.Jobs)
             {
                 if (job.DbId == restoreStartDetails.jobID)
                 {
@@ -27,7 +27,7 @@ namespace Frontend.Controllers
 
             //look for vm object
             Common.JobVM vmObject = null;
-            foreach(Common.JobVM vm in jobObject.JobVMs)
+            foreach (Common.JobVM vm in jobObject.JobVMs)
             {
                 if (vm.vmID == restoreStartDetails.vmID)
                 {
@@ -39,6 +39,13 @@ namespace Frontend.Controllers
             string sourcePath = restoreStartDetails.basePath + "\\" + jobObject.Name + "\\" + restoreStartDetails.vmID;
 
 
+            //restore already running? -> quit
+            if (App_Start.RunningRestoreJobs.CurrentLiveRestore != null)
+            {
+                response.StatusCode = HttpStatusCode.BadRequest;
+                return response;
+            }
+
             switch (restoreStartDetails.type)
             {
                 case "full":
@@ -49,41 +56,72 @@ namespace Frontend.Controllers
 
                     break;
                 case "lr":
-                    //stop request if job is already running
-                    if (App_Start.RunningRestoreJobs.CurrentLiveRestore != null)
+                    HVRestoreCore.LiveRestore lrHandler = new HVRestoreCore.LiveRestore(jobObject.UseEncryption, jobObject.AesKey);
+
+                    //set global object
+                    App_Start.RunningRestoreJobs.CurrentLiveRestore = lrHandler;
+
+
+                    System.Threading.Thread lrThread = new System.Threading.Thread(() => lrHandler.performLiveRestore(sourcePath, vmObject.vmName, restoreStartDetails.instanceID, false));
+                    lrThread.Start();
+
+                    //wait for init
+                    while (lrHandler.State == HVRestoreCore.LiveRestore.lrState.initializing)
                     {
-                        response.StatusCode = HttpStatusCode.BadRequest;
+                        System.Threading.Thread.Sleep(100);
+                    }
+
+                    if (lrHandler.State == HVRestoreCore.LiveRestore.lrState.running)
+                    {
+                        //set heartbeat timer to now
+                        App_Start.RunningRestoreJobs.LastHeartbeat = DateTimeOffset.Now.ToUnixTimeSeconds();
+
+                        response.StatusCode = HttpStatusCode.OK;
                     }
                     else
                     {
-                        HVRestoreCore.LiveRestore lrHandler = new HVRestoreCore.LiveRestore(jobObject.UseEncryption, jobObject.AesKey);
-
-                        //set global object
-                        App_Start.RunningRestoreJobs.CurrentLiveRestore = lrHandler;
-
-
-                        System.Threading.Thread lrThread = new System.Threading.Thread(() => lrHandler.performLiveRestore(sourcePath, vmObject.vmName, restoreStartDetails.instanceID, false));
-                        lrThread.Start();
-
-                        //wait for init
-                        while (lrHandler.State == HVRestoreCore.LiveRestore.lrState.initializing)
-                        {
-                            System.Threading.Thread.Sleep(100);
-                        }
-
-                        if (lrHandler.State == HVRestoreCore.LiveRestore.lrState.running)
-                        {
-                            //set heartbeat timer to now
-                            App_Start.RunningRestoreJobs.LastHeartbeat = DateTimeOffset.Now.ToUnixTimeSeconds();
-
-                            response.StatusCode = HttpStatusCode.OK;
-                        }
-                        else
-                        {
-                            App_Start.RunningRestoreJobs.CurrentLiveRestore = null;
-                            response.StatusCode = HttpStatusCode.InternalServerError;
-                        }
+                        App_Start.RunningRestoreJobs.CurrentLiveRestore = null;
+                        response.StatusCode = HttpStatusCode.InternalServerError;
                     }
+                    break;
+
+                case "flr":
+                    HVRestoreCore.FileLevelRestoreHandler flrHandler = new HVRestoreCore.FileLevelRestoreHandler(jobObject.UseEncryption, jobObject.AesKey);
+
+                    //set global object
+                    App_Start.RunningRestoreJobs.CurrentFileLevelRestore = flrHandler;
+
+                    //start thread
+                    System.Threading.Thread flrThread = new System.Threading.Thread(() => flrHandler.performGuestFilesRestore(sourcePath, restoreStartDetails.instanceID, false, restoreStartDetails.selectedHDD));
+                    flrThread.Start();
+
+                    //wait for init
+                    while (flrHandler.State.type == HVRestoreCore.FileLevelRestoreHandler.flrStateType.initializing)
+                    {
+                        System.Threading.Thread.Sleep(100);
+                    }
+
+                    //check state
+                    if (flrHandler.State.type == HVRestoreCore.FileLevelRestoreHandler.flrStateType.running) //flr running
+                    {
+                        //set heartbeat timer to now
+                        App_Start.RunningRestoreJobs.LastHeartbeat = DateTimeOffset.Now.ToUnixTimeSeconds();
+
+                        response.StatusCode = HttpStatusCode.OK;
+                    }
+                    else if (flrHandler.State.type == HVRestoreCore.FileLevelRestoreHandler.flrStateType.waitingForHDDSelect) //hdd select required
+                    {
+                        App_Start.RunningRestoreJobs.CurrentFileLevelRestore = null;
+                        response.Content = new StringContent(Newtonsoft.Json.JsonConvert.SerializeObject(flrHandler.State.hddsToSelect));
+                        response.StatusCode = HttpStatusCode.Conflict;
+                    }
+                    else //server error
+                    {
+                        App_Start.RunningRestoreJobs.CurrentFileLevelRestore = null;
+                        response.StatusCode = HttpStatusCode.InternalServerError;
+                    }
+
+
                     break;
             }
 
@@ -96,7 +134,7 @@ namespace Frontend.Controllers
             //stop lr
             if (App_Start.RunningRestoreJobs.CurrentLiveRestore != null)
             {
-                App_Start.RunningRestoreJobs.CurrentLiveRestore.stopRequest = true;
+                App_Start.RunningRestoreJobs.CurrentLiveRestore.StopRequest = true;
                 App_Start.RunningRestoreJobs.CurrentLiveRestore = null;
             }
         }
@@ -116,6 +154,7 @@ namespace Frontend.Controllers
             public string instanceID { get; set; }
             public int jobID { get; set; }
             public string vmID { get; set; }
+            public string selectedHDD { get; set; }
         }
     }
 }

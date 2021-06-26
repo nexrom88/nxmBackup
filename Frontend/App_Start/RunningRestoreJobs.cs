@@ -12,6 +12,26 @@ namespace Frontend.App_Start
         public static long LastHeartbeat { get; set; }
         private static System.Timers.Timer heartbeatCheckTimer = new System.Timers.Timer();
 
+        private static HVRestoreCore.FileLevelRestoreHandler currentFileLevelRestore;
+        public static HVRestoreCore.FileLevelRestoreHandler CurrentFileLevelRestore
+        {
+            get
+            {
+                lock (mutex)
+                {
+                    return currentFileLevelRestore;
+                }
+            }
+
+            set
+            {
+                lock (mutex)
+                {
+                    currentFileLevelRestore = value;
+                }
+            }
+        }
+
         private static HVRestoreCore.LiveRestore currentLiveRestore;
         public static HVRestoreCore.LiveRestore CurrentLiveRestore
         {
@@ -48,10 +68,22 @@ namespace Frontend.App_Start
                 long currentTimestamp = DateTimeOffset.Now.ToUnixTimeSeconds();
                 if (currentTimestamp - LastHeartbeat >= 10)
                 {
-                    CurrentLiveRestore.stopRequest = true;
+                    CurrentLiveRestore.StopRequest = true;
                     CurrentLiveRestore = null;
                 }
             }
+
+            //flr timeout?
+            if (CurrentFileLevelRestore != null)
+            {
+                long currentTimestamp = DateTimeOffset.Now.ToUnixTimeSeconds();
+                if (currentTimestamp - LastHeartbeat >= 10)
+                {
+                    currentFileLevelRestore.StopRequest = true;
+                    CurrentFileLevelRestore = null;
+                }
+            }
+
         }
 
     }

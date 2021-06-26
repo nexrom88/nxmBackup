@@ -1,4 +1,5 @@
 ﻿var selectedRestoreJob = {}; //the job selected for restore
+var selectedRestoreHDD = ""; //the selected hdd for restore
 
 //starts the restore process
 function startRestoreHandler() {
@@ -145,7 +146,10 @@ function startRestore() {
   restartStartDetails["instanceID"] = instanceID;
   restartStartDetails["type"] = $("#sbRestoreType option:selected").data("type");
   restartStartDetails["jobID"] = selectedRestoreJob["DbId"];
+  restartStartDetails["selectedHDD"] = selectedRestoreHDD;
 
+  //reset selected hdd
+  selectedRestoreHDD = "";
 
   //show loading screen
   Swal.fire({
@@ -177,6 +181,8 @@ function startRestore() {
         case "lr":
           handleRunningLiveRestore();
           break;
+        case "flr":
+          break;
       }
     })
     .fail(function (data) {
@@ -202,6 +208,30 @@ function startRestore() {
           title: 'Fehler',
           text: 'Die Wiederherstellung kann aufgrund eines Serverfehlers nicht gestartet werden',
         })
+      };
+
+      //http error code 409: hdd select on flr
+      if (data["status"] == 409) {
+        var hddOptions = JSON.parse(data["responseText"]);
+        var hddOptionsMinified = [];
+
+        //minify hdd options
+        for (var i = 0; i < hddOptions.length; i++) {
+          var oneHDDElements = hddOptions[i].split("\\");
+          hddOptionsMinified[i] = oneHDDElements[oneHDDElements.length - 1];
+        }
+
+        Swal.fire({
+          input: 'select',
+          inputOptions: hddOptionsMinified,
+          title: 'Festplatte auswählen',
+          text: 'Bitte wählen Sie hier eine virtuelle Festplatte aus, auf die die Wiederherstellung gestartet wird',
+        }).then(function (value) {
+          selectedRestoreHDD = hddOptions[value];
+
+          //restart restore
+          startRestore();
+        });
       };
 
     });

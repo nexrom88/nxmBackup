@@ -17,16 +17,26 @@ namespace HVRestoreCore
         private const int NO_RELATED_EVENT = -1;
         private bool useEncryption;
         private byte[] aesKey;
+        public bool StopRequest { set; get; }
+        public flrState State { get; set; }
+
 
         public FileLevelRestoreHandler(bool useEncryption, byte[] aesKey)
         {
             this.useEncryption = useEncryption;
             this.aesKey = aesKey;
+
+            //init state property
+            flrState newState = new flrState();
+            newState.hddsToSelect = null;
+            newState.type = flrStateType.initializing;
+
+            State = newState;
         }
 
 
         //performs a guest files restore
-        public void performGuestFilesRestore(string basePath, string instanceID)
+        public void performGuestFilesRestore(string basePath, string instanceID, bool windowMode, string guiSelectedHDD)
         {
             //get full backup chain
             List<ConfigHandler.BackupConfigHandler.BackupInfo> backupChain = ConfigHandler.BackupConfigHandler.readChain(basePath);
@@ -80,17 +90,39 @@ namespace HVRestoreCore
 
             //show hdd picker window when more than one hdd
             string selectedHDD = null;
-            if (baseHDDFiles.Length > 1)
+            if (windowMode)
             {
-                HDDPickerWindow pickerWindow = new HDDPickerWindow();
-                pickerWindow.BaseHDDs = baseHDDFiles;
-                pickerWindow.ShowDialog();
-                selectedHDD = pickerWindow.UserPickedHDD;
-
-                //no hdd selected -> cancel restore
-                if (selectedHDD == null)
+                if (baseHDDFiles.Length > 1)
                 {
-                    return;
+                    HDDPickerWindow pickerWindow = new HDDPickerWindow();
+                    pickerWindow.BaseHDDs = baseHDDFiles;
+                    pickerWindow.ShowDialog();
+                    selectedHDD = pickerWindow.UserPickedHDD;
+
+                    //no hdd selected -> cancel restore
+                    if (selectedHDD == null)
+                    {
+                        return;
+                    }
+                }
+            }
+            else
+            {
+                //web GUI mode, build return struct if more than one hdd
+                if (baseHDDFiles.Length > 1)
+                {
+                    if (guiSelectedHDD == "")
+                    {
+                        flrState newState = new flrState();
+                        newState.type = flrStateType.waitingForHDDSelect;
+                        newState.hddsToSelect = baseHDDFiles;
+                        State = newState;
+                        return;
+                    }
+                    else
+                    {
+                        selectedHDD = guiSelectedHDD;
+                    }
                 }
             }
 
@@ -123,14 +155,27 @@ namespace HVRestoreCore
             //error while mounting
             if (mountState == MountHandler.ProcessState.error)
             {
-                MessageBox.Show("Backup konnte nicht eingehängt werden", "Restore Fehler", MessageBoxButton.OK, MessageBoxImage.Error);
+                flrState newState = new flrState();
+                newState.type = flrStateType.error;
+                State = newState;
                 return;
             }
 
-            //start restore window
-            FLRWindow h = new FLRWindow();
-            h.VhdPath = mountHandler.MountFile;
-            h.ShowDialog();
+            //wait for exit
+            if (windowMode)
+            {
+                //start restore window
+                FLRWindow h = new FLRWindow();
+                h.VhdPath = mountHandler.MountFile;
+                h.ShowDialog();
+            }
+            else
+            {
+                while (!StopRequest)
+                {
+                    Thread.Sleep(200);
+                }
+            }
 
             mountThread.Abort();
             mountHandler.stopMfHandling();
@@ -176,6 +221,16 @@ namespace HVRestoreCore
             return new ConfigHandler.BackupConfigHandler.BackupInfo();
         }
 
+        public struct flrState
+        {
+            public flrStateType type;
+            public string[] hddsToSelect;
+        }
+
+        public enum flrStateType
+        {
+            initializing, running, stopped, waitingForHDDSelect, error
+        }
 
     }
 }

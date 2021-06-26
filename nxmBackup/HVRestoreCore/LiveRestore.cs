@@ -18,7 +18,7 @@ namespace HVRestoreCore
         private byte[] aesKey;
 
         //gets set to true when stop is requested
-        public bool stopRequest { get; set; }
+        public bool StopRequest { get; set; }
 
         public lrState State { get; set; }
 
@@ -122,7 +122,7 @@ namespace HVRestoreCore
             else
             {
                 //wait for stop request
-                while (!stopRequest)
+                while (!StopRequest)
                 {
                     Thread.Sleep(100);
                 }
