@@ -20,6 +20,10 @@ namespace HVRestoreCore
         public bool StopRequest { set; get; }
         public flrState State { get; set; }
 
+        private GuestFilesHandler guestFilesHandler;
+
+        public GuestVolume[] GuestVolumes { get; set; }
+
 
         public FileLevelRestoreHandler(bool useEncryption, byte[] aesKey)
         {
@@ -70,12 +74,12 @@ namespace HVRestoreCore
                 else
                 {
                     //valid element found
-                    restoreChain.Add(restoreElement); 
+                    restoreChain.Add(restoreElement);
                 }
             }
 
             //remove all lb backups except when lb backup is first element
-            for(int i = 1; i < restoreChain.Count; i++)
+            for (int i = 1; i < restoreChain.Count; i++)
             {
                 if (restoreChain[i].type == "lb")
                 {
@@ -161,6 +165,17 @@ namespace HVRestoreCore
                 return;
             }
 
+            //mount vhdx file when not in window mode
+            if (!windowMode)
+            {
+                mountVHDX(mountHandler.MountFile);
+            }
+
+            //set state to running
+            flrState newRunningState = new flrState();
+            newRunningState.type = flrStateType.running;
+            State = newRunningState;
+
             //wait for exit
             if (windowMode)
             {
@@ -183,8 +198,43 @@ namespace HVRestoreCore
 
         }
 
+        private void mountVHDX(string vhdPath)
+        {
 
-        
+            this.guestFilesHandler = new GuestFilesHandler(vhdPath);
+
+
+            List<GuestVolume> drives = this.guestFilesHandler.getMountedDrives();
+
+            this.guestFilesHandler.mountVHD();
+
+            List<GuestVolume> newDrives = this.guestFilesHandler.getMountedDrives();
+            List<GuestVolume> mountedDrives = new List<GuestVolume>();
+
+            foreach (GuestVolume drive in newDrives)
+            {
+                bool driveFound = false;
+
+                foreach (GuestVolume oldDrive in drives)
+                {
+                    if (oldDrive.path == drive.path)
+                    {
+                        driveFound = true;
+                        break;
+                    }
+                }
+
+                if (!driveFound)
+                {
+                    mountedDrives.Add(drive);
+                }
+
+            }
+
+            GuestVolumes = mountedDrives.ToArray();
+
+        }
+
 
         //builds an array of available vhdx files from a given backup chain
         private string[] getBaseHDDFilesFromChain(List<ConfigHandler.BackupConfigHandler.BackupInfo> restoreChain, string basePath)

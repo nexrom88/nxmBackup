@@ -106,7 +106,7 @@ namespace Frontend.Controllers
                     {
                         //set heartbeat timer to now
                         App_Start.RunningRestoreJobs.LastHeartbeat = DateTimeOffset.Now.ToUnixTimeSeconds();
-
+                        response.Content = new StringContent(Newtonsoft.Json.JsonConvert.SerializeObject(flrHandler.GuestVolumes));
                         response.StatusCode = HttpStatusCode.OK;
                     }
                     else if (flrHandler.State.type == HVRestoreCore.FileLevelRestoreHandler.flrStateType.waitingForHDDSelect) //hdd select required

@@ -182,6 +182,16 @@ function startRestore() {
           handleRunningLiveRestore();
           break;
         case "flr":
+
+          //build volumes array
+          var volumes = [];
+
+          try {
+            volumes = JSON.parse(data["responseText"]);
+          } catch (e) {
+            volumes = [];
+          }
+          handleRunningFLR(volumes);
           break;
       }
     })
@@ -236,6 +246,34 @@ function startRestore() {
 
     });
   
+}
+
+//handles a currently running flr
+function handleRunningFLR(volumes) {
+  var restoreWebWorker = new Worker("Scripts/restoreHeartbeatWebWorker.js");
+
+  //show dialog box
+  Swal.fire({
+    title: 'Einzeldatei-Wiederherstellung',
+    html: "<div id='flrBrowserContainer'></div>",
+    confirmButtonColor: '#3085d6',
+    allowOutsideClick: false,
+    allowEscapeKey: false,
+    confirmButtonText: 'Wiederherstellung beenden'
+  }).then((result) => { //gets called when done
+    
+
+    restoreWebWorker.terminate();
+    restoreWebWorker = null;
+  });
+
+  //load file browser container
+  $.ajax({
+    url: "Templates/newJobPage" + pageNumber
+  })
+    .done(function (data) {
+      $("#flrBrowserContainer").html(data);
+    });
 }
 
 //handles a currently running live restore

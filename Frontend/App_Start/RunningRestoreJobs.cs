@@ -74,7 +74,7 @@ namespace Frontend.App_Start
             }
 
             //flr timeout?
-            if (CurrentFileLevelRestore != null)
+            if (CurrentFileLevelRestore != null && CurrentFileLevelRestore.State.type == HVRestoreCore.FileLevelRestoreHandler.flrStateType.running)
             {
                 long currentTimestamp = DateTimeOffset.Now.ToUnixTimeSeconds();
                 if (currentTimestamp - LastHeartbeat >= 10)
