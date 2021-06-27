@@ -1,5 +1,7 @@
-﻿<label class="enter_div" for="sbDriveSelect">Tag</label>
-<select id="sbDriveSelect" class="form-control">
-    <option data-day="monday" selected>Montag</option>
-    <option data-day="tuesday">Dienstag</option>
+﻿<label class="center_div" for="sbDriveSelect">Laufwerk auswählen:</label>
+<select id="sbDriveSelect" class="form-control center_div boxElement">
+    {{#volumes}}
+    <option data-path="{{path}}">{{caption}}</option>
+    {{/volumes}}
 </select>
+<div class="center_div boxElement" id="flrBrowser"></div>

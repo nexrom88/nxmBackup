@@ -11,30 +11,53 @@ namespace Frontend.Controllers
 
     public class FLRBrowserController : ApiController
     {
-        // GET all filesystem entries from current directory
-        //public HttpResponseMessage Get()
-        //{
-        //    HttpResponseMessage response = new HttpResponseMessage();
+        // Get all filesystem entries from current directory
+        public HttpResponseMessage Post([FromBody]Folder folder)
+        {
+            HttpResponseMessage response = new HttpResponseMessage();
 
-        //    //cancel request if flr not running
-        //    if (App_Start.RunningRestoreJobs.CurrentFileLevelRestore == null)
-        //    {
-        //        response.StatusCode = HttpStatusCode.BadRequest;
-        //        return response;
-        //    }
+            //cancel request if flr not running
+            if (App_Start.RunningRestoreJobs.CurrentFileLevelRestore == null || App_Start.RunningRestoreJobs.CurrentFileLevelRestore.StopRequest || App_Start.RunningRestoreJobs.CurrentFileLevelRestore.State.type != HVRestoreCore.FileLevelRestoreHandler.flrStateType.running)
+            {
+                response.StatusCode = HttpStatusCode.BadRequest;
+                return response;
+            }
 
+            //get files
+            string[] files = System.IO.Directory.GetFiles(folder.path, "*", System.IO.SearchOption.TopDirectoryOnly);
 
-        //}
+            //get directories
+            string[] directories = System.IO.Directory.GetDirectories(folder.path, "*", System.IO.SearchOption.TopDirectoryOnly);
+
+            //build ret val
+            List<FSEntry> fsEntries = new List<FSEntry>();
+            foreach (string file in files)
+            {
+                FSEntry newEntry = new FSEntry();
+                newEntry.type = "file";
+                newEntry.path = file;
+                fsEntries.Add(newEntry);
+            }
+            foreach (string directory in directories)
+            {
+                FSEntry newEntry = new FSEntry();
+                newEntry.type = "directory";
+                newEntry.path = directory;
+                fsEntries.Add(newEntry);
+            }
+
+            //build json string
+            string retVal = Newtonsoft.Json.JsonConvert.SerializeObject(fsEntries);
+            response.StatusCode = HttpStatusCode.OK;
+            response.Content = new StringContent(retVal);
+
+            return response;
+        }
 
         // GET api/<controller>/5
         public string Get(int id)
         {
             return "value";
-        }
-
-        // POST api/<controller>
-        public void Post([FromBody] string value)
-        {
         }
 
         // PUT api/<controller>/5
@@ -45,6 +68,17 @@ namespace Frontend.Controllers
         // DELETE api/<controller>/5
         public void Delete(int id)
         {
+        }
+
+        public class FSEntry
+        {
+            public string path { get; set; }
+            public string type { get; set; } //directory || file
+        }
+
+        public class Folder
+        {
+            public string path { get; set; }
         }
     }
 }

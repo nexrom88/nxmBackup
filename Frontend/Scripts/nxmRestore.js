@@ -1,4 +1,6 @@
-﻿var selectedRestoreJob = {}; //the job selected for restore
+﻿const { json } = require("modernizr");
+
+var selectedRestoreJob = {}; //the job selected for restore
 var selectedRestoreHDD = ""; //the selected hdd for restore
 
 //starts the restore process
@@ -187,7 +189,7 @@ function startRestore() {
           var volumes = [];
 
           try {
-            volumes = JSON.parse(data["responseText"]);
+            volumes = JSON.parse(data);
           } catch (e) {
             volumes = [];
           }
@@ -269,10 +271,61 @@ function handleRunningFLR(volumes) {
 
   //load file browser container
   $.ajax({
-    url: "Templates/newJobPage" + pageNumber
+    url: "Templates/flrBrowser"
   })
     .done(function (data) {
-      $("#flrBrowserContainer").html(data);
+      $("#flrBrowserContainer").html(Mustache.render(data, { volumes: volumes }));
+
+      //get selected volume
+      var newPath = $("#sbDriveSelect option:selected").data("path");
+
+      //build jsTree
+      $('#flrBrowser').jstree({
+        'core': {
+          'check_callback': true,
+          'data': null
+        },
+        types: {
+          "directory": {
+            "icon": "fa fa-hdd-o"
+          },
+          "file": {
+            "icon": "fa fa-folder-open-o"
+          },
+          "default": {
+          }
+        }, plugins: ["types"]
+      });
+
+      //flr browser node select handler
+      $("#flrBrowser").on("select_node.jstree", function (e, data) {
+        flrDoNavigate(data.node.id, data.node.id);
+      });
+
+      //navigate
+      flrDoNavigate(newPath, "#");
+    });
+}
+
+
+//navigates to a given path within flr
+function flrDoNavigate(path, parentNode) {
+  //do ajax call
+  $.ajax({
+    url: "api/FLRBrowser",
+    contentType: "application/json; charset=utf-8",
+    data: JSON.stringify({ path: path }),
+    type: 'POST',
+    cache: false,
+  })
+    .done(function (data) {
+      var fsEntries = JSON.parse(data);
+
+      for (var i = 0; i < fsEntries.length; i++) {
+        //get last path element
+        var buffer = fsEntries[i]["path"].split("\\");
+        $('#flrBrowser').jstree().create_node(parentNode, { id: fsEntries[i]["path"], text: buffer[buffer.length - 1], type: fsEntries[i]["type"] }, "last", false, false);
+      }
     });
 }
 
