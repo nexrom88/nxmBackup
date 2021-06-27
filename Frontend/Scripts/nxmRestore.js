@@ -1,6 +1,4 @@
-﻿const { json } = require("modernizr");
-
-var selectedRestoreJob = {}; //the job selected for restore
+﻿var selectedRestoreJob = {}; //the job selected for restore
 var selectedRestoreHDD = ""; //the selected hdd for restore
 
 //starts the restore process
@@ -260,6 +258,7 @@ function handleRunningFLR(volumes) {
     html: "<div id='flrBrowserContainer'></div>",
     confirmButtonColor: '#3085d6',
     allowOutsideClick: false,
+    customClass: "flrSwalHeight",
     allowEscapeKey: false,
     confirmButtonText: 'Wiederherstellung beenden'
   }).then((result) => { //gets called when done
@@ -287,10 +286,10 @@ function handleRunningFLR(volumes) {
         },
         types: {
           "directory": {
-            "icon": "fa fa-hdd-o"
+            "icon": "fa fa-folder-open-o"
           },
           "file": {
-            "icon": "fa fa-folder-open-o"
+            "icon": "fa fa-file-archive-o"
           },
           "default": {
           }
@@ -324,7 +323,7 @@ function flrDoNavigate(path, parentNode) {
       for (var i = 0; i < fsEntries.length; i++) {
         //get last path element
         var buffer = fsEntries[i]["path"].split("\\");
-        $('#flrBrowser').jstree().create_node(parentNode, { id: fsEntries[i]["path"], text: buffer[buffer.length - 1], type: fsEntries[i]["type"] }, "last", false, false);
+        $('#flrBrowser').jstree().create_node(parentNode, { id: fsEntries[i]["path"], text: buffer[buffer.length - 1], type: fsEntries[i]["type"], li_attr: {class: "liLeftAlign" } }, "last", false, false);
       }
     });
 }

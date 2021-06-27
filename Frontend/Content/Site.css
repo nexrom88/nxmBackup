@@ -115,3 +115,11 @@ textarea {
 .boxElement {
     margin-top: 5%;
 }
+
+.liLeftAlign{
+    text-align:left;
+}
+
+.flrSwalHeight{
+    height: 80%;
+}
