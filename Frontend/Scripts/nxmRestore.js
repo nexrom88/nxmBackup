@@ -258,11 +258,16 @@ function handleRunningFLR(volumes) {
     html: "<div id='flrBrowserContainer'></div>",
     confirmButtonColor: '#3085d6',
     allowOutsideClick: false,
-    customClass: "flrSwalHeight",
+    customClass: "flrSwalStyles",
     allowEscapeKey: false,
     confirmButtonText: 'Wiederherstellung beenden'
   }).then((result) => { //gets called when done
-    
+
+    //send delete request to stop job
+    $.ajax({
+      url: 'api/Restore',
+      type: 'DELETE'
+    });
 
     restoreWebWorker.terminate();
     restoreWebWorker = null;

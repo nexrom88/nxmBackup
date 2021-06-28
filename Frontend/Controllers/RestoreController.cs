@@ -137,6 +137,13 @@ namespace Frontend.Controllers
                 App_Start.RunningRestoreJobs.CurrentLiveRestore.StopRequest = true;
                 App_Start.RunningRestoreJobs.CurrentLiveRestore = null;
             }
+
+            //stop flr
+            if (App_Start.RunningRestoreJobs.CurrentFileLevelRestore != null)
+            {
+                App_Start.RunningRestoreJobs.CurrentFileLevelRestore.StopRequest = true;
+                App_Start.RunningRestoreJobs.CurrentFileLevelRestore = null;
+            }
         }
 
         //receives the restore heartbeat

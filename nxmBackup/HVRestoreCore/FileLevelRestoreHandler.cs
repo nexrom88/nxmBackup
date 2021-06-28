@@ -192,6 +192,13 @@ namespace HVRestoreCore
                 }
             }
 
+            //clean-up
+            if (!windowMode)
+            {
+                this.guestFilesHandler.detach();
+            }
+
+
             mountThread.Abort();
             mountHandler.stopMfHandling();
 

@@ -120,6 +120,11 @@ textarea {
     text-align:left;
 }
 
-.flrSwalHeight{
-    height: 80%;
+.flrSwalStyles{
+    max-height: 80%;
+}
+
+#flrBrowser{
+    max-height: 30vh;
+    overflow:scroll;
 }
