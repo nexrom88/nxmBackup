@@ -12,7 +12,7 @@ namespace Frontend.Controllers
     public class FLRBrowserController : ApiController
     {
         // Get all filesystem entries from current directory
-        public HttpResponseMessage Post([FromBody]Folder ioElement)
+        public HttpResponseMessage Post([FromBody] Folder ioElement)
         {
             HttpResponseMessage response = new HttpResponseMessage();
 
@@ -23,46 +23,35 @@ namespace Frontend.Controllers
                 return response;
             }
 
-            //list directory?
-            if (isDirectory(ioElement.path))
+            //get files
+            string[] files = System.IO.Directory.GetFiles(ioElement.path, "*", System.IO.SearchOption.TopDirectoryOnly);
+
+            //get directories
+            string[] directories = System.IO.Directory.GetDirectories(ioElement.path, "*", System.IO.SearchOption.TopDirectoryOnly);
+
+            //build ret val
+            List<FSEntry> fsEntries = new List<FSEntry>();
+            foreach (string file in files)
             {
-                //get files
-                string[] files = System.IO.Directory.GetFiles(ioElement.path, "*", System.IO.SearchOption.TopDirectoryOnly);
-
-                //get directories
-                string[] directories = System.IO.Directory.GetDirectories(ioElement.path, "*", System.IO.SearchOption.TopDirectoryOnly);
-
-                //build ret val
-                List<FSEntry> fsEntries = new List<FSEntry>();
-                foreach (string file in files)
-                {
-                    FSEntry newEntry = new FSEntry();
-                    newEntry.type = "file";
-                    newEntry.path = file;
-                    fsEntries.Add(newEntry);
-                }
-                foreach (string directory in directories)
-                {
-                    FSEntry newEntry = new FSEntry();
-                    newEntry.type = "directory";
-                    newEntry.path = directory;
-                    fsEntries.Add(newEntry);
-                }
-
-                //build json string
-                string retVal = Newtonsoft.Json.JsonConvert.SerializeObject(fsEntries);
-                response.StatusCode = HttpStatusCode.OK;
-                response.Content = new StringContent(retVal);
-
+                FSEntry newEntry = new FSEntry();
+                newEntry.type = "file";
+                newEntry.path = file;
+                fsEntries.Add(newEntry);
             }
-            else //file download requested
+            foreach (string directory in directories)
             {
-                response.Content = new StreamContent(new System.IO.FileStream(ioElement.path, System.IO.FileMode.Open, System.IO.FileAccess.Read));
-                response.Content.Headers.ContentDisposition = new System.Net.Http.Headers.ContentDispositionHeaderValue("attachment");
-                response.Content.Headers.ContentDisposition.FileName = "testing.xlsx";
-                response.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/octet-stream");
-                //response.Content.Headers.Add("x-filename", "testing.xlsx"); //We will use this below
+                FSEntry newEntry = new FSEntry();
+                newEntry.type = "directory";
+                newEntry.path = directory;
+                fsEntries.Add(newEntry);
             }
+
+            //build json string
+            string retVal = Newtonsoft.Json.JsonConvert.SerializeObject(fsEntries);
+            response.StatusCode = HttpStatusCode.OK;
+            response.Content = new StringContent(retVal);
+
+
             return response;
         }
 

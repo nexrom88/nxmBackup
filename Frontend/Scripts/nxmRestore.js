@@ -303,7 +303,11 @@ function handleRunningFLR(volumes) {
 
       //flr browser node select handler
       $("#flrBrowser").on("select_node.jstree", function (e, data) {
-        flrDoNavigate(data.node.id, data.node.id);
+        if (data.node.type == "directory") {
+          flrDoNavigate(data.node.id, data.node.id);
+        } else {
+          handleFileDownload(data.node.id);
+        }
       });
 
       //navigate
@@ -311,6 +315,10 @@ function handleRunningFLR(volumes) {
     });
 }
 
+//handles a file download
+function handleFileDownload(path) {
+  path = path;
+}
 
 //navigates to a given path within flr
 function flrDoNavigate(path, parentNode) {
