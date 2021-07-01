@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -55,18 +56,34 @@ namespace Frontend.Controllers
             return response;
         }
 
-        //checks whether a given path is a directory or not
-        private bool isDirectory(string path)
-        {
-            System.IO.FileAttributes attr = System.IO.File.GetAttributes(path);
+        
 
-            return attr.HasFlag(System.IO.FileAttributes.Directory);
-        }
-
-        // GET api/<controller>/5
-        public string Get(int id)
+        // handle a file download
+        public HttpResponseMessage GET(string path)
         {
-            return "value";
+            //convert base64 path to string
+            byte[] pathBytes = System.Convert.FromBase64String(path);
+            path = System.Text.Encoding.UTF8.GetString(pathBytes);
+
+            //open filestream
+            FileStream sourceFile;
+            try
+            {
+                sourceFile = new FileStream(path, FileMode.Open, FileAccess.Read);
+            }catch(Exception ex)
+            {
+                HttpResponseMessage responseExc = new HttpResponseMessage(HttpStatusCode.NotFound);
+                return responseExc;
+            }
+
+            //build retVal
+            HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.OK);
+            response.Content = new StreamContent(sourceFile);
+            response.Content.Headers.ContentDisposition = new System.Net.Http.Headers.ContentDispositionHeaderValue("attachment");
+            response.Content.Headers.ContentDisposition.FileName = Path.GetFileName(path);
+            response.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/octet-stream");
+
+            return response;
         }
 
         // PUT api/<controller>/5

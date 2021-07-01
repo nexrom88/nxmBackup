@@ -298,13 +298,27 @@ function handleRunningFLR(volumes) {
           },
           "default": {
           }
-        }, plugins: ["types"]
+        },
+        plugins: ["types", "contextmenu"],
+        "contextmenu": {
+          items: {
+            "Test": {
+              "label": "TestLabel",
+              "action": function (obj) {  }
+            },
+            "Test2": {
+              "label": "Test2",
+              "action": function (obj) { }
+            }
+          }
+         }
       });
 
       //flr browser node select handler
       $("#flrBrowser").on("select_node.jstree", function (e, data) {
+        return;
         if (data.node.type == "directory") {
-          flrDoNavigate(data.node.id, data.node.id);
+          flrDoNavigate(data.node.id, data.node.id, data.node);
         } else {
           handleFileDownload(data.node.id);
         }
@@ -317,11 +331,11 @@ function handleRunningFLR(volumes) {
 
 //handles a file download
 function handleFileDownload(path) {
-  path = path;
+  window.location = "api/FLRBrowser?path=" + btoa(path);
 }
 
 //navigates to a given path within flr
-function flrDoNavigate(path, parentNode) {
+function flrDoNavigate(path, parentNode, rawNode) {
   //do ajax call
   $.ajax({
     url: "api/FLRBrowser",
@@ -338,6 +352,7 @@ function flrDoNavigate(path, parentNode) {
         var buffer = fsEntries[i]["path"].split("\\");
         $('#flrBrowser').jstree().create_node(parentNode, { id: fsEntries[i]["path"], text: buffer[buffer.length - 1], type: fsEntries[i]["type"], li_attr: {class: "liLeftAlign" } }, "last", false, false);
       }
+      $("#flrBrowser").jstree("open_node", rawNode);
     });
 }
 

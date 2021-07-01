@@ -128,3 +128,8 @@ textarea {
     max-height: 30vh;
     overflow:scroll;
 }
+
+
+.vakata-context {
+    z-index: 10000;
+}
