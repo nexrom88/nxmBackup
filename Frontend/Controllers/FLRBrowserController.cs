@@ -58,30 +58,54 @@ namespace Frontend.Controllers
 
         
 
-        // handle a file download
+        // handle a file or folder download
         public HttpResponseMessage GET(string path)
         {
             //convert base64 path to string
             byte[] pathBytes = System.Convert.FromBase64String(path);
             path = System.Text.Encoding.UTF8.GetString(pathBytes);
 
-            //open filestream
-            FileStream sourceFile;
-            try
-            {
-                sourceFile = new FileStream(path, FileMode.Open, FileAccess.Read);
-            }catch(Exception ex)
-            {
-                HttpResponseMessage responseExc = new HttpResponseMessage(HttpStatusCode.NotFound);
-                return responseExc;
-            }
+            HttpResponseMessage response;
 
-            //build retVal
-            HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.OK);
-            response.Content = new StreamContent(sourceFile);
-            response.Content.Headers.ContentDisposition = new System.Net.Http.Headers.ContentDispositionHeaderValue("attachment");
-            response.Content.Headers.ContentDisposition.FileName = Path.GetFileName(path);
-            response.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/octet-stream");
+            //check whether file or directory
+            System.IO.FileAttributes attr = System.IO.File.GetAttributes(path);
+
+            if (attr.HasFlag(FileAttributes.Directory)) //directory
+            {
+                FolderDownloader downloader = new FolderDownloader(path);
+
+
+                //build retVal
+                response = new HttpResponseMessage(HttpStatusCode.OK);
+                response.Content = new PushStreamContent(downloader.WriteToStream, new System.Net.Http.Headers.MediaTypeHeaderValue("application/octet-stream"));
+                //response.Content.Headers.ContentDisposition = new System.Net.Http.Headers.ContentDispositionHeaderValue("attachment");
+                //response.Content.Headers.ContentDisposition.FileName = "nxm.zip";
+                //response.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/octet-stream");
+
+
+
+            }
+            else //file
+            {      
+                //open filestream
+                FileStream sourceFile;
+                try
+                {
+                    sourceFile = new FileStream(path, FileMode.Open, FileAccess.Read);
+                }
+                catch (Exception ex)
+                {
+                    HttpResponseMessage responseExc = new HttpResponseMessage(HttpStatusCode.NotFound);
+                    return responseExc;
+                }
+
+                //build retVal
+                response = new HttpResponseMessage(HttpStatusCode.OK);
+                response.Content = new StreamContent(sourceFile);
+                response.Content.Headers.ContentDisposition = new System.Net.Http.Headers.ContentDispositionHeaderValue("attachment");
+                response.Content.Headers.ContentDisposition.FileName = Path.GetFileName(path);
+                response.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/octet-stream");
+            }
 
             return response;
         }

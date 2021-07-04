@@ -301,32 +301,51 @@ function handleRunningFLR(volumes) {
         },
         plugins: ["types", "contextmenu"],
         "contextmenu": {
-          items: {
-            "Test": {
-              "label": "TestLabel",
-              "action": function (obj) {  }
-            },
-            "Test2": {
-              "label": "Test2",
-              "action": function (obj) { }
-            }
-          }
+          select_node: false,
+          items: buildContextMenu
          }
       });
 
       //flr browser node select handler
       $("#flrBrowser").on("select_node.jstree", function (e, data) {
-        return;
         if (data.node.type == "directory") {
           flrDoNavigate(data.node.id, data.node.id, data.node);
-        } else {
-          handleFileDownload(data.node.id);
         }
       });
 
       //navigate
       flrDoNavigate(newPath, "#");
     });
+}
+
+//builds and returns the contextMenu according to node type
+function buildContextMenu(node) {
+  var menu = {};
+
+  if (node["type"] == "file") {
+    menu = {
+      "Download": {
+        "label": "Datei holen",
+        "action": function (obj) {
+          var filePath = $(obj["reference"][0]).parent().attr("id");
+
+          handleFileDownload(filePath);
+        }
+      }
+    };
+  } else if (node["type"] == "directory") {
+    menu = {
+      "Download": {
+        "label": "Ordner holen",
+        "action": function (obj) {
+          var filePath = $(obj["reference"][0]).parent().attr("id");
+
+          handleFileDownload(filePath);
+        }
+      }
+    };
+  }
+  return menu;
 }
 
 //handles a file download

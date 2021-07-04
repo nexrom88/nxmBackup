@@ -58,6 +58,7 @@
     <Reference Include="System.Data" />
     <Reference Include="System.DirectoryServices.AccountManagement" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.IO.Compression" />
     <Reference Include="System.Web.Entity" />
     <Reference Include="System.Web.ApplicationServices" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
@@ -162,6 +163,7 @@
     <Compile Include="Areas\HelpPage\XmlDocumentationProvider.cs" />
     <Compile Include="Controllers\BackupChainController.cs" />
     <Compile Include="Controllers\FLRBrowserController.cs" />
+    <Compile Include="Controllers\FolderDownloader.cs" />
     <Compile Include="Controllers\RestoreController.cs" />
     <Compile Include="Controllers\DirectoryController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
