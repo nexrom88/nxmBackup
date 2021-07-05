@@ -45,12 +45,21 @@ namespace Frontend.Controllers
                 string relFile = file.Substring(this.folder.Length);
 
                 //create zip file entry
-                System.IO.Compression.ZipArchiveEntry zipEntry = zipStream.CreateEntry(relFile);
+                System.IO.Compression.ZipArchiveEntry zipEntry = zipStream.CreateEntry("test.txt");
                 Stream entryStream = zipEntry.Open();
 
                 //write to archive
-                await fileStream.CopyToAsync(entryStream);
-                
+                int buffersize = 1000000;
+                byte[] buffer = new byte[buffersize];
+                int bytesRead = fileStream.Read(buffer, 0, buffersize);
+                while(bytesRead == buffersize)
+                {
+                    entryStream.Write(buffer, 0, buffersize);
+                    bytesRead = fileStream.Read(buffer, 0, buffersize);                    
+                }
+                entryStream.Write(buffer, 0, bytesRead);
+
+
 
                 //close filestream and entry stream
                 fileStream.Close();
