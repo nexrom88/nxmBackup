@@ -6,6 +6,7 @@ var eventRefreshTimer; //timer for refreshing vm events
 var maxNodeID; //counter for treeview nodes
 var selectedDirectory; //the currently selected directory within folder browser
 var newJobObj; //new job object
+var dbState; //current db state (values: init, error, success)
 
 //global handler for http status 401 (login required)
 $.ajaxSetup({
@@ -23,7 +24,19 @@ $.ajaxSetup({
 });
 
 $(window).on('load', function () {
-
+  dbState = "init";
+//check DB availability
+  $.ajax({
+    url: "api/DBConnectTest",
+    error: function (jqXHR, exception) {
+      $("#welcomeText").html("Es besteht ein Problem mit der Datenbank!");
+      $("#welcomeText").addClass("welcomeTextError");
+      dbState = "error";
+    },
+    success: function (jqXHR, exception) {
+      dbState = "success";
+    }
+  });
 
 //load configured jobs
   $.ajax({
@@ -41,10 +54,21 @@ $(window).on('load', function () {
 
   //register "add Job" Button handler
   $("#addJobButton").click(function () {
-    $("#newJobOverlay").css("display", "block");
 
-    newJobObj = {};
-    showNewJobPage(1);
+    if (dbState == "success") {
+      $("#newJobOverlay").css("display", "block");
+
+      newJobObj = {};
+      showNewJobPage(1);
+
+      //register esc key press handler
+      $(document).on('keydown', function (event) {
+        if (event.key == "Escape") {
+          $("#newJobOverlay").css("display", "none");
+        }
+      });
+
+    }
 
   });
 });
