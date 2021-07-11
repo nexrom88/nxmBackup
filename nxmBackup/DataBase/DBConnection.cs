@@ -15,6 +15,8 @@ namespace Common
         private string user = "nxm";
         private string password = "test123";
 
+        public bool ConnectionEstablished { set; get; }
+
         private NpgsqlConnection connection;
 
         public DBConnection()
@@ -24,8 +26,17 @@ namespace Common
             string connectionString = $"Server={this.server};Database={this.database};User Id={this.user};Password={this.password};";
             this.connection = new NpgsqlConnection(connectionString);
 
-            //open DB connection
-            connection.Open();
+            try
+            {
+                //open DB connection
+                connection.Open();
+            }catch(Exception ex)
+            {
+                ConnectionEstablished = false;
+                return;
+            }
+
+            ConnectionEstablished = true;
         }
 
         //opens a transaction
