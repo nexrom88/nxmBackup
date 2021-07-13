@@ -319,6 +319,17 @@ namespace nxmBackup.HVBackupCore
                 using (ManagementObject settings = WmiUtilities.GetVirtualMachineSnapshotSettings(scope))
                 using (ManagementBaseObject inParams = service.GetMethodParameters("CreateSnapshot"))
                 {
+                    //check vm state
+                    UInt16[] vmStateArray = (UInt16[]) vm["OperationalStatus"];
+                    if (vmStateArray.Length == 2 && vmStateArray[1] != 0) //32772
+                    {
+                        //vm in wrong state, do not create snapshot
+                        this.eventHandler.raiseNewEvent("fehlgeschlagen", true, false, eventId, EventStatus.error);
+                        this.eventHandler.raiseNewEvent("Der virtuelle Computer ist nicht bereit", false, false, NO_RELATED_EVENT, EventStatus.error);
+                        return null;
+                    }
+
+
                     //set settings
                     settings["ConsistencyLevel"] = cLevel == ConsistencyLevel.ApplicationAware ? 1 : 2;
                     settings["IgnoreNonSnapshottableDisks"] = true;
