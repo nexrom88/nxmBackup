@@ -19,9 +19,10 @@ namespace Frontend.Controllers
 
         public async void WriteToStream(Stream outputStream, HttpContent content, TransportContext context)
         {
+            WriteOnlyStreamWrapper streamWrapper = new WriteOnlyStreamWrapper(outputStream);
 
             //open zip archive stream and bind it to output stream
-            System.IO.Compression.ZipArchive zipStream = new System.IO.Compression.ZipArchive(outputStream, System.IO.Compression.ZipArchiveMode.Create);
+            System.IO.Compression.ZipArchive zipStream = new System.IO.Compression.ZipArchive(streamWrapper, System.IO.Compression.ZipArchiveMode.Create);
 
             //get all files from directory
             string[] files = System.IO.Directory.GetFiles(this.folder, "*", SearchOption.AllDirectories);
@@ -42,10 +43,10 @@ namespace Frontend.Controllers
 
 
                 //remove base path from string
-                string relFile = file.Substring(this.folder.Length);
+                string relFile = file.Substring(this.folder.Length + 1);
 
                 //create zip file entry
-                System.IO.Compression.ZipArchiveEntry zipEntry = zipStream.CreateEntry("test.txt");
+                System.IO.Compression.ZipArchiveEntry zipEntry = zipStream.CreateEntry(relFile);
                 Stream entryStream = zipEntry.Open();
 
                 //write to archive
@@ -54,10 +55,10 @@ namespace Frontend.Controllers
                 int bytesRead = fileStream.Read(buffer, 0, buffersize);
                 while(bytesRead == buffersize)
                 {
-                    entryStream.Write(buffer, 0, buffersize);
+                    await entryStream.WriteAsync(buffer, 0, bytesRead);
                     bytesRead = fileStream.Read(buffer, 0, buffersize);                    
                 }
-                entryStream.Write(buffer, 0, bytesRead);
+                await entryStream.WriteAsync(buffer, 0, bytesRead);
 
 
 
@@ -71,6 +72,9 @@ namespace Frontend.Controllers
 
             //close zip archive
             zipStream.Dispose();
+
+            streamWrapper.Close();
+            outputStream.Close();
 
             //try
             //{

@@ -78,9 +78,7 @@ namespace Frontend.Controllers
                 //build retVal
                 response = new HttpResponseMessage(HttpStatusCode.OK);
                 response.Content = new PushStreamContent(downloader.WriteToStream, new System.Net.Http.Headers.MediaTypeHeaderValue("application/octet-stream"));
-                //response.Content.Headers.ContentDisposition = new System.Net.Http.Headers.ContentDispositionHeaderValue("attachment");
-                //response.Content.Headers.ContentDisposition.FileName = "nxm.zip";
-                //response.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/octet-stream");
+                response.Content.Headers.ContentDisposition = new System.Net.Http.Headers.ContentDispositionHeaderValue("attachment") { FileName = "nxmBackup.zip" };
 
 
 
