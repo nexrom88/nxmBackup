@@ -61,6 +61,11 @@ $(window).on('load', function () {
       newJobObj = {};
       showNewJobPage(1);
 
+      //register close button handler
+      $(".overlayCloseButton").click(function () {
+        $("#newJobOverlay").css("display", "none");
+      });
+
       //register esc key press handler
       $(document).on('keydown', function (event) {
         if (event.key == "Escape") {

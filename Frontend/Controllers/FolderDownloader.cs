@@ -49,17 +49,23 @@ namespace Frontend.Controllers
                 System.IO.Compression.ZipArchiveEntry zipEntry = zipStream.CreateEntry(relFile);
                 Stream entryStream = zipEntry.Open();
 
-                //write to archive
-                int buffersize = 1000000;
-                byte[] buffer = new byte[buffersize];
-                int bytesRead = fileStream.Read(buffer, 0, buffersize);
-                while(bytesRead == buffersize)
+                try
                 {
-                    await entryStream.WriteAsync(buffer, 0, bytesRead);
-                    bytesRead = fileStream.Read(buffer, 0, buffersize);                    
-                }
-                await entryStream.WriteAsync(buffer, 0, bytesRead);
 
+                    //write to archive
+                    int buffersize = 1000000;
+                    byte[] buffer = new byte[buffersize];
+                    int bytesRead = fileStream.Read(buffer, 0, buffersize);
+                    while (bytesRead == buffersize)
+                    {
+                        await entryStream.WriteAsync(buffer, 0, bytesRead);
+                        bytesRead = fileStream.Read(buffer, 0, buffersize);
+                    }
+                    await entryStream.WriteAsync(buffer, 0, bytesRead);
+                }catch (Exception ex)
+                {
+
+                }
 
 
                 //close filestream and entry stream

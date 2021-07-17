@@ -18,6 +18,18 @@ function startRestoreHandler() {
   //show overlay
   $("#restoreOverlay").css("display", "block");
 
+  //register close button handler
+  $(".overlayCloseButton").click(function () {
+    $("#restoreOverlay").css("display", "none");
+  });
+
+  //register esc key press handler
+  $(document).on('keydown', function (event) {
+    if (event.key == "Escape") {
+      $("#restoreOverlay").css("display", "none");
+    }
+  });
+
   //load content for overlay
   $.ajax({
     url: "Templates/restoreOptions"
