@@ -507,7 +507,7 @@ function deleteJobHandler(event) {
         success: function (result) {
           Swal.fire(
             'Job gelöscht',
-            'Der ausgewählte Job wurde glöscht',
+            'Der ausgewählte Job wurde gelöscht',
             'success'
           );
           location.reload();

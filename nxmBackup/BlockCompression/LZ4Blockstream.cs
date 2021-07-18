@@ -393,6 +393,7 @@ namespace BlockCompression
             ulong structCacheEntryOffset = 0;
             MemoryStream destMemoryStream;
 
+            bool blockFound = false;
             foreach (StructCacheEntry entry in this.structCache)
             {
                 decompressedFileByteOffset = entry.decompressedFileByteOffset;
@@ -402,6 +403,7 @@ namespace BlockCompression
                 if (decompressedFileByteOffset + this.DecompressedBlockSize > (ulong)this.Position)
                 {
                     fileOffset = entry.fileOffset;
+                    blockFound = true;
                     break;
                 }
                 else
@@ -411,8 +413,13 @@ namespace BlockCompression
 
             }
 
-            //start block found
+            //block not found?
+            if (!blockFound)
+            {
+                return 0;
+            }
 
+            //start block found
             startDiffOffset = (ulong)this.Position - decompressedFileByteOffset;
 
 
