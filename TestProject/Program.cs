@@ -41,7 +41,7 @@ namespace TestProject
             Common.JobVM vm = new Common.JobVM();
             //vm.vmID = "3ADC3271-9A30-4DA7-AD5B-F7C23C70ECBA"; //ubuntu
             //vm.vmID = "2F8C8382-4D06-4AD7-BCC3-0BFED03199AC"; //Lubuntu
-            vm.vmID = "FF0C10BD-D5C3-4F42-8358-E1B9DF7A0A8B"; //win10_1hdd
+            vm.vmID = "3D898EAA-C76F-41D6-8EC5-DE18E3F01157"; //win10_1hdd
             nxmBackup.HVBackupCore.SnapshotHandler sh = new nxmBackup.HVBackupCore.SnapshotHandler(vm, -1, false, null);
             sh.cleanUp();
 

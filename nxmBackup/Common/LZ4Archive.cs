@@ -82,6 +82,10 @@ namespace Common
                 relatedEventId = this.eventHandler.raiseNewEvent("Lese " + fileName + " - 0%", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
             }
 
+            Int64 byteTransferCounter = 0;
+            Int64 lastTransferTimestamp = System.DateTimeOffset.Now.ToUnixTimeMilliseconds();
+            Int64 transferRate = 0;
+
             while (bytesRemaining > 0)//still bytes to read?
             {
                 if (bytesRemaining >= buffer.Length) //still a whole block to read?
@@ -98,13 +102,23 @@ namespace Common
                     bytesRemaining -= buffer.Length;
                 }
 
+                //transfer rate calculation
+                byteTransferCounter += buffer.Length;
+                if (System.DateTimeOffset.Now.ToUnixTimeMilliseconds() - 1000 >= lastTransferTimestamp)
+                {
+                    transferRate = byteTransferCounter;
+                    byteTransferCounter = 0;
+                    lastTransferTimestamp = System.DateTimeOffset.Now.ToUnixTimeMilliseconds();
+                }
+
+
                 //calculate progress
                 float percentage = (((float)baseSourceStream.Length - (float)bytesRemaining) / (float)baseSourceStream.Length) * 100.0f;
 
                 //progress changed?
                 if (lastPercentage != (int)percentage && this.eventHandler != null)
                 {
-                    this.eventHandler.raiseNewEvent("Lese " + fileName + " - " + (int)percentage + "%", false, true, relatedEventId, EventStatus.inProgress);
+                    this.eventHandler.raiseNewEvent("Lese " + fileName + " - " + (int)percentage + "%", transferRate, false, true, relatedEventId, EventStatus.inProgress);
                     lastPercentage = (int)percentage;
                 }
 

@@ -23,7 +23,7 @@ namespace BlockCompression
         private LZ4EncoderSettings encoderSettings = new LZ4EncoderSettings();
         private ulong totalDecompressedByteCount = 0;
         private ulong decompressedByteCountWithinBlock = 0;
-        private ulong decompressedBlockSize = 2000000; // = 2MB
+        private ulong decompressedBlockSize = 20000000; // = 20MB
 
         //need for read
         private ulong position = 0;

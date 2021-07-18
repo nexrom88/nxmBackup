@@ -90,6 +90,12 @@ namespace Common
                 eventProperties.eventStatus = "inProgress";
             }
 
+            //add transferrate
+            if (eventProperties.transferRate >= 0)
+            {
+                addTransferrate(eventProperties.jobExecutionId, eventProperties.transferRate);
+            }
+
             //check whether the given event is an update
             if (eventProperties.isUpdate)
             {
@@ -126,6 +132,16 @@ namespace Common
             {
                 EventHandler.writeToLog(exp.ToString(), new System.Diagnostics.StackTrace());
                 return -1;
+            }
+        }
+
+        //adds a tranferrate to DB
+        private static void addTransferrate(int jobExecutionid, Int64 transferrate)
+        {
+            using (DBConnection dbConn = new DBConnection())
+            {
+                dbConn.doWriteQuery("INSERT INTO transferrates (jobexecutionid, transferrate) VALUES (@jobexecutionid, @transferrate);",
+                        new Dictionary<string, object>() { { "jobexecutionid", jobExecutionid }, { "transferrate", transferrate } }, null);
             }
         }
 
