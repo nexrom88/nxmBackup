@@ -23,7 +23,7 @@ namespace BlockCompression
         private LZ4EncoderSettings encoderSettings = new LZ4EncoderSettings();
         private ulong totalDecompressedByteCount = 0;
         private ulong decompressedByteCountWithinBlock = 0;
-        private ulong decompressedBlockSize = 20000000; // = 20MB
+        private ulong decompressedBlockSize = 500000; // = 500kb
 
         //need for read
         private ulong position = 0;
@@ -483,7 +483,7 @@ namespace BlockCompression
 
                     //read one block
                     int blockUncompressedBytesRead = 0;
-                    cacheBlock = new byte[this.decompressedBlockSize];
+                    
                     while (dataRead != 0)
                     {
                         dataRead = this.decompressionStream.Read(destBuffer, 0, destBuffer.Length);
@@ -493,6 +493,7 @@ namespace BlockCompression
                         //add data to cache block
                         if (this.CachingMode)
                         {
+                            cacheBlock = new byte[this.decompressedBlockSize];
                             destMemoryStream.Seek(dataRead * -1, SeekOrigin.Current);
                             destMemoryStream.Read(cacheBlock, blockUncompressedBytesRead, dataRead);
                         }
@@ -535,12 +536,13 @@ namespace BlockCompression
             }
             
             //could not read all necessary bytes?
-            if (bytesdecompressed < count && bytesdecompressed > 0)
-            {
-                //read remainign bytes
-                Read(buffer, offset + bytesdecompressed, count - bytesdecompressed);
-            }
-            
+            //if (bytesdecompressed < count && bytesdecompressed > 0)
+            //{
+            //    //read remainign bytes
+            //    Read(buffer, offset + bytesdecompressed, count - bytesdecompressed);
+            //}
+
+            destMemoryStream.Dispose();
             this.Position += (long)bytesdecompressed;
             return bytesdecompressed;
             
