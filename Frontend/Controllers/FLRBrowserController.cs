@@ -17,6 +17,13 @@ namespace Frontend.Controllers
         {
             HttpResponseMessage response = new HttpResponseMessage();
 
+            //cencel if ioElement is null
+            if (ioElement.path == null)
+            {
+                response.StatusCode = HttpStatusCode.OK;
+                return response;
+            }
+
             //cancel request if flr not running
             if (App_Start.RunningRestoreJobs.CurrentFileLevelRestore == null || App_Start.RunningRestoreJobs.CurrentFileLevelRestore.StopRequest || App_Start.RunningRestoreJobs.CurrentFileLevelRestore.State.type != HVRestoreCore.FileLevelRestoreHandler.flrStateType.running)
             {
