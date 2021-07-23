@@ -156,6 +156,7 @@ namespace HVRestoreCore
                 Thread.Sleep(200);
             }
 
+            return;
             //error while mounting
             if (mountState == MountHandler.ProcessState.error)
             {

@@ -20,6 +20,7 @@ namespace HVRestoreCore
         //reads the given data from backup chain
         public void readFromChain(Int64 offset, Int64 length, byte[] buffer, Int32 bufferOffset, int callDepth = 0)
         {
+
             int firstRCTIndex = 0;
             if (nonFullBackups.Count > 0 && nonFullBackups[0].backupType == NonFullBackupType.lb)
             {
