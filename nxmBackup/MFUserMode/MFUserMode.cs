@@ -373,6 +373,12 @@ namespace nxmBackup.MFUserMode
 
                 //read the requested data from backup chain and from lb
                 data = new byte[length];
+
+                if (offset <= 201118496 && offset + length >= 201118496)
+                {
+                    offset = offset;
+                }
+
                 this.readableBackupChain.readFromChain(offset, length, data, 0);
                 this.readableBackupChain.readFromLB(offset, length, data);
 
