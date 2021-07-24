@@ -483,6 +483,12 @@ namespace BlockCompression
 
                     //read one block
                     int blockUncompressedBytesRead = 0;
+
+                    //init cache block if necessarry
+                    if (this.CachingMode)
+                    {
+                        cacheBlock = new byte[this.decompressedBlockSize];
+                    }
                     
                     while (dataRead != 0)
                     {
@@ -492,8 +498,7 @@ namespace BlockCompression
 
                         //add data to cache block
                         if (this.CachingMode)
-                        {
-                            cacheBlock = new byte[this.decompressedBlockSize];
+                        {                            
                             destMemoryStream.Seek(dataRead * -1, SeekOrigin.Current);
                             destMemoryStream.Read(cacheBlock, blockUncompressedBytesRead, dataRead);
                         }
