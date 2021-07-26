@@ -291,8 +291,9 @@ namespace HVRestoreCore
                         }
 
                         //is location completely within block to read?
-                        else if ((UInt64)offset < currentLocation.vhdxOffset && (UInt64)offset + (UInt64)length > currentLocation.vhdxOffset + currentLocation.vhdxLength)
+                        else if ((UInt64)offset < currentLocation.vhdxOffset && (UInt64)offset + (UInt64)length >= currentLocation.vhdxOffset + currentLocation.vhdxLength)
                         {
+
                             UInt64 blockStartSkippedBytes = currentLocation.vhdxOffset - (ulong)offset;
                             UInt64 blockEndSkippedBytes = ((UInt64)offset + (UInt64)length) - (currentLocation.vhdxOffset + currentLocation.vhdxLength);
 
