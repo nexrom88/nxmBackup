@@ -209,6 +209,12 @@ namespace HVRestoreCore
 
                         VhdxBlockLocation currentLocation = nonFullBackup.cbStructure.blocks[i].vhdxBlockLocations[j];
 
+                        //jump to next block when length == 0
+                        if (currentLocation.vhdxLength == 0)
+                        {
+                            continue;
+                        }
+
                         long dist = Math.Abs(offset - (long)currentLocation.vhdxOffset);
 
                         if (dist < smallestDist)

@@ -19,6 +19,9 @@ namespace TestProject
 
         static void Main(string[] args)
         {
+
+
+
             //MFUserMode um = new MFUserMode();
             //if (um.connectToKM("\\nxmLRPort", "\\BaseNamedObjects\\nxmmflr"))
             //{

@@ -747,11 +747,13 @@ namespace nxmBackup.HVBackupCore
                     int blockCount = ((ulong[])outParams["ChangedByteOffsets"]).Length;
                     ChangedBlock[] changedBlocks = new ChangedBlock[blockCount];
 
-                    for (int i = 0; i < blockCount; i++)
-                    {
+                  
+
+                    System.Threading.Tasks.Parallel.For (0, blockCount, i => {
                         changedBlocks[i].offset = ((ulong[])outParams["ChangedByteOffsets"])[i];
                         changedBlocks[i].length = ((ulong[])outParams["ChangedByteLengths"])[i];
-                    }
+                    });
+
                     this.eventHandler.raiseNewEvent("erfolgreich", true, false, eventId, EventStatus.successful);
 
                     //write backup output
