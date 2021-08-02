@@ -65,6 +65,8 @@ namespace nxmBackup.MFUserMode
         //minifilter instance name
         private const string mfName = "nxmmf";
 
+        private System.IO.FileStream logStream;
+
 
         //shared memory with km
         SharedMemory sharedMemoryHandler = new SharedMemory();
@@ -77,6 +79,7 @@ namespace nxmBackup.MFUserMode
         //empty constructor for debugging purposes
         public MFUserMode()
         {
+            
         }
 
         //loads the minifilter driver
@@ -84,6 +87,7 @@ namespace nxmBackup.MFUserMode
         {
             //first unload if already running
             unloadMF();
+            this.logStream = new FileStream("f:\\log.txt", FileMode.Create, FileAccess.Write);
 
             //start mf
             System.Diagnostics.ProcessStartInfo psi = new System.Diagnostics.ProcessStartInfo("fltmc.exe");
@@ -101,6 +105,11 @@ namespace nxmBackup.MFUserMode
         //unloads the minifilter driver
         private bool unloadMF()
         {
+            if (logStream != null)
+            {
+                this.logStream.Close();
+            }
+
             System.Diagnostics.ProcessStartInfo psi = new System.Diagnostics.ProcessStartInfo("fltmc.exe");
             psi.Arguments = "unload " + mfName;
             psi.UseShellExecute = true;
@@ -266,6 +275,11 @@ namespace nxmBackup.MFUserMode
             //perform a read request?
             if (operationMode == LROperationMode.read)
             {
+
+                string logString = offset.ToString() + "|" + length.ToString() + Environment.NewLine;
+                byte[] logBuffer = System.Text.Encoding.ASCII.GetBytes(logString);
+                this.logStream.Write(logBuffer, 0, logBuffer.Length);
+
                 //read payload data from backup chain
                 this.readableBackupChain.readFromChain(offset, length, data, 0);
                 this.readableBackupChain.readFromLB(offset, length, data);
@@ -373,11 +387,6 @@ namespace nxmBackup.MFUserMode
 
                 //read the requested data from backup chain and from lb
                 data = new byte[length];
-
-                if (offset <= 201118496 && offset + length >= 201118496)
-                {
-                    offset = offset;
-                }
 
                 this.readableBackupChain.readFromChain(offset, length, data, 0);
                 this.readableBackupChain.readFromLB(offset, length, data);

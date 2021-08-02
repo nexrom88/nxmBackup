@@ -21,7 +21,7 @@ namespace HVRestoreCore
         public void readFromChain(Int64 offset, Int64 length, byte[] buffer, Int32 bufferOffset, int callDepth = 0)
         {
 
-            if (offset <= 0x1d70b3020 && offset + length >= 0x1d70b3020)
+            if (offset + length >= 0x39a400000)
             {
                 offset = offset;
             }
@@ -235,7 +235,6 @@ namespace HVRestoreCore
                             //where to start reading within cb file?
                             UInt64 skippedFirstBytes = (UInt64)offset - currentLocation.vhdxOffset;
                             UInt64 cbOffset = skippedFirstBytes + skippedBytes + nonFullBackup.cbStructure.blocks[i].cbFileOffset;
-                            //cbFileOffset == 4423960
 
                             //can everything be read?
                             if ((UInt64)offset + (UInt64)length <= currentLocation.vhdxOffset + currentLocation.vhdxLength)
@@ -335,6 +334,12 @@ namespace HVRestoreCore
             //data not found within rct backups => read from full backup
             fullBackup.sourceStream.Seek(offset, System.IO.SeekOrigin.Begin);
             fullBackup.sourceStream.Read(buffer, bufferOffset, (Int32)length);
+
+            bool log = false;
+            if (log)
+            {
+                System.IO.File.WriteAllBytes("f:\\log_small.txt", buffer);
+            }
 
         }
 

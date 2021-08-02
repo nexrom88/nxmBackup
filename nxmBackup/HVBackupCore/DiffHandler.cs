@@ -299,6 +299,14 @@ namespace nxmBackup.HVBackupCore
                 
                 buffer = new byte[bufferSize];
 
+                foreach (HyperVBackupRCT.VhdxBlockLocation loc in cbStruct.blocks[i].vhdxBlockLocations)
+                {
+                    if (loc.vhdxOffset <= 0x24807c030 && loc.vhdxOffset + loc.vhdxLength >= 0x24807c030)
+                    {
+                        writeOffset = writeOffset;
+                    }
+                }
+
                 while ((ulong)bytesRead < cbStruct.blocks[i].changedBlockLength) //read blockwise until everything is read
                 {
                     int bytesReadBlock = 0;
