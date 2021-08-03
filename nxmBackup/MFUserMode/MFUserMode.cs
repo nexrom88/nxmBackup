@@ -65,7 +65,6 @@ namespace nxmBackup.MFUserMode
         //minifilter instance name
         private const string mfName = "nxmmf";
 
-        private System.IO.FileStream logStream;
 
 
         //shared memory with km
@@ -87,7 +86,6 @@ namespace nxmBackup.MFUserMode
         {
             //first unload if already running
             unloadMF();
-            this.logStream = new FileStream("f:\\log.txt", FileMode.Create, FileAccess.Write);
 
             //start mf
             System.Diagnostics.ProcessStartInfo psi = new System.Diagnostics.ProcessStartInfo("fltmc.exe");
@@ -105,10 +103,6 @@ namespace nxmBackup.MFUserMode
         //unloads the minifilter driver
         private bool unloadMF()
         {
-            if (logStream != null)
-            {
-                this.logStream.Close();
-            }
 
             System.Diagnostics.ProcessStartInfo psi = new System.Diagnostics.ProcessStartInfo("fltmc.exe");
             psi.Arguments = "unload " + mfName;
@@ -278,7 +272,6 @@ namespace nxmBackup.MFUserMode
 
                 string logString = offset.ToString() + "|" + length.ToString() + Environment.NewLine;
                 byte[] logBuffer = System.Text.Encoding.ASCII.GetBytes(logString);
-                this.logStream.Write(logBuffer, 0, logBuffer.Length);
 
                 //read payload data from backup chain
                 this.readableBackupChain.readFromChain(offset, length, data, 0);
