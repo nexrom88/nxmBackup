@@ -249,7 +249,7 @@ function startRestore() {
           title: 'Festplatte auswählen',
           text: 'Bitte wählen Sie hier eine virtuelle Festplatte aus, auf die die Wiederherstellung gestartet wird',
         }).then(function (value) {
-          selectedRestoreHDD = hddOptions[value];
+          selectedRestoreHDD = hddOptions[value["value"]];
 
           //restart restore
           startRestore();
