@@ -319,7 +319,6 @@ namespace Common
             int bytesRead = this.sourceStream.Read(buffer, 0, (int)batLength);
             if (bytesRead != batLength)
             {
-                bytesRead = 0;
             }
 
             //each entry consists of 64bit, iterate

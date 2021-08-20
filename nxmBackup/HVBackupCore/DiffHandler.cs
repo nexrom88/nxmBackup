@@ -142,8 +142,8 @@ namespace nxmBackup.HVBackupCore
                     {
                         UInt64 offsetDelta = block.offset % vhdxBlockSize;
 
-                        //just adjust when block is available within vhdx (offset > 0)
-                        if (currentOffset > 0)
+                        //just adjust when block is available within vhdx (offset > 10)
+                        if (currentOffset > 10)
                         {
                             currentOffset += offsetDelta;
                         }
@@ -159,8 +159,8 @@ namespace nxmBackup.HVBackupCore
 
                     remainingLength -= currentLength;
 
-                    outStream.Write(BitConverter.GetBytes((UInt64)currentOffset), 0, 8); //write one offset
-                    outStream.Write(BitConverter.GetBytes((UInt64)currentLength), 0, 8); //write one length
+                    outStream.Write(BitConverter.GetBytes(currentOffset), 0, 8); //write one offset
+                    outStream.Write(BitConverter.GetBytes(currentLength), 0, 8); //write one length
 
                 }
 
@@ -298,14 +298,6 @@ namespace nxmBackup.HVBackupCore
                 bytesRead = 0;
                 
                 buffer = new byte[bufferSize];
-
-                foreach (HyperVBackupRCT.VhdxBlockLocation loc in cbStruct.blocks[i].vhdxBlockLocations)
-                {
-                    if (loc.vhdxOffset <= 0x24807c030 && loc.vhdxOffset + loc.vhdxLength >= 0x24807c030)
-                    {
-                        writeOffset = writeOffset;
-                    }
-                }
 
                 while ((ulong)bytesRead < cbStruct.blocks[i].changedBlockLength) //read blockwise until everything is read
                 {
