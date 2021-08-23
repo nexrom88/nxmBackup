@@ -19,6 +19,9 @@ namespace nxmBackup.MFUserMode
         // Constant buffer size
         public const int BUFFER_SIZE = 100;
 
+        [DllImport("msvcrt.dll", CallingConvention = CallingConvention.Cdecl)]
+        static extern int memcmp(byte[] b1, byte[] b2, long count);
+
         [DllImport("fltlib", CharSet = CharSet.Auto)]
         static extern unsafe uint FilterConnectCommunicationPort(
             string lpPortName,
@@ -65,6 +68,7 @@ namespace nxmBackup.MFUserMode
         //minifilter instance name
         private const string mfName = "nxmmf";
 
+        FileStream compareStream = new FileStream(@"d:\original.vhdx", System.IO.FileMode.Open, System.IO.FileAccess.Read);
 
 
         //shared memory with km
@@ -277,28 +281,14 @@ namespace nxmBackup.MFUserMode
                 this.readableBackupChain.readFromChain(offset, length, data, 0);
                 this.readableBackupChain.readFromLB(offset, length, data);
 
-                //byte[] debugBuffer = new byte[length];
-                //System.IO.FileStream debugStream = System.IO.File.OpenRead(@"f:\Win10.vhdx");
-                //debugStream.Seek(offset, SeekOrigin.Begin);
-                //debugStream.Read(debugBuffer, 0, (Int32)length);
-                //debugStream.Close();
-                //bool identical = true;
-                //int i;
-                //for (i = 0; i < length; i++)
-                //{
-                //    if (data[i] != debugBuffer[i])
-                //    {
-                //        identical = false;
-                //        break;
-                //    }
-                //}
+                this.compareStream.Seek(offset, SeekOrigin.Begin);
+                byte[] compareData = new byte[length];
+                this.compareStream.Read(compareData, 0, (int)length);
 
-                //if (!identical && offset == 15979384832)
-                //{
-                //    identical = identical;
-                //    //offset = 194117632
-                //    //i = 16392
-                //}
+                if (memcmp(data, compareData, length) != 0)
+                {
+                    requestType = requestType;
+                }
 
 
                 //write payload data to shared memory
@@ -383,6 +373,15 @@ namespace nxmBackup.MFUserMode
 
                 this.readableBackupChain.readFromChain(offset, length, data, 0);
                 this.readableBackupChain.readFromLB(offset, length, data);
+
+                //this.compareStream.Seek(offset, SeekOrigin.Begin);
+                //byte[] compareData = new byte[length];
+                //this.compareStream.Read(compareData, 0, (int)length);
+
+                //if (memcmp(data, compareData, length) != 0)
+                //{
+                //    requestType = requestType;
+                //}
 
             }
             else

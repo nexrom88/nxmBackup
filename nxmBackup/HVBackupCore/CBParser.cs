@@ -95,11 +95,14 @@ namespace HyperVBackupRCT
                 {
                     VhdxBlockLocation location = new VhdxBlockLocation();
                     //offset
-                    blockStream.Read(buffer, 0, 16);
+                    blockStream.Read(buffer, 0, 17);
                     location.vhdxOffset = BitConverter.ToUInt64(buffer, 0);
 
                     //corresponding length
                     location.vhdxLength = BitConverter.ToUInt64(buffer, 8);
+
+                    //state
+                    location.vhdxState = buffer[16];
 
                     oneBlock.vhdxBlockLocations.Add(location);
                 }
@@ -172,7 +175,7 @@ namespace HyperVBackupRCT
     {
         public UInt64 vhdxOffset;
         public UInt64 vhdxLength;
-
+        public byte vhdxState;
     }
 }
 
@@ -207,9 +210,11 @@ namespace HyperVBackupRCT
 
 //ulong = 8 bytes = vhdx block offset 1
 //ulong = 8 bytes = vhdx block length 1
+//byte = 1 byte = vhdx block state 1
 
 //ulong = 8 bytes = vhdx block offset 2
 //ulong = 8 bytes = vhdx block length 2
+//byte = 1 byte = vhdx block state 2
 //...
 
 //block data (size = changed block length)

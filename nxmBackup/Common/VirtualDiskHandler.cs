@@ -196,6 +196,7 @@ namespace Common
                 System.Threading.Thread.Sleep(10);
             }
 
+
             if (this.readErrorCode == 0) //return buffer
             {
                 return buffer;

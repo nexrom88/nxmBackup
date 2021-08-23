@@ -18,8 +18,8 @@ namespace nxmBackup.HVBackupCore
             this.eventHandler = eventHandler;
         }
 
-        //translates one changed block to vhdxBlocks
-        private UInt64[] getVhdxBlocks(ulong blockOffset, ulong blockLength, Common.BATTable vhdxBATTable, UInt32 vhdxBlockSize)
+        //translates one changed block to vhdxBlocks (by returning a value < 10, it's a state code)
+        private vhdxBlock[] getVhdxBlocks(ulong blockOffset, ulong blockLength, Common.BATTable vhdxBATTable, UInt32 vhdxBlockSize)
         {
 
             //calculate start BAT entry
@@ -27,23 +27,15 @@ namespace nxmBackup.HVBackupCore
             UInt32 endEntry = (UInt32)Math.Floor(((float)blockOffset + (float)blockLength) / (float)vhdxBlockSize);
 
             //translate to vhdxOffsets
-            UInt64[] vhdxOffsets = new UInt64[(endEntry - startEntry) + 1];
+            vhdxBlock[] vhdxOffsets = new vhdxBlock[(endEntry - startEntry) + 1];
             for (UInt32 i = startEntry; i <= endEntry; i++)
             {
-                switch (vhdxBATTable.entries[(int)i].state)
-                {
-                    case 6: //block is fully present
-                        //UInt32 startOffset = (UInt32)blockOffset % 1048576;
+                vhdxBlock currentBlock = new vhdxBlock();
+                currentBlock.state = vhdxBATTable.entries[(int)i].state;
+                currentBlock.offset = vhdxBATTable.entries[(int)i].FileOffsetMB * 1048576; // multiple with 1024^2 to get byte offset
 
-                        vhdxOffsets[i - startEntry] = vhdxBATTable.entries[(int)i].FileOffsetMB * 1048576; // multiple with 1024^2 to get byte offset
-
-                        break;
-                    default: //block is not present
-                        uint offsetIndex = i - startEntry;
-                        vhdxOffsets[offsetIndex] = vhdxBATTable.entries[(int)i].state;
-                        break;
-                }
-                
+                uint offsetIndex = i - startEntry;
+                vhdxOffsets[offsetIndex] = currentBlock;
             }
 
 
@@ -124,7 +116,7 @@ namespace nxmBackup.HVBackupCore
                 outStream.Write(BitConverter.GetBytes(block.length), 0, 8); //write length
 
                 //get vhdx blocks
-                UInt64[] vhdxBlocks = getVhdxBlocks(block.offset, block.length, vhdxBATTable, vhdxBlockSize);
+                vhdxBlock[] vhdxBlocks = getVhdxBlocks(block.offset, block.length, vhdxBATTable, vhdxBlockSize);
 
                 //write vhdx blocks
                 outStream.Write(BitConverter.GetBytes((UInt32)vhdxBlocks.Length), 0, 4); //vhdx block offsets count
@@ -134,8 +126,9 @@ namespace nxmBackup.HVBackupCore
                 UInt64 remainingLength = block.length;
                 for (int i = 0; i < vhdxBlocks.Length; i++)
                 {
-                    UInt64 currentOffset = vhdxBlocks[i];
+                    UInt64 currentOffset = vhdxBlocks[i].offset;
                     UInt64 currentLength = vhdxBlockSize;
+                    byte currentState = vhdxBlocks[i].state;
 
                     //first element? adjust offset and length
                     if (i == 0)
@@ -161,6 +154,7 @@ namespace nxmBackup.HVBackupCore
 
                     outStream.Write(BitConverter.GetBytes(currentOffset), 0, 8); //write one offset
                     outStream.Write(BitConverter.GetBytes(currentLength), 0, 8); //write one length
+                    outStream.WriteByte(currentState); //write one state
 
                 }
 
@@ -296,7 +290,7 @@ namespace nxmBackup.HVBackupCore
                 //read data block buffered, has to be 2^X
                 int bufferSize = 16777216;
                 bytesRead = 0;
-                
+
                 buffer = new byte[bufferSize];
 
                 while ((ulong)bytesRead < cbStruct.blocks[i].changedBlockLength) //read blockwise until everything is read
@@ -322,7 +316,7 @@ namespace nxmBackup.HVBackupCore
                         //add length to progress
                         bytesRestored += currentBytesCount;
                     }
-                    
+
                     //write block to target file
                     diskHandler.write(cbStruct.blocks[i].changedBlockOffset + writeOffset, buffer);
                     writeOffset += (ulong)bufferSize;
@@ -350,7 +344,7 @@ namespace nxmBackup.HVBackupCore
         }
 
         //copys a given file without fs caching
-        private void copyFile (string source, string destination)
+        private void copyFile(string source, string destination)
         {
             FileStream srcFile = new FileStream(source, FileMode.Open);
             FileStream dstFile = new FileStream(destination, FileMode.Create);
@@ -362,7 +356,8 @@ namespace nxmBackup.HVBackupCore
             while (bytesWritten < srcFile.Length)
             {
                 //still possible to fill the whole buffer?
-                if (bytesWritten + buffer.Length <= srcFile.Length) {
+                if (bytesWritten + buffer.Length <= srcFile.Length)
+                {
                     srcFile.Read(buffer, 0, buffer.Length);
                     dstFile.Write(buffer, 0, buffer.Length);
                     bytesWritten += buffer.Length;
@@ -387,6 +382,7 @@ namespace nxmBackup.HVBackupCore
 
     public struct vhdxBlock
     {
-
+        public UInt64 offset;
+        public byte state;
     }
 }

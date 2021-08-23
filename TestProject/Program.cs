@@ -21,7 +21,7 @@ namespace TestProject
         {
 
             UInt64 desiredOffset = 0x24A07C000;
-            string file = @"F:\nxm\Win10_2HDD\833E61E2-F2AB-45C8-A980-805F788F2FB9\1ff76882-db4e-4796-8105-ab5f67e90bf9.nxm\Win10_2HDD.vhdx.cb";
+            string file = @"F:\nxm\Win10_1HDD\EFADCD33-FF44-46DF-A14F-309645C04020\1e92cd59-6800-44eb-8aac-06e5a536cb4a.nxm\Win10_1HDD.vhdx.cb";
             FileStream stream = new FileStream(file, FileMode.Open, FileAccess.Read);
             BlockCompression.LZ4BlockStream blockStream = new BlockCompression.LZ4BlockStream(stream, BlockCompression.AccessMode.read, false, null);
             blockStream.init();

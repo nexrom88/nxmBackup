@@ -17,6 +17,7 @@ namespace HVRestoreCore
         public ReadableFullBackup FullBackup { get => fullBackup; set => fullBackup = value; }
         public List<ReadableNonFullBackup> NonFullBackups { get => nonFullBackups; set => nonFullBackups = value; }
 
+
         //reads the given data from backup chain
         public void readFromChain(Int64 offset, Int64 length, byte[] buffer, Int32 bufferOffset, int callDepth = 0)
         {
@@ -200,7 +201,7 @@ namespace HVRestoreCore
                     UInt64 skippedBytes = 0;
                     for (int j = 0; j < nonFullBackup.cbStructure.blocks[i].vhdxBlockLocations.Count; j++)
                     {
-                        //is vhdxBlocklocation 0? not possible here -> skip this vhdxblocklocation
+                        //is vhdxBlocklocation <10? not possible here -> skip this vhdxblocklocation
                         if (nonFullBackup.cbStructure.blocks[i].vhdxBlockLocations[j].vhdxOffset < 10)
                         {
                             skippedBytes += nonFullBackup.cbStructure.blocks[i].vhdxBlockLocations[j].vhdxLength;
@@ -222,6 +223,11 @@ namespace HVRestoreCore
                             smallestDist = dist;
                             smallestIndex = i;
                         }
+
+                        //if (offset <= 9966174208 && offset + length >= 9966174208)
+                        //{
+                        //    offset = offset;
+                        //}
 
 
                         //is offset within location? (start within location)
