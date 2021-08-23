@@ -18,7 +18,7 @@ namespace nxmBackup.HVBackupCore
             this.eventHandler = eventHandler;
         }
 
-        //translates one changed block to vhdxBlocks (by returning a value < 10, it's a state code)
+        //translates one changed block to vhdxBlocks
         private vhdxBlock[] getVhdxBlocks(ulong blockOffset, ulong blockLength, Common.BATTable vhdxBATTable, UInt32 vhdxBlockSize)
         {
 
@@ -135,11 +135,8 @@ namespace nxmBackup.HVBackupCore
                     {
                         UInt64 offsetDelta = block.offset % vhdxBlockSize;
 
-                        //just adjust when block is available within vhdx (offset > 10)
-                        if (currentOffset > 10)
-                        {
-                            currentOffset += offsetDelta;
-                        }
+                        currentOffset += offsetDelta;
+
                         currentLength -= offsetDelta;
                     }
 

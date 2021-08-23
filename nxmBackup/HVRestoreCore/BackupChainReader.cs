@@ -201,8 +201,8 @@ namespace HVRestoreCore
                     UInt64 skippedBytes = 0;
                     for (int j = 0; j < nonFullBackup.cbStructure.blocks[i].vhdxBlockLocations.Count; j++)
                     {
-                        //is vhdxBlocklocation <10? not possible here -> skip this vhdxblocklocation
-                        if (nonFullBackup.cbStructure.blocks[i].vhdxBlockLocations[j].vhdxOffset < 10)
+                        //is vhdxBlocklocation not readable? -> skip this vhdxblocklocation
+                        if ( !isVHDXBlockReadable(nonFullBackup.cbStructure.blocks[i].vhdxBlockLocations[j]))
                         {
                             skippedBytes += nonFullBackup.cbStructure.blocks[i].vhdxBlockLocations[j].vhdxLength;
                             continue;
@@ -344,6 +344,11 @@ namespace HVRestoreCore
 
         }
 
+        //is vhdx block readable?
+        private bool isVHDXBlockReadable(VhdxBlockLocation location)
+        {
+            return location.vhdxState == 6;
+        }
 
         
 

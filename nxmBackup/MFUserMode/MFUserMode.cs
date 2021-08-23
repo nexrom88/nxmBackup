@@ -68,7 +68,7 @@ namespace nxmBackup.MFUserMode
         //minifilter instance name
         private const string mfName = "nxmmf";
 
-        FileStream compareStream = new FileStream(@"d:\original.vhdx", System.IO.FileMode.Open, System.IO.FileAccess.Read);
+        //FileStream compareStream = new FileStream(@"d:\original.vhdx", System.IO.FileMode.Open, System.IO.FileAccess.Read);
 
 
         //shared memory with km
@@ -281,14 +281,14 @@ namespace nxmBackup.MFUserMode
                 this.readableBackupChain.readFromChain(offset, length, data, 0);
                 this.readableBackupChain.readFromLB(offset, length, data);
 
-                this.compareStream.Seek(offset, SeekOrigin.Begin);
-                byte[] compareData = new byte[length];
-                this.compareStream.Read(compareData, 0, (int)length);
+                //this.compareStream.Seek(offset, SeekOrigin.Begin);
+                //byte[] compareData = new byte[length];
+                //this.compareStream.Read(compareData, 0, (int)length);
 
-                if (memcmp(data, compareData, length) != 0)
-                {
-                    requestType = requestType;
-                }
+                //if (memcmp(data, compareData, length) != 0)
+                //{
+                //    requestType = requestType;
+                //}
 
 
                 //write payload data to shared memory
