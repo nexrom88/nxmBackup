@@ -72,7 +72,7 @@ namespace HyperVBackupRCT
 
 
 
-            buffer = new byte[16];
+            buffer = new byte[17];
             //iterate through each block
             for (int i = 0; i < blockCount; i++)
             {
