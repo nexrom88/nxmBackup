@@ -144,6 +144,7 @@ namespace nxmBackup.HVBackupCore
                     if (i + 1 == vhdxBlocks.Length)
                     {
                         currentLength = remainingLength;
+
                     }
 
 

@@ -68,7 +68,7 @@ namespace nxmBackup.MFUserMode
         //minifilter instance name
         private const string mfName = "nxmmf";
 
-        //FileStream compareStream = new FileStream(@"d:\original.vhdx", System.IO.FileMode.Open, System.IO.FileAccess.Read);
+        //FileStream compareStream = new FileStream(@"d:\original_fixed.vhdx", System.IO.FileMode.Open, System.IO.FileAccess.Read);
 
 
         //shared memory with km

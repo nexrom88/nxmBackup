@@ -224,7 +224,7 @@ namespace HVRestoreCore
                             smallestIndex = i;
                         }
 
-                        //if (offset <= 9966174208 && offset + length >= 9966174208)
+                        //if (offset <= 19218432000 && offset + length >= 19218432000)
                         //{
                         //    offset = offset;
                         //}
@@ -347,7 +347,7 @@ namespace HVRestoreCore
         //is vhdx block readable?
         private bool isVHDXBlockReadable(VhdxBlockLocation location)
         {
-            return location.vhdxState == 6;
+            return location.vhdxOffset != 0;
         }
 
         
