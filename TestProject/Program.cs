@@ -20,32 +20,68 @@ namespace TestProject
         static void Main(string[] args)
         {
 
-            UInt64 desiredOffset = 17096990720;
-            string file = @"F:\nxm\Fixed\1661C788-7F70-4203-8255-628F95087182\74fcbe14-b042-4802-ad18-93f46cfbe008.nxm\Win10_Fixed.vhdx.cb";
+            UInt64 desiredOffset = 19218432000;
+            string file = @"D:\nxm\Lokal\54A84623-BF0D-4C9E-AF1E-9CD10955DECF\0e233927-4aaf-497f-a0bf-9df2d8042e94.nxm\Win10_Lokal.vhdx.cb";
             FileStream stream = new FileStream(file, FileMode.Open, FileAccess.Read);
             BlockCompression.LZ4BlockStream blockStream = new BlockCompression.LZ4BlockStream(stream, BlockCompression.AccessMode.read, false, null);
             blockStream.init();
 
 
-            CbStructure cbStructure = CBParser.parseCBFile(blockStream, true);
+            CbStructure cbStructure = CBParser.parseCBFile(blockStream, false);
 
 
             UInt64 smallestDist = Int64.MaxValue;
             UInt64 smallestOffset;
+            UInt64 smallestIndex = 0;
+
+            UInt64 i = 0;
             foreach (CbBlock block in cbStructure.blocks)
             {
                 foreach (VhdxBlockLocation loc in block.vhdxBlockLocations)
                 {
-                    if (Math.Abs((Int64)loc.vhdxOffset - (Int64)desiredOffset) < (Int64)smallestDist)
+                    if (loc.vhdxOffset <= desiredOffset &&  (Int64)desiredOffset - (Int64)loc.vhdxOffset < (Int64)smallestDist)
                     {
                         smallestDist = (UInt64)Math.Abs((Int64)loc.vhdxOffset - (Int64)desiredOffset);
                         smallestOffset = loc.vhdxOffset;
+                        smallestIndex = i;
                     }
                 }
+
+                i++;
             }
+
+
+            UInt32 bufferSize = 10000000;
+            byte[] buffer = new byte[bufferSize];
+            UInt64 bytesRead = 0;
+            UInt64 blockLength = cbStructure.blocks[(int)smallestIndex].changedBlockLength;
+            blockStream.Seek((long)cbStructure.blocks[(int)smallestIndex].cbFileOffset, SeekOrigin.Begin);
+
+            System.IO.FileStream outStream = new FileStream(@"f:\debug.bin", FileMode.Create, FileAccess.Write);
+
+            //read blocks
+            while (bytesRead + bufferSize <= blockLength) {
+                blockStream.Read(buffer, 0, (int)bufferSize);
+                outStream.Write(buffer, 0, buffer.Length);
+                bytesRead += bufferSize;
+            }
+
+            //read last block
+            if (bytesRead < blockLength)
+            {
+                buffer = new byte[blockLength - bytesRead];
+                blockStream.Read(buffer, 0, buffer.Length);
+                outStream.Write(buffer, 0, buffer.Length);
+            }
+            outStream.Close();
+            blockStream.Close();
+
 
             string json = JsonConvert.SerializeObject(cbStructure.blocks);
             json = json;
+
+
+
 
             //MFUserMode um = new MFUserMode();
             //if (um.connectToKM("\\nxmLRPort", "\\BaseNamedObjects\\nxmmflr"))

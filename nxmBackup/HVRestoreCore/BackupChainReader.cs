@@ -347,7 +347,7 @@ namespace HVRestoreCore
         //is vhdx block readable?
         private bool isVHDXBlockReadable(VhdxBlockLocation location)
         {
-            return location.vhdxOffset != 0;
+            return location.vhdxOffset != 0 && location.vhdxState == 6;
         }
 
         
