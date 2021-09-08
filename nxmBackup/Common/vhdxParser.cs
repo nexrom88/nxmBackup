@@ -144,8 +144,8 @@ namespace Common
             this.sourceStream.Seek(offset, SeekOrigin.Begin);
 
             //read block size
-            byte[] buffer = new byte[8];
-            this.sourceStream.Read(buffer, 0, 8);
+            byte[] buffer = new byte[4];
+            this.sourceStream.Read(buffer, 0, 4);
 
             return BitConverter.ToUInt32(buffer, 0);
         }
@@ -192,10 +192,34 @@ namespace Common
             this.sourceStream.Seek(offset, SeekOrigin.Begin);
 
             //read logicalSectorSize size
+            byte[] buffer = new byte[4];
+            this.sourceStream.Read(buffer, 0, 4);
+
+            return BitConverter.ToUInt32(buffer, 0);
+        }
+
+        //reads virtualDiskSize from MetadataTable
+        public UInt64 getVirtualDiskSize(MetadataTable metadataTable)
+        {
+            UInt32 offset = 0;
+            UInt32 length = 0;
+            foreach (MetadataTableEntry entry in metadataTable.entries)
+            {
+                if (entry.itemID[0] == 0x24)
+                {
+                    offset = entry.offset;
+                    length = entry.length;
+                }
+            }
+
+            //jump to destination
+            this.sourceStream.Seek(offset, SeekOrigin.Begin);
+
+            //read logicalSectorSize size
             byte[] buffer = new byte[8];
             this.sourceStream.Read(buffer, 0, 8);
 
-            return BitConverter.ToUInt32(buffer, 0);
+            return BitConverter.ToUInt64(buffer, 0);
         }
 
         //gets the raw MetadataTable
@@ -293,7 +317,7 @@ namespace Common
 
 
         //parses the BAT table (chunkSize just necessary when removeSectorMask is set)
-        public BATTable parseBATTable(RegionTable table, UInt32 chunkSize, bool removeSectorMask)
+        public BATTable parseBATTable(RegionTable table, UInt32 chunkSize, UInt32 sectorBitmapBlocksCount, bool removeSectorMask)
         {
             BATTable batTable = new BATTable();
             batTable.entries = new List<BATEntry>();
@@ -323,11 +347,15 @@ namespace Common
 
             //each entry consists of 64bit, iterate
             UInt32 entryCount = batLength / 64;
+            UInt32 lastSectorMaskDistance = 0;
+            UInt32 removedSectorBitmapMasks = 0;
             for (int i = 0; i < entryCount; i++)
             {
                 //jump over sector mask?
-                if (removeSectorMask && i > 0 && i % chunkSize == 0)
+                if (removeSectorMask && removedSectorBitmapMasks < sectorBitmapBlocksCount && lastSectorMaskDistance > 0 && lastSectorMaskDistance % chunkSize == 0)
                 {
+                    lastSectorMaskDistance = 0;
+                    removedSectorBitmapMasks++;
                     continue;
                 }
 
@@ -343,12 +371,17 @@ namespace Common
                 newEntry.reserved = reserved;
 
                 batTable.entries.Add(newEntry);
+
+                if (removedSectorBitmapMasks < sectorBitmapBlocksCount && removeSectorMask)
+                {
+                    lastSectorMaskDistance++;
+                }
             }
 
             return batTable;
         }
 
-        //
+
 
         //parses the region table
         public RegionTable parseRegionTable()

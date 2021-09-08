@@ -708,6 +708,7 @@ namespace nxmBackup.HVBackupCore
                     BATTable batTable;
                     UInt32 vhdxBlockSize = 0;
                     UInt32 vhdxLogicalSectorSize = 0;
+                    UInt64 virtualDiskSize = 0;
                     RawBatTable rawBatTable;
                     RawHeader rawHeader;
                     RawLog rawLog;
@@ -718,10 +719,14 @@ namespace nxmBackup.HVBackupCore
                         Common.MetadataTable metadataTable = vhdxParser.parseMetadataTable(regionTable);
                         vhdxBlockSize = vhdxParser.getBlockSize(metadataTable);
                         vhdxLogicalSectorSize = vhdxParser.getLogicalSectorSize(metadataTable);
+                        virtualDiskSize = vhdxParser.getVirtualDiskSize(metadataTable);
 
                         UInt32 vhdxChunkRatio = (UInt32)((Math.Pow(2, 23) * vhdxLogicalSectorSize) / vhdxBlockSize); //see vhdx file format specs
 
-                        batTable = vhdxParser.parseBATTable(regionTable, vhdxChunkRatio, true);
+                        UInt64 dataBlocksCount = (UInt64)Math.Ceiling((double)virtualDiskSize / (double)vhdxBlockSize);
+                        UInt32 sectorBitmapBlocksCount = (UInt32)Math.Ceiling((double)dataBlocksCount / (double)vhdxChunkRatio);
+
+                        batTable = vhdxParser.parseBATTable(regionTable, vhdxChunkRatio, sectorBitmapBlocksCount, true);
 
                         //get raw bat table
                         rawBatTable = vhdxParser.getRawBatTable(regionTable);

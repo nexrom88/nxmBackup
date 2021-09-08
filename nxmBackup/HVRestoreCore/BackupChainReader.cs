@@ -224,11 +224,6 @@ namespace HVRestoreCore
                             smallestIndex = i;
                         }
 
-                        //if (offset <= 19218432000 && offset + length >= 19218432000)
-                        //{
-                        //    offset = offset;
-                        //}
-
 
                         //is offset within location? (start within location)
                         if ((UInt64)offset >= currentLocation.vhdxOffset && (UInt64)offset < currentLocation.vhdxOffset + currentLocation.vhdxLength)
@@ -256,14 +251,6 @@ namespace HVRestoreCore
                                 UInt64 availableBytes = (currentLocation.vhdxOffset + currentLocation.vhdxLength) - (UInt64)offset;
 
                                 nonFullBackup.sourceStreamRCT.Read(buffer, bufferOffset, (Int32)availableBytes);
-
-                                bool saveArray = false;
-                                if (saveArray)
-                                {
-                                    byte[] destArr = new byte[availableBytes];
-                                    Array.Copy(buffer, bufferOffset, destArr, 0, (int)availableBytes);
-                                    System.IO.File.WriteAllBytes("f:\\debug.raw", destArr);
-                                }
 
 
                                 //read remaining bytes recursive
@@ -336,11 +323,6 @@ namespace HVRestoreCore
             fullBackup.sourceStream.Seek(offset, System.IO.SeekOrigin.Begin);
             fullBackup.sourceStream.Read(buffer, bufferOffset, (Int32)length);
 
-            bool log = false;
-            if (log)
-            {
-                System.IO.File.WriteAllBytes("f:\\log_small.txt", buffer);
-            }
 
         }
 
