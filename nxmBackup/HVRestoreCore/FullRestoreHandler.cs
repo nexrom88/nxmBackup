@@ -14,6 +14,7 @@ namespace HVRestoreCore
         private const int NO_RELATED_EVENT = -1;
         private bool useEncryption;
         private byte[] aesKey;
+        public bool StopRequest { set; get; }
 
         public FullRestoreHandler(Common.EventHandler eventHandler, bool useEncryption, byte[] aesKey)
         {
@@ -187,7 +188,6 @@ namespace HVRestoreCore
 
            
             archive = new Common.LZ4Archive(archivePath, this.eventHandler, this.useEncryption, this.aesKey);
-             
 
             archive.open(System.IO.Compression.ZipArchiveMode.Read);
 

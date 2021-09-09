@@ -1,5 +1,6 @@
 ﻿var selectedRestoreJob = {}; //the job selected for restore
 var selectedRestoreHDD = ""; //the selected hdd for restore
+var fullRestoreLogContainerTemplate = ""; // the template for the full restore log container
 
 //starts the restore process
 function startRestoreHandler() {
@@ -190,6 +191,10 @@ function startRestore() {
       $("#startRestoreButton").prop("disabled", false);
 
       switch (restartStartDetails["type"]) {
+        case "full":
+        case "fullImport":
+          handleRunningFullRestore();
+          break;
         case "lr":
           handleRunningLiveRestore();
           break;
@@ -384,6 +389,90 @@ function flrDoNavigate(path, parentNode, rawNode) {
         $('#flrBrowser').jstree().create_node(parentNode, { id: fsEntries[i]["path"], text: buffer[buffer.length - 1], type: fsEntries[i]["type"], li_attr: {class: "liLeftAlign" } }, "last", false, false);
       }
       $("#flrBrowser").jstree("open_node", rawNode);
+    });
+}
+
+//handles a currently running full restore
+function handleRunningFullRestore() {
+  //show dialog box for seeing restore logs
+  Swal.fire({
+    title: 'Komplette VM Wiederherstellung',
+    html: "<div id='fullRestoreLogContainer'></div>",
+    confirmButtonColor: '#3085d6',
+    allowOutsideClick: false,
+    customClass: "fullRestoreSwalStyles",
+    allowEscapeKey: false,
+    confirmButtonText: 'Wiederherstellung abbrechen'
+  }).then((result) => { //gets called when done
+
+    //send delete request to stop job
+    $.ajax({
+      url: 'api/Restore',
+      type: 'DELETE'
+    });
+
+  });
+
+
+  //load log container
+  $.ajax({
+    url: "Templates/fullRestoreLogContainer"
+  })
+    .done(function (data) {
+
+      //start refresh timer
+      setInterval(refreshFullRestoreLog, 3000);
+
+      fullRestoreLogContainerTemplate = data;
+            
+      });
+}
+
+
+//refreshes the full restore log viewer
+function refreshFullRestoreLog(){
+  //api call
+  $.ajax({
+    url: "api/BackupJobEvent?id=" + selectedJob + "&jobType=restore"
+  })
+    .done(function (data) {
+      data = JSON.parse(data);
+
+      //iterate through all events
+      var eventsList = [];
+      for (var i = 0; i < data.length; i++) {
+        //ignore events if wrong vmid
+        if (data[i]["vmid"] != selectedVM) {
+          continue;
+        }
+
+        //build event object
+        var oneEvent = {};
+        oneEvent.text = data[i].info;
+
+        switch (data[i].status) {
+          case "successful":
+            oneEvent.successful = true;
+            break;
+          case "inProgress":
+            oneEvent.inProgress = true;
+            break;
+          case "error":
+            oneEvent.error = true;
+            break;
+          case "warning":
+            oneEvent.warning = true;
+            break;
+          case "info":
+            oneEvent.info = true;
+            break;
+        }
+
+        //add event to eventsList
+        eventsList.unshift(oneEvent);
+      }
+
+        $("#fullRestoreLogContainer").html(Mustache.render(fullRestoreLogContainerTemplate, { events: eventsList }));
     });
 }
 

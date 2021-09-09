@@ -12,6 +12,27 @@ namespace Frontend.App_Start
         public static long LastHeartbeat { get; set; }
         private static System.Timers.Timer heartbeatCheckTimer = new System.Timers.Timer();
 
+        private static HVRestoreCore.FullRestoreHandler currentFullRestore;
+        public static HVRestoreCore.FullRestoreHandler CurrentFullRestore
+        {
+            get
+            {
+                lock (mutex)
+                {
+                    return currentFullRestore;
+                }
+            }
+
+            set
+            {
+                lock (mutex)
+                {
+                    currentFullRestore = value;
+                }
+            }
+        }
+
+
         private static HVRestoreCore.FileLevelRestoreHandler currentFileLevelRestore;
         public static HVRestoreCore.FileLevelRestoreHandler CurrentFileLevelRestore
         {

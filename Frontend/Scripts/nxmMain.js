@@ -551,7 +551,7 @@ function showCurrentEvents() {
   
   //api call
   $.ajax({
-    url: "api/BackupJobEvent/" + selectedJob
+    url: "api/BackupJobEvent?id=" + selectedJob + "&jobType=backup"
   })
     .done(function (data) {
       data = jQuery.parseJSON(data);

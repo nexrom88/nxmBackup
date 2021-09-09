@@ -132,9 +132,18 @@ textarea {
     max-height: 80%;
 }
 
-#flrBrowser{
+.fullRestoreSwalStyles{
+    max-height: 80%;
+}
+
+#flrBrowser {
     max-height: 30vh;
-    overflow:scroll;
+    overflow: scroll;
+}
+
+#fullRestoreLogContainer {
+    max-height: 30vh;
+    overflow-y:scroll;
 }
 
 

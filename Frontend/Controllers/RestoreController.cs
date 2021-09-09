@@ -52,7 +52,13 @@ namespace Frontend.Controllers
                 case "fullImport":
                     int jobExecutionId = Common.DBQueries.addJobExecution(restoreStartDetails.jobID, "restore");
                     HVRestoreCore.FullRestoreHandler fullRestoreHandler = new HVRestoreCore.FullRestoreHandler(new Common.EventHandler(vmObject, jobExecutionId), jobObject.UseEncryption, jobObject.AesKey);
-                    //fullRestoreHandler.performFullRestoreProcess(sourcePath, "f:\\target", ((ComboBoxItem)cbVMs.SelectedItem).Content.ToString() + "_restored", restorePoint.InstanceId, importToHyperV);
+                    System.Threading.Thread frThread = new System.Threading.Thread(() => fullRestoreHandler.performFullRestoreProcess(sourcePath, restoreStartDetails.destPath, vmObject + "_restored", restoreStartDetails.instanceID, false));
+                    frThread.Start();
+
+                    //set global object
+                    App_Start.RunningRestoreJobs.CurrentFullRestore = fullRestoreHandler;
+
+                    response.StatusCode = HttpStatusCode.OK;
 
                     break;
                 case "lr":
@@ -143,6 +149,13 @@ namespace Frontend.Controllers
             {
                 App_Start.RunningRestoreJobs.CurrentFileLevelRestore.StopRequest = true;
                 App_Start.RunningRestoreJobs.CurrentFileLevelRestore = null;
+            }
+
+            //stop full restore
+            if (App_Start.RunningRestoreJobs.CurrentFullRestore != null)
+            {
+                App_Start.RunningRestoreJobs.CurrentFullRestore.StopRequest = true;
+                App_Start.RunningRestoreJobs.CurrentFullRestore = null;
             }
         }
 

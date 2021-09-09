@@ -193,7 +193,7 @@ namespace Common
             int relatedEventId = -1;
             if (this.eventHandler != null)
             {
-                relatedEventId = this.eventHandler.raiseNewEvent("Stelle wieder her: " + fileName + "... ", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
+                relatedEventId = this.eventHandler.raiseNewEvent("Verarbeite: " + fileName + "... ", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
             }
 
             //open source file
@@ -228,7 +228,7 @@ namespace Common
                 string progress = Common.PrettyPrinter.prettyPrintBytes(totalReadBytes);
                 if (progress != lastProgress && this.eventHandler != null)
                 {
-                    this.eventHandler.raiseNewEvent("Stelle wieder her: " + fileName + "... " + progress, false, true, relatedEventId, EventStatus.inProgress);
+                    this.eventHandler.raiseNewEvent("Verarbeite: " + fileName + "... " + progress, false, true, relatedEventId, EventStatus.inProgress);
                     lastProgress = progress;
                 }
 
@@ -236,7 +236,7 @@ namespace Common
 
             if (this.eventHandler != null)
             {
-                this.eventHandler.raiseNewEvent("Stelle wieder her: " + fileName + "... erfolgreich", false, true, relatedEventId, EventStatus.successful);
+                this.eventHandler.raiseNewEvent("Verarbeite: " + fileName + "... erfolgreich", false, true, relatedEventId, EventStatus.successful);
             }
             destStream.Close();
             blockCompressionStream.Close();

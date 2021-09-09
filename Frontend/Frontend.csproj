@@ -347,6 +347,7 @@
     <Content Include="Scripts\umd\popper.min.js" />
     <Content Include="Templates\eventsListItem.html" />
     <Content Include="Templates\flrBrowser.html" />
+    <Content Include="Templates\fullRestoreLogContainer.html" />
     <Content Include="Templates\navJobItem.html" />
     <Content Include="Templates\jobDetailsPanel.html" />
     <Content Include="Templates\newJobPage1.html" />
