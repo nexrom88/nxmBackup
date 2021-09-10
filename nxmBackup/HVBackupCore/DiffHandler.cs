@@ -12,10 +12,20 @@ namespace nxmBackup.HVBackupCore
     {
         private Common.EventHandler eventHandler;
         private const int NO_RELATED_EVENT = -1;
+        private StopRequestWrapper stopRequest;
 
-        public DiffHandler(Common.EventHandler eventHandler)
+        public DiffHandler(Common.EventHandler eventHandler, StopRequestWrapper stopRequest)
         {
             this.eventHandler = eventHandler;
+
+            if(stopRequest != null)
+            {
+                this.stopRequest = stopRequest;
+            }
+            else
+            {
+                this.stopRequest = new StopRequestWrapper();
+            }
         }
 
         //translates one changed block to vhdxBlocks
@@ -291,7 +301,7 @@ namespace nxmBackup.HVBackupCore
 
                 buffer = new byte[bufferSize];
 
-                while ((ulong)bytesRead < cbStruct.blocks[i].changedBlockLength) //read blockwise until everything is read
+                while ((ulong)bytesRead < cbStruct.blocks[i].changedBlockLength && !this.stopRequest.value) //read blockwise until everything is read or stopped by user
                 {
                     int bytesReadBlock = 0;
 
@@ -333,7 +343,15 @@ namespace nxmBackup.HVBackupCore
 
             if (this.eventHandler != null)
             {
-                this.eventHandler.raiseNewEvent("Verarbeite Inkrement... erfolgreich", false, true, NO_RELATED_EVENT, EventStatus.successful);
+                //finished "normally"?
+                if (!this.stopRequest.value)
+                {
+                    this.eventHandler.raiseNewEvent("Verarbeite Inkrement... erfolgreich", false, true, NO_RELATED_EVENT, EventStatus.successful);
+                }
+                else
+                {
+                    this.eventHandler.raiseNewEvent("Verarbeite Inkrement... Abgebrochen", false, true, NO_RELATED_EVENT, EventStatus.error);
+                }
             }
             GC.KeepAlive(snapshotStream);
             diskHandler.detach();

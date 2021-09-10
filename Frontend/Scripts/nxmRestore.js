@@ -403,7 +403,7 @@ function handleRunningFullRestore() {
     allowOutsideClick: false,
     customClass: "fullRestoreSwalStyles",
     allowEscapeKey: false,
-    confirmButtonText: 'Wiederherstellung abbrechen'
+    confirmButtonText: 'Wiederherstellung abbrechen',
   }).then((result) => { //gets called when done
 
     //send delete request to stop job
@@ -472,8 +472,17 @@ function refreshFullRestoreLog(){
             break;
         }
 
-        //add event to eventsList
-        eventsList.unshift(oneEvent);
+        //"done" event found?
+        if (oneEvent.text == "done") {
+          //clear refresh timer
+          clearInterval(refreshFullRestoreLog);
+
+          $(".swal2-confirm").html("Schließen");
+        } else {
+          //add event to eventsList
+          eventsList.unshift(oneEvent);
+        }
+
       }
 
         $("#fullRestoreLogContainer").html(Mustache.render(fullRestoreLogContainerTemplate, { events: eventsList }));

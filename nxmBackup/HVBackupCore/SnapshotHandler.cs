@@ -762,7 +762,7 @@ namespace nxmBackup.HVBackupCore
                     this.eventHandler.raiseNewEvent("erfolgreich", true, false, eventId, EventStatus.successful);
 
                     //write backup output
-                    DiffHandler diffWriter = new DiffHandler(this.eventHandler);
+                    DiffHandler diffWriter = new DiffHandler(this.eventHandler, null);
 
                     diffWriter.writeDiffFile(changedBlocks, diskHandler, vhdxBlockSize, archive, System.IO.Path.GetFileName(snapshothddPath), batTable, bufferSize, rawBatTable, rawHeader, rawLog, rawMeta, vhdxSize);
 

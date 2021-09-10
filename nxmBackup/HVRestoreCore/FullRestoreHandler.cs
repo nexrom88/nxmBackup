@@ -98,7 +98,7 @@ namespace HVRestoreCore
             restoreChain.RemoveAt(restoreChain.Count - 1);
 
             //iterate through all incremental backups
-            nxmBackup.HVBackupCore.DiffHandler diffRestore = new nxmBackup.HVBackupCore.DiffHandler(this.eventHandler);
+            nxmBackup.HVBackupCore.DiffHandler diffRestore = new nxmBackup.HVBackupCore.DiffHandler(this.eventHandler, this.stopRequestWrapper);
             while (restoreChain.Count > 0 && !this.stopRequestWrapper.value)
             {
                 ConfigHandler.BackupConfigHandler.BackupInfo currentBackup = restoreChain[restoreChain.Count - 1];
@@ -171,10 +171,12 @@ namespace HVRestoreCore
                 if (!this.stopRequestWrapper.value)
                 {
                     this.eventHandler.raiseNewEvent("Wiederherstellung erfolgreich", false, false, NO_RELATED_EVENT, Common.EventStatus.successful);
+                    this.eventHandler.raiseNewEvent("done", false, false, NO_RELATED_EVENT, Common.EventStatus.successful);
                 }
                 else
                 {
                     this.eventHandler.raiseNewEvent("Wiederherstellung abgebrochen", false, false, NO_RELATED_EVENT, Common.EventStatus.error);
+                    this.eventHandler.raiseNewEvent("done", false, false, NO_RELATED_EVENT, Common.EventStatus.error);
                 }
             }
 
