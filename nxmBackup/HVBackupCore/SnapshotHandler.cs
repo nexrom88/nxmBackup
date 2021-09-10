@@ -265,7 +265,7 @@ namespace nxmBackup.HVBackupCore
             //create new backup container from merged backups
             Guid g = Guid.NewGuid();
             string guidFolder = g.ToString();
-            Common.LZ4Archive backupArchive = new Common.LZ4Archive(System.IO.Path.Combine(path, guidFolder + ".nxm"), null, this.useEncryption, this.aesKey);
+            Common.LZ4Archive backupArchive = new Common.LZ4Archive(System.IO.Path.Combine(path, guidFolder + ".nxm"), null, this.useEncryption, this.aesKey, null);
             backupArchive.create();
             backupArchive.open(System.IO.Compression.ZipArchiveMode.Create);
 
@@ -447,7 +447,7 @@ namespace nxmBackup.HVBackupCore
             Common.IArchive archive;
             
            
-            archive = new Common.LZ4Archive(System.IO.Path.Combine(path, guidFolder + ".nxm"), this.eventHandler, this.useEncryption, this.aesKey);
+            archive = new Common.LZ4Archive(System.IO.Path.Combine(path, guidFolder + ".nxm"), this.eventHandler, this.useEncryption, this.aesKey, null);
             
             
             archive.create();

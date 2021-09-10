@@ -40,7 +40,7 @@ namespace Frontend.Controllers
 
 
             //restore already running? -> quit
-            if (App_Start.RunningRestoreJobs.CurrentLiveRestore != null)
+            if (App_Start.RunningRestoreJobs.CurrentLiveRestore != null || App_Start.RunningRestoreJobs.CurrentFileLevelRestore != null || App_Start.RunningRestoreJobs.CurrentFullRestore != null)
             {
                 response.StatusCode = HttpStatusCode.BadRequest;
                 return response;

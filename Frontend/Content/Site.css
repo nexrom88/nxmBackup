@@ -142,7 +142,7 @@ textarea {
 }
 
 #fullRestoreLogContainer {
-    max-height: 30vh;
+    max-height: 50vh;
     overflow-y:scroll;
 }
 

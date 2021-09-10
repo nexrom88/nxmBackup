@@ -14,7 +14,17 @@ namespace HVRestoreCore
         private const int NO_RELATED_EVENT = -1;
         private bool useEncryption;
         private byte[] aesKey;
-        public bool StopRequest { set; get; }
+        public bool StopRequest {
+            set
+            {
+                stopRequestWrapper.value = value;
+            }
+            get
+            {
+                return stopRequestWrapper.value;
+            }
+        }
+        private Common.StopRequestWrapper stopRequestWrapper = new Common.StopRequestWrapper();
 
         public FullRestoreHandler(Common.EventHandler eventHandler, bool useEncryption, byte[] aesKey)
         {
@@ -89,7 +99,7 @@ namespace HVRestoreCore
 
             //iterate through all incremental backups
             nxmBackup.HVBackupCore.DiffHandler diffRestore = new nxmBackup.HVBackupCore.DiffHandler(this.eventHandler);
-            while (restoreChain.Count > 0)
+            while (restoreChain.Count > 0 && !this.stopRequestWrapper.value)
             {
                 ConfigHandler.BackupConfigHandler.BackupInfo currentBackup = restoreChain[restoreChain.Count - 1];
 
@@ -99,7 +109,7 @@ namespace HVRestoreCore
                     Common.IArchive archive;
 
 
-                    archive = new Common.LZ4Archive(System.IO.Path.Combine(basePath, currentBackup.uuid + ".nxm"), null, this.useEncryption, this.aesKey);
+                    archive = new Common.LZ4Archive(System.IO.Path.Combine(basePath, currentBackup.uuid + ".nxm"), null, this.useEncryption, this.aesKey, this.stopRequestWrapper);
 
 
                     archive.open(System.IO.Compression.ZipArchiveMode.Read);
@@ -133,7 +143,7 @@ namespace HVRestoreCore
             }
 
             //has the restored VM to be imported into HyperV?
-            if (importToHyperV)
+            if (importToHyperV && !stopRequestWrapper.value)
             {
                 relatedEventId = this.eventHandler.raiseNewEvent("An HyperV registrieren...", false, false, NO_RELATED_EVENT, Common.EventStatus.inProgress);
 
@@ -157,7 +167,15 @@ namespace HVRestoreCore
 
             if (this.eventHandler != null)
             {
-                this.eventHandler.raiseNewEvent("Wiederherstellung erfolgreich", false, false, NO_RELATED_EVENT, Common.EventStatus.successful);
+                //finished "normally"
+                if (!this.stopRequestWrapper.value)
+                {
+                    this.eventHandler.raiseNewEvent("Wiederherstellung erfolgreich", false, false, NO_RELATED_EVENT, Common.EventStatus.successful);
+                }
+                else
+                {
+                    this.eventHandler.raiseNewEvent("Wiederherstellung abgebrochen", false, false, NO_RELATED_EVENT, Common.EventStatus.error);
+                }
             }
 
 
@@ -187,7 +205,7 @@ namespace HVRestoreCore
             Common.IArchive archive;
 
            
-            archive = new Common.LZ4Archive(archivePath, this.eventHandler, this.useEncryption, this.aesKey);
+            archive = new Common.LZ4Archive(archivePath, this.eventHandler, this.useEncryption, this.aesKey, this.stopRequestWrapper);
 
             archive.open(System.IO.Compression.ZipArchiveMode.Read);
 
@@ -228,4 +246,6 @@ namespace HVRestoreCore
 
 
     }
+
+    
 }

@@ -223,7 +223,7 @@ namespace nxmBackup.MFUserMode
             Common.IArchive archive;
 
 
-            archive = new Common.LZ4Archive(archivePath, null, this.useEncryption, this.aesKey);
+            archive = new Common.LZ4Archive(archivePath, null, this.useEncryption, this.aesKey, null);
 
 
             archive.open(System.IO.Compression.ZipArchiveMode.Read);

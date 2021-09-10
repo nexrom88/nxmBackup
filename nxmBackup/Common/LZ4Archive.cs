@@ -16,14 +16,23 @@ namespace Common
         private const int NO_RELATED_EVENT = -1;
         private bool useEncryption;
         private byte[] aesKey;
+        private StopRequestWrapper stopRequest;
 
 
-        public LZ4Archive(string path,Common.EventHandler eventHandler, bool useEncryption, byte[] aesKey)
+        public LZ4Archive(string path, Common.EventHandler eventHandler, bool useEncryption, byte[] aesKey, StopRequestWrapper stopRequest)
         {
             this.path = path;
             this.eventHandler = eventHandler;
             this.useEncryption = useEncryption;
             this.aesKey = aesKey;
+
+            if (stopRequest != null) {
+                this.stopRequest = stopRequest;
+            }
+            else
+            {
+                this.stopRequest = new StopRequestWrapper();
+            }
         }
 
         //adds a whole folder to the archive
@@ -214,7 +223,7 @@ namespace Common
             long totalReadBytes = 0;
             int readBytes = -1;
             //read source and write destination
-            while (readBytes != 0)
+            while (readBytes != 0 && !this.stopRequest.value)
             {
                 //transfer one block
                 readBytes = blockCompressionStream.Read(buffer, 0, buffer.Length);
@@ -236,7 +245,16 @@ namespace Common
 
             if (this.eventHandler != null)
             {
-                this.eventHandler.raiseNewEvent("Verarbeite: " + fileName + "... erfolgreich", false, true, relatedEventId, EventStatus.successful);
+                if (!this.stopRequest.value)
+                {
+                    //finished "normally"
+                    this.eventHandler.raiseNewEvent("Verarbeite: " + fileName + "... erfolgreich", false, true, relatedEventId, EventStatus.successful);
+                }
+                else
+                {
+                    //stopped by user
+                    this.eventHandler.raiseNewEvent("Verarbeite: " + fileName + "... abgebrochen", false, true, relatedEventId, EventStatus.error);
+                }
             }
             destStream.Close();
             blockCompressionStream.Close();
@@ -291,5 +309,11 @@ namespace Common
 
         }
 
+    }
+
+    //wrapper to pass stop request by ref
+    public class StopRequestWrapper
+    {
+        public bool value;
     }
 }

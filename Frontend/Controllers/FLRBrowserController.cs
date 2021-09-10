@@ -70,9 +70,17 @@ namespace Frontend.Controllers
         {
             //convert base64 path to string
             byte[] pathBytes = System.Convert.FromBase64String(path);
-            path = System.Text.Encoding.UTF8.GetString(pathBytes);
+            path = System.Text.Encoding.Default.GetString(pathBytes);
 
             HttpResponseMessage response;
+
+            //file or directory exists?
+            if(!System.IO.Directory.Exists(path) && !System.IO.File.Exists(path))
+            {
+                //return error
+                response = new HttpResponseMessage(HttpStatusCode.NotFound);
+                return response;
+            }
 
             //check whether file or directory
             System.IO.FileAttributes attr = System.IO.File.GetAttributes(path);

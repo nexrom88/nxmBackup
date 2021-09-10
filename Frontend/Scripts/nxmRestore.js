@@ -367,7 +367,8 @@ function buildContextMenu(node) {
 
 //handles a file download
 function handleFileDownload(path) {
-  window.location = "api/FLRBrowser?path=" + btoa(path);
+  var encoded = btoa(path);
+  window.location = "api/FLRBrowser?path=" + encoded;
 }
 
 //navigates to a given path within flr
@@ -419,11 +420,14 @@ function handleRunningFullRestore() {
     url: "Templates/fullRestoreLogContainer"
   })
     .done(function (data) {
+      //save template
+      fullRestoreLogContainerTemplate = data;
+
+      //show first log
+      refreshFullRestoreLog();
 
       //start refresh timer
       setInterval(refreshFullRestoreLog, 3000);
-
-      fullRestoreLogContainerTemplate = data;
             
       });
 }
