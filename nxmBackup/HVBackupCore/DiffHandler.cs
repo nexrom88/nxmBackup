@@ -72,7 +72,7 @@ namespace nxmBackup.HVBackupCore
 
             //open destination file
             BlockCompression.LZ4BlockStream outStream = (BlockCompression.LZ4BlockStream)archive.createAndGetFileStream(hddName + ".cb");
-            //FileStream outStream = new FileStream("f:\\" + hddName + ".cb", FileMode.Create);
+           
 
             //open filestream to make it possible for readfile to read blocks (check why?)
             FileStream inputStream = new FileStream(diskHandle, FileAccess.Read, false, (int)bufferSize, true);
