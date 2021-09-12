@@ -346,11 +346,11 @@ namespace nxmBackup.HVBackupCore
                 //finished "normally"?
                 if (!this.stopRequest.value)
                 {
-                    this.eventHandler.raiseNewEvent("Verarbeite Inkrement... erfolgreich", false, true, NO_RELATED_EVENT, EventStatus.successful);
+                    this.eventHandler.raiseNewEvent("Verarbeite Inkrement... erfolgreich", true, true, NO_RELATED_EVENT, EventStatus.successful);
                 }
                 else
                 {
-                    this.eventHandler.raiseNewEvent("Verarbeite Inkrement... Abgebrochen", false, true, NO_RELATED_EVENT, EventStatus.error);
+                    this.eventHandler.raiseNewEvent("Verarbeite Inkrement... Abgebrochen", true, true, NO_RELATED_EVENT, EventStatus.error);
                 }
             }
             GC.KeepAlive(snapshotStream);

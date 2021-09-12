@@ -115,8 +115,12 @@ textarea {
     background-color: #b3b3ff;
 }
 
-#startRestoreButton{
-    margin-top:5%;
+#restorePointTable{
+    overflow-y:scroll;
+}
+
+#startRestoreButton {
+    margin-top: 5%;
     margin-bottom: 5%;
 }
 
@@ -153,4 +157,8 @@ textarea {
 
 .welcomeTextError{
     color:red;
+}
+
+.folderBrowserOnRestore{
+    text-align:left;
 }

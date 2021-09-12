@@ -48,12 +48,21 @@ function startRestoreHandler() {
 
     //on start restore handler
     $("#startRestoreButton").click(function () {
-      startRestore();
+      var restoreType = $("#sbRestoreType option:selected").data("type");
+
+      //on full restore, show folder browser dialog first
+      if (restoreType == "full" || restoreType == "fullImport") {
+        showFolderBrowserDialog();
+      } else {
+        startRestore();
+      }
     });
 
     //on select event handler
     $(".sbSourceVM").change(function () {
-      loadRestorePoints();
+      
+        loadRestorePoints();
+      
     });
 
     loadRestorePoints();
@@ -155,7 +164,7 @@ function startRestore() {
   restartStartDetails["basePath"] = selectedRestoreJob["BasePath"];
   restartStartDetails["vmName"] = $("#sbSourceVM option:selected").text() + "_restored";
   restartStartDetails["vmID"] = $("#sbSourceVM option:selected").data("vmid");
-  restartStartDetails["destPath"] = "f:\\\\target";
+  restartStartDetails["destPath"] = selectedDirectory;
   restartStartDetails["instanceID"] = instanceID;
   restartStartDetails["type"] = $("#sbRestoreType option:selected").data("type");
   restartStartDetails["jobID"] = selectedRestoreJob["DbId"];
@@ -391,6 +400,66 @@ function flrDoNavigate(path, parentNode, rawNode) {
       }
       $("#flrBrowser").jstree("open_node", rawNode);
     });
+}
+
+//shows a folder browser dialog for selecting a directory
+function showFolderBrowserDialog() {
+  Swal.fire({
+    title: 'Ziel wählen',
+    html: "<div id='folderBrowser' class='folderBrowserOnRestore'></div>",
+    confirmButtonColor: '#3085d6',
+    allowOutsideClick: false,
+    allowEscapeKey: false,
+    showCancelButton: true,
+    cancelButtonText: "Abbrechen",
+    confirmButtonText: 'Wiederherstellung starten',
+  }).then(function (state) {
+    //start restore on confirm-click
+    if (state.isConfirmed) {
+
+      //directory ok?
+      if (selectedDirectory != "") {
+        startRestore();
+      } else {
+        Swal.fire({
+          title: 'Fehler',
+          text: 'Es wurde kein Wiederherstellungspfad ausgewählt',
+          icon: 'error'
+        });
+      }
+    }
+  });
+
+
+  //load folder browser
+  $('#folderBrowser').jstree({
+    'core': {
+      'check_callback': true,
+      'data': null
+    },
+    types: {
+      "drive": {
+        "icon": "fa fa-hdd-o"
+      },
+      "folder": {
+        "icon": "fa fa-folder-open-o"
+      },
+      "default": {
+      }
+    }, plugins: ["types"]
+  });
+
+  //init treeview
+  maxNodeID = 0;
+  navigateToDirectory("/", "drive", "#");
+  selectedDirectory = "";
+
+  //node select handler
+  $("#folderBrowser").on("select_node.jstree", function (e, data) {
+    var selectedPath = data.instance.get_path(data.node, '\\');
+    selectedDirectory = selectedPath;
+    navigateToDirectory(selectedPath, "folder", data.node.id);
+  });
 }
 
 //handles a currently running full restore

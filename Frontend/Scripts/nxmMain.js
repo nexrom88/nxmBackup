@@ -252,7 +252,9 @@ function navigateToDirectory(directory, nodeType, currentNodeID) {
       }
 
       //open current node
-      $("#folderBrowser").jstree("open_node", $("#" + currentNodeID));
+      if (currentNodeID != "#") {
+        $("#folderBrowser").jstree("open_node", $("#" + currentNodeID));
+      }
 
     }
   });
