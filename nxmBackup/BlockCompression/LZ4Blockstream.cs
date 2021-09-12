@@ -370,7 +370,10 @@ namespace BlockCompression
             get => this.mode == AccessMode.write;
         }
 
-        public override long Length => throw new NotImplementedException();
+        public override long Length
+        {
+            get  => (long)this.decompressedFileSize;
+        }
 
         public override long Position { get => (long)this.position; set => this.position = (ulong)value; }
         public ulong DecompressedBlockSize { get => decompressedBlockSize; set => decompressedBlockSize = value; }

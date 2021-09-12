@@ -162,3 +162,8 @@ textarea {
 .folderBrowserOnRestore{
     text-align:left;
 }
+
+#restoreContainer{
+    overflow-x:hidden;
+    overflow-y:scroll;
+}

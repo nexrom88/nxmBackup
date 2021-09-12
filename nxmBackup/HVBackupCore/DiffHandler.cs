@@ -264,7 +264,7 @@ namespace nxmBackup.HVBackupCore
         }
 
         //merges a rct diff file with a vhdx
-        public void merge_rct(BlockCompression.LZ4BlockStream diffStream, string destinationSnapshot)
+        public bool merge_rct(BlockCompression.LZ4BlockStream diffStream, string destinationSnapshot)
         {
             int relatedEventId = -1;
             if (this.eventHandler != null)
@@ -274,89 +274,113 @@ namespace nxmBackup.HVBackupCore
 
             //open file streams
             VirtualDiskHandler diskHandler = new VirtualDiskHandler(destinationSnapshot);
-            diskHandler.open(VirtualDiskHandler.VirtualDiskAccessMask.All);
-            diskHandler.attach(VirtualDiskHandler.ATTACH_VIRTUAL_DISK_FLAG.ATTACH_VIRTUAL_DISK_FLAG_NO_LOCAL_HOST);
+
+            try
+            {
+                diskHandler.open(VirtualDiskHandler.VirtualDiskAccessMask.All);
+                diskHandler.attach(VirtualDiskHandler.ATTACH_VIRTUAL_DISK_FLAG.ATTACH_VIRTUAL_DISK_FLAG_NO_LOCAL_HOST);
+            }catch(Exception ex)
+            {
+                this.eventHandler.raiseNewEvent("Verarbeite Inkrement... fehlgeschlagen", true, true, NO_RELATED_EVENT, EventStatus.error);
+                return false;
+            }
 
             //get sector size
             int sectorSize = (int)diskHandler.getSize().SectorSize;
+            FileStream snapshotStream = null;
 
-            FileStream snapshotStream = new FileStream(diskHandler.getHandle(), FileAccess.Write, false, sectorSize, true);
-
-            HyperVBackupRCT.CbStructure cbStruct = HyperVBackupRCT.CBParser.parseCBFile(diffStream, false);
-
-            //restored bytes count for progress calculation
-            long bytesRestored = 0;
-            string lastProgress = "";
-
-            //iterate through all blocks
-            byte[] buffer;
-            for (int i = 0; i < cbStruct.blockCount; i++)
+            try
             {
-                ulong bytesRead = 0;
-                ulong writeOffset = 0;
+                snapshotStream = new FileStream(diskHandler.getHandle(), FileAccess.Write, false, sectorSize, true);
 
-                //read data block buffered, has to be 2^X
-                int bufferSize = 16777216;
-                bytesRead = 0;
+                HyperVBackupRCT.CbStructure cbStruct = HyperVBackupRCT.CBParser.parseCBFile(diffStream, false);
 
-                buffer = new byte[bufferSize];
+                //restored bytes count for progress calculation
+                long bytesRestored = 0;
+                string lastProgress = "";
 
-                while ((ulong)bytesRead < cbStruct.blocks[i].changedBlockLength && !this.stopRequest.value) //read blockwise until everything is read or stopped by user
+                //iterate through all blocks
+                byte[] buffer;
+                for (int i = 0; i < cbStruct.blockCount; i++)
                 {
-                    int bytesReadBlock = 0;
+                    ulong bytesRead = 0;
+                    ulong writeOffset = 0;
 
-                    //shrink buffer size?
-                    if (cbStruct.blocks[i].changedBlockLength - (ulong)bytesRead < (ulong)bufferSize)
+                    //read data block buffered, has to be 2^X
+                    int bufferSize = 16777216;
+                    bytesRead = 0;
+
+                    buffer = new byte[bufferSize];
+
+                    while ((ulong)bytesRead < cbStruct.blocks[i].changedBlockLength && !this.stopRequest.value) //read blockwise until everything is read or stopped by user
                     {
-                        bufferSize = (int)(cbStruct.blocks[i].changedBlockLength - (ulong)bytesRead);
-                        buffer = new byte[bufferSize];
-                    }
+                        int bytesReadBlock = 0;
+
+                        //shrink buffer size?
+                        if (cbStruct.blocks[i].changedBlockLength - (ulong)bytesRead < (ulong)bufferSize)
+                        {
+                            bufferSize = (int)(cbStruct.blocks[i].changedBlockLength - (ulong)bytesRead);
+                            buffer = new byte[bufferSize];
+                        }
 
 
-                    //read until buffer is full (by using lz4 it can occur that readBytes < bufferSize)
-                    diffStream.Seek((Int64)cbStruct.blocks[i].cbFileOffset + (Int64)bytesRead, SeekOrigin.Begin);
-                    while (bytesReadBlock < bufferSize)
-                    {
-                        int currentBytesCount = diffStream.Read(buffer, bytesReadBlock, bufferSize - bytesReadBlock);
-                        bytesReadBlock += currentBytesCount;
-                        bytesRead += (ulong)currentBytesCount;
+                        //read until buffer is full (by using lz4 it can occur that readBytes < bufferSize)
+                        diffStream.Seek((Int64)cbStruct.blocks[i].cbFileOffset + (Int64)bytesRead, SeekOrigin.Begin);
+                        while (bytesReadBlock < bufferSize)
+                        {
+                            int currentBytesCount = diffStream.Read(buffer, bytesReadBlock, bufferSize - bytesReadBlock);
+                            bytesReadBlock += currentBytesCount;
+                            bytesRead += (ulong)currentBytesCount;
 
-                        //add length to progress
-                        bytesRestored += currentBytesCount;
-                    }
+                            //add length to progress
+                            bytesRestored += currentBytesCount;
+                        }
 
-                    //write block to target file
-                    diskHandler.write(cbStruct.blocks[i].changedBlockOffset + writeOffset, buffer);
-                    writeOffset += (ulong)bufferSize;
+                        //write block to target file
+                        diskHandler.write(cbStruct.blocks[i].changedBlockOffset + writeOffset, buffer);
+                        writeOffset += (ulong)bufferSize;
 
-                    //show progress
-                    string progress = Common.PrettyPrinter.prettyPrintBytes(bytesRestored);
-                    if (progress != lastProgress && this.eventHandler != null)
-                    {
-                        this.eventHandler.raiseNewEvent("Verarbeite Inkrement... " + progress, false, true, relatedEventId, EventStatus.inProgress);
-                        lastProgress = progress;
+                        //show progress
+                        string progress = Common.PrettyPrinter.prettyPrintBytes(bytesRestored);
+                        if (progress != lastProgress && this.eventHandler != null)
+                        {
+                            this.eventHandler.raiseNewEvent("Verarbeite Inkrement... " + progress, false, true, relatedEventId, EventStatus.inProgress);
+                            lastProgress = progress;
+                        }
+
                     }
 
                 }
 
+                if (this.eventHandler != null)
+                {
+                    //finished "normally"?
+                    if (!this.stopRequest.value)
+                    {
+                        this.eventHandler.raiseNewEvent("Verarbeite Inkrement... erfolgreich", true, true, NO_RELATED_EVENT, EventStatus.successful);
+                    }
+                    else
+                    {
+                        this.eventHandler.raiseNewEvent("Verarbeite Inkrement... abgebrochen", true, true, NO_RELATED_EVENT, EventStatus.error);
+                    }
+                }
+
+            }catch(Exception ex)
+            {
+                //error while merging
+                this.eventHandler.raiseNewEvent("Verarbeite Inkrement... fehlgeschlagen", true, true, NO_RELATED_EVENT, EventStatus.error);
+                diskHandler.detach();
+                diskHandler.close();
+                diffStream.Close();
+                return false;
             }
 
-            if (this.eventHandler != null)
-            {
-                //finished "normally"?
-                if (!this.stopRequest.value)
-                {
-                    this.eventHandler.raiseNewEvent("Verarbeite Inkrement... erfolgreich", true, true, NO_RELATED_EVENT, EventStatus.successful);
-                }
-                else
-                {
-                    this.eventHandler.raiseNewEvent("Verarbeite Inkrement... Abgebrochen", true, true, NO_RELATED_EVENT, EventStatus.error);
-                }
-            }
+
             GC.KeepAlive(snapshotStream);
             diskHandler.detach();
             diskHandler.close();
             diffStream.Close();
+            return true;
         }
 
         //copys a given file without fs caching

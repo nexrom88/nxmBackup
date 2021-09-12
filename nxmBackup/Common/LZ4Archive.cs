@@ -214,10 +214,28 @@ namespace Common
             {
                 return false;
             }
+            
             //LZ4DecoderStream compressionStream = LZ4Stream.Decode(sourceStream, 0);
 
             Directory.CreateDirectory(Path.GetDirectoryName(destinationPath));
-            FileStream destStream = new FileStream(destinationPath, FileMode.Create, FileAccess.Write);
+            FileStream destStream = null; ;
+            try
+            {
+                //open dest file stream
+                destStream = new FileStream(destinationPath, FileMode.Create, FileAccess.Write);
+
+                //set file size            
+                destStream.SetLength(blockCompressionStream.Length);
+            }catch(Exception ex)
+            {
+                //not enough space
+                destStream.Close();
+                System.IO.File.Delete(destinationPath);
+                blockCompressionStream.Close();
+                sourceStream.Close();
+                this.eventHandler.raiseNewEvent("Verarbeite: " + fileName + "... fehlgeschlagen", false, true, relatedEventId, EventStatus.error);
+                return false;
+            }
 
             byte[] buffer = new byte[20000000];
             long totalReadBytes = 0;
@@ -253,7 +271,7 @@ namespace Common
                 else
                 {
                     //stopped by user
-                    this.eventHandler.raiseNewEvent("Verarbeite: " + fileName + "... abgebrochen", false, true, relatedEventId, EventStatus.error);
+                    this.eventHandler.raiseNewEvent("Verarbeite: " + fileName + "... fehlgeschlagen", false, true, relatedEventId, EventStatus.error);
                 }
             }
             destStream.Close();

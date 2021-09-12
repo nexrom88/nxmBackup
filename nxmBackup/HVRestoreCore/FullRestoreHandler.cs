@@ -77,6 +77,7 @@ namespace HVRestoreCore
                 if (restoreElement.instanceID != restoreChain[restoreChain.Count - 1].parentInstanceID)
                 {
                     //element is not valid, chain is broken, cancel restore
+                    this.eventHandler.raiseNewEvent("fehlgeschlagen.", true, false, relatedEventId, Common.EventStatus.error);
                     return;
                 }
                 else
@@ -93,6 +94,13 @@ namespace HVRestoreCore
 
             //copy full backup to destination and get vhdx files
             List<string> hddFiles = transferSnapshot(System.IO.Path.Combine(basePath, restoreChain[restoreChain.Count - 1].uuid + ".nxm"), destPath, false);
+
+            //restore not possible
+            if (hddFiles == null)
+            {
+                this.eventHandler.raiseNewEvent("Backup kann im angegebenen Verzeichnis nicht geschrieben werden", false, false, NO_RELATED_EVENT, Common.EventStatus.error);
+                return;
+            }
 
             //remove full backup from restore chain
             restoreChain.RemoveAt(restoreChain.Count - 1);
@@ -120,7 +128,12 @@ namespace HVRestoreCore
                         System.IO.Stream diffStream = archive.openAndGetFileStream(System.IO.Path.GetFileName(hddFile) + ".cb");
 
                         //merge the files
-                        diffRestore.merge_rct((BlockCompression.LZ4BlockStream)diffStream, hddFile);
+                        if (!diffRestore.merge_rct((BlockCompression.LZ4BlockStream)diffStream, hddFile))
+                        {
+                            this.eventHandler.raiseNewEvent("Zusammenführung fehlgeschlagen", true, false, NO_RELATED_EVENT, Common.EventStatus.error);
+                            diffStream.Close();
+                            return;
+                        }
                         diffStream.Close();
                     }
                     archive.close();
@@ -177,10 +190,11 @@ namespace HVRestoreCore
                 {
                     this.eventHandler.raiseNewEvent("Wiederherstellung abgebrochen", false, false, NO_RELATED_EVENT, Common.EventStatus.error);
                     this.eventHandler.raiseNewEvent("done", false, false, NO_RELATED_EVENT, Common.EventStatus.error);
+                    return;
                 }
             }
 
-
+            return;
 
         }
 
@@ -233,7 +247,12 @@ namespace HVRestoreCore
                 fileDestination = System.IO.Path.Combine(fileDestination, splitter[splitter.Length - 1]);
 
                 //start the transfer
-                archive.getFile(entry, fileDestination);
+                if (!archive.getFile(entry, fileDestination))
+                {
+                    //error on writing full snapshot
+                    archive.close();
+                    return null;
+                }
 
                 //add to return list if vhdx
                 if (fileDestination.EndsWith(".vhdx"))
@@ -248,6 +267,8 @@ namespace HVRestoreCore
 
 
     }
+
+    
 
     
 }

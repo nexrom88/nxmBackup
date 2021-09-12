@@ -41,7 +41,7 @@ namespace Frontend.Controllers
             }
             else //request is "normal" folder
             {
-                    string[] folders = System.IO.Directory.GetDirectories(requestedPath);
+                string[] folders = System.IO.Directory.GetDirectories(requestedPath);
 
                 returnDirectories = new string[folders.Length];
                 for (int i = 0; i < folders.Length; i++)
