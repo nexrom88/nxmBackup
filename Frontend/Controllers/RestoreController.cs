@@ -50,9 +50,17 @@ namespace Frontend.Controllers
             {
                 case "full":
                 case "fullImport":
+
+                    //have to import to hyperv?
+                    bool importToHyperV = false;
+                    if (restoreStartDetails.type == "fullImport")
+                    {
+                        importToHyperV = true;
+                    }
+                    
                     int jobExecutionId = Common.DBQueries.addJobExecution(restoreStartDetails.jobID, "restore");
                     HVRestoreCore.FullRestoreHandler fullRestoreHandler = new HVRestoreCore.FullRestoreHandler(new Common.EventHandler(vmObject, jobExecutionId), jobObject.UseEncryption, jobObject.AesKey);
-                    System.Threading.Thread frThread = new System.Threading.Thread(() => fullRestoreHandler.performFullRestoreProcess(sourcePath, restoreStartDetails.destPath, vmObject + "_restored", restoreStartDetails.instanceID, false));
+                    System.Threading.Thread frThread = new System.Threading.Thread(() => fullRestoreHandler.performFullRestoreProcess(sourcePath, restoreStartDetails.destPath, vmObject.vmName + "_restored", restoreStartDetails.instanceID, importToHyperV));
                     frThread.Start();
 
                     //set global object
