@@ -227,7 +227,7 @@ namespace nxmBackup.HVBackupCore
             if (chain[0].type == "full" && chain[1].type == "full")
             {
                 ConfigHandler.BackupConfigHandler.removeBackup(path, chain[0].uuid); //remove from config
-                System.IO.File.Delete(System.IO.Path.Combine(path, chain[0].uuid + ".nxm")); //remove backup file
+                System.IO.Directory.Delete(System.IO.Path.Combine(path, chain[0].uuid + ".nxm"), true); //remove backup file
                 return;
             }
 
