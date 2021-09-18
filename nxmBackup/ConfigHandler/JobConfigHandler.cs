@@ -28,7 +28,7 @@ namespace ConfigHandler
             //open DB connection
             using (Common.DBConnection connection = new Common.DBConnection())
             {
-                List<Dictionary<string, object>> jobsDB = connection.doReadQuery("SELECT jobs.id, jobs.name, jobs.isRunning, jobs.basepath, jobs.maxelements, jobs.blocksize, jobs.day, jobs.hour, jobs.minute, jobs.interval, jobs.livebackup, jobs.useencryption, jobs.aeskey, rotationtype.name AS rotationname FROM jobs INNER JOIN rotationtype ON jobs.rotationtypeid=rotationtype.id WHERE jobs.deleted=FALSE;", null, null);
+                List<Dictionary<string, object>> jobsDB = connection.doReadQuery("SELECT jobs.id, jobs.name, jobs.incremental, jobs.isRunning, jobs.basepath, jobs.maxelements, jobs.blocksize, jobs.day, jobs.hour, jobs.minute, jobs.interval, jobs.livebackup, jobs.useencryption, jobs.aeskey, rotationtype.name AS rotationname FROM jobs INNER JOIN rotationtype ON jobs.rotationtypeid=rotationtype.id WHERE jobs.deleted=FALSE;", null, null);
 
                 //check that jobs != null
                 if (jobsDB == null) //DB error
@@ -48,6 +48,7 @@ namespace ConfigHandler
                     newJob.BlockSize = (int)jobDB["blocksize"];
                     newJob.IsRunning = (bool)jobDB["isrunning"];
                     newJob.LiveBackup = (bool)jobDB["livebackup"];
+                    newJob.Incremental = (bool)jobDB["incremental"];
                     newJob.UseEncryption = (bool)jobDB["useencryption"];
 
                     if (newJob.UseEncryption)
@@ -179,6 +180,7 @@ namespace ConfigHandler
                 //create job entry
                 parameters = new Dictionary<string, object>();
                 parameters.Add("name", job.Name);
+                parameters.Add("incremental", job.Incremental);
                 parameters.Add("interval", intervalString);
                 parameters.Add("minute", job.Interval.minute);
                 parameters.Add("hour", job.Interval.hour);
@@ -192,7 +194,7 @@ namespace ConfigHandler
                 parameters.Add("aeskey", job.AesKey);
 
 
-                values = connection.doReadQuery("INSERT INTO jobs (name, interval, minute, hour, day, basepath, blocksize, maxelements, livebackup, rotationtypeid, useencryption, aeskey) VALUES(@name, @interval, @minute, @hour, @day, @basepath, @blocksize, @maxelements, @livebackup, @rotationtypeID, @useencryption, @aeskey) RETURNING id;", parameters, transaction);
+                values = connection.doReadQuery("INSERT INTO jobs (name, incremental, interval, minute, hour, day, basepath, blocksize, maxelements, livebackup, rotationtypeid, useencryption, aeskey) VALUES(@name, @incremental, @interval, @minute, @hour, @day, @basepath, @blocksize, @maxelements, @livebackup, @rotationtypeID, @useencryption, @aeskey) RETURNING id;", parameters, transaction);
 
                 int jobID = (int)(values[0]["id"]);
 
@@ -312,6 +314,7 @@ namespace ConfigHandler
         private bool useEncryption;
         private byte[] aesKey;
         private string name;
+        private bool incremental;
         private Interval interval;
         private List<JobVM> jobVMs;
         private string basePath;
@@ -335,6 +338,7 @@ namespace ConfigHandler
         public int BlockSize { get => blockSize; set => blockSize = value; }
         public Rotation Rotation { get => rotation; set => rotation = value; }
         public bool IsRunning { get => isRunning; set => isRunning = value; }
+        public bool Incremental { get => incremental; set => incremental = value; }
         public int DbId { get => dbId; set => dbId = value; }
         public bool LiveBackup { get => liveBackup; set => liveBackup = value; }
         public LiveBackupWorker LiveBackupWorker { get => lbWorker; set => lbWorker = value; }

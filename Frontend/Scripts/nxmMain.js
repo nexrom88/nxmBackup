@@ -161,6 +161,11 @@ function showNewJobPage(pageNumber) {
           $("#newJobPage").html(data);
           registerNextPageClickHandler(pageNumber);
 
+          //disable options for non-incremental jobs
+          if (!newJobObj["incremental"]) {
+            $("#incrementalOptions").css("display","none");
+          }
+
           //enable input number spinner
           $("input[type='number']").inputSpinner();
 
@@ -292,6 +297,9 @@ function registerNextPageClickHandler(currentPage) {
         //use encryption?
         newJobObj["useencryption"] = $("#cbEncryption").prop("checked");
         newJobObj["encpassword"] = $("#txtEncryptionPassword").val();
+
+        //use incremental backups?
+        newJobObj["incremental"] = $("#cbIncremental").prop("checked");
 
         break;
       case 2:

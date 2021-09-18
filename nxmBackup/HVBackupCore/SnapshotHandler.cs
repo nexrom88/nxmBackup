@@ -53,7 +53,7 @@ namespace nxmBackup.HVBackupCore
             {
                 if (chain == null || chain.Count == 0) //first backup must be full backup
                 {
-                    this.eventHandler.raiseNewEvent("Inkrementielles Backup nicht möglich", false, false, NO_RELATED_EVENT, EventStatus.info);
+                    this.eventHandler.raiseNewEvent("Inkrementelles Backup nicht möglich", false, false, NO_RELATED_EVENT, EventStatus.info);
                     refP = null; //incremental backup not possible
                 }
                 else if (getBlockSize(chain) >= job.BlockSize) //block size reached?
@@ -507,7 +507,7 @@ namespace nxmBackup.HVBackupCore
                     //just raise event by first iteration
                     if (hddCounter == 0)
                     {
-                        this.eventHandler.raiseNewEvent("Beginne inkrementielles Backup", false, false, NO_RELATED_EVENT, EventStatus.successful);
+                        this.eventHandler.raiseNewEvent("Beginne inkrementelles Backup", false, false, NO_RELATED_EVENT, EventStatus.successful);
                     }
                     
                     //do a rct backup copy

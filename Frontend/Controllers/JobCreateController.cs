@@ -19,6 +19,7 @@ namespace Frontend.Controllers
 
             //convert Frontend job to OneJob object
             newJob.Name = value.name;
+            newJob.Incremental = value.incremental;
             newJob.BasePath = value.target;
             newJob.LiveBackup = value.livebackup;
             newJob.UseEncryption = value.useencryption;
@@ -113,6 +114,7 @@ namespace Frontend.Controllers
         public class NewFrontendJob
         {
             public string name { get; set; }
+            public bool incremental { get; set; }
             public bool useencryption { get; set; }
             public string encpassword { get; set; }
             public bool livebackup { get; set; }

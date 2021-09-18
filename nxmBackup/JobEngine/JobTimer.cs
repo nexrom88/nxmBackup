@@ -65,7 +65,11 @@ namespace JobEngine
             foreach (JobVM vm in this.Job.JobVMs)
             {
                 SnapshotHandler ssHandler = new SnapshotHandler(vm, executionId, this.Job.UseEncryption, this.Job.AesKey);
-                bool successful = ssHandler.performFullBackupProcess(ConsistencyLevel.ApplicationAware, true, true, this.job);
+
+                //incremental allowed?
+                bool incremental = this.Job.Incremental;
+
+                bool successful = ssHandler.performFullBackupProcess(ConsistencyLevel.ApplicationAware, true, incremental, this.job);
                 if (!successful) executionSuccessful = false;
             }
 
