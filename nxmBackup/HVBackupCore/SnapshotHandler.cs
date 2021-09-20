@@ -223,84 +223,99 @@ namespace nxmBackup.HVBackupCore
         //merge two backups to keep max snapshot count
         private void mergeOldest(string path, List<ConfigHandler.BackupConfigHandler.BackupInfo> chain)
         {
-            //when the first two backups are "full" backups then the first one can just be deleted
-            if (chain[0].type == "full" && chain[1].type == "full")
+
+            try
             {
+
+                //when the first two backups are "full" backups then the first one can just be deleted
+                if (chain[0].type == "full" && chain[1].type == "full")
+                {
+                    ConfigHandler.BackupConfigHandler.removeBackup(path, chain[0].uuid); //remove from config
+                    System.IO.Directory.Delete(System.IO.Path.Combine(path, chain[0].uuid + ".nxm"), true); //remove backup file
+
+                    return;
+                }
+
+                //Given at this point: first backup is "full", the second one is "rct" or "lb"
+
+                //is second backup within chain "lb" backup?
+                if (chain[1].type == "lb")
+                {
+                    //remove lb backup from config, hdd and chainlist
+                    ConfigHandler.BackupConfigHandler.removeBackup(path, chain[1].uuid); //remove from config
+                    System.IO.Directory.Delete(System.IO.Path.Combine(path, chain[1].uuid + ".nxm"), true); //remove backup file
+                    chain.RemoveAt(1);
+                }
+
+
+
+
+                //create staging dir
+                System.IO.Directory.CreateDirectory(System.IO.Path.Combine(path, "staging"));
+
+                int eventId;
+                eventId = this.eventHandler.raiseNewEvent("Rotiere Backups (Schritt 1 von 5)...", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
+
+                HVRestoreCore.FullRestoreHandler restHandler = new HVRestoreCore.FullRestoreHandler(null, this.useEncryption, this.aesKey);
+
+                //perform restore to staging directory (including merge with second backup)
+                restHandler.performFullRestoreProcess(path, System.IO.Path.Combine(path, "staging"), "", chain[1].instanceID, false);
+
+                this.eventHandler.raiseNewEvent("erfolgreich", true, false, eventId, EventStatus.successful);
+                eventId = this.eventHandler.raiseNewEvent("Rotiere Backups (Schritt 2 von 5)...", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
+
+                //remove first and second backup from backup chain
                 ConfigHandler.BackupConfigHandler.removeBackup(path, chain[0].uuid); //remove from config
                 System.IO.Directory.Delete(System.IO.Path.Combine(path, chain[0].uuid + ".nxm"), true); //remove backup file
-                return;
-            }
-
-            //Given at this point: first backup is "full", the second one is "rct" or "lb"
-
-            //is second backup within chain "lb" backup?
-            if (chain[1].type == "lb")
-            {
-                //remove lb backup from config, hdd and chainlist
                 ConfigHandler.BackupConfigHandler.removeBackup(path, chain[1].uuid); //remove from config
                 System.IO.Directory.Delete(System.IO.Path.Combine(path, chain[1].uuid + ".nxm"), true); //remove backup file
-                chain.RemoveAt(1);
-            }
 
-            //create staging dir
-            System.IO.Directory.CreateDirectory(System.IO.Path.Combine(path, "staging"));
+                //create new backup container from merged backups
+                Guid g = Guid.NewGuid();
+                string guidFolder = g.ToString();
+                Common.LZ4Archive backupArchive = new Common.LZ4Archive(System.IO.Path.Combine(path, guidFolder + ".nxm"), null, this.useEncryption, this.aesKey, null);
+                backupArchive.create();
+                backupArchive.open(System.IO.Compression.ZipArchiveMode.Create);
 
-            int eventId;
-            eventId = this.eventHandler.raiseNewEvent("Rotiere Backups (Schritt 1 von 5)...", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
+                this.eventHandler.raiseNewEvent("erfolgreich", true, false, eventId, EventStatus.successful);
+                eventId = this.eventHandler.raiseNewEvent("Rotiere Backups (Schritt 3 von 5)...", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
 
-            HVRestoreCore.FullRestoreHandler restHandler = new HVRestoreCore.FullRestoreHandler(null, this.useEncryption, this.aesKey);
+                //add whole staging directory to the container archive
+                backupArchive.addDirectory(System.IO.Path.Combine(path, "staging"));
+                backupArchive.close();
 
-            //perform restore to staging directory (including merge with second backup)
-            restHandler.performFullRestoreProcess(path, System.IO.Path.Combine(path, "staging"), "", chain[1].instanceID, false);
+                this.eventHandler.raiseNewEvent("erfolgreich", true, false, eventId, EventStatus.successful);
+                eventId = this.eventHandler.raiseNewEvent("Rotiere Backups (Schritt 4 von 5)...", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
 
-            this.eventHandler.raiseNewEvent("erfolgreich", true, false, eventId, EventStatus.successful);
-            eventId = this.eventHandler.raiseNewEvent("Rotiere Backups (Schritt 2 von 5)...", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
+                //create entry to backup chain
+                ConfigHandler.BackupConfigHandler.addBackup(path, guidFolder, "full", chain[1].instanceID, "", true);
 
-            //remove first and second backup from backup chain
-            ConfigHandler.BackupConfigHandler.removeBackup(path, chain[0].uuid); //remove from config
-            System.IO.Directory.Delete(System.IO.Path.Combine(path, chain[0].uuid + ".nxm"), true); //remove backup file
-            ConfigHandler.BackupConfigHandler.removeBackup(path, chain[1].uuid); //remove from config
-            System.IO.Directory.Delete(System.IO.Path.Combine(path, chain[1].uuid + ".nxm"), true); //remove backup file
+                this.eventHandler.raiseNewEvent("erfolgreich", true, false, eventId, EventStatus.successful);
+                eventId = this.eventHandler.raiseNewEvent("Rotiere Backups (Schritt 5 von 5)...", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
 
-            //create new backup container from merged backups
-            Guid g = Guid.NewGuid();
-            string guidFolder = g.ToString();
-            Common.LZ4Archive backupArchive = new Common.LZ4Archive(System.IO.Path.Combine(path, guidFolder + ".nxm"), null, this.useEncryption, this.aesKey, null);
-            backupArchive.create();
-            backupArchive.open(System.IO.Compression.ZipArchiveMode.Create);
-
-            this.eventHandler.raiseNewEvent("erfolgreich", true, false, eventId, EventStatus.successful);
-            eventId = this.eventHandler.raiseNewEvent("Rotiere Backups (Schritt 3 von 5)...", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
-
-            //add whole staging directory to the container archive
-            backupArchive.addDirectory(System.IO.Path.Combine(path, "staging"));
-            backupArchive.close();
-
-            this.eventHandler.raiseNewEvent("erfolgreich", true, false, eventId, EventStatus.successful);
-            eventId = this.eventHandler.raiseNewEvent("Rotiere Backups (Schritt 4 von 5)...", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
-
-            //create entry to backup chain
-            ConfigHandler.BackupConfigHandler.addBackup(path, guidFolder, "full", chain[1].instanceID, "", true);
-
-            this.eventHandler.raiseNewEvent("erfolgreich", true, false, eventId, EventStatus.successful);
-            eventId = this.eventHandler.raiseNewEvent("Rotiere Backups (Schritt 5 von 5)...", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
-
-            //remove reference point
-            List<ManagementObject> refPs = getReferencePoints();
-            //iterate reference points
-            List<ManagementObject> referencePoints = getReferencePoints();
-            foreach (ManagementObject mo in referencePoints)
-            {
-                if (mo["InstanceId"].ToString() == chain[0].instanceID)
+                //remove reference point
+                List<ManagementObject> refPs = getReferencePoints();
+                //iterate reference points
+                List<ManagementObject> referencePoints = getReferencePoints();
+                foreach (ManagementObject mo in referencePoints)
                 {
-                    removeReferencePoint(mo);
+                    if (mo["InstanceId"].ToString() == chain[0].instanceID)
+                    {
+                        removeReferencePoint(mo);
+                    }
                 }
+
+                //remove staging folder
+                System.IO.Directory.Delete(System.IO.Path.Combine(path, "staging"), true);
+
+                this.eventHandler.raiseNewEvent("erfolgreich", true, false, eventId, EventStatus.successful);
+
             }
-
-            //remove staging folder
-            System.IO.Directory.Delete(System.IO.Path.Combine(path, "staging"), true);
-
-            this.eventHandler.raiseNewEvent("erfolgreich", true, false, eventId, EventStatus.successful);
+            catch
+            {
+                //old backups could not be deleted, write error message
+                this.eventHandler.raiseNewEvent("Fehler beim Rotieren alter Backups", false, false, NO_RELATED_EVENT, EventStatus.warning);
+            }
 
 
         }

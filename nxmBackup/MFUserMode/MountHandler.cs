@@ -418,7 +418,10 @@ namespace nxmBackup.MFUserMode
         public void stopMfHandling()
         {
             this.processStopped = true;
-            
+
+            //close km connection
+            this.kmConnection.closeConnection();
+
             //iterate through all rct backups
             foreach (BackupChainReader.ReadableNonFullBackup nonFullBackup in this.readableChain.NonFullBackups)
             {
@@ -437,8 +440,7 @@ namespace nxmBackup.MFUserMode
             //close full backup
             this.readableChain.FullBackup.sourceStream.Close();
 
-            //close km connection
-            this.kmConnection.closeConnection();
+
 
             //delete dummy files
             if (this.restoreMode == RestoreMode.flr)

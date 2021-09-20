@@ -21,13 +21,19 @@ namespace HVRestoreCore
         }
 
         //mounts vhdx file without driveletter
-        public void mountVHD()
+        public bool mountVHD()
         {
             diskHandler = new Common.VirtualDiskHandler(this.vhdPath);
-            diskHandler.open(Common.VirtualDiskHandler.VirtualDiskAccessMask.AttachReadOnly);
-            diskHandler.attach(Common.VirtualDiskHandler.ATTACH_VIRTUAL_DISK_FLAG.ATTACH_VIRTUAL_DISK_FLAG_NO_DRIVE_LETTER | Common.VirtualDiskHandler.ATTACH_VIRTUAL_DISK_FLAG.ATTACH_VIRTUAL_DISK_FLAG_READ_ONLY);
+            if (!diskHandler.open(Common.VirtualDiskHandler.VirtualDiskAccessMask.AttachReadOnly))
+            {
+                return false;
+            }
+            if (!diskHandler.attach(Common.VirtualDiskHandler.ATTACH_VIRTUAL_DISK_FLAG.ATTACH_VIRTUAL_DISK_FLAG_NO_DRIVE_LETTER | Common.VirtualDiskHandler.ATTACH_VIRTUAL_DISK_FLAG.ATTACH_VIRTUAL_DISK_FLAG_READ_ONLY))
+            {
+                return false;
+            }
             //diskHandler.attach(Common.VirtualDiskHandler.ATTACH_VIRTUAL_DISK_FLAG.ATTACH_VIRTUAL_DISK_FLAG_READ_ONLY);
-
+            return true;
         }
 
         //gets all current mounted drives with no drive letter

@@ -168,7 +168,16 @@ namespace HVRestoreCore
             //mount vhdx file when not in window mode
             if (!windowMode)
             {
-                mountVHDX(mountHandler.MountFile);
+                if (!mountVHDX(mountHandler.MountFile))
+                {
+                    //error while mounting vhdx
+                    flrState newState = new flrState();
+                    newState.type = flrStateType.error;
+                    State = newState;
+                    mountThread.Abort();
+                    mountHandler.stopMfHandling();
+                    return;
+                }
             }
 
             //set state to running
@@ -205,7 +214,7 @@ namespace HVRestoreCore
 
         }
 
-        private void mountVHDX(string vhdPath)
+        private bool mountVHDX(string vhdPath)
         {
 
             this.guestFilesHandler = new GuestFilesHandler(vhdPath);
@@ -213,7 +222,10 @@ namespace HVRestoreCore
 
             List<GuestVolume> drives = this.guestFilesHandler.getMountedDrives();
 
-            this.guestFilesHandler.mountVHD();
+            if (!this.guestFilesHandler.mountVHD())
+            {
+                return false;
+            }
 
             List<GuestVolume> newDrives = this.guestFilesHandler.getMountedDrives();
             List<GuestVolume> mountedDrives = new List<GuestVolume>();
@@ -239,7 +251,7 @@ namespace HVRestoreCore
             }
 
             GuestVolumes = mountedDrives.ToArray();
-
+            return true;
         }
 
 
