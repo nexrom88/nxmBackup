@@ -445,7 +445,14 @@ namespace nxmBackup.MFUserMode
             //delete dummy files
             if (this.restoreMode == RestoreMode.flr)
             {
-                System.IO.File.Delete(this.MountFile);
+                try
+                {
+                    System.IO.File.Delete(this.MountFile);
+                }
+                catch
+                {
+                    //ignore when mount file cannot be deleted
+                }
             }
 
             if (this.restoreMode == RestoreMode.lr)
