@@ -79,6 +79,7 @@ namespace nxmBackup.MFUserMode
             this.mountFile = getMountHDDPath(decompressedFileSize, vhdxName);
             if (this.mountFile == null)
             {
+                DBQueries.addLog("LR: mount file could not be created", Environment.StackTrace);
                 mountState = ProcessState.error;
                 return;
             }
@@ -97,6 +98,7 @@ namespace nxmBackup.MFUserMode
             //return if no config file found
             if (configFile == "")
             {
+                DBQueries.addLog("LR: no config ile found", Environment.StackTrace);
                 mountState = ProcessState.error;
                 System.IO.File.Delete(this.mountFile);
                 return;
@@ -125,6 +127,7 @@ namespace nxmBackup.MFUserMode
             }
             else
             {
+                DBQueries.addLog("LR: Failed to connect to KM", Environment.StackTrace);
                 this.mountState = ProcessState.error;
             }
         }
@@ -146,6 +149,7 @@ namespace nxmBackup.MFUserMode
             }
             catch(Exception ex)
             {
+                DBQueries.addLog("LR: importing vm failed", Environment.StackTrace);
                 this.mountState = ProcessState.error;
             }
 

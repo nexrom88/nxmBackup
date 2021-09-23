@@ -9,6 +9,7 @@ using ConfigHandler;
 using System.Windows;
 using nxmBackup.SubGUIs;
 using System.Management;
+using Common;
 
 namespace HVRestoreCore
 {
@@ -41,7 +42,7 @@ namespace HVRestoreCore
             //target backup found?
             if (targetBackup.instanceID != instanceID )
             {
-
+                DBQueries.addLog("LR: target backup not found", Environment.StackTrace);
                 return; //not found, no restore
             }
 

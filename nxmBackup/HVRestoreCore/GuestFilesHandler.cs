@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Management;
 using System.IO;
+using Common;
 
 namespace HVRestoreCore
 {
@@ -26,10 +27,12 @@ namespace HVRestoreCore
             diskHandler = new Common.VirtualDiskHandler(this.vhdPath);
             if (!diskHandler.open(Common.VirtualDiskHandler.VirtualDiskAccessMask.AttachReadOnly))
             {
+                DBQueries.addLog("Mount: opening vhdx failed", Environment.StackTrace);
                 return false;
             }
             if (!diskHandler.attach(Common.VirtualDiskHandler.ATTACH_VIRTUAL_DISK_FLAG.ATTACH_VIRTUAL_DISK_FLAG_NO_DRIVE_LETTER | Common.VirtualDiskHandler.ATTACH_VIRTUAL_DISK_FLAG.ATTACH_VIRTUAL_DISK_FLAG_READ_ONLY))
             {
+                DBQueries.addLog("FLR: attaching vhdx failed", Environment.StackTrace);
                 return false;
             }
             //diskHandler.attach(Common.VirtualDiskHandler.ATTACH_VIRTUAL_DISK_FLAG.ATTACH_VIRTUAL_DISK_FLAG_READ_ONLY);
