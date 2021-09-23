@@ -9,6 +9,17 @@ namespace Common
 {
     public class DBQueries
     {
+
+        //adds an entry to log table
+        public static void addLog(string text, string stacktrace)
+        {
+            using (DBConnection dbConn = new DBConnection())
+            {
+                dbConn.doWriteQuery("INSERT INTO log (text, stacktrace) VALUES (@text, @stacktrace);",
+                        new Dictionary<string, object>() { { "text", text }, { "stacktrace", stacktrace } }, null);
+            }
+        }
+
         //deletes the old hdds from a given vm and adds new ones
         public static void refreshHDDs(List<VMHDD> hdds, string vmid)
         {

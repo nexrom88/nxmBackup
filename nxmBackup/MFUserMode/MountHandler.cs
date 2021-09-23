@@ -326,6 +326,7 @@ namespace nxmBackup.MFUserMode
             }
             else
             {
+                DBQueries.addLog("FLR: Failed to connect to KM", Environment.StackTrace);
                 mountState = ProcessState.error;
             }
         }
