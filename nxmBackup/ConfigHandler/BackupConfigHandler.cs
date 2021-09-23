@@ -109,30 +109,39 @@ namespace ConfigHandler
             //check whether config file exists
             if (!File.Exists(Path.Combine(basePath, "config.xml"))) { return null; }
 
-            //file exists, open it
-            FileStream baseStream = new FileStream(Path.Combine(basePath, "config.xml"), FileMode.Open, FileAccess.ReadWrite);
-            XmlDocument xml = new XmlDocument();
-            xml.Load(baseStream);
-            baseStream.Close();
-
-            //open VMBackup
-            XmlElement rootElement = (XmlElement)xml.SelectSingleNode("VMBackup");
-            XmlElement backupsElement = (XmlElement)rootElement.SelectSingleNode("BackupChain");
-
-            //iterate through all backups
-            for (int i = 0; i < backupsElement.ChildNodes.Count; i++)
+            try
             {
-                //build structure
-                BackupInfo backup = new BackupInfo();
-                backup.uuid = backupsElement.ChildNodes.Item(i).Attributes.GetNamedItem("uuid").Value;
-                backup.type = backupsElement.ChildNodes.Item(i).Attributes.GetNamedItem("type").Value;
-                backup.timeStamp = backupsElement.ChildNodes.Item(i).Attributes.GetNamedItem("timestamp").Value;
-                backup.instanceID = backupsElement.ChildNodes.Item(i).Attributes.GetNamedItem("InstanceId").Value;
-                backup.parentInstanceID = backupsElement.ChildNodes.Item(i).Attributes.GetNamedItem("ParentInstanceId").Value;
-                backupChain.Add(backup);
-            }
+                //file exists, open it
+                FileStream baseStream = new FileStream(Path.Combine(basePath, "config.xml"), FileMode.Open, FileAccess.Read);
+                XmlDocument xml = new XmlDocument();
+                xml.Load(baseStream);
+                baseStream.Close();
 
-            return backupChain;
+                //open VMBackup
+                XmlElement rootElement = (XmlElement)xml.SelectSingleNode("VMBackup");
+                XmlElement backupsElement = (XmlElement)rootElement.SelectSingleNode("BackupChain");
+
+                //iterate through all backups
+                for (int i = 0; i < backupsElement.ChildNodes.Count; i++)
+                {
+                    //build structure
+                    BackupInfo backup = new BackupInfo();
+                    backup.uuid = backupsElement.ChildNodes.Item(i).Attributes.GetNamedItem("uuid").Value;
+                    backup.type = backupsElement.ChildNodes.Item(i).Attributes.GetNamedItem("type").Value;
+                    backup.timeStamp = backupsElement.ChildNodes.Item(i).Attributes.GetNamedItem("timestamp").Value;
+                    backup.instanceID = backupsElement.ChildNodes.Item(i).Attributes.GetNamedItem("InstanceId").Value;
+                    backup.parentInstanceID = backupsElement.ChildNodes.Item(i).Attributes.GetNamedItem("ParentInstanceId").Value;
+                    backupChain.Add(backup);
+                }
+
+                return backupChain;
+
+            }
+            catch
+            {
+                //config.xml is not accesible
+                return null;
+            }
         }
 
         //builds an array of hdd files from a given backup chain
