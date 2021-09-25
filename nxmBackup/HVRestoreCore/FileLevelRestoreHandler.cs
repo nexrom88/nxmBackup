@@ -51,6 +51,7 @@ namespace HVRestoreCore
             //target backup found?
             if (targetBackup.instanceID != instanceID)
             {
+                DBQueries.addLog("target backup not found", Environment.StackTrace);
                 return; //not found, no restore
             }
 

@@ -547,6 +547,9 @@ function vmClickHandler(event) {
 
   selectedVM = $(this).data("vmid");
 
+  //remove active-class from all vms
+  $(".vm").removeClass("active");
+
   //set current element in GUI
   $(this).addClass("active");
 
