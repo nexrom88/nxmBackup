@@ -52,6 +52,9 @@ namespace HVRestoreCore
             if (targetBackup.instanceID != instanceID)
             {
                 DBQueries.addLog("target backup not found", Environment.StackTrace);
+                flrState newState = new flrState();
+                newState.type = flrStateType.error;
+                State = newState;
                 return; //not found, no restore
             }
 
@@ -70,6 +73,10 @@ namespace HVRestoreCore
                 if (restoreElement.instanceID != restoreChain[restoreChain.Count - 1].parentInstanceID)
                 {
                     //element is not valid, chain is broken, cancel restore
+                    DBQueries.addLog("backup chain broken", Environment.StackTrace);
+                    flrState newState = new flrState();
+                    newState.type = flrStateType.error;
+                    State = newState;
                     return;
                 }
                 else
@@ -107,6 +114,7 @@ namespace HVRestoreCore
                     //no hdd selected -> cancel restore
                     if (selectedHDD == null)
                     {
+                        DBQueries.addLog("no hdd selcted", Environment.StackTrace);
                         return;
                     }
                 }
