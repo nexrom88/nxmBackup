@@ -87,7 +87,7 @@ namespace HVRestoreCore
             }
 
             //get hdd files from backup chain
-            string[] hddFiles = BackupConfigHandler.getHDDFilesFromChain(restoreChain, basePath, null);
+            string[] hddFiles = BackupConfigHandler.getHDDFilesFromChainForLR(restoreChain, basePath);
 
             string backupBasePath = System.IO.Path.Combine(basePath, restoreChain[restoreChain.Count -1].uuid + ".nxm");
 

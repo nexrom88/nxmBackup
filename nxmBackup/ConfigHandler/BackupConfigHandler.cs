@@ -186,6 +186,41 @@ namespace ConfigHandler
 
         }
 
+        //builds an array of hdd files from a given backup chain for lr
+        public static string[] getHDDFilesFromChainForLR(List<BackupInfo> restoreChain, string basePath)
+        {
+            string[] retVal = new string[restoreChain.Count];
+            string targetHDD = "";
+
+            //iterate through all backups within chain in reverse to read full backup first
+            for (int i = restoreChain.Count - 1; i >= 0; i--)
+            {
+                if (restoreChain[i].type == "full")
+                {
+
+                    //get all vhdx files
+                    string vmBasePath = System.IO.Path.Combine(basePath, restoreChain[i].uuid + ".nxm\\" + "Virtual Hard Disks");
+                    string[] entries = System.IO.Directory.GetFiles(vmBasePath, "*.vhdx");
+                    retVal[i] = entries[0]; //take first found file. OK here because otherwise user would have chosen one
+                    targetHDD = System.IO.Path.GetFileName(entries[0]);
+
+                }
+                else if (restoreChain[i].type == "rct")
+                {
+                    string vmBasePath = System.IO.Path.Combine(basePath, restoreChain[i].uuid + ".nxm\\");
+                    retVal[i] = System.IO.Path.Combine(vmBasePath, targetHDD + ".cb");
+                }
+                else if (restoreChain[i].type == "lb")
+                {
+                    string vmBasePath = System.IO.Path.Combine(basePath, restoreChain[i].uuid + ".nxm\\");
+                    retVal[i] = System.IO.Path.Combine(vmBasePath, targetHDD + ".lb");
+                }
+            }
+
+            return retVal;
+
+        }
+
         public struct BackupInfo
         {
             public string uuid;
