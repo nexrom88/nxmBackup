@@ -59,7 +59,7 @@ function startRestoreHandler() {
     });
 
     //on select event handler
-    $(".sbSourceVM").change(function () {
+    $("#sbSourceVM").change(function () {
       
         loadRestorePoints();
       
