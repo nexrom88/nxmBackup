@@ -18,7 +18,7 @@ namespace HVRestoreCore
         private bool useEncryption;
         private byte[] aesKey;
 
-        //gets set to true when stop is requested
+        //set to true when stop is requested
         public bool StopRequest { get; set; }
 
         public lrState State { get; set; }
