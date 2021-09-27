@@ -187,9 +187,10 @@ namespace ConfigHandler
         }
 
         //builds an array of hdd files from a given backup chain for lr
-        public static string[] getHDDFilesFromChainForLR(List<BackupInfo> restoreChain, string basePath)
+        public static LRBackupChains getHDDFilesFromChainForLR(List<BackupInfo> restoreChain, string basePath)
         {
-            string[] retVal = new string[restoreChain.Count];
+            LRBackupChains retVal = new LRBackupChains();
+            
             string targetHDD = "";
 
             //iterate through all backups within chain in reverse to read full backup first
@@ -220,6 +221,17 @@ namespace ConfigHandler
             return retVal;
 
         }
+
+        public struct LRBackupChains
+        {
+            public List<LRBackupChain> chains;
+        }
+
+        public struct LRBackupChain
+        {
+            public string[] files;
+        }
+
 
         public struct BackupInfo
         {
