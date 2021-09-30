@@ -254,6 +254,7 @@ namespace nxmBackup.MFUserMode
 
             long offset = BitConverter.ToInt64(data, 1);
             long length = BitConverter.ToInt64(data, 9);
+            byte vhdxTargetIndex = data[17];
 
 
             //get lr operation mode (0 = write, 1 = read)
@@ -278,8 +279,8 @@ namespace nxmBackup.MFUserMode
                 byte[] logBuffer = System.Text.Encoding.ASCII.GetBytes(logString);
 
                 //read payload data from backup chain
-                this.readableBackupChains[0].readFromChain(offset, length, data, 0);
-                this.readableBackupChains[0].readFromLB(offset, length, data);
+                this.readableBackupChains[vhdxTargetIndex].readFromChain(offset, length, data, 0);
+                this.readableBackupChains[vhdxTargetIndex].readFromLB(offset, length, data);
 
                 //this.compareStream.Seek(offset, SeekOrigin.Begin);
                 //byte[] compareData = new byte[length];
