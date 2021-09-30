@@ -60,7 +60,7 @@ namespace nxmBackup.MFUserMode
 
 
         //source stream (usually seekable decompression stream)
-        private BackupChainReader readableBackupChain;
+        private BackupChainReader[] readableBackupChains;
 
         //the handle to the km connection
         private IntPtr kmHandle;
@@ -74,9 +74,9 @@ namespace nxmBackup.MFUserMode
         //shared memory with km
         SharedMemory sharedMemoryHandler = new SharedMemory();
 
-        public MFUserMode(BackupChainReader readableBackupChain)
+        public MFUserMode(BackupChainReader[] readableBackupChains)
         {
-            this.readableBackupChain = readableBackupChain;
+            this.readableBackupChains = readableBackupChains;
         }
 
         //empty constructor for debugging purposes
@@ -278,8 +278,8 @@ namespace nxmBackup.MFUserMode
                 byte[] logBuffer = System.Text.Encoding.ASCII.GetBytes(logString);
 
                 //read payload data from backup chain
-                this.readableBackupChain.readFromChain(offset, length, data, 0);
-                this.readableBackupChain.readFromLB(offset, length, data);
+                this.readableBackupChains[0].readFromChain(offset, length, data, 0);
+                this.readableBackupChains[0].readFromLB(offset, length, data);
 
                 //this.compareStream.Seek(offset, SeekOrigin.Begin);
                 //byte[] compareData = new byte[length];
@@ -371,8 +371,9 @@ namespace nxmBackup.MFUserMode
                 //read the requested data from backup chain and from lb
                 data = new byte[length];
 
-                this.readableBackupChain.readFromChain(offset, length, data, 0);
-                this.readableBackupChain.readFromLB(offset, length, data);
+                //read from first element in chains. On FLR there can only be one chain
+                this.readableBackupChains[0].readFromChain(offset, length, data, 0);
+                this.readableBackupChains[0].readFromLB(offset, length, data);
 
                 //this.compareStream.Seek(offset, SeekOrigin.Begin);
                 //byte[] compareData = new byte[length];
@@ -386,7 +387,7 @@ namespace nxmBackup.MFUserMode
             }
             else
             {
-                string a = "s";
+                
             }
 
 

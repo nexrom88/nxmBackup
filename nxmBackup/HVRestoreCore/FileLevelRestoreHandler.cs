@@ -177,7 +177,7 @@ namespace HVRestoreCore
             //mount vhdx file when not in window mode
             if (!windowMode)
             {
-                if (!mountVHDX(mountHandler.MountFiles))
+                if (!mountVHDX(mountHandler.MountFiles[0])) //first file ok here, because on flr there can be only one file
                 {
                     //error while mounting vhdx
                     flrState newState = new flrState();
@@ -199,7 +199,7 @@ namespace HVRestoreCore
             {
                 //start restore window
                 FLRWindow h = new FLRWindow();
-                h.VhdPath = mountHandler.MountFiles;
+                h.VhdPath = mountHandler.MountFiles[0]; //first file ok here, because on flr there can be only one file
                 h.ShowDialog();
             }
             else

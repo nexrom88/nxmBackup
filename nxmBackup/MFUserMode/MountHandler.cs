@@ -123,7 +123,7 @@ namespace nxmBackup.MFUserMode
             if (this.kmConnection.connectToKM("\\nxmLRPort", "\\BaseNamedObjects\\nxmmflr"))
             {
                 //send target vhdx path to km
-                sendVHDXTargetPathToKM(this.mountFiles);
+                sendVHDXTargetPathsToKM(this.mountFiles);
 
                 //import to hyperv
                 System.Threading.Thread mountThread = new System.Threading.Thread(() => startImportVMProcess(configFile, mountDirectory, true, vmName + "_LiveRestore"));
@@ -202,22 +202,44 @@ namespace nxmBackup.MFUserMode
 
 
         //sends a target vhdx to km for lr
-        private void sendVHDXTargetPathToKM(string path)
+        private void sendVHDXTargetPathsToKM(string[] paths)
         {
-            //replace driveletter with DOS device path
-            path = replaceDriveLetterByDevicePath(path);
+            byte pathsCount;
+            if (paths.Length >= 254)
+            {
+                pathsCount = 254;
+            }
+            else
+            {
+                pathsCount = (byte)paths.Length;
+            }
 
-            //get unicode bytes
-            byte[] buffer = Encoding.Unicode.GetBytes(path);
+            //send paths count
+            byte[] pathsCountBuffer = new byte[1];
+            pathsCountBuffer[0] = (byte)pathsCount;
 
-            //build send buffer, to zero-terminate unicode string
-            byte[] sendBuffer = new byte[buffer.Length + 2];
-            Array.Copy(buffer, sendBuffer, buffer.Length);
-            sendBuffer[sendBuffer.Length - 1] = 0;
-            sendBuffer[sendBuffer.Length - 2] = 0;
+            //send pathsCountBuffer to km
+            this.kmConnection.writeMessage(pathsCountBuffer);
 
 
-            this.kmConnection.writeMessage(sendBuffer);
+            //send paths
+            foreach (string path in paths)
+            {
+                //replace driveletter with DOS device path
+                string dosPath = replaceDriveLetterByDevicePath(path);
+
+                //get unicode bytes
+                byte[] buffer = Encoding.Unicode.GetBytes(dosPath);
+
+                //build send buffer, to zero-terminate unicode string
+                byte[] sendBuffer = new byte[buffer.Length + 2];
+                Array.Copy(buffer, sendBuffer, buffer.Length);
+                sendBuffer[sendBuffer.Length - 1] = 0;
+                sendBuffer[sendBuffer.Length - 2] = 0;
+
+
+                this.kmConnection.writeMessage(sendBuffer);
+            }
         }
 
         //replaces the drive letter with nt device path
@@ -441,23 +463,26 @@ namespace nxmBackup.MFUserMode
             //close km connection
             this.kmConnection.closeConnection();
 
-            //iterate through all rct backups
-            foreach (BackupChainReader.ReadableNonFullBackup nonFullBackup in this.readableChains.NonFullBackups)
+            //iterate through all rct backups in all chains
+            foreach (BackupChainReader backupChain in this.readableChains)
             {
-                switch (nonFullBackup.backupType)
+                foreach (BackupChainReader.ReadableNonFullBackup nonFullBackup in backupChain.NonFullBackups)
                 {
-                    case BackupChainReader.NonFullBackupType.lb:
-                        nonFullBackup.sourceStreamLB.Close();
-                        break;
-                    case BackupChainReader.NonFullBackupType.rct:
-                        nonFullBackup.sourceStreamRCT.Close();
-                        break;
-                }
-                
-            }
+                    switch (nonFullBackup.backupType)
+                    {
+                        case BackupChainReader.NonFullBackupType.lb:
+                            nonFullBackup.sourceStreamLB.Close();
+                            break;
+                        case BackupChainReader.NonFullBackupType.rct:
+                            nonFullBackup.sourceStreamRCT.Close();
+                            break;
+                    }
 
-            //close full backup
-            this.readableChains.FullBackup.sourceStream.Close();
+                }
+
+                //close full backup
+                backupChain.FullBackup.sourceStream.Close();
+            }
 
 
 
@@ -466,7 +491,10 @@ namespace nxmBackup.MFUserMode
             {
                 try
                 {
-                    System.IO.File.Delete(this.MountFiles);
+                    foreach (string file in this.mountFiles)
+                    {
+                        System.IO.File.Delete(file);
+                    }
                 }
                 catch
                 {
@@ -476,16 +504,19 @@ namespace nxmBackup.MFUserMode
 
             if (this.restoreMode == RestoreMode.lr)
             {
-                string mountDir = Directory.GetParent(System.IO.Path.GetDirectoryName(this.MountFiles)).FullName;
-
-                try
+                foreach (string file in this.mountFiles)
                 {
-                    System.IO.Directory.Delete(mountDir + "\\Virtual Hard Disks", true);
-                    System.IO.Directory.Delete(mountDir + "\\Virtual Machines", true);
-                }
-                catch (Exception ex)
-                {
+                    string mountDir = Directory.GetParent(System.IO.Path.GetDirectoryName(file)).FullName;
 
+                    try
+                    {
+                        System.IO.Directory.Delete(mountDir + "\\Virtual Hard Disks", true);
+                        System.IO.Directory.Delete(mountDir + "\\Virtual Machines", true);
+                    }
+                    catch (Exception ex)
+                    {
+
+                    }
                 }
             }
 
