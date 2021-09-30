@@ -190,31 +190,55 @@ namespace ConfigHandler
         public static LRBackupChains getHDDFilesFromChainForLR(List<BackupInfo> restoreChain, string basePath)
         {
             LRBackupChains retVal = new LRBackupChains();
+
             
-            string targetHDD = "";
+            string[] targetHDDs = null;
 
             //iterate through all backups within chain in reverse to read full backup first
             for (int i = restoreChain.Count - 1; i >= 0; i--)
             {
-                if (restoreChain[i].type == "full")
+                if (restoreChain[i].type == "full") 
                 {
 
                     //get all vhdx files
                     string vmBasePath = System.IO.Path.Combine(basePath, restoreChain[i].uuid + ".nxm\\" + "Virtual Hard Disks");
                     string[] entries = System.IO.Directory.GetFiles(vmBasePath, "*.vhdx");
-                    retVal[i] = entries[0]; //take first found file. OK here because otherwise user would have chosen one
-                    targetHDD = System.IO.Path.GetFileName(entries[0]);
+
+                    //init chains
+                    retVal.chains = new LRBackupChain[entries.Length];
+                    targetHDDs = new string[entries.Length];
+                    for(int j = 0; j < retVal.chains.Length; j++)
+                    {
+                        retVal.chains[j].files = new string[restoreChain.Count];
+                    }
+                    
+                    //iterate entries
+                    for (int j = 0; j < entries.Length; j++)
+                    {
+                        retVal.chains[j].files[i] = entries[j];
+                        targetHDDs[j] = System.IO.Path.GetFileName(entries[j]);
+                    }
+
+                    
 
                 }
                 else if (restoreChain[i].type == "rct")
                 {
                     string vmBasePath = System.IO.Path.Combine(basePath, restoreChain[i].uuid + ".nxm\\");
-                    retVal[i] = System.IO.Path.Combine(vmBasePath, targetHDD + ".cb");
+
+                    for (int j = 0; j < targetHDDs.Length; j++)
+                    {
+                        retVal.chains[j].files[i] = System.IO.Path.Combine(vmBasePath, targetHDDs[j] + ".cb");
+                    }
+                    
                 }
                 else if (restoreChain[i].type == "lb")
                 {
                     string vmBasePath = System.IO.Path.Combine(basePath, restoreChain[i].uuid + ".nxm\\");
-                    retVal[i] = System.IO.Path.Combine(vmBasePath, targetHDD + ".lb");
+                    for (int j = 0; j < targetHDDs.Length; j++)
+                    {
+                        retVal.chains[j].files[i] = System.IO.Path.Combine(vmBasePath, targetHDDs[j] + ".lb");
+                    }
                 }
             }
 
@@ -224,7 +248,7 @@ namespace ConfigHandler
 
         public struct LRBackupChains
         {
-            public List<LRBackupChain> chains;
+            public LRBackupChain[] chains;
         }
 
         public struct LRBackupChain

@@ -8,6 +8,7 @@ using nxmBackup.HVBackupCore;
 using System.Runtime.InteropServices;
 using System.Management;
 using Common;
+using ConfigHandler;
 
 namespace nxmBackup.MFUserMode
 {
@@ -19,8 +20,8 @@ namespace nxmBackup.MFUserMode
         private MFUserMode kmConnection;
         private bool processStopped = false;
         private System.IO.FileStream destStream;
-        private BackupChainReader readableChain;
-        private string mountFile;
+        private BackupChainReader[] readableChains;
+        private string[] mountFiles;
         private RestoreMode restoreMode;
         private string lrVMID; //vm id, just for lr
         public ProcessState mountState;
@@ -34,63 +35,71 @@ namespace nxmBackup.MFUserMode
             this.restoreMode = mode;
         }
 
-        public string MountFile { get => mountFile; }
+        public string[] MountFiles { get => mountFiles; }
 
         public string LrVMID { get => lrVMID;}
 
         //starts the mount process for LR
-        public void startMfHandlingForLR(string[] sourceFiles, string basePath, string vmName)
+        public void startMfHandlingForLR(BackupConfigHandler.LRBackupChains sourceFiles, string basePath, string vmName)
         {
-            //build readable backup chain structure first
-            this.readableChain = buildReadableBackupChain(sourceFiles);
+            string mountDirectory = String.Empty;
+            this.readableChains = new BackupChainReader[sourceFiles.chains.Length];
+            this.mountFiles = new string[sourceFiles.chains.Length];
 
-            ulong decompressedFileSize = 0;
-            //open source file and read "decompressed file size" (first 8 bytes) when LR on full backup
-            if (sourceFiles.Length == 1)
+            //build readable backup chains structure first
+            for (int i = 0; i < sourceFiles.chains.Length; i++)
             {
-                FileStream sourceStream = new System.IO.FileStream(sourceFiles[sourceFiles.Length - 1], System.IO.FileMode.Open, System.IO.FileAccess.Read);
-                byte[] buffer = new byte[8];
+                this.readableChains[i] = buildReadableBackupChain(sourceFiles.chains[i].files);
 
-                //read iv length to jump over iv
-                sourceStream.Read(buffer, 0, 4);
-                int ivLength = BitConverter.ToInt32(buffer, 0);
-                sourceStream.Seek(ivLength + 16, SeekOrigin.Current); //+16 to jump over signature too
 
-                sourceStream.Read(buffer, 0, 8);
-                decompressedFileSize = BitConverter.ToUInt64(buffer, 0);
-                sourceStream.Close();
-                sourceStream.Dispose();
+                ulong decompressedFileSize = 0;
+                //open source file and read "decompressed file size" (first 8 bytes) when LR on full backup
+                if (sourceFiles.chains[i].files.Length == 1)
+                {
+                    FileStream sourceStream = new System.IO.FileStream(sourceFiles.chains[i].files[sourceFiles.chains[i].files.Length - 1], System.IO.FileMode.Open, System.IO.FileAccess.Read);
+                    byte[] buffer = new byte[8];
+
+                    //read iv length to jump over iv
+                    sourceStream.Read(buffer, 0, 4);
+                    int ivLength = BitConverter.ToInt32(buffer, 0);
+                    sourceStream.Seek(ivLength + 16, SeekOrigin.Current); //+16 to jump over signature too
+
+                    sourceStream.Read(buffer, 0, 8);
+                    decompressedFileSize = BitConverter.ToUInt64(buffer, 0);
+                    sourceStream.Close();
+                    sourceStream.Dispose();
+                }
+                else if (sourceFiles.chains[i].files[0].EndsWith(".cb"))
+                {
+                    //read "decompressed file size" from first rct backup
+                    decompressedFileSize = this.readableChains[i].NonFullBackups[0].cbStructure.vhdxSize;
+                }
+                else if (sourceFiles.chains[i].files[0].EndsWith("lb"))
+                {
+                    //read "decompressed file size" from first lb backup
+                    decompressedFileSize = this.readableChains[i].NonFullBackups[0].lbStructure.vhdxSize;
+                }
+
+                //get vhdx file name
+                string[] stringSplitter = sourceFiles.chains[i].files[sourceFiles.chains[i].files.Length - 1].Split("\\".ToCharArray());
+                string vhdxName = stringSplitter[stringSplitter.Length - 1];
+
+                this.mountFiles[i] = getMountHDDPath(decompressedFileSize, vhdxName);
+                if (this.mountFiles == null)
+                {
+                    DBQueries.addLog("LR: mount file could not be created", Environment.StackTrace);
+                    mountState = ProcessState.error;
+                    return;
+                }
+
+                //build dummy dest vhdx file
+                mountDirectory = Directory.GetParent(System.IO.Path.GetDirectoryName(this.MountFiles[i])).FullName; //getParent to go up one folder to leave 'Virtual Hard Disks' folder
+                System.IO.Directory.CreateDirectory(mountDirectory);
+                this.destStream = new System.IO.FileStream(this.MountFiles[i], System.IO.FileMode.Create, System.IO.FileAccess.Write);
+                this.destStream.SetLength((long)decompressedFileSize);
+                this.destStream.Close();
+                this.destStream.Dispose();
             }
-            else if (sourceFiles[0].EndsWith(".cb"))
-            {
-                //read "decompressed file size" from first rct backup
-                decompressedFileSize = this.readableChain.NonFullBackups[0].cbStructure.vhdxSize;
-            }
-            else if (sourceFiles[0].EndsWith("lb"))
-            {
-                //read "decompressed file size" from first lb backup
-                decompressedFileSize = this.readableChain.NonFullBackups[0].lbStructure.vhdxSize;
-            }
-
-            //get vhdx file name
-            string[] stringSplitter = sourceFiles[sourceFiles.Length - 1].Split("\\".ToCharArray());
-            string vhdxName = stringSplitter[stringSplitter.Length -1];
-
-            this.mountFile = getMountHDDPath(decompressedFileSize, vhdxName);
-            if (this.mountFile == null)
-            {
-                DBQueries.addLog("LR: mount file could not be created", Environment.StackTrace);
-                mountState = ProcessState.error;
-                return;
-            }
-
-            //build dummy dest vhdx file
-            string mountDirectory = Directory.GetParent(System.IO.Path.GetDirectoryName(this.MountFile)).FullName; //getParent to go up one folder to leave 'Virtual Hard Disks' folder
-            System.IO.Directory.CreateDirectory(mountDirectory);
-            this.destStream = new System.IO.FileStream(this.MountFile, System.IO.FileMode.Create, System.IO.FileAccess.Write);
-            this.destStream.SetLength((long)decompressedFileSize);
-            this.destStream.Close();
-            this.destStream.Dispose();
 
             //restore vm config files            
             string configFile = transferVMConfig(basePath, mountDirectory);
@@ -98,20 +107,23 @@ namespace nxmBackup.MFUserMode
             //return if no config file found
             if (configFile == "")
             {
-                DBQueries.addLog("LR: no config ile found", Environment.StackTrace);
+                DBQueries.addLog("LR: no config file found", Environment.StackTrace);
                 mountState = ProcessState.error;
-                System.IO.File.Delete(this.mountFile);
+                foreach (string file in this.mountFiles)
+                {
+                    System.IO.File.Delete(file);
+                }
                 return;
             }
 
 
 
             //connect to MF Kernel Mode
-            this.kmConnection = new MFUserMode(this.readableChain);
+            this.kmConnection = new MFUserMode(this.readableChains);
             if (this.kmConnection.connectToKM("\\nxmLRPort", "\\BaseNamedObjects\\nxmmflr"))
             {
                 //send target vhdx path to km
-                sendVHDXTargetPathToKM(this.mountFile);
+                sendVHDXTargetPathToKM(this.mountFiles);
 
                 //import to hyperv
                 System.Threading.Thread mountThread = new System.Threading.Thread(() => startImportVMProcess(configFile, mountDirectory, true, vmName + "_LiveRestore"));
@@ -272,7 +284,9 @@ namespace nxmBackup.MFUserMode
         public void startMfHandlingForFLR (string[] sourceFiles, ref ProcessState mountState)
         {
             //build readable backup chain structure first
-            this.readableChain = buildReadableBackupChain(sourceFiles);
+            this.readableChains = new BackupChainReader[1]; //on flr there can be just one chain
+            this.mountFiles = new string[1];
+            this.readableChains[0] = buildReadableBackupChain(sourceFiles);
 
             ulong decompressedFileSize = 0;
             //open source file and read "decompressed file size" when flr on full backup
@@ -296,29 +310,29 @@ namespace nxmBackup.MFUserMode
             else if (sourceFiles[0].EndsWith(".cb"))
             {
                 //read "decompressed file size" from first rct backup
-                decompressedFileSize = this.readableChain.NonFullBackups[0].cbStructure.vhdxSize;
+                decompressedFileSize = this.readableChains[0].NonFullBackups[0].cbStructure.vhdxSize;
             }else if (sourceFiles[0].EndsWith("lb"))
             {
                 //read "decompressed file size" from first lb backup
-                decompressedFileSize = this.readableChain.NonFullBackups[0].lbStructure.vhdxSize;
+                decompressedFileSize = this.readableChains[0].NonFullBackups[0].lbStructure.vhdxSize;
             }
 
-            this.mountFile = getMountHDDPath(decompressedFileSize, "mount.vhdx");
-            if (this.mountFile == null)
+            this.mountFiles[0] = getMountHDDPath(decompressedFileSize, "mount.vhdx");
+            if (this.mountFiles == null)
             {
                 mountState = ProcessState.error;
                 return;
             }
 
             //build dummy dest file
-            System.IO.Directory.CreateDirectory(System.IO.Path.GetDirectoryName(this.MountFile));
-            this.destStream = new System.IO.FileStream(this.MountFile, System.IO.FileMode.Create, System.IO.FileAccess.Write);
+            System.IO.Directory.CreateDirectory(System.IO.Path.GetDirectoryName(this.MountFiles[0]));
+            this.destStream = new System.IO.FileStream(this.MountFiles[0], System.IO.FileMode.Create, System.IO.FileAccess.Write);
             this.destStream.SetLength((long)decompressedFileSize);
             this.destStream.Close();
             this.destStream.Dispose();
 
             //connect to MF Kernel Mode
-            this.kmConnection = new MFUserMode(this.readableChain);
+            this.kmConnection = new MFUserMode(this.readableChains);
             if (this.kmConnection.connectToKM("\\nxmFLRPort", "\\BaseNamedObjects\\nxmmfflr"))
             {
                 mountState = ProcessState.successful;
@@ -348,7 +362,7 @@ namespace nxmBackup.MFUserMode
                     {
                         //try to create mountfolder
                         System.IO.Directory.CreateDirectory(drive.Name + "nxmMount\\Virtual Hard Disks");
-                        mountFile = drive.Name + "nxmMount\\Virtual Hard Disks\\" + vhdxName;
+                        string mountFile = drive.Name + "nxmMount\\Virtual Hard Disks\\" + vhdxName;
                         return mountFile;
                     }
 
@@ -428,7 +442,7 @@ namespace nxmBackup.MFUserMode
             this.kmConnection.closeConnection();
 
             //iterate through all rct backups
-            foreach (BackupChainReader.ReadableNonFullBackup nonFullBackup in this.readableChain.NonFullBackups)
+            foreach (BackupChainReader.ReadableNonFullBackup nonFullBackup in this.readableChains.NonFullBackups)
             {
                 switch (nonFullBackup.backupType)
                 {
@@ -443,7 +457,7 @@ namespace nxmBackup.MFUserMode
             }
 
             //close full backup
-            this.readableChain.FullBackup.sourceStream.Close();
+            this.readableChains.FullBackup.sourceStream.Close();
 
 
 
@@ -452,7 +466,7 @@ namespace nxmBackup.MFUserMode
             {
                 try
                 {
-                    System.IO.File.Delete(this.MountFile);
+                    System.IO.File.Delete(this.MountFiles);
                 }
                 catch
                 {
@@ -462,7 +476,7 @@ namespace nxmBackup.MFUserMode
 
             if (this.restoreMode == RestoreMode.lr)
             {
-                string mountDir = Directory.GetParent(System.IO.Path.GetDirectoryName(this.MountFile)).FullName;
+                string mountDir = Directory.GetParent(System.IO.Path.GetDirectoryName(this.MountFiles)).FullName;
 
                 try
                 {

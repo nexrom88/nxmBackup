@@ -177,7 +177,7 @@ namespace HVRestoreCore
             //mount vhdx file when not in window mode
             if (!windowMode)
             {
-                if (!mountVHDX(mountHandler.MountFile))
+                if (!mountVHDX(mountHandler.MountFiles))
                 {
                     //error while mounting vhdx
                     flrState newState = new flrState();
@@ -199,7 +199,7 @@ namespace HVRestoreCore
             {
                 //start restore window
                 FLRWindow h = new FLRWindow();
-                h.VhdPath = mountHandler.MountFile;
+                h.VhdPath = mountHandler.MountFiles;
                 h.ShowDialog();
             }
             else
