@@ -348,6 +348,7 @@ namespace nxmBackup.HVBackupCore
                     //set settings
                     settings["ConsistencyLevel"] = cLevel == ConsistencyLevel.ApplicationAware ? 1 : 2;
                     settings["IgnoreNonSnapshottableDisks"] = true;
+                    settings["GuestBackupType"] = 1; //full backup
                     inParams["AffectedSystem"] = vm.Path.Path;
                     inParams["SnapshotSettings"] = settings.GetText(TextFormat.WmiDtd20);
                     inParams["SnapshotType"] = SnapshotTypeRecovery;
