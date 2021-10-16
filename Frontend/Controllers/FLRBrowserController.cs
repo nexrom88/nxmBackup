@@ -31,22 +31,30 @@ namespace Frontend.Controllers
                 return response;
             }
 
-            //get files
-            string[] files = System.IO.Directory.GetFiles(ioElement.path, "*", System.IO.SearchOption.TopDirectoryOnly);
+            string[] directories = null;
+            string[] files = null;
 
-            //get directories
-            string[] directories = System.IO.Directory.GetDirectories(ioElement.path, "*", System.IO.SearchOption.TopDirectoryOnly);
+            //get files
+            try
+            {
+                files = System.IO.Directory.GetFiles(ioElement.path, "*", System.IO.SearchOption.TopDirectoryOnly);
+
+                //get directories
+
+                directories = System.IO.Directory.GetDirectories(ioElement.path, "*", System.IO.SearchOption.TopDirectoryOnly);
+            }
+            catch { }
 
             //build ret val
             List<FSEntry> fsEntries = new List<FSEntry>();
-            foreach (string file in files)
+            foreach (string file in files ?? Enumerable.Empty<string>())
             {
                 FSEntry newEntry = new FSEntry();
                 newEntry.type = "file";
                 newEntry.path = file;
                 fsEntries.Add(newEntry);
             }
-            foreach (string directory in directories)
+            foreach (string directory in directories ?? Enumerable.Empty<string>())
             {
                 FSEntry newEntry = new FSEntry();
                 newEntry.type = "directory";
