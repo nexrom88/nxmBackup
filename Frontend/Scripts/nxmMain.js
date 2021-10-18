@@ -55,31 +55,36 @@ $(window).on('load', function () {
   //register "add Job" Button handler
   $("#addJobButton").click(function () {
 
-    if (dbState == "success") {
-      $("#newJobOverlay").css("display", "block");
-
-      newJobObj = {};
-      showNewJobPage(1);
-
-      //register close button handler
-      $(".overlayCloseButton").click(function () {
-        $("#newJobOverlay").css("display", "none");
-      });
-
-      //register esc key press handler
-      $(document).on('keydown', function (event) {
-        if (event.key == "Escape") {
-          $("#newJobOverlay").css("display", "none");
-        }
-      });
-
-    }
+      if (dbState == "success") {
+          startNewJobProcess(null);
+      }
 
   });
 });
 
+
+//starts a job editing/creating process
+function startNewJobProcess(selectedEditJob) {
+    $("#newJobOverlay").css("display", "block");
+
+    newJobObj = {};
+    showNewJobPage(1, selectedEditJob);
+
+    //register close button handler
+    $(".overlayCloseButton").click(function () {
+        $("#newJobOverlay").css("display", "none");
+    });
+
+    //register esc key press handler
+    $(document).on('keydown', function (event) {
+        if (event.key == "Escape") {
+            $("#newJobOverlay").css("display", "none");
+        }
+    });
+}
+
 //shows a given page number when adding a new job
-function showNewJobPage(pageNumber) {
+function showNewJobPage(pageNumber, selectedEditJob) {
   //load page
   $.ajax({
     url: "Templates/newJobPage" + pageNumber
@@ -87,16 +92,21 @@ function showNewJobPage(pageNumber) {
     .done(function (data) {
       switch (pageNumber) {
         case 1:
-          $("#newJobPage").html(data);
-          registerNextPageClickHandler(pageNumber);
-          //click handler for encryption checkBox
-          $("#cbEncryption").click(function () {
+            $("#newJobPage").html(data);
+                registerNextPageClickHandler(pageNumber, selectedEditJob);
+            //click handler for encryption checkBox
+            $("#cbEncryption").click(function () {
             if ($("#cbEncryption").prop("checked")) {
-              $("#txtEncryptionPassword").css("display", "inline-block");
+                $("#txtEncryptionPassword").css("display", "inline-block");
             } else {
-              $("#txtEncryptionPassword").css("display", "none");
+                $("#txtEncryptionPassword").css("display", "none");
             }
-          });
+            });
+
+            //show current settings when editing a job
+            if (selectedJob) {
+                showCurrentSettings(pageNumber, selectedEditJob);
+            }
           break;
         case 2:
           //load vms
@@ -104,33 +114,42 @@ function showNewJobPage(pageNumber) {
             url: "api/vms"
           })
             .done(function (vmdata) {
-              var parsedJSON = jQuery.parseJSON(vmdata)
-              var renderedData = Mustache.render(data, { vms: parsedJSON });
-              $("#newJobPage").html(renderedData);
-              registerNextPageClickHandler(pageNumber);
+                var parsedJSON = jQuery.parseJSON(vmdata)
+                var renderedData = Mustache.render(data, { vms: parsedJSON });
+                $("#newJobPage").html(renderedData);
+                registerNextPageClickHandler(pageNumber, selectedEditJob);
 
-              //vm click handler
-              $(".vm").click(function (event) {
+                //vm click handler
+                $(".vm").click(function (event) {
                 $(this).toggleClass("active");
 
                 //enable next-button
                 if ($(".vm.active").length > 0) {
-                  $("#newJobNextButton").removeAttr("disabled");
+                    $("#newJobNextButton").removeAttr("disabled");
                 } else {
-                  $("#newJobNextButton").attr("disabled", "disabled");
+                    $("#newJobNextButton").attr("disabled", "disabled");
                 }
 
-              });
+                });
 
-              //set next-button to disabled
-              $("#newJobNextButton").attr("disabled", "disabled");
+                //set next-button to disabled
+                $("#newJobNextButton").attr("disabled", "disabled");
 
+                //show current settings when editing a job
+                if (selectedJob) {
+                    showCurrentSettings(pageNumber, selectedEditJob);
+
+                    //activate next button when vm is selected
+                    if ($(".vm.active")) {
+                        $("#newJobNextButton").attr("disabled", false);
+                    }
+                }
             });
 
           break;
         case 3:
           $("#newJobPage").html(data);
-          registerNextPageClickHandler(pageNumber);
+              registerNextPageClickHandler(pageNumber, selectedEditJob);
 
           //enable input number spinner
           $("input[type='number']").inputSpinner();
@@ -159,7 +178,7 @@ function showNewJobPage(pageNumber) {
           break;
         case 4:
           $("#newJobPage").html(data);
-          registerNextPageClickHandler(pageNumber);
+              registerNextPageClickHandler(pageNumber, selectedEditJob);
 
           //disable options for non-incremental jobs
           if (!newJobObj["incremental"]) {
@@ -188,7 +207,7 @@ function showNewJobPage(pageNumber) {
 
         case 5:
           $("#newJobPage").html(data);
-          registerNextPageClickHandler(pageNumber);
+              registerNextPageClickHandler(pageNumber, selectedEditJob);
           $('#folderBrowser').jstree({
             'core': {
               'check_callback': true,
@@ -220,10 +239,34 @@ function showNewJobPage(pageNumber) {
 
           break;
       }
-     
+
+        
 
     });
     
+}
+
+//shows the current settings on a given page when editing a job
+function showCurrentSettings(pageNumber, selectedEditJob) {
+    switch (pageNumber) {
+        case 1:
+            $("#txtJobName").val(selectedEditJob["Name"]);
+            $("#cbIncremental").prop("checked", selectedEditJob["Incremental"]);
+            $("#cbLiveBackup").prop("checked", selectedEditJob["LiveBackup"]);
+            $("#cbEncryption").prop("checked", selectedEditJob["UseEncryption"]);
+            $("#cbEncryption").prop("disabled", true); //encrpytion setting not changeable
+            break;
+
+        case 2:
+            for (var i = 0; i < selectedEditJob["JobVMs"].length; i++) {
+                $(".vm").each(function () {
+                    if ($(this).data("vmid") == selectedEditJob["JobVMs"][i]["vmID"]) {
+                        $(this).addClass("active");
+                    }
+                });
+            }
+
+    }
 }
 
 //folder browser: navigate to directory
@@ -266,7 +309,7 @@ function navigateToDirectory(directory, nodeType, currentNodeID) {
 }
 
 //click handler for nextPageButton
-function registerNextPageClickHandler(currentPage) {
+function registerNextPageClickHandler(currentPage, selectedEditJob) {
   $("#newJobNextButton").click(function () {
 
     //parse inputs
@@ -356,7 +399,7 @@ function registerNextPageClickHandler(currentPage) {
 
 
     currentPage += 1;
-    showNewJobPage(currentPage);
+      showNewJobPage(currentPage, selectedEditJob);
   });
 }
 
@@ -470,7 +513,10 @@ function buildJobDetailsPanel(currentJob) {
           $("#startJobButton").click(startJobHandler);
 
           //set delete job button click handler
-          $("#deleteJobButton").click(deleteJobHandler);
+            $("#deleteJobButton").click(deleteJobHandler);
+
+            //set edit job button click handler
+            $("#editJobButton").click(editJobHandler);
 
           //set restore button click handler
           $("#restoreButton").click(startRestoreHandler); //startRestoreHandler function is defined within nxmRestore.js
@@ -493,6 +539,20 @@ function buildJobDetailsPanel(currentJob) {
               
 }
 
+
+//click handler for editing job
+function editJobHandler(event) {
+
+    var selectedEditJob = [];
+    //look for job
+    for (var i = 0; i < configuredJobs.length; i++) {
+        if (configuredJobs[i].DbId == selectedJob) {
+            selectedEditJob = configuredJobs[i];
+        }
+    }
+
+    startNewJobProcess(selectedEditJob);
+}
 
 //click handler for deleting job
 function deleteJobHandler(event) {
