@@ -175,6 +175,16 @@ function showNewJobPage(pageNumber, selectedEditJob) {
             }
           });
 
+          //show current settings when editing a job
+          if (selectedJob) {
+            showCurrentSettings(pageNumber, selectedEditJob);
+
+            //activate next button when vm is selected
+            if ($(".vm.active")) {
+              $("#newJobNextButton").attr("disabled", false);
+            }
+          }
+
           break;
         case 4:
           $("#newJobPage").html(data);
@@ -257,15 +267,23 @@ function showCurrentSettings(pageNumber, selectedEditJob) {
             $("#cbEncryption").prop("disabled", true); //encrpytion setting not changeable
             break;
 
-        case 2:
-            for (var i = 0; i < selectedEditJob["JobVMs"].length; i++) {
-                $(".vm").each(function () {
-                    if ($(this).data("vmid") == selectedEditJob["JobVMs"][i]["vmID"]) {
-                        $(this).addClass("active");
-                    }
-                });
+      case 2:
+        for (var i = 0; i < selectedEditJob["JobVMs"].length; i++) {
+          $(".vm").each(function () {
+            if ($(this).data("vmid") == selectedEditJob["JobVMs"][i]["vmID"]) {
+              $(this).addClass("active");
             }
+          });
+        }
+        break;
+      case 3:
+        //set interval base
+        switch (selectedEditJob["Interval"]["IntervalBase"]) {
+          case 0: //hourly
+            $('option[data-interval="hourly"]').prop("selected", true);
+        }
 
+        break;
     }
 }
 
