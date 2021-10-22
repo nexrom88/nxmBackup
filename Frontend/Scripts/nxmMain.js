@@ -93,7 +93,7 @@ function showNewJobPage(pageNumber, selectedEditJob) {
       switch (pageNumber) {
         case 1:
             $("#newJobPage").html(data);
-                registerNextPageClickHandler(pageNumber, selectedEditJob);
+            registerNextPageClickHandler(pageNumber, selectedEditJob);
             //click handler for encryption checkBox
             $("#cbEncryption").click(function () {
             if ($("#cbEncryption").prop("checked")) {
@@ -278,9 +278,17 @@ function showCurrentSettings(pageNumber, selectedEditJob) {
         break;
       case 3:
         //set interval base
-        switch (selectedEditJob["Interval"]["IntervalBase"]) {
+        switch (selectedEditJob["Interval"]["intervalBase"]) {
           case 0: //hourly
             $('option[data-interval="hourly"]').prop("selected", true);
+
+            break;
+          case 1: //daily
+            $('option[data-interval="daily"]').prop("selected", true);
+            break;
+          case 2: //weekly
+            $('option[data-interval="weekly"]').prop("selected", true);
+            break;
         }
 
         break;
@@ -345,7 +353,7 @@ function registerNextPageClickHandler(currentPage, selectedEditJob) {
         }
 
         //using encryption but no password given?
-        if ($("#cbEncryption").prop("checked") && !$("#txtEncryptionPassword").val()) {
+        if (!selectedEditJob && $("#cbEncryption").prop("checked") && !$("#txtEncryptionPassword").val()) {
           $("#txtEncryptionPassword").css("background-color", "#ff4d4d");
           return;
         } else {
