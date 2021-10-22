@@ -178,11 +178,6 @@ function showNewJobPage(pageNumber, selectedEditJob) {
           //show current settings when editing a job
           if (selectedJob) {
             showCurrentSettings(pageNumber, selectedEditJob);
-
-            //activate next button when vm is selected
-            if ($(".vm.active")) {
-              $("#newJobNextButton").attr("disabled", false);
-            }
           }
 
           break;
@@ -213,6 +208,10 @@ function showNewJobPage(pageNumber, selectedEditJob) {
 
           });
 
+          //show current settings when editing a job
+          if (selectedJob) {
+              showCurrentSettings(pageNumber, selectedEditJob);
+          }
           break;
 
         case 5:
@@ -246,6 +245,10 @@ function showNewJobPage(pageNumber, selectedEditJob) {
             selectedDirectory = selectedPath;
             navigateToDirectory(selectedPath, "folder", data.node.id);
           });
+          //show current settings when editing a job
+          if (selectedJob) {
+              showCurrentSettings(pageNumber, selectedEditJob);
+          }
 
           break;
       }
@@ -280,18 +283,43 @@ function showCurrentSettings(pageNumber, selectedEditJob) {
         //set interval base
         switch (selectedEditJob["Interval"]["intervalBase"]) {
           case 0: //hourly
-            $('option[data-interval="hourly"]').prop("selected", true);
-
+                $('option[data-interval="hourly"]').prop("selected", true);
+                $("#sbJobInterval").change(); //trigger change-event manually
+                $("#spJobIntervalMinute").val(selectedEditJob["Interval"]["minute"]);
             break;
           case 1: //daily
-            $('option[data-interval="daily"]').prop("selected", true);
+                $('option[data-interval="daily"]').prop("selected", true);
+                $("#sbJobInterval").change(); //trigger change-event manually
+                $("#spJobIntervalMinute").val(selectedEditJob["Interval"]["minute"]);
+                $("#spJobIntervalHour").val(selectedEditJob["Interval"]["hour"]);
             break;
           case 2: //weekly
-            $('option[data-interval="weekly"]').prop("selected", true);
+                $('option[data-interval="weekly"]').prop("selected", true);
+                $("#sbJobInterval").change(); //trigger change-event manually
+                $("#spJobIntervalMinute").val(selectedEditJob["Interval"]["minute"]);
+                $("#spJobIntervalHour").val(selectedEditJob["Interval"]["hour"]);
+                $('option[data-day="' + selectedEditJob["Interval"]["day"] + '"]').prop("selected", true);
             break;
         }
+            break;
 
-        break;
+        case 4:
+            $("#spBlockSize").val(selectedEditJob["BlockSize"]);
+
+            //set rotation type
+            if (selectedEditJob["Rotation"]["type"] == 0) { //merge
+                $('option[data-rotationtype="merge"]').prop("selected", true);
+            } else if (selectedEditJob["Rotation"]["type"] == 1) { //blockrotation
+                $('option[data-rotationtype="blockrotation"]').prop("selected", true);
+            }
+
+            $("#spMaxElements").val(selectedEditJob["Rotation"]["maxElementCount"]);
+            break;
+
+        case 5:
+            navigateToDirectory(selectedEditJob["BasePath"], "folder", "#");
+            break;
+
     }
 }
 
