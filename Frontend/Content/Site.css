@@ -167,3 +167,23 @@ textarea {
     overflow-x:hidden;
     overflow-y:scroll;
 }
+
+.centeredElement{
+    margin:auto;
+}
+.centeredElementSpan {
+    margin: auto;
+    display:table;
+}
+
+#sbJobInterval{
+    display:inline;
+}
+
+#sbJobDay {
+    display: inline;
+}
+
+#sbRotationType{
+    display: inline;
+}

@@ -97,7 +97,7 @@ function showNewJobPage(pageNumber, selectedEditJob) {
             //click handler for encryption checkBox
             $("#cbEncryption").click(function () {
             if ($("#cbEncryption").prop("checked")) {
-                $("#txtEncryptionPassword").css("display", "inline-block");
+                $("#txtEncryptionPassword").css("display", "block");
             } else {
                 $("#txtEncryptionPassword").css("display", "none");
             }
