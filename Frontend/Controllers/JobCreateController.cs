@@ -13,7 +13,7 @@ namespace Frontend.Controllers
 
         
         // POST api/<controller>
-        public void Post([FromBody] NewFrontendJob value)
+        public void Post([FromBody] NewFrontendJob value) //created or updates a job
         {
             ConfigHandler.OneJob newJob = new ConfigHandler.OneJob();
 
@@ -101,10 +101,21 @@ namespace Frontend.Controllers
             }
 
             newJob.JobVMs = vms;
-                       
 
-            //add job to db
-            ConfigHandler.JobConfigHandler.addJob(newJob);
+            //update or new job
+            int updatedJobID;
+            if (value.updatedJob != null && int.TryParse(value.updatedJob, out updatedJobID))
+            {
+                //update job within DB
+                ConfigHandler.JobConfigHandler.updateJob(newJob, updatedJobID);
+            }
+            else
+            {
+                //add new job to DB
+                ConfigHandler.JobConfigHandler.addJob(newJob);
+            }
+
+            
 
             //refresh jobs
             App_Start.GUIJobHandler.initJob();
@@ -113,6 +124,7 @@ namespace Frontend.Controllers
        
         public class NewFrontendJob
         {
+            public string updatedJob { get; set; }
             public string name { get; set; }
             public bool incremental { get; set; }
             public bool useencryption { get; set; }

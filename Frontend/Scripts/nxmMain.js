@@ -68,6 +68,12 @@ function startNewJobProcess(selectedEditJob) {
     $("#newJobOverlay").css("display", "block");
 
     newJobObj = {};
+
+    //set updated job ID if necessary
+    if (selectedEditJob) {
+        newJobObj["updatedJob"] = selectedEditJob["DbId"];
+    }
+
     showNewJobPage(1, selectedEditJob);
 
     //register close button handler
@@ -317,7 +323,7 @@ function showCurrentSettings(pageNumber, selectedEditJob) {
             break;
 
         case 5:
-            navigateToDirectory(selectedEditJob["BasePath"], "folder", "#");
+            
             break;
 
     }
@@ -466,11 +472,6 @@ function saveNewJob() {
     type: 'POST',
     cache: false,
     success: function (result) {
-      Swal.fire(
-        'Job erstellt',
-        'Der neue Backupjob wurde erfolgreich erstellt',
-        'success'
-      );
       location.reload();
     }
   });

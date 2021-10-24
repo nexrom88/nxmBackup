@@ -155,6 +155,61 @@ namespace ConfigHandler
             }
         }
 
+
+        //updates a given job
+        public static void updateJob(OneJob job, int updatedJobID)
+        {
+            //open DB connection
+            using (Common.DBConnection connection = new Common.DBConnection())
+            {
+                string intervalString = job.Interval.intervalBase.ToString();
+
+                Dictionary<string, object> parameters = new Dictionary<string, object>();
+
+                //start DB transaction
+                NpgsqlTransaction transaction = connection.beginTransaction();
+
+                List<Dictionary<string, object>> values;
+
+                parameters = new Dictionary<string, object>();
+                //get rotationtype ID
+                parameters.Add("name", job.Rotation.type.ToString().ToLower());
+                values = connection.doReadQuery("SELECT id FROM RotationType WHERE name=@name", parameters, transaction);
+                int rotationID = (int)(values[0]["id"]);
+
+                //create job entry
+                parameters = new Dictionary<string, object>();
+                parameters.Add("name", job.Name);
+                parameters.Add("incremental", job.Incremental);
+                parameters.Add("interval", intervalString);
+                parameters.Add("minute", job.Interval.minute);
+                parameters.Add("hour", job.Interval.hour);
+                parameters.Add("day", job.Interval.day);
+                parameters.Add("basepath", job.BasePath);
+                parameters.Add("blocksize", job.BlockSize);
+                parameters.Add("maxelements", job.Rotation.maxElementCount);
+                parameters.Add("rotationtypeID", rotationID);
+                parameters.Add("livebackup", job.LiveBackup);
+                parameters.Add("updatejobID", updatedJobID);
+
+
+                values = connection.doReadQuery("UPDATE jobs SET name = @name, incremental = @incremental, interval = @interval, minute = @minute, hour = @hour, day = @day, basepath = @basepath, blocksize = @blocksize, maxelements = @maxelements, livebackup = @livebackup, rotationtypeid = @rotationtypeID WHERE id=@updatejobID;", parameters, transaction);
+
+                //delete existing JObVM relation
+                deleteJobVMRelation(updatedJobID, connection, transaction);
+
+                //create vms relation
+                List<string> alreadyExistedvmIDs = createJobVMRelation(job, updatedJobID, connection, transaction);
+
+                //create hdds relation
+                createVMHDDRelation(job.JobVMs, connection, transaction, alreadyExistedvmIDs);
+
+                //commit transaction
+                transaction.Commit();
+            }
+        }
+
+
         //adds a job to the job list
         public static void addJob(OneJob job)
         {
@@ -243,6 +298,16 @@ namespace ConfigHandler
                 }
 
             }
+        }
+
+
+        //deletes the JobVM relation for a given job
+        private static void deleteJobVMRelation(int jobID, Common.DBConnection connection, NpgsqlTransaction transaction)
+        {
+            //build and execute delete query
+            Dictionary<string, object> parameters = new Dictionary<string, object>();
+            parameters.Add("jobID", jobID);
+            connection.doWriteQuery("DELETE FROM JobVMRelation WHERE jobid=@jobID;", parameters, transaction);
         }
 
         //creates a job-vms relation, return already existed vm ids
