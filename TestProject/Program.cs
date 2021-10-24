@@ -9,6 +9,7 @@ using HyperVBackupRCT;
 using nxmBackup.MFUserMode;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
+using Microsoft.Isam.Esent.Interop;
 
 namespace TestProject
 {
@@ -19,6 +20,43 @@ namespace TestProject
 
         static void Main(string[] args)
         {
+
+            JET_INSTANCE instance;
+            JET_SESID sesid;
+            JET_DBID dbid;
+            JET_TABLEID tableid;
+
+            JET_COLUMNDEF columndef = new JET_COLUMNDEF();
+            JET_COLUMNID columnid;
+
+            int val = 0;
+            Api.JetGetDatabaseFileInfo(@"C:\Users\matthias\Desktop\Mailbox Database 0621326406.edb", out val, JET_DbInfo.PageSize);
+
+            // Initialize ESENT. Setting JET_param.CircularLog to 1 means ESENT will automatically
+            // delete unneeded logfiles. JetInit will inspect the logfiles to see if the last
+            // shutdown was clean. If it wasn't (e.g. the application crashed) recovery will be
+            // run automatically bringing the database to a consistent state.
+            Api.JetCreateInstance(out instance, "instance");
+            Api.JetSetSystemParameter(instance, JET_SESID.Nil, JET_param.DatabasePageSize, 32768, null);
+            Api.JetSetSystemParameter(instance, JET_SESID.Nil, JET_param.CircularLog, 1, null);
+            
+            Api.JetInit(ref instance);
+            Api.JetBeginSession(instance, out sesid, null, null);
+
+            // Create the database. To open an existing database use the JetAttachDatabase and 
+            // JetOpenDatabase APIs.
+            //Api.JetCreateDatabase(sesid, "edbtest.db", null, out dbid, CreateDatabaseGrbit.OverwriteExisting);
+            Api.JetAttachDatabase(sesid, @"C:\Users\matthias\Desktop\Mailbox Database 0621326406.edb", AttachDatabaseGrbit.ReadOnly);
+
+            Api.JetOpenDatabase(sesid, @"C:\Users\matthias\Desktop\Mailbox Database 0621326406.edb", null, out dbid, OpenDatabaseGrbit.ReadOnly);
+
+
+
+            Api.JetCloseDatabase(sesid, dbid, CloseDatabaseGrbit.None);
+            Api.JetDetachDatabase(sesid, @"C:\Users\matthias\Desktop\Mailbox Database 0621326406.edb");
+            Api.JetEndSession(sesid, EndSessionGrbit.None);
+            Api.JetTerm(instance);
+
 
             //UInt64 desiredOffset = 17096990720;
             //string file = @"F:\nxm\Fixed\1661C788-7F70-4203-8255-628F95087182\74fcbe14-b042-4802-ad18-93f46cfbe008.nxm\Win10_Fixed.vhdx.cb";
@@ -113,35 +151,35 @@ namespace TestProject
             //RestoreHelper.VMImporter.importVM(@"F:\target\Virtual Machines\78D3C2AC-AEE7-4752-8648-0C3BCA41AE1A.vmcx", @"F:\target", false);
 
 
-            Common.vhdxParser parser = new Common.vhdxParser(@"d:\original_fixed.vhdx");
-            Common.RawLog log = parser.getRawLog();
-            Common.RegionTable regionTable = parser.parseRegionTable();
-            Common.MetadataTable metadataTable = parser.parseMetadataTable(regionTable);
-            uint lss = parser.getLogicalSectorSize(metadataTable);
-            uint blockSize = parser.getBlockSize(metadataTable);
+            //Common.vhdxParser parser = new Common.vhdxParser(@"d:\original_fixed.vhdx");
+            //Common.RawLog log = parser.getRawLog();
+            //Common.RegionTable regionTable = parser.parseRegionTable();
+            //Common.MetadataTable metadataTable = parser.parseMetadataTable(regionTable);
+            //uint lss = parser.getLogicalSectorSize(metadataTable);
+            //uint blockSize = parser.getBlockSize(metadataTable);
 
-            UInt32 vhdxChunkRatio = (UInt32)((Math.Pow(2, 23) * (double)lss) / (double)blockSize);
+            //UInt32 vhdxChunkRatio = (UInt32)((Math.Pow(2, 23) * (double)lss) / (double)blockSize);
 
-            UInt64 dbc = (UInt64)Math.Ceiling((double)parser.getVirtualDiskSize(metadataTable) / (double)blockSize);
+            //UInt64 dbc = (UInt64)Math.Ceiling((double)parser.getVirtualDiskSize(metadataTable) / (double)blockSize);
 
-            UInt32 sectorBitmapBlocksCount = (UInt32)Math.Ceiling((double)dbc / (double)vhdxChunkRatio);
+            //UInt32 sectorBitmapBlocksCount = (UInt32)Math.Ceiling((double)dbc / (double)vhdxChunkRatio);
 
-            Common.BATTable bat = parser.parseBATTable(regionTable, vhdxChunkRatio, sectorBitmapBlocksCount, true);
-
-
-
-            UInt64 desiredOffset = 17083400192;
-            for(int i = 0; i < bat.entries.Count; i++)
-            {
-                if (bat.entries[i].FileOffsetMB * 1048576 == desiredOffset)
-                {
-                    i = i;
-                }
-            }
+            //Common.BATTable bat = parser.parseBATTable(regionTable, vhdxChunkRatio, sectorBitmapBlocksCount, true);
 
 
-            string json = JsonConvert.SerializeObject(bat.entries);
-            json = json;
+
+            //UInt64 desiredOffset = 17083400192;
+            //for(int i = 0; i < bat.entries.Count; i++)
+            //{
+            //    if (bat.entries[i].FileOffsetMB * 1048576 == desiredOffset)
+            //    {
+            //        i = i;
+            //    }
+            //}
+
+
+            //string json = JsonConvert.SerializeObject(bat.entries);
+            //json = json;
 
             //MFUserMode. um = new MFUserMode.MFUserMode();
             //um.connectToKM("\\nxmLBPort", "\\BaseNamedObjects\\nxmmflb");
