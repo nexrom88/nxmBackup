@@ -21,7 +21,7 @@ namespace TestProject
         static void Main(string[] args)
         {
 
-            JET_INSTANCE instance;
+            JET_INSTANCE instance = JET_INSTANCE.Nil;
             JET_SESID sesid;
             JET_DBID dbid;
             JET_TABLEID tableid;
@@ -30,15 +30,16 @@ namespace TestProject
             JET_COLUMNID columnid;
 
             int val = 0;
-            Api.JetGetDatabaseFileInfo(@"C:\Users\matthias\Desktop\Mailbox Database 0621326406.edb", out val, JET_DbInfo.PageSize);
+            //Api.JetGetDatabaseFileInfo(@"C:\Users\matthias\Desktop\Mailbox Database 0621326406.edb", out val, JET_DbInfo.PageSize);
 
             // Initialize ESENT. Setting JET_param.CircularLog to 1 means ESENT will automatically
             // delete unneeded logfiles. JetInit will inspect the logfiles to see if the last
             // shutdown was clean. If it wasn't (e.g. the application crashed) recovery will be
             // run automatically bringing the database to a consistent state.
+            Microsoft.Isam.Esent.Interop.SystemParameters.DatabasePageSize = 32768;
             Api.JetCreateInstance(out instance, "instance");
-            Api.JetSetSystemParameter(instance, JET_SESID.Nil, JET_param.DatabasePageSize, 32768, null);
-            Api.JetSetSystemParameter(instance, JET_SESID.Nil, JET_param.CircularLog, 1, null);
+            //Api.JetSetSystemParameter(JET_INSTANCE.Nil, JET_SESID.Nil, JET_param.DatabasePageSize, 32768, null);
+            Api.JetSetSystemParameter(instance, JET_SESID.Nil, JET_param.Recovery, 0, "Off");
             
             Api.JetInit(ref instance);
             Api.JetBeginSession(instance, out sesid, null, null);
