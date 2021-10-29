@@ -21,44 +21,13 @@ namespace TestProject
         static void Main(string[] args)
         {
 
-            JET_INSTANCE instance = JET_INSTANCE.Nil;
-            JET_SESID sesid;
-            JET_DBID dbid;
-            JET_TABLEID tableid;
+            Common.JetBlue db = new Common.JetBlue(@"C: \Users\matthias\Desktop\Mailbox Database 0621326406.edb");
 
-            JET_COLUMNDEF columndef = new JET_COLUMNDEF();
-            JET_COLUMNID columnid;
+            db.openDB();
+            List<string> tables = db.getTables();
+            db.closeDB();
 
-            int val = 0;
-            //Api.JetGetDatabaseFileInfo(@"C:\Users\matthias\Desktop\Mailbox Database 0621326406.edb", out val, JET_DbInfo.PageSize);
-
-            // Initialize ESENT. Setting JET_param.CircularLog to 1 means ESENT will automatically
-            // delete unneeded logfiles. JetInit will inspect the logfiles to see if the last
-            // shutdown was clean. If it wasn't (e.g. the application crashed) recovery will be
-            // run automatically bringing the database to a consistent state.
-            Microsoft.Isam.Esent.Interop.SystemParameters.DatabasePageSize = 32768;
-            Api.JetCreateInstance(out instance, "instance");
-            //Api.JetSetSystemParameter(JET_INSTANCE.Nil, JET_SESID.Nil, JET_param.DatabasePageSize, 32768, null);
-            Api.JetSetSystemParameter(instance, JET_SESID.Nil, JET_param.Recovery, 0, "Off");
-            
-            Api.JetInit(ref instance);
-            Api.JetBeginSession(instance, out sesid, null, null);
-
-            // Create the database. To open an existing database use the JetAttachDatabase and 
-            // JetOpenDatabase APIs.
-            //Api.JetCreateDatabase(sesid, "edbtest.db", null, out dbid, CreateDatabaseGrbit.OverwriteExisting);
-            Api.JetAttachDatabase(sesid, @"C:\Users\matthias\Desktop\Mailbox Database 0621326406.edb", AttachDatabaseGrbit.ReadOnly);
-
-            Api.JetOpenDatabase(sesid, @"C:\Users\matthias\Desktop\Mailbox Database 0621326406.edb", null, out dbid, OpenDatabaseGrbit.ReadOnly);
-
-
-
-            Api.JetCloseDatabase(sesid, dbid, CloseDatabaseGrbit.None);
-            Api.JetDetachDatabase(sesid, @"C:\Users\matthias\Desktop\Mailbox Database 0621326406.edb");
-            Api.JetEndSession(sesid, EndSessionGrbit.None);
-            Api.JetTerm(instance);
-
-
+            tables = null;
             //UInt64 desiredOffset = 17096990720;
             //string file = @"F:\nxm\Fixed\1661C788-7F70-4203-8255-628F95087182\74fcbe14-b042-4802-ad18-93f46cfbe008.nxm\Win10_Fixed.vhdx.cb";
             //FileStream stream = new FileStream(file, FileMode.Open, FileAccess.Read);
