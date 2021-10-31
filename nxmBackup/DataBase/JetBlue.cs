@@ -51,7 +51,8 @@ namespace Common
                 Api.JetOpenDatabase(sesid, this.dbPath, null, out this.dbid, OpenDatabaseGrbit.ReadOnly);
 
                 return true;
-            }catch(Exception ex)
+            }
+            catch (Exception ex)
             {
                 DBQueries.addLog(ex.Message, Environment.StackTrace);
                 return false;
@@ -69,7 +70,8 @@ namespace Common
                 //convert to string list
                 return tablesEnum.ToList();
 
-            }catch(Exception ex)
+            }
+            catch (Exception ex)
             {
                 DBQueries.addLog(ex.Message, Environment.StackTrace);
                 return null;
@@ -80,7 +82,7 @@ namespace Common
         public JBTable getTable(string name)
         {
             JET_TABLEID table;
-            
+
             //open table
             Api.OpenTable(this.sesid, this.dbid, name, OpenTableGrbit.ReadOnly, out table);
 
@@ -91,21 +93,26 @@ namespace Common
 
 
             JBTable parsedTable = new JBTable();
-            parsedTable.rows = new List<Dictionary<string, string>>();
-       
+            parsedTable.rows = new List<Dictionary<string, byte[]>>();
+
+            bool rowAvailable;
 
             //jump to first column
-            Api.JetMove(this.sesid, table, JET_Move.First, MoveGrbit.None);
+            rowAvailable = Api.TryMoveFirst(this.sesid, table);
 
-
-
-            //read all columns
-            Dictionary<string, string> dict = new Dictionary<string, string>();
-            foreach (ColumnInfo columnInfo in columns) {
-               string readValue = Api.RetrieveColumnAsString(this.sesid, table, columnInfo.Columnid);
-                dict.Add(columnInfo.Name, readValue);
+            //iterate through all rows
+            while (rowAvailable)
+            {
+                //read all columns
+                Dictionary<string, byte[]> dict = new Dictionary<string, byte[]>();
+                foreach (ColumnInfo columnInfo in columns)
+                {
+                    byte[] readValue = Api.RetrieveColumn(this.sesid, table, columnInfo.Columnid, RetrieveColumnGrbit.None, null);
+                    dict.Add(columnInfo.Name, readValue);
+                }
+                parsedTable.rows.Add(dict);
+                rowAvailable= Api.TryMoveNext(this.sesid, table);
             }
-            parsedTable.rows.Add(dict);
 
 
             //close table
@@ -125,7 +132,7 @@ namespace Common
 
         public struct JBTable
         {
-            public List<Dictionary<string, string>> rows;
+            public List<Dictionary<string, byte[]>> rows;
         }
 
     }
