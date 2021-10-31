@@ -58,6 +58,8 @@ namespace Common
             }
         }
 
+
+
         public List<string> getTables()
         {
             try
@@ -74,6 +76,43 @@ namespace Common
             }
         }
 
+        //gets the content from a given table
+        public JBTable getTable(string name)
+        {
+            JET_TABLEID table;
+            
+            //open table
+            Api.OpenTable(this.sesid, this.dbid, name, OpenTableGrbit.ReadOnly, out table);
+
+            //read columns
+            IEnumerable<ColumnInfo> columnsEnumerator = Api.GetTableColumns(this.sesid, table);
+
+            List<ColumnInfo> columns = columnsEnumerator.ToList();
+
+
+            JBTable parsedTable = new JBTable();
+            parsedTable.rows = new List<Dictionary<string, string>>();
+       
+
+            //jump to first column
+            Api.JetMove(this.sesid, table, JET_Move.First, MoveGrbit.None);
+
+
+
+            //read all columns
+            Dictionary<string, string> dict = new Dictionary<string, string>();
+            foreach (ColumnInfo columnInfo in columns) {
+               string readValue = Api.RetrieveColumnAsString(this.sesid, table, columnInfo.Columnid);
+                dict.Add(columnInfo.Name, readValue);
+            }
+            parsedTable.rows.Add(dict);
+
+
+            //close table
+            Api.JetCloseTable(this.sesid, table);
+            return parsedTable;
+        }
+
         //closes the DB connection
         public void closeDB()
         {
@@ -82,5 +121,12 @@ namespace Common
             Api.JetEndSession(sesid, EndSessionGrbit.None);
             Api.JetTerm(instance);
         }
+
+
+        public struct JBTable
+        {
+            public List<Dictionary<string, string>> rows;
+        }
+
     }
 }

@@ -21,10 +21,11 @@ namespace TestProject
         static void Main(string[] args)
         {
 
-            Common.JetBlue db = new Common.JetBlue(@"C: \Users\matthias\Desktop\Mailbox Database 0621326406.edb");
+            Common.JetBlue db = new Common.JetBlue(@"C:\Users\Administrator\Desktop\Mailbox Database 0621326406.edb");
 
             db.openDB();
             List<string> tables = db.getTables();
+            db.getTable("Mailbox");
             db.closeDB();
 
             tables = null;
