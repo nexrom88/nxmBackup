@@ -25,7 +25,7 @@ namespace TestProject
 
             db.openDB();
             List<string> tables = db.getTables();
-            db.getTable("Mailbox");
+            db.getTable("Message");
             db.closeDB();
 
             tables = null;
