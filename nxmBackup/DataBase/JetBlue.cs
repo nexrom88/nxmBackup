@@ -35,14 +35,19 @@ namespace Common
                 //create instance
                 Api.JetCreateInstance(out this.instance, "nxminstance");
 
+
                 //disable recovery mode
-                Api.JetSetSystemParameter(instance, JET_SESID.Nil, JET_param.Recovery, 0, "Off");
+                Api.JetSetSystemParameter(instance, JET_SESID.Nil, JET_param.Recovery, 0, "OFF");
+
+                
 
                 //init DB
                 Api.JetInit(ref instance);
 
                 //begin session
                 Api.JetBeginSession(instance, out sesid, null, null);
+
+              
 
                 //attach DB file in read only mode
                 Api.JetAttachDatabase(sesid, this.dbPath, AttachDatabaseGrbit.ReadOnly);
@@ -52,11 +57,24 @@ namespace Common
 
                 return true;
             }
+            catch (EsentDatabaseDirtyShutdownException ex)
+            {
+                //dirty shutdown detected, recover                
+                recoverFromDirtyShutdown();
+                return true;
+
+            }
             catch (Exception ex)
             {
                 DBQueries.addLog(ex.Message, Environment.StackTrace);
                 return false;
             }
+        }
+
+        //recovers a DB in dirty-shutdown mode
+        private void recoverFromDirtyShutdown()
+        {
+
         }
 
 
