@@ -57,12 +57,14 @@ namespace Common
 
                 return true;
             }
-            catch (EsentDatabaseDirtyShutdownException ex)
+            catch (EsentDatabaseDirtyShutdownException)
             {
                 //dirty shutdown detected, recover                
                 recoverFromDirtyShutdown();
-                return true;
 
+                //try opening DB again
+                return openDB();
+                
             }
             catch (Exception ex)
             {
@@ -74,7 +76,46 @@ namespace Common
         //recovers a DB in dirty-shutdown mode
         private void recoverFromDirtyShutdown()
         {
+            //read page size from db
+            int pageSize = 0;
+            Api.JetGetDatabaseFileInfo(this.dbPath, out pageSize, JET_DbInfo.PageSize);
 
+            //close session
+            Api.JetEndSession(sesid, EndSessionGrbit.None);
+
+            //close instance
+            Api.JetTerm2(instance, TermGrbit.Complete);
+
+            //create instance
+            Api.JetCreateInstance(out this.instance, "nxminstance_recovery");
+
+            //disable recovery mode
+            Api.JetSetSystemParameter(JET_INSTANCE.Nil, JET_SESID.Nil, JET_param.Recovery, 0, "ON");
+
+            string logPath = System.IO.Directory.GetParent(this.dbPath).FullName + "\\";
+            Api.JetSetSystemParameter(this.instance, JET_SESID.Nil, JET_param.LogFilePath, 0, logPath);
+            Api.JetSetSystemParameter(this.instance, JET_SESID.Nil, JET_param.TempPath, 0, logPath);
+            Api.JetSetSystemParameter(this.instance, JET_SESID.Nil, JET_param.SystemPath, 0, logPath);
+
+            //init DB
+            Api.JetInit(ref instance);
+
+            //begin session
+            Api.JetBeginSession(instance, out sesid, null, null);
+            
+            
+
+            //do recovery
+            Api.JetAttachDatabase(sesid, this.dbPath, AttachDatabaseGrbit.DeleteCorruptIndexes);
+
+            //detach DB
+            Api.JetDetachDatabase(sesid, this.dbPath);
+
+            //close session
+            Api.JetEndSession(sesid, EndSessionGrbit.None);
+
+            //close instance
+            Api.JetTerm(instance);
         }
 
 
