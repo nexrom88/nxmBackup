@@ -57,8 +57,10 @@ namespace ConfigHandler
                     }
 
                     // build nextRun string
-                    newJob.NextRun = $"{((int)jobDB["hour"]).ToString("00")}:{((int)jobDB["minute"]).ToString("00")}";
-                    if (jobDB["day"].ToString() != "") newJob.NextRun += $" ({jobDB["day"]})";
+                    //newJob.NextRun = $"{((int)jobDB["hour"]).ToString("00")}:{((int)jobDB["minute"]).ToString("00")}";
+                    //if (jobDB["day"].ToString() != "") newJob.NextRun += $" ({jobDB["day"]})";
+
+                    
 
                     var rota = new Rotation();
                     //build rotation structure
@@ -388,7 +390,6 @@ namespace ConfigHandler
         private bool liveBackup;
         private LiveBackupWorker lbWorker;
         private bool isRunning;
-        private string nextRun;
         private string lastRun;
         private bool successful;
 
@@ -440,7 +441,6 @@ namespace ConfigHandler
             }
         }
   
-        public string NextRun { get => nextRun; set => nextRun = value; }
         public string LastRun { get => lastRun; set => lastRun = value; }
         public string Successful 
         { 

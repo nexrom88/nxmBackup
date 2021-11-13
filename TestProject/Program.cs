@@ -21,14 +21,14 @@ namespace TestProject
         static void Main(string[] args)
         {
 
-            Common.JetBlue db = new Common.JetBlue(@"C:\Users\Administrator\Downloads\nxmBackupFLR\Mailbox Database 0621326406.edb");
+            //Common.JetBlue db = new Common.JetBlue(@"C:\Users\Administrator\Downloads\nxmBackupFLR\Mailbox Database 0621326406.edb");
 
-            db.openDB();
-            List<string> tables = db.getTables();
-            db.getTable("Message");
-            db.closeDB();
+            //db.openDB();
+            //List<string> tables = db.getTables();
+            //db.getTable("Message");
+            //db.closeDB();
 
-            tables = null;
+            //tables = null;
             //UInt64 desiredOffset = 17096990720;
             //string file = @"F:\nxm\Fixed\1661C788-7F70-4203-8255-628F95087182\74fcbe14-b042-4802-ad18-93f46cfbe008.nxm\Win10_Fixed.vhdx.cb";
             //FileStream stream = new FileStream(file, FileMode.Open, FileAccess.Read);
@@ -111,12 +111,12 @@ namespace TestProject
             //CbStructure parsedFile = CBParser.parseCBFile(@"F:\nxm\Job_1VM\DF86F44C-037D-4111-8EF8-3DC2B3C2F553\31be3d96-d520-452e-b1f3-2b6fe88964cc.nxm\Win10.vhdx.cb", true);
             //string output = JsonConvert.SerializeObject(parsedFile);
 
-            //Common.JobVM vm = new Common.JobVM();
+            Common.JobVM vm = new Common.JobVM();
             //vm.vmID = "7A571DAE-9111-4576-897C-8E266EE51FFB"; //ubuntu
             //vm.vmID = "2F8C8382-4D06-4AD7-BCC3-0BFED03199AC"; //Lubuntu
-            //vm.vmID = "3D898EAA-C76F-41D6-8EC5-DE18E3F01157"; //win10_1hdd
-            //nxmBackup.HVBackupCore.SnapshotHandler sh = new nxmBackup.HVBackupCore.SnapshotHandler(vm, -1, false, null);
-            //sh.cleanUp();
+            vm.vmID = "25BA5143-5604-4A2C-A0E5-60D06630DAD2"; //win10_2hdd
+            nxmBackup.HVBackupCore.SnapshotHandler sh = new nxmBackup.HVBackupCore.SnapshotHandler(vm, -1, false, null);
+            sh.cleanUp();
 
 
             //RestoreHelper.VMImporter.importVM(@"F:\target\Virtual Machines\78D3C2AC-AEE7-4752-8648-0C3BCA41AE1A.vmcx", @"F:\target", false);

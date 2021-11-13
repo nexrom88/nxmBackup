@@ -25,7 +25,7 @@ $.ajaxSetup({
 
 $(window).on('load', function () {
   dbState = "init";
-//check DB availability
+  //check DB availability
   $.ajax({
     url: "api/DBConnectTest",
     error: function (jqXHR, exception) {
@@ -38,7 +38,7 @@ $(window).on('load', function () {
     }
   });
 
-//load configured jobs
+  //load configured jobs
   $.ajax({
     url: "api/ConfiguredJobs"
   })
@@ -55,9 +55,9 @@ $(window).on('load', function () {
   //register "add Job" Button handler
   $("#addJobButton").click(function () {
 
-      if (dbState == "success") {
-          startNewJobProcess(null);
-      }
+    if (dbState == "success") {
+      startNewJobProcess(null);
+    }
 
   });
 });
@@ -65,28 +65,28 @@ $(window).on('load', function () {
 
 //starts a job editing/creating process
 function startNewJobProcess(selectedEditJob) {
-    $("#newJobOverlay").css("display", "block");
+  $("#newJobOverlay").css("display", "block");
 
-    newJobObj = {};
+  newJobObj = {};
 
-    //set updated job ID if necessary
-    if (selectedEditJob) {
-        newJobObj["updatedJob"] = selectedEditJob["DbId"];
+  //set updated job ID if necessary
+  if (selectedEditJob) {
+    newJobObj["updatedJob"] = selectedEditJob["DbId"];
+  }
+
+  showNewJobPage(1, selectedEditJob);
+
+  //register close button handler
+  $(".overlayCloseButton").click(function () {
+    $("#newJobOverlay").css("display", "none");
+  });
+
+  //register esc key press handler
+  $(document).on('keydown', function (event) {
+    if (event.key == "Escape") {
+      $("#newJobOverlay").css("display", "none");
     }
-
-    showNewJobPage(1, selectedEditJob);
-
-    //register close button handler
-    $(".overlayCloseButton").click(function () {
-        $("#newJobOverlay").css("display", "none");
-    });
-
-    //register esc key press handler
-    $(document).on('keydown', function (event) {
-        if (event.key == "Escape") {
-            $("#newJobOverlay").css("display", "none");
-        }
-    });
+  });
 }
 
 //shows a given page number when adding a new job
@@ -98,21 +98,21 @@ function showNewJobPage(pageNumber, selectedEditJob) {
     .done(function (data) {
       switch (pageNumber) {
         case 1:
-            $("#newJobPage").html(data);
-            registerNextPageClickHandler(pageNumber, selectedEditJob);
-            //click handler for encryption checkBox
-            $("#cbEncryption").click(function () {
+          $("#newJobPage").html(data);
+          registerNextPageClickHandler(pageNumber, selectedEditJob);
+          //click handler for encryption checkBox
+          $("#cbEncryption").click(function () {
             if ($("#cbEncryption").prop("checked")) {
-                $("#txtEncryptionPassword").css("display", "block");
+              $("#txtEncryptionPassword").css("display", "block");
             } else {
-                $("#txtEncryptionPassword").css("display", "none");
+              $("#txtEncryptionPassword").css("display", "none");
             }
-            });
+          });
 
-            //show current settings when editing a job
-            if (selectedJob) {
-                showCurrentSettings(pageNumber, selectedEditJob);
-            }
+          //show current settings when editing a job
+          if (selectedJob) {
+            showCurrentSettings(pageNumber, selectedEditJob);
+          }
           break;
         case 2:
           //load vms
@@ -120,42 +120,42 @@ function showNewJobPage(pageNumber, selectedEditJob) {
             url: "api/vms"
           })
             .done(function (vmdata) {
-                var parsedJSON = jQuery.parseJSON(vmdata)
-                var renderedData = Mustache.render(data, { vms: parsedJSON });
-                $("#newJobPage").html(renderedData);
-                registerNextPageClickHandler(pageNumber, selectedEditJob);
+              var parsedJSON = jQuery.parseJSON(vmdata)
+              var renderedData = Mustache.render(data, { vms: parsedJSON });
+              $("#newJobPage").html(renderedData);
+              registerNextPageClickHandler(pageNumber, selectedEditJob);
 
-                //vm click handler
-                $(".vm").click(function (event) {
+              //vm click handler
+              $(".vm").click(function (event) {
                 $(this).toggleClass("active");
 
                 //enable next-button
                 if ($(".vm.active").length > 0) {
-                    $("#newJobNextButton").removeAttr("disabled");
+                  $("#newJobNextButton").removeAttr("disabled");
                 } else {
-                    $("#newJobNextButton").attr("disabled", "disabled");
+                  $("#newJobNextButton").attr("disabled", "disabled");
                 }
 
-                });
+              });
 
-                //set next-button to disabled
-                $("#newJobNextButton").attr("disabled", "disabled");
+              //set next-button to disabled
+              $("#newJobNextButton").attr("disabled", "disabled");
 
-                //show current settings when editing a job
-                if (selectedJob) {
-                    showCurrentSettings(pageNumber, selectedEditJob);
+              //show current settings when editing a job
+              if (selectedJob) {
+                showCurrentSettings(pageNumber, selectedEditJob);
 
-                    //activate next button when vm is selected
-                    if ($(".vm.active")) {
-                        $("#newJobNextButton").attr("disabled", false);
-                    }
+                //activate next button when vm is selected
+                if ($(".vm.active")) {
+                  $("#newJobNextButton").attr("disabled", false);
                 }
+              }
             });
 
           break;
         case 3:
           $("#newJobPage").html(data);
-              registerNextPageClickHandler(pageNumber, selectedEditJob);
+          registerNextPageClickHandler(pageNumber, selectedEditJob);
 
           //enable input number spinner
           $("input[type='number']").inputSpinner();
@@ -189,11 +189,11 @@ function showNewJobPage(pageNumber, selectedEditJob) {
           break;
         case 4:
           $("#newJobPage").html(data);
-              registerNextPageClickHandler(pageNumber, selectedEditJob);
+          registerNextPageClickHandler(pageNumber, selectedEditJob);
 
           //disable options for non-incremental jobs
           if (!newJobObj["incremental"]) {
-            $("#incrementalOptions").css("display","none");
+            $("#incrementalOptions").css("display", "none");
           }
 
           //enable input number spinner
@@ -216,13 +216,13 @@ function showNewJobPage(pageNumber, selectedEditJob) {
 
           //show current settings when editing a job
           if (selectedJob) {
-              showCurrentSettings(pageNumber, selectedEditJob);
+            showCurrentSettings(pageNumber, selectedEditJob);
           }
           break;
 
         case 5:
           $("#newJobPage").html(data);
-              registerNextPageClickHandler(pageNumber, selectedEditJob);
+          registerNextPageClickHandler(pageNumber, selectedEditJob);
           $('#folderBrowser').jstree({
             'core': {
               'check_callback': true,
@@ -253,80 +253,80 @@ function showNewJobPage(pageNumber, selectedEditJob) {
           });
           //show current settings when editing a job
           if (selectedJob) {
-              showCurrentSettings(pageNumber, selectedEditJob);
+            showCurrentSettings(pageNumber, selectedEditJob);
           }
 
           break;
       }
 
-        
+
 
     });
-    
+
 }
 
 //shows the current settings on a given page when editing a job
 function showCurrentSettings(pageNumber, selectedEditJob) {
-    switch (pageNumber) {
-        case 1:
-            $("#txtJobName").val(selectedEditJob["Name"]);
-            $("#cbIncremental").prop("checked", selectedEditJob["Incremental"]);
-            $("#cbLiveBackup").prop("checked", selectedEditJob["LiveBackup"]);
-            $("#cbEncryption").prop("checked", selectedEditJob["UseEncryption"]);
-            $("#cbEncryption").prop("disabled", true); //encrpytion setting not changeable
-            break;
+  switch (pageNumber) {
+    case 1:
+      $("#txtJobName").val(selectedEditJob["Name"]);
+      $("#cbIncremental").prop("checked", selectedEditJob["Incremental"]);
+      $("#cbLiveBackup").prop("checked", selectedEditJob["LiveBackup"]);
+      $("#cbEncryption").prop("checked", selectedEditJob["UseEncryption"]);
+      $("#cbEncryption").prop("disabled", true); //encrpytion setting not changeable
+      break;
 
-      case 2:
-        for (var i = 0; i < selectedEditJob["JobVMs"].length; i++) {
-          $(".vm").each(function () {
-            if ($(this).data("vmid") == selectedEditJob["JobVMs"][i]["vmID"]) {
-              $(this).addClass("active");
-            }
-          });
-        }
-        break;
-      case 3:
-        //set interval base
-        switch (selectedEditJob["Interval"]["intervalBase"]) {
-          case 0: //hourly
-                $('option[data-interval="hourly"]').prop("selected", true);
-                $("#sbJobInterval").change(); //trigger change-event manually
-                $("#spJobIntervalMinute").val(selectedEditJob["Interval"]["minute"]);
-            break;
-          case 1: //daily
-                $('option[data-interval="daily"]').prop("selected", true);
-                $("#sbJobInterval").change(); //trigger change-event manually
-                $("#spJobIntervalMinute").val(selectedEditJob["Interval"]["minute"]);
-                $("#spJobIntervalHour").val(selectedEditJob["Interval"]["hour"]);
-            break;
-          case 2: //weekly
-                $('option[data-interval="weekly"]').prop("selected", true);
-                $("#sbJobInterval").change(); //trigger change-event manually
-                $("#spJobIntervalMinute").val(selectedEditJob["Interval"]["minute"]);
-                $("#spJobIntervalHour").val(selectedEditJob["Interval"]["hour"]);
-                $('option[data-day="' + selectedEditJob["Interval"]["day"] + '"]').prop("selected", true);
-            break;
-        }
-            break;
+    case 2:
+      for (var i = 0; i < selectedEditJob["JobVMs"].length; i++) {
+        $(".vm").each(function () {
+          if ($(this).data("vmid") == selectedEditJob["JobVMs"][i]["vmID"]) {
+            $(this).addClass("active");
+          }
+        });
+      }
+      break;
+    case 3:
+      //set interval base
+      switch (selectedEditJob["Interval"]["intervalBase"]) {
+        case 0: //hourly
+          $('option[data-interval="hourly"]').prop("selected", true);
+          $("#sbJobInterval").change(); //trigger change-event manually
+          $("#spJobIntervalMinute").val(selectedEditJob["Interval"]["minute"]);
+          break;
+        case 1: //daily
+          $('option[data-interval="daily"]').prop("selected", true);
+          $("#sbJobInterval").change(); //trigger change-event manually
+          $("#spJobIntervalMinute").val(selectedEditJob["Interval"]["minute"]);
+          $("#spJobIntervalHour").val(selectedEditJob["Interval"]["hour"]);
+          break;
+        case 2: //weekly
+          $('option[data-interval="weekly"]').prop("selected", true);
+          $("#sbJobInterval").change(); //trigger change-event manually
+          $("#spJobIntervalMinute").val(selectedEditJob["Interval"]["minute"]);
+          $("#spJobIntervalHour").val(selectedEditJob["Interval"]["hour"]);
+          $('option[data-day="' + selectedEditJob["Interval"]["day"] + '"]').prop("selected", true);
+          break;
+      }
+      break;
 
-        case 4:
-            $("#spBlockSize").val(selectedEditJob["BlockSize"]);
+    case 4:
+      $("#spBlockSize").val(selectedEditJob["BlockSize"]);
 
-            //set rotation type
-            if (selectedEditJob["Rotation"]["type"] == 0) { //merge
-                $('option[data-rotationtype="merge"]').prop("selected", true);
-            } else if (selectedEditJob["Rotation"]["type"] == 1) { //blockrotation
-                $('option[data-rotationtype="blockrotation"]').prop("selected", true);
-            }
+      //set rotation type
+      if (selectedEditJob["Rotation"]["type"] == 0) { //merge
+        $('option[data-rotationtype="merge"]').prop("selected", true);
+      } else if (selectedEditJob["Rotation"]["type"] == 1) { //blockrotation
+        $('option[data-rotationtype="blockrotation"]').prop("selected", true);
+      }
 
-            $("#spMaxElements").val(selectedEditJob["Rotation"]["maxElementCount"]);
-            break;
+      $("#spMaxElements").val(selectedEditJob["Rotation"]["maxElementCount"]);
+      break;
 
-        case 5:
-            
-            break;
+    case 5:
 
-    }
+      break;
+
+  }
 }
 
 //folder browser: navigate to directory
@@ -459,7 +459,7 @@ function registerNextPageClickHandler(currentPage, selectedEditJob) {
 
 
     currentPage += 1;
-      showNewJobPage(currentPage, selectedEditJob);
+    showNewJobPage(currentPage, selectedEditJob);
   });
 }
 
@@ -528,85 +528,127 @@ function buildJobsList() {
 
 //builds the vm list
 function buildJobDetailsPanel(currentJob) {
- 
-      //load vm details table
-      $.ajax({
-        url: "Templates/jobDetailsPanel"
-      })
-        .done(function (tableData) {
-          $("#mainPanelHeader").html("Jobdetails (" + currentJob.Name + ")");
 
-          //build interval string
-          var interval;
-          switch (currentJob.Interval.intervalBase) {
-            case 0:
-              interval = "stündlich";
+  //load vm details table
+  $.ajax({
+    url: "Templates/jobDetailsPanel"
+  })
+    .done(function (tableData) {
+      $("#mainPanelHeader").html("Jobdetails (" + currentJob.Name + ")");
+
+      //build interval string
+      var interval;
+      switch (currentJob.Interval.intervalBase) {
+        case 0:
+          interval = "stündlich";
+          break;
+        case 1:
+          interval = "täglich";
+          break;
+        case 2:
+          interval = "wöchentlich";
+          break;
+        default:
+          interval = "manuell";
+      }
+
+      //set details panel and vms list
+      var vms = [];
+      for (var i = 0; i < currentJob.JobVMs.length; i++) {
+        vms[i] = { vmid: currentJob.JobVMs[i].vmID, name: currentJob.JobVMs[i].vmName };
+      }
+
+      //build next run string
+      var currentDate = moment();
+
+
+      var intervalString;
+      switch (currentJob["Interval"]["intervalBase"]) {
+        case 0: //stündlich
+          intervalString = "Stündlich bei Minute " + currentJob["Interval"]["minute"];
+          break;
+        case 1: //täglich
+          intervalString = "Täglich um " + currentJob["Interval"]["hour"] + ":" + currentJob["Interval"]["minute"];
+          break;
+        case 2: //wöchentlich
+          var dayForGui;
+          switch (currentJob["Interval"]["day"]) {
+            case "monday":
+              dayForGui = "Montag";
               break;
-            case 1:
-              interval = "täglich";
+            case "tuesday":
+              dayForGui = "Dienstag";
               break;
-            case 2:
-              interval = "wöchentlich";
+            case "wednesday":
+              dayForGui = "Mittwoch";
               break;
-            default:
-              interval = "manuell";
+            case "thursday":
+              dayForGui = "Donnerstag";
+              break;
+            case "friday":
+              dayForGui = "Freitag";
+              break;
+            case "saturday":
+              dayForGui = "Samstag";
+              break;
+            case "sunday":
+              dayForGui = "Sonntag";
+              break;
           }
 
-          //set details panel and vms list
-          var vms= [];
-          for (var i = 0; i < currentJob.JobVMs.length; i++) {
-            vms[i] = { vmid: currentJob.JobVMs[i].vmID, name: currentJob.JobVMs[i].vmName };
-          }
+          intervalString = dayForGui + "s " + " um " + currentJob["Interval"]["hour"] + ":" + currentJob["Interval"]["minute"];
+          break;
+      }
 
-          var details = Mustache.render(tableData, {vms: vms, running: currentJob.IsRunning, nextRun: currentJob.NextRun, interval: interval, lastRun: currentJob.LastRun, lastState: currentJob.Successful });
-          $("#mainPanel").html(details);
+      var details = Mustache.render(tableData, { vms: vms, running: currentJob.IsRunning, interval: intervalString, lastRun: currentJob.LastRun, lastState: currentJob.Successful });
+      $("#mainPanel").html(details);
 
-          //set vm click handler
-          $(".vm").click(vmClickHandler);
+      //set vm click handler
+      $(".vm").click(vmClickHandler);
 
-          //set start job button click handler
-          $("#startJobButton").click(startJobHandler);
+      //set start job button click handler
+      $("#startJobButton").click(startJobHandler);
 
-          //set delete job button click handler
-            $("#deleteJobButton").click(deleteJobHandler);
+      //set delete job button click handler
+      $("#deleteJobButton").click(deleteJobHandler);
 
-            //set edit job button click handler
-            $("#editJobButton").click(editJobHandler);
+      //set edit job button click handler
+      $("#editJobButton").click(editJobHandler);
 
-          //set restore button click handler
-          $("#restoreButton").click(startRestoreHandler); //startRestoreHandler function is defined within nxmRestore.js
+      //set restore button click handler
+      $("#restoreButton").click(startRestoreHandler); //startRestoreHandler function is defined within nxmRestore.js
 
-          //set state color
-          if (currentJob.Successful == "erfolgreich") {
-            $("#jobDetailsRow").css("background-color", "#ccffcc");
-          } else {
-            $("#jobDetailsRow").css("background-color", "#ffb3b3");
-          }
+      //set state color
+      if (currentJob.Successful == "erfolgreich") {
+        $("#jobDetailsRow").css("background-color", "#ccffcc");
+      } else {
+        $("#jobDetailsRow").css("background-color", "#ffb3b3");
+      }
 
-          if (currentJob.IsRunning) {
-            $("#jobDetailsRow").css("background-color", "#ffffb3");
-          }
+      if (currentJob.IsRunning) {
+        $("#jobDetailsRow").css("background-color", "#ffffb3");
+      }
 
-          //select first vm
-          $(".vm").first().click();
+      //select first vm
+      $(".vm").first().click();
 
-        });
-              
+    });
+
 }
 
 
 //click handler for editing job
 function editJobHandler(event) {
 
-    var selectedEditJob = [];
-    //look for job
-    for (var i = 0; i < configuredJobs.length; i++) {
-        if (configuredJobs[i].DbId == selectedJob) {
-            selectedEditJob = configuredJobs[i];
-        }
+  var selectedEditJob = [];
+  //look for job
+  for (var i = 0; i < configuredJobs.length; i++) {
+    if (configuredJobs[i].DbId == selectedJob) {
+      selectedEditJob = configuredJobs[i];
     }
+  }
 
-    startNewJobProcess(selectedEditJob);
+  startNewJobProcess(selectedEditJob);
 }
 
 //click handler for deleting job
@@ -639,7 +681,7 @@ function deleteJobHandler(event) {
         }
       });
 
-      
+
     }
   });
 }
@@ -651,7 +693,7 @@ function startJobHandler(event) {
     url: "api/JobStart/" + selectedJob
   })
     .done(function (data) {
-      
+
     });
 }
 
@@ -676,7 +718,7 @@ function vmClickHandler(event) {
 
 //refresh handler for clicking vm in main panel
 function showCurrentEvents() {
-  
+
   //api call
   $.ajax({
     url: "api/BackupJobEvent?id=" + selectedJob + "&jobType=backup"
@@ -777,7 +819,7 @@ function showLoginForm(showError) {
   if (showError) {
     Swal.showValidationMessage(`Anmeldung ist fehlgeschlagen`);
   }
-  
+
 }
 
 //async function for loagin ajax call
