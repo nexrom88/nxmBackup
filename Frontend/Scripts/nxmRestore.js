@@ -136,7 +136,7 @@ function convertBackupProperties(properties) {
     }
 
     //parse timestamp
-    var parsedDate = moment(properties[i].timeStamp, "YYYYMMDDhhmmss").format("DD.MM.YYYY hh:mm");
+    var parsedDate = moment(properties[i].timeStamp, "YYYYMMDDhhmmss").format("DD.MM.YYYY HH:mm");
     properties[i].timeStamp = parsedDate;
 
   }

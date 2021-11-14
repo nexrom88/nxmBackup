@@ -162,6 +162,7 @@
     <Compile Include="Areas\HelpPage\SampleGeneration\TextSample.cs" />
     <Compile Include="Areas\HelpPage\XmlDocumentationProvider.cs" />
     <Compile Include="Controllers\BackupChainController.cs" />
+    <Compile Include="Controllers\BackupJobStateController.cs" />
     <Compile Include="Controllers\DBConnectTestController.cs" />
     <Compile Include="Controllers\FLRBrowserController.cs" />
     <Compile Include="Controllers\FolderDownloader.cs" />

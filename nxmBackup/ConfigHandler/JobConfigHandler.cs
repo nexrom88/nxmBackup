@@ -20,10 +20,9 @@ namespace ConfigHandler
 
         public static List<OneJob> Jobs { get => jobs; }
 
-        //reads all jobs from the DB
-        public static void readJobsFromDB()
+        //reads all jobs from db to a given object
+        public static void readJobsFromDB(List<OneJob> target)
         {
-            jobs = new List<OneJob>();
 
             //open DB connection
             using (Common.DBConnection connection = new Common.DBConnection())
@@ -60,7 +59,7 @@ namespace ConfigHandler
                     //newJob.NextRun = $"{((int)jobDB["hour"]).ToString("00")}:{((int)jobDB["minute"]).ToString("00")}";
                     //if (jobDB["day"].ToString() != "") newJob.NextRun += $" ({jobDB["day"]})";
 
-                    
+
 
                     var rota = new Rotation();
                     //build rotation structure
@@ -118,7 +117,7 @@ namespace ConfigHandler
                         newVM.vmHDDs = new List<VMHDD>();
 
                         //iterate through all hdds
-                        foreach(Dictionary<string,object> oneHDD in hdds)
+                        foreach (Dictionary<string, object> oneHDD in hdds)
                         {
                             VMHDD newHDD = new VMHDD();
                             newHDD.name = oneHDD["name"].ToString();
@@ -148,13 +147,21 @@ namespace ConfigHandler
                             newJob.LastRun = jobExecution["startstamp"].ToString();
                             newJob.Successful = jobExecution["successful"].ToString();
                         }
-                            
+
                     }
 
-                    jobs.Add(newJob);
+                    target.Add(newJob);
 
                 }
             }
+        }
+
+
+        //reads all jobs from the DB and loads it
+        public static void readJobsFromDB()
+        {
+            jobs = new List<OneJob>();
+            readJobsFromDB(jobs);
         }
 
 
