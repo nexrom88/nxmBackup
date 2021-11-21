@@ -565,10 +565,10 @@ function buildJobDetailsPanel(currentJob) {
       var intervalString;
       switch (currentJob["Interval"]["intervalBase"]) {
         case 0: //stündlich
-          intervalString = "Stündlich bei Minute " + currentJob["Interval"]["minute"];
+          intervalString = "Stündlich bei Minute " + buildTwoDigitsInt(currentJob["Interval"]["minute"]);
           break;
         case 1: //täglich
-          intervalString = "Täglich um " + currentJob["Interval"]["hour"] + ":" + currentJob["Interval"]["minute"];
+          intervalString = "Täglich um " + buildTwoDigitsInt(currentJob["Interval"]["hour"]) + ":" + buildTwoDigitsInt(currentJob["Interval"]["minute"]);
           break;
         case 2: //wöchentlich
           var dayForGui;
@@ -596,7 +596,7 @@ function buildJobDetailsPanel(currentJob) {
               break;
           }
 
-          intervalString = dayForGui + "s " + " um " + currentJob["Interval"]["hour"] + ":" + currentJob["Interval"]["minute"];
+          intervalString = dayForGui + "s " + " um " + buildTwoDigitsInt(currentJob["Interval"]["hour"]) + ":" + buildTwoDigitsInt(currentJob["Interval"]["minute"]);
           break;
       }
 
@@ -634,6 +634,11 @@ function buildJobDetailsPanel(currentJob) {
 
     });
 
+}
+
+//changes a given int to two digits
+function buildTwoDigitsInt(input) {
+  return input.toLocaleString('en-US', { minimumIntegerDigits: 2, useGrouping: false });
 }
 
 

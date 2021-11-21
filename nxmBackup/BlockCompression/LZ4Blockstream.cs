@@ -698,19 +698,5 @@ namespace BlockCompression
 }
 
 //Block Compression Fileformat:
-//----------header----------
-//4 bytes: aes IV length
-//IV length bytes: aes IV
-//16 bytes: signature string "nxmlz4" (16 bytes aligned, because of AES blocksize)
-//
-//8 bytes: decompressed file size in bytes
-//8 bytes: decompressed block size in bytes
-//
-//----------body blocks----------
-//8 bytes: decompressed file byte offset
-//8 bytes: compressed block size (cbs) in bytes
-//cbs bytes: compressed data
-//
-//----------next block----------
-//...
+// see spec file
 
