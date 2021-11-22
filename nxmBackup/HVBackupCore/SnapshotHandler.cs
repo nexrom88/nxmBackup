@@ -18,14 +18,16 @@ namespace nxmBackup.HVBackupCore
         private Common.EventHandler eventHandler;
         private bool useEncryption;
         private byte[] aesKey;
+        private bool usingDedupe;
 
-        public SnapshotHandler(JobVM vm, int executionId, bool useEncryption, byte[] aesKey)
+        public SnapshotHandler(JobVM vm, int executionId, bool useEncryption, byte[] aesKey, bool usingDedupe)
         {
             this.useEncryption = useEncryption;
             this.aesKey = aesKey;
             this.vm = vm;
             this.executionId = executionId;
             this.eventHandler = new Common.EventHandler(vm, executionId);
+            this.usingDedupe = usingDedupe;
         }
 
         //performs a full backup chain
@@ -256,7 +258,7 @@ namespace nxmBackup.HVBackupCore
                 int eventId;
                 eventId = this.eventHandler.raiseNewEvent("Rotiere Backups (Schritt 1 von 5)...", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
 
-                HVRestoreCore.FullRestoreHandler restHandler = new HVRestoreCore.FullRestoreHandler(null, this.useEncryption, this.aesKey);
+                HVRestoreCore.FullRestoreHandler restHandler = new HVRestoreCore.FullRestoreHandler(null, this.useEncryption, this.aesKey, this.usingDedupe);
 
                 //perform restore to staging directory (including merge with second backup)
                 restHandler.performFullRestoreProcess(path, System.IO.Path.Combine(path, "staging"), "", chain[1].instanceID, false);
@@ -273,7 +275,7 @@ namespace nxmBackup.HVBackupCore
                 //create new backup container from merged backups
                 Guid g = Guid.NewGuid();
                 string guidFolder = g.ToString();
-                Common.LZ4Archive backupArchive = new Common.LZ4Archive(System.IO.Path.Combine(path, guidFolder + ".nxm"), null, this.useEncryption, this.aesKey, null);
+                Common.LZ4Archive backupArchive = new Common.LZ4Archive(System.IO.Path.Combine(path, guidFolder + ".nxm"), null, this.useEncryption, this.aesKey,this.usingDedupe, null);
                 backupArchive.create();
                 backupArchive.open(System.IO.Compression.ZipArchiveMode.Create);
 
@@ -464,7 +466,7 @@ namespace nxmBackup.HVBackupCore
             Common.IArchive archive;
             
            
-            archive = new Common.LZ4Archive(System.IO.Path.Combine(path, guidFolder + ".nxm"), this.eventHandler, this.useEncryption, this.aesKey, null);
+            archive = new Common.LZ4Archive(System.IO.Path.Combine(path, guidFolder + ".nxm"), this.eventHandler, this.useEncryption, this.aesKey, this.usingDedupe, null);
             
             
             archive.create();

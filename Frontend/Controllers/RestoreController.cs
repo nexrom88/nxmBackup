@@ -59,7 +59,7 @@ namespace Frontend.Controllers
                     }
                     
                     int jobExecutionId = Common.DBQueries.addJobExecution(restoreStartDetails.jobID, "restore");
-                    HVRestoreCore.FullRestoreHandler fullRestoreHandler = new HVRestoreCore.FullRestoreHandler(new Common.EventHandler(vmObject, jobExecutionId), jobObject.UseEncryption, jobObject.AesKey);
+                    HVRestoreCore.FullRestoreHandler fullRestoreHandler = new HVRestoreCore.FullRestoreHandler(new Common.EventHandler(vmObject, jobExecutionId), jobObject.UseEncryption, jobObject.AesKey, jobObject.UsingDedupe);
                     System.Threading.Thread frThread = new System.Threading.Thread(() => fullRestoreHandler.performFullRestoreProcess(sourcePath, restoreStartDetails.destPath, vmObject.vmName + "_restored", restoreStartDetails.instanceID, importToHyperV));
                     frThread.Start();
 
@@ -70,7 +70,7 @@ namespace Frontend.Controllers
 
                     break;
                 case "lr":
-                    HVRestoreCore.LiveRestore lrHandler = new HVRestoreCore.LiveRestore(jobObject.UseEncryption, jobObject.AesKey);
+                    HVRestoreCore.LiveRestore lrHandler = new HVRestoreCore.LiveRestore(jobObject.UseEncryption, jobObject.AesKey, jobObject.UsingDedupe);
 
                     //set global object
                     App_Start.RunningRestoreJobs.CurrentLiveRestore = lrHandler;

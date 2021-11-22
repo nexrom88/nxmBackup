@@ -17,6 +17,7 @@ namespace HVRestoreCore
         private const int NO_RELATED_EVENT = -1;
         private bool useEncryption;
         private byte[] aesKey;
+        private bool usingDedupe;
         public bool StopRequest { set; get; }
         public flrState State { get; set; }
 
@@ -25,10 +26,11 @@ namespace HVRestoreCore
         public GuestVolume[] GuestVolumes { get; set; }
 
 
-        public FileLevelRestoreHandler(bool useEncryption, byte[] aesKey)
+        public FileLevelRestoreHandler(bool useEncryption, byte[] aesKey, bool usingDedupe)
         {
             this.useEncryption = useEncryption;
             this.aesKey = aesKey;
+            this.usingDedupe = usingDedupe;
 
             //init state property
             flrState newState = new flrState();
@@ -153,7 +155,7 @@ namespace HVRestoreCore
             //get hdd files from backup chain
             string[] hddFiles = BackupConfigHandler.getHDDFilesFromChain(restoreChain, basePath, selectedHDD);
 
-            MountHandler mountHandler = new MountHandler(MountHandler.RestoreMode.flr, this.useEncryption, this.aesKey);
+            MountHandler mountHandler = new MountHandler(MountHandler.RestoreMode.flr, this.useEncryption, this.aesKey, this.usingDedupe);
 
             MountHandler.ProcessState mountState = MountHandler.ProcessState.pending;
             Thread mountThread = new Thread(() => mountHandler.startMfHandlingForFLR(hddFiles, ref mountState));

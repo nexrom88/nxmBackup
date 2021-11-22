@@ -17,16 +17,18 @@ namespace HVRestoreCore
     {
         private bool useEncryption;
         private byte[] aesKey;
+        private bool usingDedupe;
 
         //set to true when stop is requested
         public bool StopRequest { get; set; }
 
         public lrState State { get; set; }
 
-        public LiveRestore(bool useEncryption, byte[] aesKey)
+        public LiveRestore(bool useEncryption, byte[] aesKey, bool usingDedupe)
         {
             this.useEncryption = useEncryption;
             this.aesKey = aesKey;
+            this.usingDedupe = usingDedupe;
             State = lrState.initializing;
         }
 
@@ -91,7 +93,7 @@ namespace HVRestoreCore
 
             string backupBasePath = System.IO.Path.Combine(basePath, restoreChain[restoreChain.Count -1].uuid + ".nxm");
 
-            MountHandler mountHandler = new MountHandler(MountHandler.RestoreMode.lr, this.useEncryption, this.aesKey);
+            MountHandler mountHandler = new MountHandler(MountHandler.RestoreMode.lr, this.useEncryption, this.aesKey, this.usingDedupe);
 
             Thread mountThread = new Thread(() => mountHandler.startMfHandlingForLR(hddFiles, backupBasePath, vmName));
             mountThread.Start();

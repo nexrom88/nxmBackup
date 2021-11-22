@@ -115,7 +115,7 @@ namespace TestProject
             //vm.vmID = "7A571DAE-9111-4576-897C-8E266EE51FFB"; //ubuntu
             //vm.vmID = "2F8C8382-4D06-4AD7-BCC3-0BFED03199AC"; //Lubuntu
             vm.vmID = "25BA5143-5604-4A2C-A0E5-60D06630DAD2"; //win10_2hdd
-            nxmBackup.HVBackupCore.SnapshotHandler sh = new nxmBackup.HVBackupCore.SnapshotHandler(vm, -1, false, null);
+            nxmBackup.HVBackupCore.SnapshotHandler sh = new nxmBackup.HVBackupCore.SnapshotHandler(vm, -1, false, null, true);
             sh.cleanUp();
 
 

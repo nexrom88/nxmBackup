@@ -14,6 +14,7 @@ namespace HVRestoreCore
         private const int NO_RELATED_EVENT = -1;
         private bool useEncryption;
         private byte[] aesKey;
+        private bool usingDedupe;
         public bool StopRequest {
             set
             {
@@ -26,11 +27,12 @@ namespace HVRestoreCore
         }
         private Common.StopRequestWrapper stopRequestWrapper = new Common.StopRequestWrapper();
 
-        public FullRestoreHandler(Common.EventHandler eventHandler, bool useEncryption, byte[] aesKey)
+        public FullRestoreHandler(Common.EventHandler eventHandler, bool useEncryption, byte[] aesKey, bool usingDedupe)
         {
             this.eventHandler = eventHandler;
             this.useEncryption = useEncryption;
             this.aesKey = aesKey;
+            this.usingDedupe = usingDedupe;
         }
 
         //performs a full restore process
@@ -117,7 +119,7 @@ namespace HVRestoreCore
                     Common.IArchive archive;
 
 
-                    archive = new Common.LZ4Archive(System.IO.Path.Combine(basePath, currentBackup.uuid + ".nxm"), null, this.useEncryption, this.aesKey, this.stopRequestWrapper);
+                    archive = new Common.LZ4Archive(System.IO.Path.Combine(basePath, currentBackup.uuid + ".nxm"), null, this.useEncryption, this.aesKey, this.usingDedupe, this.stopRequestWrapper);
 
 
                     archive.open(System.IO.Compression.ZipArchiveMode.Read);
@@ -221,7 +223,7 @@ namespace HVRestoreCore
             Common.IArchive archive;
 
            
-            archive = new Common.LZ4Archive(archivePath, this.eventHandler, this.useEncryption, this.aesKey, this.stopRequestWrapper);
+            archive = new Common.LZ4Archive(archivePath, this.eventHandler, this.useEncryption, this.aesKey, this.usingDedupe, this.stopRequestWrapper);
 
             archive.open(System.IO.Compression.ZipArchiveMode.Read);
 

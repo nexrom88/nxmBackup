@@ -27,7 +27,7 @@ namespace ConfigHandler
             //open DB connection
             using (Common.DBConnection connection = new Common.DBConnection())
             {
-                List<Dictionary<string, object>> jobsDB = connection.doReadQuery("SELECT jobs.id, jobs.name, jobs.incremental, jobs.isRunning, jobs.basepath, jobs.maxelements, jobs.blocksize, jobs.day, jobs.hour, jobs.minute, jobs.interval, jobs.livebackup, jobs.useencryption, jobs.aeskey, rotationtype.name AS rotationname FROM jobs INNER JOIN rotationtype ON jobs.rotationtypeid=rotationtype.id WHERE jobs.deleted=FALSE;", null, null);
+                List<Dictionary<string, object>> jobsDB = connection.doReadQuery("SELECT jobs.id, jobs.name, jobs.incremental, jobs.isRunning, jobs.basepath, jobs.maxelements, jobs.blocksize, jobs.day, jobs.hour, jobs.minute, jobs.interval, jobs.livebackup, jobs.useencryption, jobs.aeskey, jobs.usededupe, rotationtype.name AS rotationname FROM jobs INNER JOIN rotationtype ON jobs.rotationtypeid=rotationtype.id WHERE jobs.deleted=FALSE;", null, null);
 
                 //check that jobs != null
                 if (jobsDB == null) //DB error
@@ -48,6 +48,7 @@ namespace ConfigHandler
                     newJob.IsRunning = (bool)jobDB["isrunning"];
                     newJob.LiveBackup = (bool)jobDB["livebackup"];
                     newJob.Incremental = (bool)jobDB["incremental"];
+                    newJob.UsingDedupe = (bool)jobDB["usededupe"];
                     newJob.UseEncryption = (bool)jobDB["useencryption"];
 
                     if (newJob.UseEncryption)
@@ -200,9 +201,10 @@ namespace ConfigHandler
                 parameters.Add("rotationtypeID", rotationID);
                 parameters.Add("livebackup", job.LiveBackup);
                 parameters.Add("updatejobID", updatedJobID);
+                parameters.Add("usededupe", job.UsingDedupe);
 
 
-                values = connection.doReadQuery("UPDATE jobs SET name = @name, incremental = @incremental, interval = @interval, minute = @minute, hour = @hour, day = @day, basepath = @basepath, blocksize = @blocksize, maxelements = @maxelements, livebackup = @livebackup, rotationtypeid = @rotationtypeID WHERE id=@updatejobID;", parameters, transaction);
+                values = connection.doReadQuery("UPDATE jobs SET name = @name, incremental = @incremental, interval = @interval, minute = @minute, hour = @hour, day = @day, basepath = @basepath, blocksize = @blocksize, maxelements = @maxelements, livebackup = @livebackup, rotationtypeid = @rotationtypeID, usededupe = @usededupe WHERE id=@updatejobID;", parameters, transaction);
 
                 //delete existing JObVM relation
                 deleteJobVMRelation(updatedJobID, connection, transaction);
@@ -256,9 +258,10 @@ namespace ConfigHandler
                 parameters.Add("livebackup", job.LiveBackup);
                 parameters.Add("useencryption", job.UseEncryption);
                 parameters.Add("aeskey", job.AesKey);
+                parameters.Add("usededupe", job.UsingDedupe);
 
 
-                values = connection.doReadQuery("INSERT INTO jobs (name, incremental, interval, minute, hour, day, basepath, blocksize, maxelements, livebackup, rotationtypeid, useencryption, aeskey) VALUES(@name, @incremental, @interval, @minute, @hour, @day, @basepath, @blocksize, @maxelements, @livebackup, @rotationtypeID, @useencryption, @aeskey) RETURNING id;", parameters, transaction);
+                values = connection.doReadQuery("INSERT INTO jobs (name, incremental, interval, minute, hour, day, basepath, blocksize, maxelements, livebackup, rotationtypeid, useencryption, aeskey, usededupe) VALUES(@name, @incremental, @interval, @minute, @hour, @day, @basepath, @blocksize, @maxelements, @livebackup, @rotationtypeID, @useencryption, @aeskey, @usededupe) RETURNING id;", parameters, transaction);
 
                 int jobID = (int)(values[0]["id"]);
 
@@ -387,6 +390,7 @@ namespace ConfigHandler
         private int dbId;
         private bool useEncryption;
         private byte[] aesKey;
+        private bool usingDedupe;
         private string name;
         private bool incremental;
         private Interval interval;
@@ -406,6 +410,7 @@ namespace ConfigHandler
         public Interval Interval { get => interval; set => interval = value; }
         public bool UseEncryption { get => useEncryption; set => useEncryption = value; }
         public byte[] AesKey { get => aesKey; set => aesKey = value; }
+        public bool UsingDedupe { get => usingDedupe; set => usingDedupe = value; }
         public List<JobVM> JobVMs { get => jobVMs; set => jobVMs = value; }
         public string BasePath { get => basePath; set => basePath = value; }
         public int BlockSize { get => blockSize; set => blockSize = value; }

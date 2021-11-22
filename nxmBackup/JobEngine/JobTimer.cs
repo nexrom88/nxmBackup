@@ -64,7 +64,7 @@ namespace JobEngine
             //iterate vms within the current job
             foreach (JobVM vm in this.Job.JobVMs)
             {
-                SnapshotHandler ssHandler = new SnapshotHandler(vm, executionId, this.Job.UseEncryption, this.Job.AesKey);
+                SnapshotHandler ssHandler = new SnapshotHandler(vm, executionId, this.Job.UseEncryption, this.Job.AesKey, this.job.UsingDedupe);
 
                 //incremental allowed?
                 bool incremental = this.Job.Incremental;

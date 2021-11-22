@@ -59,7 +59,7 @@ namespace BlockCompression
             this.mStream = new MemoryStream((int)this.DecompressedBlockSize);
             this.useEncryption = useEncryption;
             this.aesKey = aesKey;
-            this.usingDedupe = usingDedupe;
+            this.usingDedupe = usingDedupe; //only necessary when within write mode
 
             //init dedupe dict if necessary
             if (this.usingDedupe)

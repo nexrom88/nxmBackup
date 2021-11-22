@@ -27,12 +27,14 @@ namespace nxmBackup.MFUserMode
         public ProcessState mountState;
         private bool useEncryption;
         private byte[] aesKey;
+        private bool usingDedupe;
 
-        public MountHandler(RestoreMode mode, bool useEncryption, byte[] aesKey)
+        public MountHandler(RestoreMode mode, bool useEncryption, byte[] aesKey, bool usingDedupe)
         {
             this.useEncryption = useEncryption;
             this.aesKey = aesKey;
             this.restoreMode = mode;
+            this.usingDedupe = usingDedupe;
         }
 
         public string[] MountFiles { get => mountFiles; }
@@ -261,7 +263,7 @@ namespace nxmBackup.MFUserMode
             Common.IArchive archive;
 
 
-            archive = new Common.LZ4Archive(archivePath, null, this.useEncryption, this.aesKey, null);
+            archive = new Common.LZ4Archive(archivePath, null, this.useEncryption, this.aesKey, this.usingDedupe, null);
 
 
             archive.open(System.IO.Compression.ZipArchiveMode.Read);
@@ -417,7 +419,7 @@ namespace nxmBackup.MFUserMode
                     nonFullBackup.cbStructure = cbStruct;
                     nonFullBackup.backupType = BackupChainReader.NonFullBackupType.rct;
                     FileStream inputStream = new FileStream(sourceFiles[i], FileMode.Open, FileAccess.Read);
-                    BlockCompression.LZ4BlockStream blockStream = new BlockCompression.LZ4BlockStream(inputStream, BlockCompression.AccessMode.read, this.useEncryption, this.aesKey);
+                    BlockCompression.LZ4BlockStream blockStream = new BlockCompression.LZ4BlockStream(inputStream, BlockCompression.AccessMode.read, this.useEncryption, this.aesKey, this.usingDedupe);
                     if (!blockStream.init())
                     {
                         return null;
@@ -442,7 +444,7 @@ namespace nxmBackup.MFUserMode
             //build readable full backup
             BackupChainReader.ReadableFullBackup readableFullBackup = new BackupChainReader.ReadableFullBackup();
             FileStream inputStreamFull = new FileStream(sourceFiles[sourceFiles.Length - 1], FileMode.Open, FileAccess.Read);
-            BlockCompression.LZ4BlockStream blockStreamFull = new BlockCompression.LZ4BlockStream(inputStreamFull, BlockCompression.AccessMode.read, this.useEncryption, this.aesKey);
+            BlockCompression.LZ4BlockStream blockStreamFull = new BlockCompression.LZ4BlockStream(inputStreamFull, BlockCompression.AccessMode.read, this.useEncryption, this.aesKey, this.usingDedupe);
             if (!blockStreamFull.init())
             {
                 return null;

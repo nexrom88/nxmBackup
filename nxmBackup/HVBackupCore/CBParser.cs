@@ -133,7 +133,7 @@ namespace HyperVBackupRCT
         {
             FileStream inputStream = new FileStream(path, FileMode.Open, FileAccess.Read);
 
-            BlockCompression.LZ4BlockStream compressionStream = new BlockCompression.LZ4BlockStream(inputStream, BlockCompression.AccessMode.read, useEncryption, aesKey);
+            BlockCompression.LZ4BlockStream compressionStream = new BlockCompression.LZ4BlockStream(inputStream, BlockCompression.AccessMode.read, useEncryption, aesKey, false);
 
             if (!compressionStream.init())
             {
