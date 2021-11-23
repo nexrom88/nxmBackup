@@ -356,6 +356,16 @@ namespace nxmBackup.HVBackupCore
                     inParams["SnapshotType"] = SnapshotTypeRecovery;
 
                     this.eventHandler.raiseNewEvent("erfolgreich", true, false, eventId, EventStatus.successful);
+
+                    if (this.usingDedupe)
+                    {
+                        this.eventHandler.raiseNewEvent("Daten-Deduplizierung wird verwendet", false, false, NO_RELATED_EVENT, EventStatus.info);
+                    }
+                    if (this.useEncryption)
+                    {
+                        this.eventHandler.raiseNewEvent("Verschlüsselung wird verwendet", false, false, NO_RELATED_EVENT, EventStatus.info);
+                    }
+
                     eventId = this.eventHandler.raiseNewEvent("Erzeuge Recovery Snapshot...", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
 
                     using (ManagementBaseObject outParams = service.InvokeMethod(

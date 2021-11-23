@@ -107,6 +107,7 @@ function loadRestorePoints() {
           //set backup select event handler
           $('#restorePointTable tr').on('click', function (event) {
             $(this).addClass('active').siblings().removeClass('active');
+            $("#startRestoreButton").removeAttr("disabled");
           });
 
         });

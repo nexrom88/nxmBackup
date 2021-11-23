@@ -192,6 +192,7 @@
     </ApplicationDefinition>
     <Compile Include="BlockCompression\LZ4Blockstream.cs" />
     <Compile Include="Common\ChangedBlock.cs" />
+    <Compile Include="Common\SHA1Provider.cs" />
     <Compile Include="Common\SHA256Provider.cs" />
     <Compile Include="DataBase\JetBlue.cs" />
     <Compile Include="HVBackupCore\DiffHandler.cs" />

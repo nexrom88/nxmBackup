@@ -238,9 +238,9 @@ namespace BlockCompression
             this.structCache = new List<StructCacheEntry>();
 
             //jump to first block
-            this.fileStream.Seek(16 + this.decompressedFileSizeOffset, SeekOrigin.Begin);
+            this.fileStream.Seek(17 + this.decompressedFileSizeOffset, SeekOrigin.Begin);
 
-            byte[] buffer = new byte[16];
+            byte[] buffer = new byte[24];
 
             while (this.fileStream.Position < this.fileStream.Length)
             {
@@ -423,8 +423,8 @@ namespace BlockCompression
         //can block be found within dedupe table? currentFileOffset is for adding a new dedupe entry
         private UInt64 getOffsetFromDeDupeDict(MemoryStream memStream, Int64 currentFileOffset)
         {
-            //compute sha256 hash
-            byte[] hash = Common.SHA256Provider.computeHash(memStream.GetBuffer());
+            //compute md5 hash
+            byte[] hash = Common.SHA1Provider.computeHash(memStream.GetBuffer());
 
             //check dict for hash
             UInt64 foundOffset;

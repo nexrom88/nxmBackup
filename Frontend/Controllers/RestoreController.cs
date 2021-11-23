@@ -100,7 +100,7 @@ namespace Frontend.Controllers
                     break;
 
                 case "flr":
-                    HVRestoreCore.FileLevelRestoreHandler flrHandler = new HVRestoreCore.FileLevelRestoreHandler(jobObject.UseEncryption, jobObject.AesKey);
+                    HVRestoreCore.FileLevelRestoreHandler flrHandler = new HVRestoreCore.FileLevelRestoreHandler(jobObject.UseEncryption, jobObject.AesKey, jobObject.UsingDedupe);
 
                     //set global object
                     App_Start.RunningRestoreJobs.CurrentFileLevelRestore = flrHandler;
