@@ -12,7 +12,7 @@ namespace BlockCompression
     public class LZ4BlockStream : System.IO.Stream, IDisposable
     {
         MemoryStream mStream;
-        LZ4EncoderStream compressionStream;
+        //LZ4EncoderStream compressionStream;
         LZ4DecoderStream decompressionStream;
 
         private System.IO.FileStream fileStream;
@@ -134,10 +134,7 @@ namespace BlockCompression
                 {
                     this.fileStream.WriteByte(0);
                 }
-               
-
-                //open compression stream
-                this.compressionStream = LZ4Stream.Encode(this.mStream, this.encoderSettings, true);
+                
 
             }else if (this.mode == AccessMode.read) //if read mode: read file header
             {
@@ -293,15 +290,12 @@ namespace BlockCompression
             this.decompressedByteCountWithinBlock = 0;
             this.mStream.Close();
             this.mStream.Dispose();
-            this.mStream = new MemoryStream();
-            this.compressionStream = LZ4Stream.Encode(this.mStream, this.encoderSettings, true);
+            this.mStream = new MemoryStream((int)this.decompressedBlockSize);
         }
 
         //closes the current block
         private void closeBlock()
         {
-            //close compression stream 
-            compressionStream.Close();
 
             //is this block empty? Then remove the new block header
             if (this.decompressedByteCountWithinBlock == 0)
@@ -343,9 +337,7 @@ namespace BlockCompression
             //write block to file
             if (this.useEncryption)
             {
-                using (MemoryStream memStream = new MemoryStream())
-                using (CryptoStream cryptoStream = new CryptoStream(memStream, this.encryptor, CryptoStreamMode.Write))
-                {
+               
                     //check dedupe dict if necessary
                     if (this.usingDedupe)
                     {
@@ -362,10 +354,9 @@ namespace BlockCompression
                             byte[] offsetBuffer = new byte[8];
                             this.fileStream.Write(offsetBuffer, 0, 8);
 
-                            //write payload data
-                            this.mStream.WriteTo(cryptoStream);
-                            cryptoStream.FlushFinalBlock();
-                            memStream.WriteTo(this.fileStream);
+                            //write payload data:
+                            writeToStorage(this.mStream, this.fileStream, this.useEncryption);
+                            
                         }
 
                     }
@@ -375,15 +366,10 @@ namespace BlockCompression
                         byte[] offsetBuffer = new byte[8];
                         this.fileStream.Write(offsetBuffer, 0, 8);
 
-                        //write payload data
-                        this.mStream.WriteTo(cryptoStream);
-                        cryptoStream.FlushFinalBlock();
-                        memStream.WriteTo(this.fileStream);
-                    }
-
-
-                    
+                        //write payload data:
+                        writeToStorage(this.mStream, this.fileStream, this.useEncryption);
                 }
+                
             }
             else //encryption disabled
             {
@@ -404,7 +390,7 @@ namespace BlockCompression
                         this.fileStream.Write(offsetBuffer, 0, 8);
 
                         //write payload data
-                        this.mStream.WriteTo(this.fileStream);
+                        writeToStorage(this.mStream, this.fileStream, this.useEncryption);
                     }
 
                 }
@@ -415,7 +401,36 @@ namespace BlockCompression
                     this.fileStream.Write(offsetBuffer, 0, 8);
 
                     //write payload data
-                    this.mStream.WriteTo(this.fileStream);
+                    writeToStorage(this.mStream, this.fileStream, this.useEncryption);
+                }
+            }
+        }
+
+        //writes the given payload data to storage
+        private void writeToStorage(MemoryStream source, FileStream target, bool useEncryption)
+        {
+            using (MemoryStream compMemStream = new MemoryStream())
+            using (MemoryStream cryptoMemStream = new MemoryStream())
+            using (CryptoStream cryptoStream = new CryptoStream(cryptoMemStream, this.encryptor, CryptoStreamMode.Write))
+            using (LZ4EncoderStream compressionStream = LZ4Stream.Encode(compMemStream, this.encoderSettings, true))
+            {
+                //compression
+                source.WriteTo(compressionStream);
+                compressionStream.Close();
+
+                if (useEncryption)
+                {
+                    //encryption
+                    compMemStream.WriteTo(cryptoStream);
+                    cryptoStream.FlushFinalBlock();
+
+                    //write to storage
+                    cryptoMemStream.WriteTo(target);
+                }
+                else
+                {
+                    //write to storage without encryption
+                    compMemStream.WriteTo(target);
                 }
             }
         }
@@ -424,7 +439,7 @@ namespace BlockCompression
         private UInt64 getOffsetFromDeDupeDict(MemoryStream memStream, Int64 currentFileOffset)
         {
             //compute md5 hash
-            byte[] hash = Common.SHA1Provider.computeHash(memStream.GetBuffer());
+            byte[] hash = Common.SHA1Provider.computeHash(memStream.ToArray());
 
             //check dict for hash
             UInt64 foundOffset;
@@ -761,8 +776,8 @@ namespace BlockCompression
                 //can write all bytes at once?
                 if (this.DecompressedBlockSize - this.decompressedByteCountWithinBlock > (ulong)count)
                 {
-                    compressionStream.Write(buffer, offset, count);
-                    compressionStream.Flush();
+                    this.mStream.Write(buffer, offset, count);
+                    this.mStream.Flush();
                     offset += count;
                     this.decompressedByteCountWithinBlock += (ulong)count;
                     this.totalDecompressedByteCount += (ulong)count;
@@ -772,7 +787,7 @@ namespace BlockCompression
                 {
                     //remaining bytes are more than remaining bytes within block
                     ulong bytesRemainingWithinBlock = this.DecompressedBlockSize - this.decompressedByteCountWithinBlock;
-                    compressionStream.Write(buffer, offset, (int)bytesRemainingWithinBlock);
+                    this.mStream.Write(buffer, offset, (int)bytesRemainingWithinBlock);
                     offset += (int)bytesRemainingWithinBlock;
                     count -= (int)bytesRemainingWithinBlock;
                     this.decompressedByteCountWithinBlock += bytesRemainingWithinBlock;

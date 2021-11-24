@@ -32,6 +32,8 @@ namespace TestProject
                 mStream.WriteByte((byte)i);
             }
 
+            byte[] hash = Common.SHA1Provider.computeHash(mStream.ToArray());
+
             byte[] destBuffer = mStream.GetBuffer();
             for(int i = 0; i < destBuffer.Length; i++)
             {
