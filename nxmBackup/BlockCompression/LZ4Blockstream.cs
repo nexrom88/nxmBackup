@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -20,7 +21,7 @@ namespace BlockCompression
 
         //needed for dedupe
         private bool usingDedupe;
-        private Dictionary<byte[], UInt64> blocksDict;
+        private Dictionary<SHA1Struct, UInt64> blocksDict;
 
         //needed for write
         private LZ4EncoderSettings encoderSettings = new LZ4EncoderSettings();
@@ -65,7 +66,7 @@ namespace BlockCompression
             //init dedupe dict if necessary
             if (this.usingDedupe)
             {
-                this.blocksDict = new Dictionary<byte[], ulong>();
+                this.blocksDict = new Dictionary<SHA1Struct, ulong>();
             }
         }
 
@@ -441,12 +442,17 @@ namespace BlockCompression
         //can block be found within dedupe table? currentFileOffset is for adding a new dedupe entry
         private UInt64 getOffsetFromDeDupeDict(MemoryStream memStream, Int64 currentFileOffset)
         {
+ 
             //compute md5 hash
             byte[] hash = Common.SHA1Provider.computeHash(memStream.ToArray());
+            SHA1Struct sha1Struct = new SHA1Struct();
+            sha1Struct.block1 = BitConverter.ToUInt64(hash, 0);
+            sha1Struct.block2 = BitConverter.ToUInt64(hash, 8);
+            sha1Struct.block3 = BitConverter.ToUInt32(hash, 16);
 
             //check dict for hash
             UInt64 foundOffset;
-            if (this.blocksDict.TryGetValue(hash, out foundOffset))
+            if (this.blocksDict.TryGetValue(sha1Struct, out foundOffset))
             {
                 //entry found, return file offset
                 return foundOffset;
@@ -454,7 +460,7 @@ namespace BlockCompression
             else
             {
                 //entry not found, add it to dict
-                this.blocksDict.Add(hash, (UInt64)currentFileOffset);
+                this.blocksDict.Add(sha1Struct, (UInt64)currentFileOffset);
                 return 0;
             }
         }
@@ -802,6 +808,14 @@ namespace BlockCompression
             }
 
         }
+    }
+
+    //represents a SHA1 has with 20bytes to be better comparable
+    public struct SHA1Struct
+    {
+        public UInt64 block1;
+        public UInt64 block2;
+        public UInt32 block3;
     }
 
     public enum AccessMode
