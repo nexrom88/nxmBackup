@@ -60,6 +60,7 @@ namespace BlockCompression
             this.useEncryption = useEncryption;
             this.aesKey = aesKey;
             this.usingDedupe = usingDedupe; //only necessary when within write mode
+            
 
             //init dedupe dict if necessary
             if (this.usingDedupe)
@@ -67,6 +68,7 @@ namespace BlockCompression
                 this.blocksDict = new Dictionary<byte[], ulong>();
             }
         }
+
 
         public bool init()
         { 
@@ -304,34 +306,9 @@ namespace BlockCompression
                 return;
             }
 
-            
-            //close block by filling the 8 byte block header (compressed block size)
-
-            //go back 8 bytes
-            this.fileStream.Seek(-8, SeekOrigin.Current);
-
-            //write "compressed block size"
-            byte[] buffer;
-            long compressedBlockSize = 0;
-            if (this.useEncryption)
-            {
-                //aes is 16 byte aligned
-                compressedBlockSize = this.mStream.Length;
-                compressedBlockSize += 16 -(compressedBlockSize % 16);
-                buffer = BitConverter.GetBytes(compressedBlockSize);
-            }
-            else
-            {
-                buffer = BitConverter.GetBytes(this.mStream.Length);
-            }
-            this.fileStream.Write(buffer, 0, 8);
-
-            //go back to file head
-            this.fileStream.Seek(0, SeekOrigin.End);
 
             //write memory stream to file
             this.mStream.Position = 0;
-
            
 
             //write block to file
@@ -410,13 +387,35 @@ namespace BlockCompression
         private void writeToStorage(MemoryStream source, FileStream target, bool useEncryption)
         {
             using (MemoryStream compMemStream = new MemoryStream())
-            using (MemoryStream cryptoMemStream = new MemoryStream())
-            using (CryptoStream cryptoStream = new CryptoStream(cryptoMemStream, this.encryptor, CryptoStreamMode.Write))
             using (LZ4EncoderStream compressionStream = LZ4Stream.Encode(compMemStream, this.encoderSettings, true))
             {
-                //compression
+                MemoryStream cryptoMemStream = null;
+                CryptoStream cryptoStream = null;
+                //do compression
                 source.WriteTo(compressionStream);
                 compressionStream.Close();
+
+                //write compressed block size to block header
+                byte[] buffer;
+                long compressedBlockSize = 0;
+                if (useEncryption)
+                {
+                    //init enryptor module
+                    cryptoMemStream = new MemoryStream();
+                    cryptoStream = new CryptoStream(cryptoMemStream, this.encryptor, CryptoStreamMode.Write);
+
+                    //aes is 16 byte aligned
+                    compressedBlockSize = compMemStream.Length;
+                    compressedBlockSize += 16 - (compressedBlockSize % 16);
+                    buffer = BitConverter.GetBytes(compressedBlockSize);
+                }
+                else
+                {
+                    buffer = BitConverter.GetBytes(compMemStream.Length);
+                }
+                this.fileStream.Seek(-16, SeekOrigin.Current); //jump back 16 bytes to find right position for cbs
+                this.fileStream.Write(buffer, 0, 8);
+                this.fileStream.Seek(8, SeekOrigin.Current); //jump forward to point to payload data
 
                 if (useEncryption)
                 {
@@ -426,6 +425,10 @@ namespace BlockCompression
 
                     //write to storage
                     cryptoMemStream.WriteTo(target);
+
+                    //close encryptor module
+                    cryptoStream.Dispose();
+                    cryptoMemStream.Dispose();
                 }
                 else
                 {
