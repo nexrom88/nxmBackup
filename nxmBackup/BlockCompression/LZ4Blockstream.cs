@@ -677,13 +677,6 @@ namespace BlockCompression
             //write bytes to buffer[] and return read bytes
             int bytesdecompressed = destMemoryStream.Read(buffer, offset, count);
 
-            bool debug = false;
-            if (debug)
-            {
-                byte[] tempBuffer = new byte[count];
-                destMemoryStream.Read(tempBuffer, 0, count);
-                System.IO.File.WriteAllBytes("f:\\debug.raw", tempBuffer);
-            }
             
             //could not read all necessary bytes?
             //if (bytesdecompressed < count && bytesdecompressed > 0)
@@ -691,6 +684,11 @@ namespace BlockCompression
             //    //read remainign bytes
             //    Read(buffer, offset + bytesdecompressed, count - bytesdecompressed);
             //}
+
+            if (bytesdecompressed == 0)
+            {
+                bytesdecompressed = 0;
+            }
 
             destMemoryStream.Dispose();
             this.Position += (long)bytesdecompressed;
