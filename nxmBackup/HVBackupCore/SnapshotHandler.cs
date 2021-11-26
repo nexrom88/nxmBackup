@@ -415,7 +415,7 @@ namespace nxmBackup.HVBackupCore
             }catch (Exception ex)
             {
                 //error while taking snapshot
-                Common.DBQueries.addLog(ex.Message, Environment.StackTrace);
+                Common.DBQueries.addLog(ex.Message, Environment.StackTrace, ex);
                 this.eventHandler.raiseNewEvent("fehlgeschlagen", true, false, eventId, EventStatus.error);
                 return null;
             }

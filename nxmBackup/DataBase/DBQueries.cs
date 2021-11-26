@@ -11,12 +11,19 @@ namespace Common
     {
 
         //adds an entry to log table
-        public static void addLog(string text, string stacktrace)
+        public static void addLog(string text, string stacktrace, Exception ex)
         {
+            string exception = "no exception";
+
+            if (ex != null)
+            {
+                exception = ex.Message;
+            }
+
             using (DBConnection dbConn = new DBConnection())
             {
-                dbConn.doWriteQuery("INSERT INTO log (text, stacktrace) VALUES (@text, @stacktrace);",
-                        new Dictionary<string, object>() { { "text", text }, { "stacktrace", stacktrace } }, null);
+                dbConn.doWriteQuery("INSERT INTO log (text, stacktrace, exception) VALUES (@text, @stacktrace, @exception);",
+                        new Dictionary<string, object>() { { "text", text }, { "stacktrace", stacktrace }, {"exception", exception } }, null);
             }
         }
 
@@ -282,5 +289,25 @@ namespace Common
                 EventHandler.writeToLog(exp.ToString(), new System.Diagnostics.StackTrace());
             }
         }
+
+        //removes dynamic data from db
+        public static void wipeDB()
+        {
+            using (DBConnection dbConn = new DBConnection())
+            {
+                NpgsqlTransaction transaction = dbConn.beginTransaction();
+                dbConn.doWriteQuery("DELETE FROM log;", null, transaction);
+                dbConn.doWriteQuery("DELETE FROM jobvmrelation;", null, transaction);
+                dbConn.doWriteQuery("DELETE FROM vmhddrelation;", null, transaction);
+                dbConn.doWriteQuery("DELETE FROM vms;", null, transaction);
+                dbConn.doWriteQuery("DELETE FROM hdds;", null, transaction);
+                dbConn.doWriteQuery("DELETE FROM jobexecutionevents;", null, transaction);
+                dbConn.doWriteQuery("DELETE FROM jobexecutions;", null, transaction);
+                dbConn.doWriteQuery("DELETE FROM transferrates;", null, transaction);
+                dbConn.doWriteQuery("DELETE FROM jobs;", null, transaction);
+                transaction.Commit();
+            }
+        }
+
     }
 }

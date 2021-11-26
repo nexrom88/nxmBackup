@@ -68,7 +68,7 @@ namespace Common
             }
             catch (Exception ex)
             {
-                DBQueries.addLog(ex.Message, Environment.StackTrace);
+                DBQueries.addLog(ex.Message, Environment.StackTrace, ex);
                 return false;
             }
         }
@@ -132,7 +132,7 @@ namespace Common
             }
             catch (Exception ex)
             {
-                DBQueries.addLog(ex.Message, Environment.StackTrace);
+                DBQueries.addLog(ex.Message, Environment.StackTrace, ex);
                 return null;
             }
         }

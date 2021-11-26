@@ -89,7 +89,7 @@ namespace nxmBackup.MFUserMode
                 this.mountFiles[i] = getMountHDDPath(decompressedFileSize, vhdxName);
                 if (this.mountFiles == null)
                 {
-                    DBQueries.addLog("LR: mount file could not be created", Environment.StackTrace);
+                    DBQueries.addLog("LR: mount file could not be created", Environment.StackTrace, null);
                     mountState = ProcessState.error;
                     return;
                 }
@@ -104,12 +104,26 @@ namespace nxmBackup.MFUserMode
             }
 
             //restore vm config files            
-            string configFile = transferVMConfig(basePath, mountDirectory);
+            string configFile;
+            try
+            {
+                configFile = transferVMConfig(basePath, mountDirectory);
+
+            }catch(Exception ex)
+            {
+                DBQueries.addLog("LR: error on transfering vm config files", Environment.StackTrace, ex);
+                mountState = ProcessState.error;
+                foreach (string file in this.mountFiles)
+                {
+                    System.IO.File.Delete(file);
+                }
+                return;
+            }
 
             //return if no config file found
             if (configFile == "")
             {
-                DBQueries.addLog("LR: no config file found", Environment.StackTrace);
+                DBQueries.addLog("LR: no config file found", Environment.StackTrace, null);
                 mountState = ProcessState.error;
                 foreach (string file in this.mountFiles)
                 {
@@ -141,7 +155,7 @@ namespace nxmBackup.MFUserMode
             }
             else
             {
-                DBQueries.addLog("LR: Failed to connect to KM", Environment.StackTrace);
+                DBQueries.addLog("LR: Failed to connect to KM", Environment.StackTrace, null);
                 this.mountState = ProcessState.error;
             }
         }
@@ -163,7 +177,7 @@ namespace nxmBackup.MFUserMode
             }
             catch(Exception ex)
             {
-                DBQueries.addLog("LR: importing vm failed", Environment.StackTrace);
+                DBQueries.addLog("LR: importing vm failed", Environment.StackTrace, ex);
                 this.mountState = ProcessState.error;
             }
 
@@ -363,12 +377,19 @@ namespace nxmBackup.MFUserMode
 
                 while (!this.processStopped)
                 {
-                    this.kmConnection.handleFLRMessage();
+                    try
+                    {
+                        this.kmConnection.handleFLRMessage();
+                    }catch(Exception ex)
+                    {
+                        DBQueries.addLog("FLR: Error on handling flr message", Environment.StackTrace, ex);
+                        mountState = ProcessState.error;
+                    }
                 }
             }
             else
             {
-                DBQueries.addLog("FLR: Failed to connect to KM", Environment.StackTrace);
+                DBQueries.addLog("FLR: Failed to connect to KM", Environment.StackTrace, null);
                 mountState = ProcessState.error;
             }
         }
@@ -463,7 +484,10 @@ namespace nxmBackup.MFUserMode
             this.processStopped = true;
 
             //close km connection
-            this.kmConnection.closeConnection();
+            if (this.kmConnection != null)
+            {
+                this.kmConnection.closeConnection();
+            }
 
             //iterate through all rct backups in all chains
             foreach (BackupChainReader backupChain in this.readableChains)
