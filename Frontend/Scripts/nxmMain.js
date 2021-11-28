@@ -272,6 +272,7 @@ function showCurrentSettings(pageNumber, selectedEditJob) {
       $("#txtJobName").val(selectedEditJob["Name"]);
       $("#cbIncremental").prop("checked", selectedEditJob["Incremental"]);
       $("#cbLiveBackup").prop("checked", selectedEditJob["LiveBackup"]);
+      $("#cbDedupe").prop("checked", selectedEditJob["UsingDedupe"]);
       $("#cbEncryption").prop("checked", selectedEditJob["UseEncryption"]);
       $("#cbEncryption").prop("disabled", true); //encrpytion setting not changeable
       break;
@@ -393,6 +394,9 @@ function registerNextPageClickHandler(currentPage, selectedEditJob) {
         } else {
           $("#txtEncryptionPassword").css("background-color", "initial");
         }
+
+        //use dedupe?
+        newJobObj["usingdedupe"] = $("#cbDedupe").prop("checked");
 
         //use live backup?
         newJobObj["livebackup"] = $("#cbLiveBackup").prop("checked");

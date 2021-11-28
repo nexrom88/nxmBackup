@@ -23,6 +23,7 @@ namespace Frontend.Controllers
             newJob.BasePath = value.target;
             newJob.LiveBackup = value.livebackup;
             newJob.UseEncryption = value.useencryption;
+            newJob.UsingDedupe = value.usingdedupe;
 
             if (newJob.UseEncryption) {
                 newJob.AesKey = Common.SHA256Provider.computeHash(System.Text.Encoding.UTF8.GetBytes(value.encpassword));
@@ -128,6 +129,7 @@ namespace Frontend.Controllers
             public string name { get; set; }
             public bool incremental { get; set; }
             public bool useencryption { get; set; }
+            public bool usingdedupe { get; set; }
             public string encpassword { get; set; }
             public bool livebackup { get; set; }
             public string target { get; set; }
