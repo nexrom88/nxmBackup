@@ -61,7 +61,7 @@ namespace BlockCompression
             this.useEncryption = useEncryption;
             this.aesKey = aesKey;
             this.usingDedupe = usingDedupe; //only necessary when within write mode
-            
+
 
             //init dedupe dict if necessary
             if (this.usingDedupe)
@@ -72,7 +72,7 @@ namespace BlockCompression
 
 
         public bool init()
-        { 
+        {
             //if "write-mode" then create new file and fill the first 2 X 8 header bytes
             if (this.mode == AccessMode.write)
             {
@@ -137,9 +137,10 @@ namespace BlockCompression
                 {
                     this.fileStream.WriteByte(0);
                 }
-                
 
-            }else if (this.mode == AccessMode.read) //if read mode: read file header
+
+            }
+            else if (this.mode == AccessMode.read) //if read mode: read file header
             {
                 byte[] buffer = new byte[8];
 
@@ -186,7 +187,7 @@ namespace BlockCompression
 
                     //decryption error
                     if (signatureString != "nxmlz4")
-                    { 
+                    {
                         this.fileStream.Close();
                         return false;
                     }
@@ -213,7 +214,7 @@ namespace BlockCompression
                     }
                 }
 
-                
+
 
                 this.fileStream.Read(buffer, 0, 8);
                 this.decompressedFileSize = BitConverter.ToUInt64(buffer, 0);
@@ -222,11 +223,11 @@ namespace BlockCompression
                 this.DecompressedBlockSize = BitConverter.ToUInt64(buffer, 0);
 
                 //read dedupe switch
-                this.usingDedupe =  this.fileStream.ReadByte() == 1 ? true: false;
+                this.usingDedupe = this.fileStream.ReadByte() == 1 ? true : false;
 
                 //build struct cache
                 buildStructCache();
-                
+
             }
 
             return true;
@@ -235,6 +236,7 @@ namespace BlockCompression
         //builds the struct cache
         private void buildStructCache()
         {
+            bool blockDeduped = false;
             this.structCache = new List<StructCacheEntry>();
 
             //jump to first block
@@ -247,7 +249,7 @@ namespace BlockCompression
                 //build cache entry
                 StructCacheEntry cacheEntry = new StructCacheEntry();
                 this.fileStream.Read(buffer, 0, 24);
-                
+
                 cacheEntry.decompressedFileByteOffset = BitConverter.ToUInt64(buffer, 0);
                 cacheEntry.compressedBlockSize = BitConverter.ToUInt64(buffer, 8);
 
@@ -256,19 +258,23 @@ namespace BlockCompression
                     //read payloadDataOffset
                     UInt64 payloadDataOffset = BitConverter.ToUInt64(buffer, 16);
                     cacheEntry.fileOffset = payloadDataOffset > 0 ? payloadDataOffset : (ulong)this.fileStream.Position;
+                    blockDeduped = payloadDataOffset > 0 ? true : false;
                 }
                 else
                 {
                     cacheEntry.fileOffset = (ulong)this.fileStream.Position;
                 }
 
-                
+
 
                 //add entry to cache
                 this.structCache.Add(cacheEntry);
 
-                //jump to next block
-                this.fileStream.Seek((long)cacheEntry.compressedBlockSize, SeekOrigin.Current);
+                //jump to next block when current block is not available because of dedupe
+                if (!blockDeduped)
+                {
+                    this.fileStream.Seek((long)cacheEntry.compressedBlockSize, SeekOrigin.Current);
+                }
 
             }
 
@@ -303,42 +309,44 @@ namespace BlockCompression
             //is this block empty? Then remove the new block header
             if (this.decompressedByteCountWithinBlock == 0)
             {
-                this.fileStream.SetLength (this.fileStream.Length - 16);
+                this.fileStream.SetLength(this.fileStream.Length - 16);
                 return;
             }
 
 
             //write memory stream to file
             this.mStream.Position = 0;
-           
+
 
             //write block to file
             if (this.useEncryption)
             {
-               
-                    //check dedupe dict if necessary
-                    if (this.usingDedupe)
-                    {
-                        UInt64 dedupeOffset = getOffsetFromDeDupeDict(this.mStream, this.fileStream.Position + 8); // +8 because payloaddataoffset still gets written
-                        if (dedupeOffset > 0) //dedupe entry found
-                        {
-                            //write payloaddataoffset
-                            byte[] offsetBuffer = BitConverter.GetBytes(dedupeOffset);
-                            this.fileStream.Write(offsetBuffer, 0, 8);
-                        }
-                        else //dedupe entry not found, write bytes to current stream
-                        {
-                            //write payloaddataoffset == 0
-                            byte[] offsetBuffer = new byte[8];
-                            this.fileStream.Write(offsetBuffer, 0, 8);
 
-                            //write payload data:
-                            writeToStorage(this.mStream, this.fileStream, this.useEncryption);
-                            
-                        }
+                //check dedupe dict if necessary
+                if (this.usingDedupe)
+                {
+                    UInt64 dedupeOffset = getOffsetFromDeDupeDict(this.mStream, this.fileStream.Position + 8); // +8 because payloaddataoffset still gets written
+                    if (dedupeOffset > 0) //dedupe entry found
+                    {
+                        //write payloaddataoffset
+                        byte[] offsetBuffer = BitConverter.GetBytes(dedupeOffset);
+                        this.fileStream.Write(offsetBuffer, 0, 8);
+
+                        //jump to payloaddata -16 to read compressed block size
+                        this.fileStream.Seek((long)dedupeOffset - 16, SeekOrigin.Begin);
+                        byte[] cbsBuffer = new byte[8];
+                        this.fileStream.Read(cbsBuffer, 0, 8);
+
+
+                        //jump to cbs from current block
+                        this.fileStream.Seek(-16, SeekOrigin.End);
+                        this.fileStream.Write(cbsBuffer, 0, 8);
+
+                        //jump to file end
+                        this.fileStream.Seek(0, SeekOrigin.End);
 
                     }
-                    else //dedupe is disabled
+                    else //dedupe entry not found, write bytes to current stream
                     {
                         //write payloaddataoffset == 0
                         byte[] offsetBuffer = new byte[8];
@@ -346,20 +354,44 @@ namespace BlockCompression
 
                         //write payload data:
                         writeToStorage(this.mStream, this.fileStream, this.useEncryption);
+
+                    }
+
                 }
-                
+                else //dedupe is disabled
+                {
+                    //write payloaddataoffset == 0
+                    byte[] offsetBuffer = new byte[8];
+                    this.fileStream.Write(offsetBuffer, 0, 8);
+
+                    //write payload data:
+                    writeToStorage(this.mStream, this.fileStream, this.useEncryption);
+                }
+
             }
             else //encryption disabled
             {
                 //check dedupe dict if necessary
                 if (this.usingDedupe)
                 {
-                    UInt64 dedupeOffset = getOffsetFromDeDupeDict(this.mStream, this.fileStream.Position +8); // +8 because payloaddataoffset still gets written
+                    UInt64 dedupeOffset = getOffsetFromDeDupeDict(this.mStream, this.fileStream.Position + 8); // +8 because payloaddataoffset still gets written
                     if (dedupeOffset > 0) //dedupe entry found
                     {
                         //write payloaddataoffset
                         byte[] offsetBuffer = BitConverter.GetBytes(dedupeOffset);
                         this.fileStream.Write(offsetBuffer, 0, 8);
+
+                        //jump to payloaddata -16 to read compressed block size
+                        this.fileStream.Seek((long)dedupeOffset - 16, SeekOrigin.Begin);
+                        byte[] cbsBuffer = new byte[8];
+                        this.fileStream.Read(cbsBuffer, 0, 8);
+
+                        //jump to cbs from current block
+                        this.fileStream.Seek(-16, SeekOrigin.End);
+                        this.fileStream.Write(cbsBuffer, 0, 8);
+
+                        //jump to file end
+                        this.fileStream.Seek(0, SeekOrigin.End);
                     }
                     else //dedupe entry not found, write bytes to current stream
                     {
@@ -414,9 +446,9 @@ namespace BlockCompression
                 {
                     buffer = BitConverter.GetBytes(compMemStream.Length);
                 }
-                this.fileStream.Seek(-16, SeekOrigin.Current); //jump back 16 bytes to find right position for cbs
-                this.fileStream.Write(buffer, 0, 8);
-                this.fileStream.Seek(8, SeekOrigin.Current); //jump forward to point to payload data
+                target.Seek(-16, SeekOrigin.Current); //jump back 16 bytes to find right position for cbs
+                target.Write(buffer, 0, 8);
+                target.Seek(8, SeekOrigin.Current); //jump forward to point to payload data
 
                 if (useEncryption)
                 {
@@ -442,7 +474,7 @@ namespace BlockCompression
         //can block be found within dedupe table? currentFileOffset is for adding a new dedupe entry
         private UInt64 getOffsetFromDeDupeDict(MemoryStream memStream, Int64 currentFileOffset)
         {
- 
+
             //compute md5 hash
             byte[] hash = Common.SHA1Provider.computeHash(memStream.ToArray());
             SHA1Struct sha1Struct = new SHA1Struct();
@@ -502,7 +534,7 @@ namespace BlockCompression
             get => this.mode == AccessMode.read;
         }
 
-            
+
         //returns whether the stream is seekable or not (always true)
         public override bool CanSeek => true;
 
@@ -514,7 +546,7 @@ namespace BlockCompression
 
         public override long Length
         {
-            get  => (long)this.decompressedFileSize;
+            get => (long)this.decompressedFileSize;
         }
 
         public override long Position { get => (long)this.position; set => this.position = (ulong)value; }
@@ -575,7 +607,7 @@ namespace BlockCompression
             double blocksToRead = Math.Ceiling((double)count / (double)this.DecompressedBlockSize) + 1;
             destMemoryStream = new MemoryStream((int)(this.DecompressedBlockSize * blocksToRead));
 
-            for (double i = 0; i< blocksToRead ; i++)
+            for (double i = 0; i < blocksToRead; i++)
             {
                 //read complete block here within for:
 
@@ -634,7 +666,7 @@ namespace BlockCompression
                     {
                         cacheBlock = new byte[this.decompressedBlockSize];
                     }
-                    
+
                     while (dataRead != 0)
                     {
                         dataRead = this.decompressionStream.Read(destBuffer, 0, destBuffer.Length);
@@ -643,7 +675,7 @@ namespace BlockCompression
 
                         //add data to cache block
                         if (this.CachingMode)
-                        {                            
+                        {
                             destMemoryStream.Seek(dataRead * -1, SeekOrigin.Current);
                             destMemoryStream.Read(cacheBlock, blockUncompressedBytesRead, dataRead);
                         }
@@ -672,12 +704,12 @@ namespace BlockCompression
             }
 
             destMemoryStream.Position = (long)(startDiffOffset);
-            
+
 
             //write bytes to buffer[] and return read bytes
             int bytesdecompressed = destMemoryStream.Read(buffer, offset, count);
 
-            
+
             //could not read all necessary bytes?
             //if (bytesdecompressed < count && bytesdecompressed > 0)
             //{
@@ -685,15 +717,11 @@ namespace BlockCompression
             //    Read(buffer, offset + bytesdecompressed, count - bytesdecompressed);
             //}
 
-            if (bytesdecompressed == 0)
-            {
-                bytesdecompressed = 0;
-            }
 
             destMemoryStream.Dispose();
             this.Position += (long)bytesdecompressed;
             return bytesdecompressed;
-            
+
         }
 
         //adds a new block to cache
@@ -768,8 +796,8 @@ namespace BlockCompression
         //writes the given buffer (uncompressed) to the destination file (compressed)
         public override void Write(byte[] buffer, int offset, int count)
         {
-            
-            
+
+
             //just write when in "write mode"
             if (this.mode != AccessMode.write)
             {
@@ -779,7 +807,7 @@ namespace BlockCompression
             //write bytes/blocks until count == 0
             while (count > 0)
             {
-                
+
                 //can write all bytes at once?
                 if (this.DecompressedBlockSize - this.decompressedByteCountWithinBlock > (ulong)count)
                 {

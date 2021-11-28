@@ -464,7 +464,18 @@ namespace nxmBackup.MFUserMode
 
             //build readable full backup
             BackupChainReader.ReadableFullBackup readableFullBackup = new BackupChainReader.ReadableFullBackup();
-            FileStream inputStreamFull = new FileStream(sourceFiles[sourceFiles.Length - 1], FileMode.Open, FileAccess.Read);
+
+            FileStream inputStreamFull;
+            try
+            {
+                inputStreamFull = new FileStream(sourceFiles[sourceFiles.Length - 1], FileMode.Open, FileAccess.Read);
+            }catch(Exception ex)
+            {
+                //source file not accesible
+                Common.DBQueries.addLog("Error while opening backup source file", Environment.StackTrace, ex);
+                return null;
+            }
+
             BlockCompression.LZ4BlockStream blockStreamFull = new BlockCompression.LZ4BlockStream(inputStreamFull, BlockCompression.AccessMode.read, this.useEncryption, this.aesKey, this.usingDedupe);
             if (!blockStreamFull.init())
             {
