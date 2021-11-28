@@ -77,7 +77,7 @@ function startNewJobProcess(selectedEditJob) {
   showNewJobPage(1, selectedEditJob);
 
   //register close button handler
-  $(".overlayCloseButton").click(function () {
+  $(".overlayClose").click(function () {
     $("#newJobOverlay").css("display", "none");
   });
 

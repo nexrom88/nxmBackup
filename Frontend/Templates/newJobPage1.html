@@ -3,28 +3,36 @@
     <div class="form-group center_div newJobElement">
         <input type="email" class="form-control centeredElement" id="txtJobName" placeholder="Name des neuen Jobs">
     </div>
-    <div class="form-check center_div newJobElement">
-        <span class="centeredElementSpan">
-            <input type="checkbox" class="form-check-input" id="cbIncremental" checked>
-            <label class="form-check-label" for="cbIncremental">Inkrementelle Backups erstellen</label>
-        </span>
-    </div>
-    <div class="form-check center_div newJobElement">
-        <span class="centeredElementSpan">
-            <input type="checkbox" class="form-check-input" id="cbLiveBackup">
-            <label class="form-check-label" for="cbLiveBackup">LiveBackup verwenden</label>
-        </span>
-    </div>
-    <div class="form-check center_div newJobElement">
-        <span class="centeredElementSpan">
-            <input type="checkbox" class="form-check-input" id="cbEncryption">
-            <label class="form-check-label" for="cbEncryption">Backups verschlüsseln</label>
-        </span>
-    </div>
     <div class="form-group center_div newJobElement">
-        <input type="password" class="form-control centeredElement" id="txtEncryptionPassword" placeholder="Passwort für die Verschlüsselung">
-    </div>
-    <div class="text-center">
-        <button id="newJobNextButton" type="button" class="btn btn-primary centeredElement">Weiter</button>
+        <div class="form-check center_div newJobElement">
+            <span class="centeredElementSpan">
+                <input type="checkbox" id="cbIncremental" checked>
+                <label class="form-check-label" for="cbIncremental">Inkrementelle Backups erstellen</label>
+            </span>
+        </div>
+        <div class="form-check center_div newJobElement">
+            <span class="centeredElementSpan">
+                <input type="checkbox" id="cbDedupe">
+                <label class="form-check-label" for="cbEncryption">Daten-Deduplizierung verwenden</label>
+            </span>
+        </div>
+        <div class="form-check center_div newJobElement">
+            <span class="centeredElementSpan">
+                <input type="checkbox" id="cbLiveBackup">
+                <label class="form-check-label" for="cbLiveBackup">LiveBackup verwenden</label>
+            </span>
+        </div>
+        <div class="form-check center_div newJobElement">
+            <span class="centeredElementSpan">
+                <input type="checkbox" id="cbEncryption">
+                <label class="form-check-label" for="cbEncryption">Backups verschlüsseln</label>
+            </span>
+        </div>
+        <div class="form-group center_div newJobElement">
+            <input type="password" class="form-control centeredElement" id="txtEncryptionPassword" placeholder="Passwort für die Verschlüsselung">
+        </div>
+        <div class="text-center">
+            <button id="newJobNextButton" type="button" class="btn btn-primary centeredElement">Weiter</button>
+        </div>
     </div>
 </form>

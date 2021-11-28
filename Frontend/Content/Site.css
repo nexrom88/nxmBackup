@@ -171,13 +171,14 @@ textarea {
 .centeredElement{
     margin:auto;
 }
-.centeredElementSpan {
-    margin: auto;
-    display:table;
+
+
+#jobCheckBoxes{
+    width:80%;
 }
 
-#sbJobInterval{
-    display:inline; 
+#sbJobInterval {
+    display: inline;
 }
 
 #sbJobDay {
