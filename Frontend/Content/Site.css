@@ -188,3 +188,15 @@ textarea {
 #sbRotationType{
     display: inline;
 }
+
+#nxmLogo {
+    max-width: 41.666667%;
+    margin: auto;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+#mainPanel{
+    position:relative;
+}
