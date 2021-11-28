@@ -126,11 +126,11 @@ function showNewJobPage(pageNumber, selectedEditJob) {
               registerNextPageClickHandler(pageNumber, selectedEditJob);
 
               //vm click handler
-              $(".vm").click(function (event) {
+              $(".availablevm").click(function (event) {
                 $(this).toggleClass("active");
 
                 //enable next-button
-                if ($(".vm.active").length > 0) {
+                if ($(".availablevm.active").length > 0) {
                   $("#newJobNextButton").removeAttr("disabled");
                 } else {
                   $("#newJobNextButton").attr("disabled", "disabled");
@@ -146,7 +146,7 @@ function showNewJobPage(pageNumber, selectedEditJob) {
                 showCurrentSettings(pageNumber, selectedEditJob);
 
                 //activate next button when vm is selected
-                if ($(".vm.active")) {
+                if ($(".availablevm.active")) {
                   $("#newJobNextButton").attr("disabled", false);
                 }
               }
@@ -279,7 +279,7 @@ function showCurrentSettings(pageNumber, selectedEditJob) {
 
     case 2:
       for (var i = 0; i < selectedEditJob["JobVMs"].length; i++) {
-        $(".vm").each(function () {
+        $(".availablevmvm").each(function () {
           if ($(this).data("vmid") == selectedEditJob["JobVMs"][i]["vmID"]) {
             $(this).addClass("active");
           }
@@ -410,7 +410,7 @@ function registerNextPageClickHandler(currentPage, selectedEditJob) {
 
         break;
       case 2:
-        var selectedVMs = $(".vm.active");
+        var selectedVMs = $(".availablevm.active");
         newJobObj["vms"] = [];
 
         //add vm IDs to newJob object
