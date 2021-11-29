@@ -39,7 +39,7 @@ namespace nxmBackup.MFUserMode
 
         public string[] MountFiles { get => mountFiles; }
 
-        public string LrVMID { get => lrVMID;}
+        public string LrVMID { get => lrVMID; }
 
         //starts the mount process for LR
         public void startMfHandlingForLR(BackupConfigHandler.LRBackupChains sourceFiles, string basePath, string vmName)
@@ -95,12 +95,28 @@ namespace nxmBackup.MFUserMode
                 }
 
                 //build dummy dest vhdx file
-                mountDirectory = Directory.GetParent(System.IO.Path.GetDirectoryName(this.MountFiles[i])).FullName; //getParent to go up one folder to leave 'Virtual Hard Disks' folder
-                System.IO.Directory.CreateDirectory(mountDirectory);
-                this.destStream = new System.IO.FileStream(this.MountFiles[i], System.IO.FileMode.Create, System.IO.FileAccess.Write);
-                this.destStream.SetLength((long)decompressedFileSize);
-                this.destStream.Close();
-                this.destStream.Dispose();
+                try
+                {
+                    string hddDirectory = System.IO.Path.GetDirectoryName(this.MountFiles[i]);
+                    mountDirectory = System.IO.Directory.GetParent(hddDirectory).FullName;
+                    System.IO.Directory.CreateDirectory(hddDirectory);
+                    this.destStream = new System.IO.FileStream(this.MountFiles[i], System.IO.FileMode.Create, System.IO.FileAccess.Write);
+                    this.destStream.SetLength((long)decompressedFileSize);
+                    this.destStream.Close();
+                    this.destStream.Dispose();
+                }catch(Exception ex)
+                {
+                    DBQueries.addLog("error on creating dummy dest file", Environment.StackTrace, ex);
+                    mountState = ProcessState.error;
+                    foreach (string file in this.mountFiles)
+                    {
+                        if (System.IO.File.Exists(file))
+                        {
+                            System.IO.File.Delete(file);
+                        }
+                    }
+                    return;
+                }
             }
 
             //restore vm config files            
@@ -109,7 +125,8 @@ namespace nxmBackup.MFUserMode
             {
                 configFile = transferVMConfig(basePath, mountDirectory);
 
-            }catch(Exception ex)
+            }
+            catch (Exception ex)
             {
                 DBQueries.addLog("LR: error on transfering vm config files", Environment.StackTrace, ex);
                 mountState = ProcessState.error;
@@ -144,14 +161,14 @@ namespace nxmBackup.MFUserMode
                 //import to hyperv
                 System.Threading.Thread mountThread = new System.Threading.Thread(() => startImportVMProcess(configFile, mountDirectory, true, vmName + "_LiveRestore"));
                 mountThread.Start();
-                
+
 
                 while (!this.processStopped)
                 {
                     this.kmConnection.handleLRMessage();
                 }
 
-                
+
             }
             else
             {
@@ -175,7 +192,7 @@ namespace nxmBackup.MFUserMode
                 createHelperSnapshot(vmID);
                 this.mountState = ProcessState.successful;
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 DBQueries.addLog("LR: importing vm failed", Environment.StackTrace, ex);
                 this.mountState = ProcessState.error;
@@ -212,7 +229,7 @@ namespace nxmBackup.MFUserMode
 
                 }
 
-                
+
             }
         }
 
@@ -307,7 +324,7 @@ namespace nxmBackup.MFUserMode
                 archive.getFile(entry, fileDestination);
 
                 //is config file?
-                if (fileDestination.EndsWith (".vmcx", StringComparison.OrdinalIgnoreCase))
+                if (fileDestination.EndsWith(".vmcx", StringComparison.OrdinalIgnoreCase))
                 {
                     configFile = fileDestination;
                 }
@@ -319,7 +336,7 @@ namespace nxmBackup.MFUserMode
         }
 
         //starts the mount process for FLR
-        public void startMfHandlingForFLR (string[] sourceFiles, ref ProcessState mountState)
+        public void startMfHandlingForFLR(string[] sourceFiles, ref ProcessState mountState)
         {
             //build readable backup chain structure first
             this.readableChains = new BackupChainReader[1]; //on flr there can be just one chain
@@ -349,14 +366,15 @@ namespace nxmBackup.MFUserMode
             {
                 //read "decompressed file size" from first rct backup
                 decompressedFileSize = this.readableChains[0].NonFullBackups[0].cbStructure.vhdxSize;
-            }else if (sourceFiles[0].EndsWith("lb"))
+            }
+            else if (sourceFiles[0].EndsWith("lb"))
             {
                 //read "decompressed file size" from first lb backup
                 decompressedFileSize = this.readableChains[0].NonFullBackups[0].lbStructure.vhdxSize;
             }
 
             this.mountFiles[0] = getMountHDDPath(decompressedFileSize, "mount.vhdx");
-            if (this.mountFiles == null)
+            if (this.mountFiles == null || this.mountFiles.Length == 0 || this.mountFiles[0] == null)
             {
                 mountState = ProcessState.error;
                 return;
@@ -380,7 +398,8 @@ namespace nxmBackup.MFUserMode
                     try
                     {
                         this.kmConnection.handleFLRMessage();
-                    }catch(Exception ex)
+                    }
+                    catch (Exception ex)
                     {
                         DBQueries.addLog("FLR: Error on handling flr message", Environment.StackTrace, ex);
                         mountState = ProcessState.error;
@@ -394,28 +413,57 @@ namespace nxmBackup.MFUserMode
             }
         }
 
-        //gets the path to a mount path with enough hdd space and a given file name
+        //gets the path to the user given mount path with enough hdd space and a given file name
         private string getMountHDDPath(ulong fileSize, string vhdxName)
         {
-            //iterate through all drives with a drive letter
-            foreach (DriveInfo drive in DriveInfo.GetDrives())
-            {
-                try
-                {
-                    //remaining free space has to be 1GB
-                    if (drive.AvailableFreeSpace - (long)fileSize > 1000000000)
-                    {
-                        //try to create mountfolder
-                        System.IO.Directory.CreateDirectory(drive.Name + "nxmMount\\Virtual Hard Disks");
-                        string mountFile = drive.Name + "nxmMount\\Virtual Hard Disks\\" + vhdxName;
-                        return mountFile;
-                    }
+            //read mountPath from DB
+            object mountPathObj = DBQueries.readGlobalSetting("mountpath");
+            string mountPath;
 
-                }
-                catch (Exception ex) //catch for drives not ready
-                {
-                }
+            //mount path not valid?
+            if (mountPathObj == null)
+            {
+                Common.DBQueries.addLog("mountpath cannot be read from DB", Environment.StackTrace, null);
+                return null;
             }
+            else
+            {
+                //parse object to string
+                mountPath = (string)mountPathObj;
+            }
+
+            //check if drive-path exists
+            if (!Directory.Exists(Path.GetPathRoot(mountPath)))
+            {
+                Common.DBQueries.addLog("drive for mountpath does not exist", Environment.StackTrace, null);
+                return null;
+            }
+
+            DriveInfo drive = new DriveInfo((Path.GetPathRoot(mountPath)));
+
+            try
+            {
+                //remaining free space has to be 1GB
+                if (drive.AvailableFreeSpace - (long)fileSize > 1000000000)
+                {
+                    //try to create mountfolder
+                    string combinedPath = System.IO.Path.Combine(mountPath, "nxmMount");
+                    System.IO.Directory.CreateDirectory(combinedPath);
+                    string mountFile = System.IO.Path.Combine(combinedPath, "Virtual Hard Disks\\" + vhdxName);
+                    return mountFile;
+                }
+                else
+                {
+                    //not enough free disk space
+                    Common.DBQueries.addLog("not enough free disk space for creating mount file", Environment.StackTrace, null);
+                }
+
+            }
+            catch (Exception ex) //catch for drives not ready
+            {
+                Common.DBQueries.addLog("cannot create mount path", Environment.StackTrace, ex);
+            }
+
 
             return null;
         }
@@ -458,7 +506,7 @@ namespace nxmBackup.MFUserMode
                     nonFullBackup.sourceStreamLB = inputStream;
 
                 }
-                
+
                 chain.NonFullBackups.Add(nonFullBackup);
             }
 
@@ -469,7 +517,8 @@ namespace nxmBackup.MFUserMode
             try
             {
                 inputStreamFull = new FileStream(sourceFiles[sourceFiles.Length - 1], FileMode.Open, FileAccess.Read);
-            }catch(Exception ex)
+            }
+            catch (Exception ex)
             {
                 //source file not accesible
                 Common.DBQueries.addLog("Error while opening backup source file", Environment.StackTrace, ex);
@@ -558,7 +607,7 @@ namespace nxmBackup.MFUserMode
             }
 
         }
-    
+
         public enum ProcessState
         {
             pending,
@@ -585,9 +634,9 @@ namespace nxmBackup.MFUserMode
             public UInt64 filePosition;
         }
 
-       
 
-        
+
+
 
     }
 

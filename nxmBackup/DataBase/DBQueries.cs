@@ -27,6 +27,27 @@ namespace Common
             }
         }
 
+        //reads a given global setting from db
+        public static object readGlobalSetting(string setting)
+        {
+            using (DBConnection dbConn = new DBConnection())
+            {
+                Dictionary<string, object> parameters = new Dictionary<string, object>();
+                parameters.Add("setting", setting);
+                List<Dictionary<string, object>> result = dbConn.doReadQuery("SELECT value FROM settings WHERE name=@setting;", parameters, null);
+
+                //result valid?
+                if (result == null || result.Count == 0)
+                {
+                    return null;
+                }
+                else
+                {
+                    return result[0]["value"];
+                }
+            }
+        }
+
         //deletes the old hdds from a given vm and adds new ones
         public static void refreshHDDs(List<VMHDD> hdds, string vmid)
         {

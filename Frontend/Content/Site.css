@@ -191,9 +191,11 @@ textarea {
 
 #nxmLogo {
     max-width: 41.666667%;
-    margin: auto;
     position: absolute;
     top: 50%;
+    left: 0;
+    right: 0;
+    margin:auto;
     transform: translateY(-50%);
 }
 
