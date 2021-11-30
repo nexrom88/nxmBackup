@@ -417,7 +417,7 @@ namespace nxmBackup.MFUserMode
         private string getMountHDDPath(ulong fileSize, string vhdxName)
         {
             //read mountPath from DB
-            object mountPathObj = DBQueries.readGlobalSetting("mountpath");
+            string mountPathObj = DBQueries.readGlobalSetting("mountpath");
             string mountPath;
 
             //mount path not valid?
@@ -429,7 +429,7 @@ namespace nxmBackup.MFUserMode
             else
             {
                 //parse object to string
-                mountPath = (string)mountPathObj;
+                mountPath = mountPathObj;
             }
 
             //check if drive-path exists

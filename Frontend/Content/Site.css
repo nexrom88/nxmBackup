@@ -202,3 +202,35 @@ textarea {
 #mainPanel{
     position:relative;
 }
+
+.headerLink {
+    list-style-type: none;
+}
+
+.headerLink a{
+    color: #fff;
+}
+
+.headerLink a:hover{
+    color:gray;
+}
+
+
+.settingInput {
+    display:inline-block;
+    text-align:left;
+    min-width:80%;
+}
+
+#settingsForm{
+    padding-top:5%;
+}
+
+.settingInputControl{
+    width:100%;
+    max-width:unset;
+}
+
+.settingWrapper{
+    margin-bottom:5%;
+}

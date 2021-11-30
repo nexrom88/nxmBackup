@@ -28,7 +28,7 @@ namespace Common
         }
 
         //reads a given global setting from db
-        public static object readGlobalSetting(string setting)
+        public static string readGlobalSetting(string setting)
         {
             using (DBConnection dbConn = new DBConnection())
             {
@@ -43,7 +43,33 @@ namespace Common
                 }
                 else
                 {
-                    return result[0]["value"];
+                    return (string)result[0]["value"];
+                }
+            }
+        }
+
+        //reads all global settings from db
+        public static Dictionary<string, string> readGlobalSettings()
+        {
+            using (DBConnection dbConn = new DBConnection())
+            {
+                Dictionary<string, object> parameters = new Dictionary<string, object>();
+                List<Dictionary<string, object>> result = dbConn.doReadQuery("SELECT name, value FROM settings;", null, null);
+
+                //result valid?
+                if (result == null || result.Count == 0)
+                {
+                    return null;
+                }
+                else
+                {
+                    //convert obj to string
+                    Dictionary<string, string> retVal = new Dictionary<string, string>();
+                    foreach(Dictionary<string, object> oneSetting in result)
+                    {
+                        retVal.Add((string)oneSetting["name"], (string)oneSetting["value"]);
+                    }
+                    return retVal;
                 }
             }
         }

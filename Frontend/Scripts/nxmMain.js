@@ -52,6 +52,11 @@ $(window).on('load', function () {
     logOut();
   });
 
+  //register settings handler
+  $("#settings").click(function () {
+    showSettings();
+  });
+
   //register "add Job" Button handler
   $("#addJobButton").click(function () {
 
