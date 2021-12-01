@@ -20,6 +20,11 @@ namespace TestProject
 
         static void Main(string[] args)
         {
+            int a = Environment.ProcessorCount;
+            a = 1;
+            a = (int)Math.Ceiling((float)a / 2);
+
+            return;
             //Common.DBQueries.wipeDB();
 
 
@@ -115,7 +120,7 @@ namespace TestProject
             //string output = JsonConvert.SerializeObject(parsedFile);
 
             Common.JobVM vm = new Common.JobVM();
-            vm.vmID = "5DBA0566-D487-427D-8475-77CABACB7EFD"; //Server2022_fixed
+            vm.vmID = "2FA559B4-71C4-4D9A-8904-FC8311636BE9"; //Win10
             //vm.vmID = "7A571DAE-9111-4576-897C-8E266EE51FFB"; //ubuntu
             //vm.vmID = "2F8C8382-4D06-4AD7-BCC3-0BFED03199AC"; //Lubuntu
             //vm.vmID = "25BA5143-5604-4A2C-A0E5-60D06630DAD2"; //win10_2hdd

@@ -9,7 +9,7 @@ namespace Frontend.Controllers
 {
     public class SettingsController : ApiController
     {
-        // GET api/<controller>
+        // read all global settings
         public HttpResponseMessage Get()
         {
             Dictionary<string, string> result = Common.DBQueries.readGlobalSettings();

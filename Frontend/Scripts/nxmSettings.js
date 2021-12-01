@@ -35,5 +35,8 @@ function showSettingsPopUp() {
   })
     .done(function (settingsForm) {
       $("#settingsPopUp").html(settingsForm);
+
+      //show settings
+      $("#inputMountPath").val(globalSettings["mountpath"]);
     });
 }

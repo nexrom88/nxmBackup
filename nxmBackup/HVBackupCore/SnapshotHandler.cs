@@ -20,6 +20,9 @@ namespace nxmBackup.HVBackupCore
         private byte[] aesKey;
         private bool usingDedupe;
 
+        public const string USER_SNAPSHOT_TYPE = "Microsoft:Hyper-V:Snapshot:Realized";
+        public const string RECOVERY_SNAPSHOT_TYPE = "Microsoft:Hyper-V:Snapshot:Recovery";
+
         public SnapshotHandler(JobVM vm, int executionId, bool useEncryption, byte[] aesKey, bool usingDedupe)
         {
             this.useEncryption = useEncryption;
@@ -327,6 +330,26 @@ namespace nxmBackup.HVBackupCore
         {
             ManagementScope scope = new ManagementScope("\\\\localhost\\root\\virtualization\\v2", null);
             int eventId = this.eventHandler.raiseNewEvent("Initialisiere Umgebung...", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
+
+            //check for already existing snapshots (user created ones)
+            List<ManagementObject> snapshots = getSnapshots(USER_SNAPSHOT_TYPE);
+            if (snapshots.Count > 0)
+            {
+                this.eventHandler.raiseNewEvent("fehlgeschlagen", true, false, eventId, EventStatus.error);
+                this.eventHandler.raiseNewEvent("Es sind bereits Prüfpunkte vorhanden", false, false, NO_RELATED_EVENT, EventStatus.error);
+                return null;
+            }
+
+            //check for already existing snapshots (recovery ones)
+            snapshots = getSnapshots(RECOVERY_SNAPSHOT_TYPE);
+            
+            //delete these snapshots
+            foreach(ManagementObject snapshot in snapshots)
+            {
+                ManagementObject refPoint = convertToReferencePoint(snapshot);
+                removeReferencePoint(refPoint);
+            }
+
 
             try
             {
@@ -781,11 +804,18 @@ namespace nxmBackup.HVBackupCore
                     int blockCount = ((ulong[])outParams["ChangedByteOffsets"]).Length;
                     ChangedBlock[] changedBlocks = new ChangedBlock[blockCount];
 
-                  
+                    //set max parallel tasks to cpu cores / 2
+                    int cpuCores = Environment.ProcessorCount;
+                    int availableCPUCores = (int)Math.Ceiling((float)cpuCores / 2);
+                    System.Threading.Tasks.ParallelOptions options = new System.Threading.Tasks.ParallelOptions();
+                    options.MaxDegreeOfParallelism = availableCPUCores;
 
-                    System.Threading.Tasks.Parallel.For (0, blockCount, i => {
-                        changedBlocks[i].offset = ((ulong[])outParams["ChangedByteOffsets"])[i];
-                        changedBlocks[i].length = ((ulong[])outParams["ChangedByteLengths"])[i];
+                    ulong[] offsets = (ulong[])outParams["ChangedByteOffsets"];
+                    ulong[] lengths = (ulong[])outParams["ChangedByteLengths"];
+
+                    System.Threading.Tasks.Parallel.For (0, blockCount, options, i => {
+                        changedBlocks[i].offset = offsets[i];
+                        changedBlocks[i].length = lengths[i];
                     });
 
                     this.eventHandler.raiseNewEvent("erfolgreich", true, false, eventId, EventStatus.successful);
@@ -808,7 +838,7 @@ namespace nxmBackup.HVBackupCore
 
 
         //gets a list of all snapshots
-        public List<ManagementObject> getSnapshots()
+        public List<ManagementObject> getSnapshots(string snapshotType)
         {
             List<ManagementObject> snapshots = new List<ManagementObject>();
             ManagementScope scope = new ManagementScope("\\\\localhost\\root\\virtualization\\v2", null);
@@ -828,8 +858,8 @@ namespace nxmBackup.HVBackupCore
                     ManagementObject vsSettings = new ManagementObject(snapshot["dependent"].ToString());
                     string type = vsSettings["VirtualSystemType"].ToString();
 
-                    //is recovery snapshot
-                    if (type == "Microsoft:Hyper-V:Snapshot:Recovery")
+                    //is recovery snapshot?
+                    if (type == snapshotType)
                     {
                         snapshots.Add(vsSettings);
                     }
@@ -951,7 +981,7 @@ namespace nxmBackup.HVBackupCore
         //removes all snapshots and reference points
         public void cleanUp()
         {
-            List<ManagementObject> snapshots = this.getSnapshots();
+            List<ManagementObject> snapshots = this.getSnapshots(RECOVERY_SNAPSHOT_TYPE);
             foreach (ManagementObject snapshot in snapshots)
             {
                 this.convertToReferencePoint(snapshot);
