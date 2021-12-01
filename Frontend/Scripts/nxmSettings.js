@@ -23,9 +23,35 @@ function showSettingsPopUp() {
     allowOutsideClick: true,
     allowEscapeKey: true,
     confirmButtonText: 'Änderungen übernehmen',
-    cancelButtonText: 'Abbrechen'
+    cancelButtonText: 'Abbrechen',
+    preConfirm: (result) => {
+      //check if given mount path is valid
+      if (!checkForValidPath($("#inputMountPath").val())) {
+        $("#inputMountPath").css("background-color", "red");
+        return false;
+      }
+    },
   }).then((result) => { //gets called when done
+    //return when not confirm clicked
+    if (!result.isConfirmed) {
+      return;
+    }   
 
+    //set settings object to new values
+    globalSettings["mountpath"] = $("#inputMountPath").val();
+
+    //remove last backslash
+    if (globalSettings["mountpath"].endsWith("\\")) {
+      globalSettings["mountpath"] = globalSettings["mountpath"].substring(0, globalSettings["mountpath"].length - 1);
+    }
+
+    //send settings object to backend
+    $.ajax({
+      url: 'api/Settings',
+      contentType: "application/json; charset=utf-8",
+      data: JSON.stringify(globalSettings),
+      type: 'POST'
+    });
     
   });
 
@@ -39,4 +65,10 @@ function showSettingsPopUp() {
       //show settings
       $("#inputMountPath").val(globalSettings["mountpath"]);
     });
+}
+
+//checks if a given path is valid
+function checkForValidPath(path) {
+  var result = path.match(/^(?:[a-z]:)?[\/\\]{0,2}(?:[.\/\\ ](?![.\/\\\n])|[^<>:"|?*.\/\\ \n])+$/gmi);  
+  return result != null;
 }

@@ -27,6 +27,29 @@ namespace Common
             }
         }
 
+
+        //writes the given settings to db
+        public static void writeGlobalSettings(Dictionary<string, string> settings)
+        {
+            using (DBConnection dbConn = new DBConnection())
+            {
+                //start transaction
+                NpgsqlTransaction transaction = dbConn.beginTransaction();
+
+                //iterate through each key
+                foreach(string key in settings.Keys)
+                {
+                    Dictionary<string, object> parameters = new Dictionary<string, object>();
+                    parameters.Add("value", settings[key]);
+                    parameters.Add("name", key);
+                    dbConn.doWriteQuery("UPDATE settings SET value=@value WHERE name=@name;", parameters, transaction);
+                }
+
+                //commit transaction
+                transaction.Commit();
+            }
+        }
+
         //reads a given global setting from db
         public static string readGlobalSetting(string setting)
         {
