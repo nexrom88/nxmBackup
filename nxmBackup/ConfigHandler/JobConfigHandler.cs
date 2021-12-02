@@ -20,14 +20,22 @@ namespace ConfigHandler
 
         public static List<OneJob> Jobs { get => jobs; }
 
-        //reads all jobs from db to a given object
-        public static void readJobsFromDB(List<OneJob> target)
+        //reads all jobs or just a given job from db to a given object
+        public static void readJobsFromDB(List<OneJob> target, int jobid = -1)
         {
 
             //open DB connection
             using (Common.DBConnection connection = new Common.DBConnection())
             {
-                List<Dictionary<string, object>> jobsDB = connection.doReadQuery("SELECT jobs.id, jobs.name, jobs.incremental, jobs.isRunning, jobs.basepath, jobs.maxelements, jobs.blocksize, jobs.day, jobs.hour, jobs.minute, jobs.interval, jobs.livebackup, jobs.useencryption, jobs.aeskey, jobs.usededupe, rotationtype.name AS rotationname FROM jobs INNER JOIN rotationtype ON jobs.rotationtypeid=rotationtype.id WHERE jobs.deleted=FALSE;", null, null);
+                string queryExtension = ";";
+
+                //build query extension when just one job should be read
+                if (jobid > -1)
+                {
+                    queryExtension = " AND jobs.id=" + jobid;
+                }
+
+                List<Dictionary<string, object>> jobsDB = connection.doReadQuery("SELECT jobs.id, jobs.name, jobs.incremental, jobs.basepath, jobs.maxelements, jobs.blocksize, jobs.day, jobs.hour, jobs.minute, jobs.interval, jobs.livebackup, jobs.useencryption, jobs.aeskey, jobs.usededupe, rotationtype.name AS rotationname FROM jobs INNER JOIN rotationtype ON jobs.rotationtypeid=rotationtype.id WHERE jobs.deleted=FALSE" + queryExtension, null, null);
 
                 //check that jobs != null
                 if (jobsDB == null) //DB error
@@ -45,7 +53,6 @@ namespace ConfigHandler
                     newJob.BasePath = jobDB["basepath"].ToString();
                     newJob.Name = jobDB["name"].ToString();
                     newJob.BlockSize = (int)jobDB["blocksize"];
-                    newJob.IsRunning = (bool)jobDB["isrunning"];
                     newJob.LiveBackup = (bool)jobDB["livebackup"];
                     newJob.Incremental = (bool)jobDB["incremental"];
                     newJob.UsingDedupe = (bool)jobDB["usededupe"];
@@ -147,6 +154,7 @@ namespace ConfigHandler
                         {
                             newJob.LastRun = jobExecution["startstamp"].ToString();
                             newJob.Successful = jobExecution["successful"].ToString();
+                            newJob.IsRunning = bool.Parse(jobExecution["isrunning"].ToString());
                         }
 
                     }

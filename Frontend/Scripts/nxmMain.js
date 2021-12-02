@@ -7,6 +7,8 @@ var maxNodeID; //counter for treeview nodes
 var selectedDirectory; //the currently selected directory within folder browser
 var newJobObj; //new job object
 var dbState; //current db state (values: init, error, success)
+var jobStateTableTemplate; //template for job state table
+var eventsListItemTemplate; //template for event list item
 
 //global handler for http status 401 (login required)
 $.ajaxSetup({
@@ -545,21 +547,7 @@ function buildJobDetailsPanel(currentJob) {
     .done(function (tableData) {
       $("#mainPanelHeader").html("Jobdetails (" + currentJob.Name + ")");
 
-      //build interval string
-      var interval;
-      switch (currentJob.Interval.intervalBase) {
-        case 0:
-          interval = "stündlich";
-          break;
-        case 1:
-          interval = "täglich";
-          break;
-        case 2:
-          interval = "wöchentlich";
-          break;
-        default:
-          interval = "manuell";
-      }
+      
 
       //set details panel and vms list
       var vms = [];
@@ -567,49 +555,9 @@ function buildJobDetailsPanel(currentJob) {
         vms[i] = { vmid: currentJob.JobVMs[i].vmID, name: currentJob.JobVMs[i].vmName };
       }
 
-      //build next run string
-      var currentDate = moment();
+      
 
-
-      var intervalString;
-      switch (currentJob["Interval"]["intervalBase"]) {
-        case 0: //stündlich
-          intervalString = "Stündlich bei Minute " + buildTwoDigitsInt(currentJob["Interval"]["minute"]);
-          break;
-        case 1: //täglich
-          intervalString = "Täglich um " + buildTwoDigitsInt(currentJob["Interval"]["hour"]) + ":" + buildTwoDigitsInt(currentJob["Interval"]["minute"]);
-          break;
-        case 2: //wöchentlich
-          var dayForGui;
-          switch (currentJob["Interval"]["day"]) {
-            case "monday":
-              dayForGui = "Montag";
-              break;
-            case "tuesday":
-              dayForGui = "Dienstag";
-              break;
-            case "wednesday":
-              dayForGui = "Mittwoch";
-              break;
-            case "thursday":
-              dayForGui = "Donnerstag";
-              break;
-            case "friday":
-              dayForGui = "Freitag";
-              break;
-            case "saturday":
-              dayForGui = "Samstag";
-              break;
-            case "sunday":
-              dayForGui = "Sonntag";
-              break;
-          }
-
-          intervalString = dayForGui + "s " + " um " + buildTwoDigitsInt(currentJob["Interval"]["hour"]) + ":" + buildTwoDigitsInt(currentJob["Interval"]["minute"]);
-          break;
-      }
-
-      var details = Mustache.render(tableData, { vms: vms, running: currentJob.IsRunning, interval: intervalString, lastRun: currentJob.LastRun, lastState: currentJob.Successful });
+      var details = Mustache.render(tableData, { vms: vms });
       $("#mainPanel").html(details);
 
       //set vm click handler
@@ -626,17 +574,6 @@ function buildJobDetailsPanel(currentJob) {
 
       //set restore button click handler
       $("#restoreButton").click(startRestoreHandler); //startRestoreHandler function is defined within nxmRestore.js
-
-      //set state color
-      if (currentJob.Successful == "erfolgreich") {
-        $("#jobDetailsRow").css("background-color", "#ccffcc");
-      } else {
-        $("#jobDetailsRow").css("background-color", "#ffb3b3");
-      }
-
-      if (currentJob.IsRunning) {
-        $("#jobDetailsRow").css("background-color", "#ffffb3");
-      }
 
       //select first vm
       $(".vm").first().click();
@@ -724,10 +661,31 @@ function vmClickHandler(event) {
   //set current element in GUI
   $(this).addClass("active");
 
+  //load required templates
+  loadJobTemplates();
+
   showCurrentEvents();
 
   //start refresh timer
   eventRefreshTimer = setInterval(showCurrentEvents, 4000);
+}
+
+//loads the required templates
+function loadJobTemplates() {
+  $.ajax({
+    url: "Templates/eventsListItem"
+  })
+    .done(function (data) {
+      eventsListItemTemplate = data;
+    });
+
+  $.ajax({
+    url: "Templates/jobStateTable"
+  })
+    .done(function (data) {
+      jobStateTableTemplate = data;
+    });
+
 }
 
 //refresh handler for clicking vm in main panel
@@ -776,15 +734,87 @@ function showCurrentEvents() {
       }
 
       //display events
-      $.ajax({
-        url: "Templates/eventsListItem"
-      })
-        .done(function (data) {
-          $("#jobEventList").html(Mustache.render(data, { events: eventsList }));
-        });
+      $("#jobEventList").html(Mustache.render(eventsListItemTemplate, { events: eventsList }));
+
+
+    });
+
+  //step two: refresh backup job state panel
+  renderJobStateTable();
+}
+
+
+//render job state table
+function renderJobStateTable() {
+  
+  $.ajax({
+    url: "api/BackupJobState?jobId=" + selectedJob
+  })
+    .done(function (data) {
+      data = JSON.parse(data);
+
+      //build next run string
+      var intervalString;
+      switch (data["Interval"]["intervalBase"]) {
+        case 0: //stündlich
+          intervalString = "Stündlich bei Minute " + buildTwoDigitsInt(data["Interval"]["minute"]);
+          break;
+        case 1: //täglich
+          intervalString = "Täglich um " + buildTwoDigitsInt(data["Interval"]["hour"]) + ":" + buildTwoDigitsInt(data["Interval"]["minute"]);
+          break;
+        case 2: //wöchentlich
+          var dayForGui;
+          switch (data["Interval"]["day"]) {
+            case "monday":
+              dayForGui = "Montag";
+              break;
+            case "tuesday":
+              dayForGui = "Dienstag";
+              break;
+            case "wednesday":
+              dayForGui = "Mittwoch";
+              break;
+            case "thursday":
+              dayForGui = "Donnerstag";
+              break;
+            case "friday":
+              dayForGui = "Freitag";
+              break;
+            case "saturday":
+              dayForGui = "Samstag";
+              break;
+            case "sunday":
+              dayForGui = "Sonntag";
+              break;
+          }
+
+          intervalString = dayForGui + "s " + " um " + buildTwoDigitsInt(data["Interval"]["hour"]) + ":" + buildTwoDigitsInt(currentJob["Interval"]["minute"]);
+          break;
+      }
+
+      var lastRunString = data["LastRun"];
+      if (data["IsRunning"]) {
+        lastRunString = "Job wird gerade ausgeführt...";
+      }
+
+      $("#jobStateTable").html(Mustache.render(jobStateTableTemplate, { running: data["IsRunning"], interval: intervalString, lastRun: lastRunString, lastState: data["Successful"] }));
+
+      //set state color
+      if (data.Successful == "erfolgreich") {
+        $("#jobDetailsRow").css("background-color", "#ccffcc");
+        $("#jobDetailsRow").removeClass("detailsRowRunning");
+      } else {
+        $("#jobDetailsRow").css("background-color", "#ffb3b3");
+        $("#jobDetailsRow").removeClass("detailsRowRunning");
+      }
+
+      if (data.IsRunning) {
+        $("#jobDetailsRow").addClass("detailsRowRunning");
+      }
 
     });
 }
+
 
 //show login form
 function showLoginForm(showError) {

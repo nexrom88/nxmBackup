@@ -110,7 +110,7 @@ namespace Common
                 List<Dictionary<string, object>> result = dbConn.doReadQuery("DELETE FROM vmhddrelation WHERE vmid=@vmid;", parameters, transaction);
 
                 //add new hdds and their relations to vm
-                foreach(VMHDD hdd in hdds)
+                foreach (VMHDD hdd in hdds)
                 {
                     //add hdd
                     parameters.Clear();
@@ -339,14 +339,14 @@ namespace Common
         }
 
         // Updates an existing execution.
-        public static void updateJobExecution(Common.JobExecutionProperties executionProperties, string jobExecutionId)
+        public static void closeJobExecution(Common.JobExecutionProperties executionProperties, string jobExecutionId)
         {
             try
             {
                 using (DBConnection dbConn = new DBConnection())
                 {
-                    int affectedRows = dbConn.doWriteQuery("UPDATE JobExecutions SET stopTime=@stopTime, isRunning=@isRunning, transferRate=@transferRate, alreadyRead=@alreadyRead, alreadyWritten=@alreadyWritten, successful=@successful, warnings=@warnings, errors=@errors WHERE id=@id;",
-                        new Dictionary<string, object>() { { "stopTime", executionProperties.stopTime.ToString() }, { "isRunning", executionProperties.isRunning.ToString() }, { "transferRate", executionProperties.transferRate.ToString() }, { "alreadyRead", executionProperties.alreadyRead.ToString() }, { "alreadyWritten", executionProperties.alreadyWritten.ToString() }, { "successful", executionProperties.successful.ToString() }, { "warnings", executionProperties.warnings.ToString() }, { "errors", executionProperties.errors.ToString() }, { "id", jobExecutionId.ToString() } }, null);
+                    int affectedRows = dbConn.doWriteQuery("UPDATE jobexecutions SET stoptime=now(), isrunning=false, transferRate=@transferRate, alreadyRead=@alreadyRead, alreadyWritten=@alreadyWritten, successful=@successful, warnings=@warnings, errors=@errors WHERE id=@id;",
+                        new Dictionary<string, object>() { { "transferRate", executionProperties.transferRate }, { "alreadyRead", executionProperties.alreadyRead }, { "alreadyWritten", executionProperties.alreadyWritten}, { "successful", executionProperties.successful }, { "warnings", executionProperties.warnings }, { "errors", executionProperties.errors }, { "id", int.Parse(jobExecutionId) } }, null);
 
                     if (affectedRows == 0)
                     {

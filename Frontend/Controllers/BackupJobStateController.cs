@@ -12,7 +12,23 @@ namespace Frontend.Controllers
         // gets the job state to fill job panel
         public HttpResponseMessage Get(int jobId)
         {
-            return null;
+            List<ConfigHandler.OneJob> jobs = new List<ConfigHandler.OneJob>();
+            ConfigHandler.JobConfigHandler.readJobsFromDB(jobs, jobId);
+
+            //check that result is valid
+            if (jobs == null || jobs.Count == 0)
+            {
+                return null;
+            }
+
+            //just use first job from result list
+            ConfigHandler.OneJob selectedJob = jobs[0];
+
+            HttpResponseMessage response = new HttpResponseMessage();
+            response.StatusCode = HttpStatusCode.OK;
+            response.Content = new StringContent(Newtonsoft.Json.JsonConvert.SerializeObject(selectedJob));
+
+            return response;
         }
 
        

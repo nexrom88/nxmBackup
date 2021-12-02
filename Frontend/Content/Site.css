@@ -19,7 +19,7 @@ textarea {
     margin-left:0;
     margin-right:0;
 }
-#jobDetailsTable{
+#jobStateTable{
     margin-left:15px;
 }
 
@@ -233,4 +233,25 @@ textarea {
 
 .settingWrapper{
     margin-bottom:5%;
+}
+
+.detailsRowRunning {
+    animation-name: color;
+    animation-duration: 2s;
+    animation-iteration-count: infinite;
+    background-color: #ffffb3;
+}
+
+@keyframes color {
+    0% {
+        background-color: #ffffb3;
+    }
+
+    50% {
+        background-color: #ffffe6;
+    }
+
+    100% {
+        background-color: #ffffb3;
+    }
 }
