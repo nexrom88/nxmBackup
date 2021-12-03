@@ -255,3 +255,21 @@ textarea {
         background-color: #ffffb3;
     }
 }
+
+#waitingHourglass {
+    animation-name: rotatingHourglass;
+    animation-iteration-count: infinite;
+    transform-origin: 50% 50%;
+    animation-timing-function: ease-in-out;
+    animation-duration: 2.0s;
+}
+
+@keyframes rotatingHourglass {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}

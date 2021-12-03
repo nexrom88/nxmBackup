@@ -9,6 +9,7 @@ var newJobObj; //new job object
 var dbState; //current db state (values: init, error, success)
 var jobStateTableTemplate; //template for job state table
 var eventsListItemTemplate; //template for event list item
+var lastJobStateData; //last data for job state to decide whether to refresh jobStateTable or not
 
 //global handler for http status 401 (login required)
 $.ajaxSetup({
@@ -528,6 +529,7 @@ function buildJobsList() {
         //look for job
         for (var i = 0; i < configuredJobs.length; i++) {
           if (configuredJobs[i].DbId == JobDbId) {
+            lastJobStateData = "";
             buildJobDetailsPanel(configuredJobs[i]);
           }
         }
@@ -696,6 +698,14 @@ function showCurrentEvents() {
     url: "api/BackupJobEvent?id=" + selectedJob + "&jobType=backup"
   })
     .done(function (data) {
+
+      //nothing to refresh?
+      if (lastJobStateData == data) {
+        return;
+      } else {
+        lastJobStateData = data;
+      }
+
       data = jQuery.parseJSON(data);
 
       //iterate through all events
@@ -788,7 +798,7 @@ function renderJobStateTable() {
               break;
           }
 
-          intervalString = dayForGui + "s " + " um " + buildTwoDigitsInt(data["Interval"]["hour"]) + ":" + buildTwoDigitsInt(currentJob["Interval"]["minute"]);
+          intervalString = dayForGui + "s " + " um " + buildTwoDigitsInt(data["Interval"]["hour"]) + ":" + buildTwoDigitsInt(data["Interval"]["minute"]);
           break;
       }
 
@@ -866,7 +876,7 @@ function showLoginForm(showError) {
 
 }
 
-//async function for loagin ajax call
+//async function for login ajax call
 function ajaxLogin(encodedLogin) {
   try {
     $.ajax({
