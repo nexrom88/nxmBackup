@@ -140,7 +140,7 @@ namespace Common
             {
                 using (DBConnection dbConn = new DBConnection())
                 {
-                    List<Dictionary<string, object>> jobExecutionIds = dbConn.doReadQuery("INSERT INTO jobexecutions (jobid, isrunning, transferrate, alreadyread, alreadywritten, successful, warnings, errors, type) " +
+                    List<Dictionary<string, object>> jobExecutionIds = dbConn.doReadQuery("INSERT INTO jobexecutions (jobid, isrunning, averageTransferrate, alreadyread, alreadywritten, successful, warnings, errors, type) " +
                         "VALUES(@jobId, @isRunning, @transferRate, @alreadyRead, @alreadyWritten, @successful, @warnings, @errors, @type) RETURNING id;",
                         new Dictionary<string, object>() {
                             { "jobId", jobId },
@@ -345,7 +345,17 @@ namespace Common
             {
                 using (DBConnection dbConn = new DBConnection())
                 {
-                    int affectedRows = dbConn.doWriteQuery("UPDATE jobexecutions SET stoptime=now(), isrunning=false, transferRate=@transferRate, alreadyRead=@alreadyRead, alreadyWritten=@alreadyWritten, successful=@successful, warnings=@warnings, errors=@errors WHERE id=@id;",
+                    //get start time
+                    List<Dictionary<string, object>> result = dbConn.doReadQuery("SELECT startstamp FROM jobexecutions WHERE id=@id;", new Dictionary<string, object>() { { "id", jobExecutionId } }, null);
+
+                    if (result != null && result.Count > 0)
+                    {
+
+                    }
+
+
+                    //close jobexecution
+                    int affectedRows = dbConn.doWriteQuery("UPDATE jobexecutions SET stoptime=now(), isrunning=false, averageTransferrate=@transferRate, alreadyRead=@alreadyRead, alreadyWritten=@alreadyWritten, successful=@successful, warnings=@warnings, errors=@errors WHERE id=@id;",
                         new Dictionary<string, object>() { { "transferRate", executionProperties.transferRate }, { "alreadyRead", executionProperties.alreadyRead }, { "alreadyWritten", executionProperties.alreadyWritten}, { "successful", executionProperties.successful }, { "warnings", executionProperties.warnings }, { "errors", executionProperties.errors }, { "id", int.Parse(jobExecutionId) } }, null);
 
                     if (affectedRows == 0)
