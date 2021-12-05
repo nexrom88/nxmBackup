@@ -699,12 +699,6 @@ function showCurrentEvents() {
   })
     .done(function (data) {
 
-      //nothing to refresh?
-      if (lastJobStateData == data) {
-        return;
-      } else {
-        lastJobStateData = data;
-      }
 
       data = jQuery.parseJSON(data);
 
@@ -761,6 +755,14 @@ function renderJobStateTable() {
     url: "api/BackupJobState?jobId=" + selectedJob
   })
     .done(function (data) {
+
+      //nothing to refresh?
+      if (lastJobStateData == data) {
+        return;
+      } else {
+        lastJobStateData = data;
+      }
+
       data = JSON.parse(data);
 
       //build next run string
@@ -807,22 +809,57 @@ function renderJobStateTable() {
         lastRunString = "Job wird gerade ausgeführt...";
       }
 
-      $("#jobStateTable").html(Mustache.render(jobStateTableTemplate, { running: data["IsRunning"], interval: intervalString, lastRun: lastRunString, lastState: data["Successful"] }));
-
-      //set state color
-      if (data.Successful == "erfolgreich") {
-        $("#jobDetailsRow").css("background-color", "#ccffcc");
-        $("#jobDetailsRow").removeClass("detailsRowRunning");
-      } else {
-        $("#jobDetailsRow").css("background-color", "#ffb3b3");
-        $("#jobDetailsRow").removeClass("detailsRowRunning");
+      var successString = data["Successful"];
+      if (data["LastRun"] == "") {
+        successString = "Nicht zutreffend";
       }
 
-      if (data.IsRunning) {
-        $("#jobDetailsRow").addClass("detailsRowRunning");
+      var currentTransferrateString = prettyPrintBytes(data["CurrentTransferrate"]) + "/s";
+
+      $("#jobStateTable").html(Mustache.render(jobStateTableTemplate, { running: data["IsRunning"], interval: intervalString, lastRun: lastRunString, lastState: successString, lastTransferrate: currentTransferrateString}));
+
+      //set state color
+      if (data["LastRun"] == "" && !data["IsRunning"]) {
+        $("#jobDetailsRow").css("background-color", "#e6e6e6");
+        $("#jobDetailsRow").removeClass("detailsRowRunning");
+      } else {
+        if (data["Successful"] == "erfolgreich") {
+          $("#jobDetailsRow").css("background-color", "#ccffcc");
+          $("#jobDetailsRow").removeClass("detailsRowRunning");
+        } else {
+          $("#jobDetailsRow").css("background-color", "#ffb3b3");
+          $("#jobDetailsRow").removeClass("detailsRowRunning");
+        }
+
+        if (data.IsRunning) {
+          $("#jobDetailsRow").addClass("detailsRowRunning");
+        }
       }
 
     });
+}
+
+//pretty prints file size
+function prettyPrintBytes(bytes, si = true, dp = 2) {
+  const thresh = si ? 1000 : 1024;
+
+  if (Math.abs(bytes) < thresh) {
+    return bytes + ' B';
+  }
+
+  const units = si
+    ? ['kB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
+    : ['KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB', 'ZiB', 'YiB'];
+  let u = -1;
+  const r = 10 ** dp;
+
+  do {
+    bytes /= thresh;
+    ++u;
+  } while (Math.round(Math.abs(bytes) * r) / r >= thresh && u < units.length - 1);
+
+
+  return bytes.toFixed(dp) + ' ' + units[u];
 }
 
 

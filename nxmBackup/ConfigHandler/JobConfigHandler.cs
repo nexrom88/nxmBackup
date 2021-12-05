@@ -142,21 +142,39 @@ namespace ConfigHandler
 
 
                     //get last jobExecution attributes
-
                     paramaters.Clear();
                     paramaters.Add("jobid", (int)jobDB["id"]);
                     List<Dictionary<string, object>> jobExecutions = connection.doReadQuery("SELECT * FROM jobexecutions WHERE jobexecutions.jobid=@jobid and jobexecutions.id = (SELECT MAX(id) FROM jobexecutions WHERE jobexecutions.jobid=@jobid)", paramaters, null);
 
                     if (jobExecutions.Count > 1) MessageBox.Show("db error: jobExecutions hat mehr als 1 result");
-                    else
-                    {
+                    else if (jobExecutions.Count == 1){
                         foreach (Dictionary<string, object> jobExecution in jobExecutions)
                         {
                             newJob.LastRun = jobExecution["startstamp"].ToString();
+                            
                             newJob.Successful = jobExecution["successful"].ToString();
+                           
                             newJob.IsRunning = bool.Parse(jobExecution["isrunning"].ToString());
+
+                            //read last transferrate
+                            paramaters.Clear();
+                            paramaters.Add("jobexecutionid", jobExecution["id"]);
+                            List<Dictionary<string, object>> transferrates = connection.doReadQuery("SELECT transferrate FROM transferrates WHERE jobexecutionid=@jobexecutionid ORDER BY id DESC LIMIT 1", paramaters, null);
+                            if (transferrates != null && transferrates.Count > 0)
+                            {
+                                newJob.CurrentTransferrate = UInt32.Parse(transferrates[0]["transferrate"].ToString());
+                            }
+
                         }
 
+                    }
+                    else
+                    { //no jobExecutions yet
+                        newJob.LastRun = "";
+
+                        newJob.Successful = "true";
+
+                        newJob.IsRunning = false;
                     }
 
                     target.Add(newJob);
@@ -411,6 +429,7 @@ namespace ConfigHandler
         private bool isRunning;
         private string lastRun;
         private bool successful;
+        private UInt32 currentTransferrate;
 
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -460,7 +479,8 @@ namespace ConfigHandler
                 }
             }
         }
-  
+
+        public UInt32 CurrentTransferrate { get => currentTransferrate; set => currentTransferrate = value; }
         public string LastRun { get => lastRun; set => lastRun = value; }
         public string Successful 
         { 
