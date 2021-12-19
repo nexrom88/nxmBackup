@@ -50,6 +50,7 @@ namespace Common
 
             }catch(Exception ex) //error occured, hyperv role not installed?
             {
+                Common.DBQueries.addLog("error on listVMs", Environment.StackTrace, ex);
                 return null;
             }
         }
