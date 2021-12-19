@@ -121,6 +121,10 @@ function showNewJobPage(pageNumber, selectedEditJob) {
           if (selectedJob) {
             showCurrentSettings(pageNumber, selectedEditJob);
           }
+
+          //set focus to txtJobName
+          $("#txtJobName").focus();
+
           break;
         case 2:
           //load vms
