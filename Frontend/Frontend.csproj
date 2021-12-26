@@ -164,6 +164,7 @@
     <Compile Include="Controllers\BackupChainController.cs" />
     <Compile Include="Controllers\BackupJobStateController.cs" />
     <Compile Include="Controllers\DBConnectTestController.cs" />
+    <Compile Include="Controllers\FileIconController.cs" />
     <Compile Include="Controllers\FLRBrowserController.cs" />
     <Compile Include="Controllers\FolderDownloader.cs" />
     <Compile Include="Controllers\RestoreController.cs" />
