@@ -8,13 +8,6 @@
     padding-right: 15px;
 }
 
-/* Set width on the form input elements since they're 100% wide by default */
-input,
-select,
-textarea {
-    max-width: 280px;
-}
-
 #vmContainer{
     margin-left:0;
     margin-right:0;
@@ -44,8 +37,6 @@ textarea {
     right: 0;
     top: 0;
     bottom: 0;
-    /*right: 0;
-    bottom: 0;*/
     background-color: rgba(0,0,0,0.5); /* Black background with opacity */
     z-index: 3; /* Specify a stack order in case you're using a different order for other elements */
     cursor: pointer; /* Add a pointer on hover */
@@ -102,7 +93,7 @@ textarea {
 
 .subHeadline{
     text-align:center;
-    margin-top:10%;
+    margin-top:5%;
 }
 
 #page5Form{
@@ -240,6 +231,15 @@ textarea {
     animation-duration: 2s;
     animation-iteration-count: infinite;
     background-color: #ffffb3;
+}
+
+.newJobInput{
+    width: 85%;
+}
+
+#vmList{
+    margin-left: auto;
+    margin-right: auto;
 }
 
 @keyframes color {

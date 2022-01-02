@@ -460,6 +460,16 @@ function registerNextPageClickHandler(currentPage, selectedEditJob) {
         //get max-elements
         newJobObj["maxelements"] = $("#spMaxElements").val();
 
+        //valid input?
+        if (newJobObj["rotationtype"] == "merge" && newJobObj["blocksize"] > newJobObj["maxelements"]) {
+          Swal.fire(
+            'Eingabefehler',
+            'Ein Vollbackup würde nie durchgeführt werden, da die "Anzahl aufzubewahrender Backups" zu klein ist',
+            'error'
+          );
+          return;
+        }
+
         break;
 
       case 5:

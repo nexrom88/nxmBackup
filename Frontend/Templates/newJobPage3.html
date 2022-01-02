@@ -2,7 +2,7 @@
     <h5 class="center_div subHeadline">Zeitplan festlegen</h5>
     <div class="newJobElement center_div">
         <div class="centeredElementSpan">
-            <label class="enter_div newJobElement" for="sbJobInterval">Zeitinterval</label>
+            <label for="sbJobInterval">Zeitinterval</label>
             <select id="sbJobInterval" class="form-control">
                 <option data-interval="hourly">Stündlich</option>
                 <option data-interval="daily">Täglich</option>
@@ -11,23 +11,23 @@
         </div>
     </div>
     <h5 class="center_div subHeadline newJobElement">Zeitplan-Details</h5>
-    <div class="newJobElement center_div">
+    <div class="center_div">
         <span class="centeredElementSpan">
-            <label class="enter_div" for="spJobIntervalMinute">Minute</label>
-            <input id="spJobIntervalMinute" type="number" value="0" min="0" max="59" step="1" />
+            <label for="spJobIntervalMinute">Minute</label>
+            <input id="spJobIntervalMinute" class="newJobInput" type="number" value="0" min="0" max="59" step="1" />
         </span>
     </div>
 
     <div class="newJobElement center_div">
         <span class="centeredElementSpan">
-            <label class="enter_div" for="spJobIntervalHour">Stunde</label>
-            <input id="spJobIntervalHour" type="number" value="0" min="0" max="23" step="1" />
+            <label for="spJobIntervalHour">Stunde</label>
+            <input id="spJobIntervalHour" class="newJobInput" type="number" value="0" min="0" max="23" step="1" />
         </span>
     </div>
 
     <div class="newJobElement center_div">
         <span class="centeredElementSpan">
-            <label class="enter_div" for="sbJobDay">Tag</label>
+            <label for="sbJobDay">Tag</label>
             <select id="sbJobDay" class="form-control">
                 <option data-day="monday" selected>Montag</option>
                 <option data-day="tuesday">Dienstag</option>
