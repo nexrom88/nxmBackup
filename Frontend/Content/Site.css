@@ -178,7 +178,7 @@ textarea {
 }
 
 #sbJobInterval {
-    display: inline;
+    display: block;
 }
 
 #sbJobDay {
