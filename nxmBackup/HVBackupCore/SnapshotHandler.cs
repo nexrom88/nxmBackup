@@ -316,10 +316,11 @@ namespace nxmBackup.HVBackupCore
                 this.eventHandler.raiseNewEvent("erfolgreich", true, false, eventId, EventStatus.successful);
 
             }
-            catch
+            catch(Exception ex)
             {
                 //old backups could not be deleted, write error message
                 this.eventHandler.raiseNewEvent("Fehler beim Rotieren alter Backups", false, false, NO_RELATED_EVENT, EventStatus.warning);
+                Common.DBQueries.addLog("merge failed", Environment.StackTrace, ex);
             }
 
 
