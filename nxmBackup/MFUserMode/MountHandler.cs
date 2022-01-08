@@ -483,18 +483,27 @@ namespace nxmBackup.MFUserMode
 
                 if (sourceFiles[i].EndsWith(".cb"))
                 {
-                    //parse cb file
-                    CbStructure cbStruct = CBParser.parseCBFile(sourceFiles[i], true, this.useEncryption, this.aesKey);
-                    nonFullBackup.cbStructure = cbStruct;
-                    nonFullBackup.backupType = BackupChainReader.NonFullBackupType.rct;
-                    FileStream inputStream = new FileStream(sourceFiles[i], FileMode.Open, FileAccess.Read);
-                    BlockCompression.LZ4BlockStream blockStream = new BlockCompression.LZ4BlockStream(inputStream, BlockCompression.AccessMode.read, this.useEncryption, this.aesKey, this.usingDedupe);
-                    if (!blockStream.init())
+                    try
                     {
-                        return null;
-                    }
+                        //parse cb file
+                        FileStream inputStream = new FileStream(sourceFiles[i], FileMode.Open, FileAccess.Read);
+                        BlockCompression.LZ4BlockStream blockStream = new BlockCompression.LZ4BlockStream(inputStream, BlockCompression.AccessMode.read, this.useEncryption, this.aesKey, this.usingDedupe);
+                        if (!blockStream.init())
+                        {
+                            Common.DBQueries.addLog("Error while initializing backup source file (cb)", Environment.StackTrace, null);
+                            return null;
+                        }
+                        CbStructure cbStruct = CBParser.parseCBFile(blockStream, false);
 
-                    nonFullBackup.sourceStreamRCT = blockStream;
+                        nonFullBackup.cbStructure = cbStruct;
+                        nonFullBackup.backupType = BackupChainReader.NonFullBackupType.rct;
+                        nonFullBackup.sourceStreamRCT = blockStream;
+                    }
+                    catch(Exception ex)
+                    {
+                        Common.DBQueries.addLog("Error while opening backup source file (cb)", Environment.StackTrace, ex);
+                        return null;
+                    }                    
 
                 }
                 else if (sourceFiles[i].EndsWith(".lb"))
