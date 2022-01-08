@@ -728,7 +728,7 @@ namespace nxmBackup.HVBackupCore
             diskHandler.open(VirtualDiskHandler.VirtualDiskAccessMask.AttachReadOnly | VirtualDiskHandler.VirtualDiskAccessMask.GetInfo);
             VirtualDiskHandler.GetVirtualDiskInfoSize sizeStruct = diskHandler.getSize();
             ulong hddSize = sizeStruct.VirtualSize;
-            ulong bufferSize = sizeStruct.SectorSize * 10000; //buffersize has to be a multiple of virtual sector size
+            ulong bufferSize = sizeStruct.SectorSize * 50000; //buffersize has to be a multiple of virtual sector size
             diskHandler.close();
 
 
