@@ -1,6 +1,7 @@
 ﻿//on main window load
 var configuredJobs; //list of all active jobs
 var selectedJob; //the id of the currently selected job
+var selectedJobObj; //the obj with the currently selected job
 var selectedVM; //the selected vm id within main panel
 var eventRefreshTimer; //timer for refreshing vm events
 var maxNodeID; //counter for treeview nodes
@@ -328,8 +329,10 @@ function showCurrentSettings(pageNumber, selectedEditJob) {
       //set rotation type
       if (selectedEditJob["Rotation"]["type"] == 0) { //merge
         $('option[data-rotationtype="merge"]').prop("selected", true);
+        $("#lblMaxElements").html("Anzahl aufzubewahrender Backups");
       } else if (selectedEditJob["Rotation"]["type"] == 1) { //blockrotation
         $('option[data-rotationtype="blockrotation"]').prop("selected", true);
+        $("#lblMaxElements").html("Anzahl aufzubewahrender Blöcke");
       }
 
       $("#spMaxElements").val(selectedEditJob["Rotation"]["maxElementCount"]);
@@ -544,7 +547,8 @@ function buildJobsList() {
         for (var i = 0; i < configuredJobs.length; i++) {
           if (configuredJobs[i].DbId == JobDbId) {
             lastJobStateData = "";
-            buildJobDetailsPanel(configuredJobs[i]);
+            selectedJobObj = configuredJobs[i];
+            buildJobDetailsPanel();
           }
         }
 
@@ -554,21 +558,21 @@ function buildJobsList() {
 }
 
 //builds the vm list
-function buildJobDetailsPanel(currentJob) {
+function buildJobDetailsPanel() {
 
   //load vm details table
   $.ajax({
     url: "Templates/jobDetailsPanel"
   })
     .done(function (tableData) {
-      $("#mainPanelHeader").html("Jobdetails (" + currentJob.Name + ")");
+      $("#mainPanelHeader").html("Jobdetails (" + selectedJobObj.Name + ")");
 
       
 
       //set details panel and vms list
       var vms = [];
-      for (var i = 0; i < currentJob.JobVMs.length; i++) {
-        vms[i] = { vmid: currentJob.JobVMs[i].vmID, name: currentJob.JobVMs[i].vmName };
+      for (var i = 0; i < selectedJobObj.JobVMs.length; i++) {
+        vms[i] = { vmid: selectedJobObj.JobVMs[i].vmID, name: selectedJobObj.JobVMs[i].vmName };
       }
 
       
@@ -585,11 +589,17 @@ function buildJobDetailsPanel(currentJob) {
       //set delete job button click handler
       $("#deleteJobButton").click(deleteJobHandler);
 
+      //set enable job button click handler
+      $("#enableJobButton").click(enableJobHandler);
+
       //set edit job button click handler
       $("#editJobButton").click(editJobHandler);
 
       //set restore button click handler
       $("#restoreButton").click(startRestoreHandler); //startRestoreHandler function is defined within nxmRestore.js
+
+      //edit enableJobButton caption
+      $("#enableJobButtonCaption").html(selectedJobObj["Enabled"] ? "Job deaktivieren" : "Job aktivieren");
 
       //select first vm
       $(".vm").first().click();
@@ -616,6 +626,25 @@ function editJobHandler(event) {
   }
 
   startNewJobProcess(selectedEditJob);
+}
+
+//click handler for enabling/disabling job
+function enableJobHandler(event) {
+  var postObj = {};
+
+  postObj["jobID"] = selectedJob;
+  postObj["enabled"] = selectedJobObj["Enabled"] ? "false" : "true";
+
+  $.ajax({
+    url: 'api/JobEnable',
+    contentType: "application/json; charset=utf-8",
+    data: JSON.stringify(postObj),
+    type: 'POST',
+    cache: false,
+    success: function (result) {
+      location.reload();
+    }
+  });
 }
 
 //click handler for deleting job
@@ -781,41 +810,47 @@ function renderJobStateTable() {
 
       //build next run string
       var intervalString;
-      switch (data["Interval"]["intervalBase"]) {
-        case 0: //stündlich
-          intervalString = "Stündlich bei Minute " + buildTwoDigitsInt(data["Interval"]["minute"]);
-          break;
-        case 1: //täglich
-          intervalString = "Täglich um " + buildTwoDigitsInt(data["Interval"]["hour"]) + ":" + buildTwoDigitsInt(data["Interval"]["minute"]);
-          break;
-        case 2: //wöchentlich
-          var dayForGui;
-          switch (data["Interval"]["day"]) {
-            case "monday":
-              dayForGui = "Montag";
-              break;
-            case "tuesday":
-              dayForGui = "Dienstag";
-              break;
-            case "wednesday":
-              dayForGui = "Mittwoch";
-              break;
-            case "thursday":
-              dayForGui = "Donnerstag";
-              break;
-            case "friday":
-              dayForGui = "Freitag";
-              break;
-            case "saturday":
-              dayForGui = "Samstag";
-              break;
-            case "sunday":
-              dayForGui = "Sonntag";
-              break;
-          }
 
-          intervalString = dayForGui + "s " + " um " + buildTwoDigitsInt(data["Interval"]["hour"]) + ":" + buildTwoDigitsInt(data["Interval"]["minute"]);
-          break;
+      if (selectedJobObj["Enabled"]) {
+        switch (data["Interval"]["intervalBase"]) {
+          case 0: //stündlich
+            intervalString = "Stündlich bei Minute " + buildTwoDigitsInt(data["Interval"]["minute"]);
+            break;
+          case 1: //täglich
+            intervalString = "Täglich um " + buildTwoDigitsInt(data["Interval"]["hour"]) + ":" + buildTwoDigitsInt(data["Interval"]["minute"]);
+            break;
+          case 2: //wöchentlich
+            var dayForGui;
+            switch (data["Interval"]["day"]) {
+              case "monday":
+                dayForGui = "Montag";
+                break;
+              case "tuesday":
+                dayForGui = "Dienstag";
+                break;
+              case "wednesday":
+                dayForGui = "Mittwoch";
+                break;
+              case "thursday":
+                dayForGui = "Donnerstag";
+                break;
+              case "friday":
+                dayForGui = "Freitag";
+                break;
+              case "saturday":
+                dayForGui = "Samstag";
+                break;
+              case "sunday":
+                dayForGui = "Sonntag";
+                break;
+            }
+
+            intervalString = dayForGui + "s " + " um " + buildTwoDigitsInt(data["Interval"]["hour"]) + ":" + buildTwoDigitsInt(data["Interval"]["minute"]);
+            break;
+        }
+      } else {
+        //job is disabled
+        intervalString = "Job ist deaktiviert";
       }
 
       var lastRunString = data["LastRun"];

@@ -25,12 +25,15 @@ namespace JobEngine
             //create one timer for each job
             foreach (ConfigHandler.OneJob job in jobs)
             {
-                JobTimer timer = new JobTimer(job);
-                this.jobTimers.Add(timer);
-                System.Timers.Timer t = new System.Timers.Timer(60000);
-                timer.underlyingTimer = t;
-                t.Elapsed += timer.tick;
-                t.Start();
+                if (job.Enabled)
+                {
+                    JobTimer timer = new JobTimer(job);
+                    this.jobTimers.Add(timer);
+                    System.Timers.Timer t = new System.Timers.Timer(60000);
+                    timer.underlyingTimer = t;
+                    t.Elapsed += timer.tick;
+                    t.Start();
+                }
             }
             return true;
 

@@ -35,7 +35,7 @@ namespace ConfigHandler
                     queryExtension = " AND jobs.id=" + jobid;
                 }
 
-                List<Dictionary<string, object>> jobsDB = connection.doReadQuery("SELECT jobs.id, jobs.name, jobs.incremental, jobs.basepath, jobs.maxelements, jobs.blocksize, jobs.day, jobs.hour, jobs.minute, jobs.interval, jobs.livebackup, jobs.useencryption, jobs.aeskey, jobs.usededupe, rotationtype.name AS rotationname FROM jobs INNER JOIN rotationtype ON jobs.rotationtypeid=rotationtype.id WHERE jobs.deleted=FALSE" + queryExtension, null, null);
+                List<Dictionary<string, object>> jobsDB = connection.doReadQuery("SELECT jobs.id, jobs.enabled, jobs.name, jobs.incremental, jobs.basepath, jobs.maxelements, jobs.blocksize, jobs.day, jobs.hour, jobs.minute, jobs.interval, jobs.livebackup, jobs.useencryption, jobs.aeskey, jobs.usededupe, rotationtype.name AS rotationname FROM jobs INNER JOIN rotationtype ON jobs.rotationtypeid=rotationtype.id WHERE jobs.deleted=FALSE" + queryExtension, null, null);
 
                 //check that jobs != null
                 if (jobsDB == null) //DB error
@@ -50,6 +50,7 @@ namespace ConfigHandler
                     //build structure
                     OneJob newJob = new OneJob();
                     newJob.DbId = (int)jobDB["id"];
+                    newJob.Enabled = (bool)jobDB["enabled"];
                     newJob.BasePath = jobDB["basepath"].ToString();
                     newJob.Name = jobDB["name"].ToString();
                     newJob.BlockSize = (int)jobDB["blocksize"];
@@ -303,6 +304,20 @@ namespace ConfigHandler
 
         }
 
+        //sets a given job to enabled/disabled
+        public static void setJobEnabled(int jobID, bool enabled)
+        {
+            //open DB connection
+            using (Common.DBConnection connection = new Common.DBConnection())
+            {
+                Dictionary<string, object> parameters = new Dictionary<string, object>();
+                parameters.Add("enabled", enabled);
+                parameters.Add("jobID", jobID);
+
+                connection.doWriteQuery("UPDATE jobs SET enabled=@enabled WHERE id=@jobID", parameters, null);
+            }
+        }
+
         //creates a vm-hdd relation for all selected vms within a job. vm must be in DB already
         private static void createVMHDDRelation(List<JobVM> vms, Common.DBConnection connection, NpgsqlTransaction transaction, List<string> alreadyExistedvmIDs)
         {
@@ -414,6 +429,7 @@ namespace ConfigHandler
     public class OneJob : System.ComponentModel.INotifyPropertyChanged
     {
         private int dbId;
+        private bool enabled;
         private bool useEncryption;
         private byte[] aesKey;
         private bool usingDedupe;
@@ -434,6 +450,7 @@ namespace ConfigHandler
         public event PropertyChangedEventHandler PropertyChanged;
 
         public string Name { get => name; set => name = value; }
+        public bool Enabled { get => enabled; set => enabled = value; }
         public Interval Interval { get => interval; set => interval = value; }
         public bool UseEncryption { get => useEncryption; set => useEncryption = value; }
         public byte[] AesKey { get => aesKey; set => aesKey = value; }
