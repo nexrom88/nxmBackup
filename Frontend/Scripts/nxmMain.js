@@ -642,7 +642,13 @@ function enableJobHandler(event) {
     type: 'POST',
     cache: false,
     success: function (result) {
-      location.reload();
+      selectedJobObj["Enabled"] = !selectedJobObj["Enabled"];
+
+      //edit enableJobButton caption
+      $("#enableJobButtonCaption").html(selectedJobObj["Enabled"] ? "Job deaktivieren" : "Job aktivieren");
+
+      //refresh job state table
+      renderJobStateTable();
     }
   });
 }
