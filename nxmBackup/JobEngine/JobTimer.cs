@@ -24,8 +24,11 @@ namespace JobEngine
         //gets raised frequently
         public void tick(object sender, System.Timers.ElapsedEventArgs e)
         {
-         
-            startJob(false);
+            //just start job when not disabled
+            if (this.job.Enabled)
+            {
+                startJob(false);
+            }
         }
 
         //starts the job
