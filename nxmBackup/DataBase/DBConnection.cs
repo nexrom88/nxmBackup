@@ -148,7 +148,13 @@ namespace Common
                 }
             }
 
-            return command.ExecuteNonQuery();
+            try
+            {
+                return command.ExecuteNonQuery();
+            }catch(Exception ex)
+            {
+                return -1;
+            }
         }
 
         //closes the db connection
