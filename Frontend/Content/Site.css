@@ -206,6 +206,10 @@
     color:gray;
 }
 
+.jobLinkDisabled {
+    color: #ff4d4d;
+}
+
 
 .settingInput {
     display:inline-block;

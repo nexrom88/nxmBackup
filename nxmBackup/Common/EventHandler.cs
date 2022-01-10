@@ -49,12 +49,5 @@ namespace Common
 
         }
 
-
-        //writes errors to the log
-        public static void writeToLog(string errorMsg, System.Diagnostics.StackTrace t)
-        {
-
-        }
-
     }
 }

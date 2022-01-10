@@ -123,7 +123,7 @@ namespace nxmBackup
             {
                 ConfigHandler.OneJob job = this.jobsObservable[lvJobs.SelectedIndex];
                 bool result = ConfigHandler.JobConfigHandler.deleteJob(job.DbId);
-                if (!result) Common.EventHandler.writeToLog("job delete failed", new System.Diagnostics.StackTrace());
+                if (!result) Common.DBQueries.addLog("error on deleting job", Environment.StackTrace, null);
                 initJobs();
             }
         }

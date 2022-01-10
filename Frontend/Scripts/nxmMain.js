@@ -519,6 +519,10 @@ function logOut() {
 
 //builds the jobs sidebar
 function buildJobsList() {
+
+  //clear the content first
+  $("#jobsList").html("");
+
   //load html template first
   var jobTemplate;
   $.ajax({
@@ -534,7 +538,7 @@ function buildJobsList() {
         var currentTemplate = jobTemplate.slice();
 
         //add job to sidebar
-        $("#jobsList").append(Mustache.render(currentTemplate, { JobName: configuredJobs[i].Name, JobDbId: configuredJobs[i].DbId }));
+        $("#jobsList").append(Mustache.render(currentTemplate, { JobName: configuredJobs[i].Name, JobDbId: configuredJobs[i].DbId, JobEnabled: configuredJobs[i].Enabled}));
 
       }
 
@@ -565,8 +569,13 @@ function buildJobDetailsPanel() {
     url: "Templates/jobDetailsPanel"
   })
     .done(function (tableData) {
-      $("#mainPanelHeader").html("Jobdetails (" + selectedJobObj.Name + ")");
+      var jobHeaderString;
+      jobHeaderString = "Jobdetails (" + selectedJobObj.Name + ")";
+      if (!selectedJobObj.Enabled) {
+        jobHeaderString += " - deaktiviert";
+      }
 
+      $("#mainPanelHeader").html(jobHeaderString);
       
 
       //set details panel and vms list
@@ -647,8 +656,19 @@ function enableJobHandler(event) {
       //edit enableJobButton caption
       $("#enableJobButtonCaption").html(selectedJobObj["Enabled"] ? "Job deaktivieren" : "Job aktivieren");
 
+      //refresh the details panel header
+      var jobHeaderString;
+      jobHeaderString = "Jobdetails (" + selectedJobObj.Name + ")";
+      if (!selectedJobObj.Enabled) {
+        jobHeaderString += " - deaktiviert";
+      }
+      $("#mainPanelHeader").html(jobHeaderString);
+
       //refresh job state table
       renderJobStateTable();
+
+      //build jobs list panel
+      buildJobsList();
     }
   });
 }

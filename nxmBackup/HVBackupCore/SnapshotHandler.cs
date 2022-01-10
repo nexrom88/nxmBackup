@@ -34,8 +34,10 @@ namespace nxmBackup.HVBackupCore
         }
 
         //performs a full backup chain
-        public bool performFullBackupProcess(ConsistencyLevel cLevel, Boolean allowSnapshotFallback, bool incremental, ConfigHandler.OneJob job)
+        public BackupJobResult performFullBackupProcess(ConsistencyLevel cLevel, Boolean allowSnapshotFallback, bool incremental, ConfigHandler.OneJob job)
         {
+            BackupJobResult retVal = new BackupJobResult();
+
             string destination = job.BasePath;
             ManagementObject snapshot = createSnapshot(cLevel, allowSnapshotFallback);
             ManagementObject refP = null;
@@ -44,7 +46,8 @@ namespace nxmBackup.HVBackupCore
             if (snapshot == null)
             {
                 this.eventHandler.raiseNewEvent("Backupvorgang fehlgeschlagen", false, false, NO_RELATED_EVENT, EventStatus.error);
-                return false;
+                retVal.successful = false;
+                return retVal;
             }
 
             //add job name and vm name to destination
@@ -149,7 +152,8 @@ namespace nxmBackup.HVBackupCore
             }
 
             this.eventHandler.raiseNewEvent("Backupvorgang erfolgreich", false, false, NO_RELATED_EVENT, EventStatus.successful);
-            return true;
+            retVal.successful = true;
+            return retVal;
         }
 
         //gets the block count for the given chain
@@ -1002,7 +1006,12 @@ namespace nxmBackup.HVBackupCore
             public List<VMHDD> newHDDs;
         }
 
-
+        public struct BackupJobResult
+        {
+            public bool successful;
+            public UInt64 bytesProcessed;
+            public UInt64 bytesTransfered;
+        }
 
     }
 }

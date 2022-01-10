@@ -118,7 +118,7 @@ namespace Common
                 return result;
             }catch(Exception ex)
             {
-                EventHandler.writeToLog(ex.ToString(), new System.Diagnostics.StackTrace());
+                Common.DBQueries.addLog("error on performing DB read query", Environment.StackTrace, ex);
                 return null;
             }
         }

@@ -60,8 +60,10 @@ namespace Common
         }
 
         //adds a given file to the archive
-        public bool addFile(string file, string path)
+        public TransferDetails addFile(string file, string path)
         {
+            TransferDetails transferDetails = new TransferDetails();
+
             path = path.Replace("/", "\\");
             string fileName = Path.GetFileName(file);
 
@@ -79,7 +81,8 @@ namespace Common
 
             if (!compressionStream.init())
             {
-                return false;
+                transferDetails.successful = false;
+                return transferDetails;
             }
 
             //create buffer and read counter
@@ -113,6 +116,9 @@ namespace Common
                     bytesRemaining -= buffer.Length;
                 }
 
+                //add read bytes to statistics counter
+                transferDetails.bytesProcessed += (UInt64)buffer.Length;
+
                 //transfer rate calculation
                 byteTransferCounter += buffer.Length;
                 if (System.DateTimeOffset.Now.ToUnixTimeMilliseconds() - 1000 >= lastTransferTimestamp)
@@ -135,6 +141,9 @@ namespace Common
 
             }
 
+            //add transfered bytes to statistics counter
+            transferDetails.bytesTransfered = compressionStream.TotalCompressedBytesWritten;
+
             //transfer completed
             if (this.eventHandler != null)
             {
@@ -142,7 +151,8 @@ namespace Common
             }
             compressionStream.Dispose();
             baseSourceStream.Close();
-            return true;
+            transferDetails.successful = true;
+            return transferDetails;
 
         }
 

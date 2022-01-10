@@ -29,6 +29,9 @@ namespace BlockCompression
         private ulong decompressedByteCountWithinBlock = 0;
         private ulong decompressedBlockSize = 500000; // = 500kb
 
+        //for statistics
+        public UInt64 TotalCompressedBytesWritten { get; set; }
+
         //need for read
         private ulong position = 0;
         private ulong decompressedFileSize = 0;
@@ -427,6 +430,9 @@ namespace BlockCompression
                 //do compression
                 source.WriteTo(compressionStream);
                 compressionStream.Close();
+
+                //add compressed bytes count to var for statistics
+                TotalCompressedBytesWritten += (UInt64)compMemStream.Length;
 
                 //write compressed block size to block header
                 byte[] buffer;

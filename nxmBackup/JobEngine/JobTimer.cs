@@ -65,6 +65,9 @@ namespace JobEngine
             bool executionSuccessful = true;
 
             //iterate vms within the current job
+
+            UInt64 totalBytesTransfered = 0;
+            UInt64 totalBytesProcessed = 0;
             foreach (JobVM vm in this.Job.JobVMs)
             {
                 SnapshotHandler ssHandler = new SnapshotHandler(vm, executionId, this.Job.UseEncryption, this.Job.AesKey, this.job.UsingDedupe);
@@ -72,15 +75,19 @@ namespace JobEngine
                 //incremental allowed?
                 bool incremental = this.Job.Incremental;
 
-                bool successful = ssHandler.performFullBackupProcess(ConsistencyLevel.ApplicationAware, true, incremental, this.job);
-                if (!successful) executionSuccessful = false;
+                SnapshotHandler.BackupJobResult jobResult = ssHandler.performFullBackupProcess(ConsistencyLevel.ApplicationAware, true, incremental, this.job);
+
+                //update bytes counter
+                totalBytesTransfered += jobResult.bytesTransfered;
+                totalBytesProcessed += jobResult.bytesProcessed;
+
+                if (!jobResult.successful) executionSuccessful = false;
             }
 
             // set job execution state
             JobExecutionProperties executionProps = new JobExecutionProperties();
-            executionProps.transferRate = 0;
-            executionProps.alreadyRead = 0;
-            executionProps.alreadyWritten = 0;
+            executionProps.bytesProcessed = totalBytesProcessed;
+            executionProps.bytesTransfered = totalBytesTransfered;
             executionProps.successful = executionSuccessful;
             executionProps.warnings = 0;            
             if (executionSuccessful)

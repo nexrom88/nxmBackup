@@ -21,10 +21,10 @@ namespace TestProject
         static void Main(string[] args)
         {
 
-            //Common.DBQueries.wipeDB();
+            Common.DBQueries.wipeDB();
 
-            System.Drawing.Icon icon =  System.Drawing.Icon.ExtractAssociatedIcon(@"c:\test.ini");
-            icon = icon;
+            //System.Drawing.Icon icon =  System.Drawing.Icon.ExtractAssociatedIcon(@"c:\test.ini");
+            //icon = icon;
 
 
             //Common.JetBlue db = new Common.JetBlue(@"C:\Users\Administrator\Downloads\nxmBackupFLR\Mailbox Database 0621326406.edb");

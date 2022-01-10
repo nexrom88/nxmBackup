@@ -9,9 +9,8 @@ namespace Common
     public struct JobExecutionProperties
     {
         public DateTime startStamp;
-        public int transferRate;
-        public int alreadyRead;
-        public int alreadyWritten;
+        public UInt64 bytesProcessed;
+        public UInt64 bytesTransfered;
         public bool successful;
         public int warnings;
         public int errors;

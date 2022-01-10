@@ -140,14 +140,13 @@ namespace Common
             {
                 using (DBConnection dbConn = new DBConnection())
                 {
-                    List<Dictionary<string, object>> jobExecutionIds = dbConn.doReadQuery("INSERT INTO jobexecutions (jobid, isrunning, averageTransferrate, alreadyread, alreadywritten, successful, warnings, errors, type) " +
-                        "VALUES(@jobId, @isRunning, @transferRate, @alreadyRead, @alreadyWritten, @successful, @warnings, @errors, @type) RETURNING id;",
+                    List<Dictionary<string, object>> jobExecutionIds = dbConn.doReadQuery("INSERT INTO jobexecutions (jobid, isrunning, bytesprocessed, bytestransfered, successful, warnings, errors, type) " +
+                        "VALUES(@jobId, @isRunning, @bytesprocessed, @bytestransfered, @successful, @warnings, @errors, @type) RETURNING id;",
                         new Dictionary<string, object>() {
                             { "jobId", jobId },
                             { "isRunning", true },
-                            { "transferRate", 0 },
-                            { "alreadyRead", 0 },
-                            { "alreadyWritten", 0 },
+                            { "bytesprocessed", 0 },
+                            { "bytestransfered", 0 },
                             { "successful", true },
                             { "warnings", 0 },
                             { "errors", 0 },
@@ -162,9 +161,9 @@ namespace Common
                     return (int)(jobExecutionIds[0]["id"]);
                 }
             }
-            catch (Exception exp)
+            catch (Exception ex)
             {
-                EventHandler.writeToLog(exp.ToString(), new System.Diagnostics.StackTrace());
+                Common.DBQueries.addLog ("error on adding jobExecution to DB", Environment.StackTrace , ex);
                 return -1;
             }
         }
@@ -216,9 +215,9 @@ namespace Common
                     }
                 }
             }
-            catch (Exception exp)
+            catch (Exception ex)
             {
-                EventHandler.writeToLog(exp.ToString(), new System.Diagnostics.StackTrace());
+                Common.DBQueries.addLog("error on adding event to DB", Environment.StackTrace, ex);
                 return -1;
             }
         }
@@ -249,9 +248,9 @@ namespace Common
                     }
                 }
             }
-            catch (Exception exp)
+            catch (Exception ex)
             {
-                EventHandler.writeToLog(exp.ToString(), new System.Diagnostics.StackTrace());
+                Common.DBQueries.addLog("error on updating event", Environment.StackTrace, ex);
             }
         }
 
@@ -271,9 +270,9 @@ namespace Common
                     }
                 }
             }
-            catch (Exception exp)
+            catch (Exception ex)
             {
-                EventHandler.writeToLog(exp.ToString(), new System.Diagnostics.StackTrace());
+                Common.DBQueries.addLog("error on setting done event", Environment.StackTrace, ex);
             }
         }
 
@@ -312,9 +311,9 @@ namespace Common
                     }
                 }
             }
-            catch (Exception exp)
+            catch (Exception ex)
             {
-                EventHandler.writeToLog(exp.ToString(), new System.Diagnostics.StackTrace());
+                Common.DBQueries.addLog("error on getting events from DB", Environment.StackTrace, ex);
                 return new List<Dictionary<string, object>>();
             }
         }
@@ -348,15 +347,9 @@ namespace Common
                     //get start time
                     List<Dictionary<string, object>> result = dbConn.doReadQuery("SELECT startstamp FROM jobexecutions WHERE id=@id;", new Dictionary<string, object>() { { "id", jobExecutionId } }, null);
 
-                    if (result != null && result.Count > 0)
-                    {
-
-                    }
-
-
                     //close jobexecution
-                    int affectedRows = dbConn.doWriteQuery("UPDATE jobexecutions SET stoptime=now(), isrunning=false, averageTransferrate=@transferRate, alreadyRead=@alreadyRead, alreadyWritten=@alreadyWritten, successful=@successful, warnings=@warnings, errors=@errors WHERE id=@id;",
-                        new Dictionary<string, object>() { { "transferRate", executionProperties.transferRate }, { "alreadyRead", executionProperties.alreadyRead }, { "alreadyWritten", executionProperties.alreadyWritten}, { "successful", executionProperties.successful }, { "warnings", executionProperties.warnings }, { "errors", executionProperties.errors }, { "id", int.Parse(jobExecutionId) } }, null);
+                    int affectedRows = dbConn.doWriteQuery("UPDATE jobexecutions SET stoptime=now(), isrunning=false, bytesProcessed=@bytesProcessed, bytesTransfered=@bytesTransfered, successful=@successful, warnings=@warnings, errors=@errors WHERE id=@id;",
+                        new Dictionary<string, object>() {{ "bytesprocessed", executionProperties.bytesProcessed }, { "bytestransfered", executionProperties.bytesTransfered}, { "successful", executionProperties.successful }, { "warnings", executionProperties.warnings }, { "errors", executionProperties.errors }, { "id", int.Parse(jobExecutionId) } }, null);
 
                     if (affectedRows == 0)
                     {
@@ -364,9 +357,9 @@ namespace Common
                     }
                 }
             }
-            catch (Exception exp)
+            catch (Exception ex)
             {
-                EventHandler.writeToLog(exp.ToString(), new System.Diagnostics.StackTrace());
+                Common.DBQueries.addLog("error on closing job execution within DB", Environment.StackTrace, ex);
             }
         }
 

@@ -25,7 +25,7 @@ namespace Common
         System.IO.Stream openAndGetFileStream(string path);
 
         //adds a file to the archive
-        bool addFile(string file, string path);
+        TransferDetails addFile(string file, string path);
 
         //adds a whole folder to the archive
         void addDirectory(string folder);
@@ -35,5 +35,12 @@ namespace Common
 
         //lists all archive entries
         List<string> listEntries();
+    }
+
+    public struct TransferDetails
+    {
+        public UInt64 bytesProcessed;
+        public UInt64 bytesTransfered;
+        public bool successful;
     }
 }
