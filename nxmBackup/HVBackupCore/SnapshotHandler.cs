@@ -34,9 +34,9 @@ namespace nxmBackup.HVBackupCore
         }
 
         //performs a full backup chain
-        public BackupJobResult performFullBackupProcess(ConsistencyLevel cLevel, Boolean allowSnapshotFallback, bool incremental, ConfigHandler.OneJob job)
+        public TransferDetails performFullBackupProcess(ConsistencyLevel cLevel, Boolean allowSnapshotFallback, bool incremental, ConfigHandler.OneJob job)
         {
-            BackupJobResult retVal = new BackupJobResult();
+            TransferDetails retVal = new TransferDetails();
 
             string destination = job.BasePath;
             ManagementObject snapshot = createSnapshot(cLevel, allowSnapshotFallback);
@@ -91,7 +91,7 @@ namespace nxmBackup.HVBackupCore
             }
 
             //export the snapshot
-            export(destination, snapshot, refP, job);
+            TransferDetails transferDetails = export(destination, snapshot, refP, job);
 
             //read current backup chain for further processing
             chain = ConfigHandler.BackupConfigHandler.readChain(destination);
@@ -152,6 +152,9 @@ namespace nxmBackup.HVBackupCore
             }
 
             this.eventHandler.raiseNewEvent("Backupvorgang erfolgreich", false, false, NO_RELATED_EVENT, EventStatus.successful);
+
+            retVal.bytesProcessed = transferDetails.bytesProcessed;
+            retVal.bytesTransfered = transferDetails.bytesTransfered;
             retVal.successful = true;
             return retVal;
         }
@@ -489,7 +492,7 @@ namespace nxmBackup.HVBackupCore
         }
 
         //exports a snapshot
-        public void export(string path, ManagementObject currentSnapshot, ManagementObject rctBase, ConfigHandler.OneJob job)
+        public TransferDetails export(string path, ManagementObject currentSnapshot, ManagementObject rctBase, ConfigHandler.OneJob job)
         {
             string basePath = path;
             string backupType = "";
@@ -537,6 +540,10 @@ namespace nxmBackup.HVBackupCore
                 this.eventHandler.raiseNewEvent("Veränderter Datenspeicher erkannt", false, false, NO_RELATED_EVENT, EventStatus.warning);
             }
 
+            //transfer statistics
+            TransferDetails transferDetailsSummary = new TransferDetails();
+            transferDetailsSummary.successful = true;
+
             //now export the hdds
             foreach (ManagementObject hdd in hdds)
             {
@@ -554,8 +561,11 @@ namespace nxmBackup.HVBackupCore
                     {
                         this.eventHandler.raiseNewEvent("Beginne Vollbackup", false, false, NO_RELATED_EVENT, EventStatus.successful);
                     }
+
                     //write to the archive
-                    archive.addFile(hddPath[0], "Virtual Hard Disks");
+                    TransferDetails transferDetails = archive.addFile(hddPath[0], "Virtual Hard Disks");
+                    transferDetailsSummary.bytesProcessed += transferDetails.bytesProcessed;
+                    transferDetailsSummary.bytesTransfered += transferDetails.bytesTransfered;
 
                     backupType = "full";
                 }
@@ -584,8 +594,11 @@ namespace nxmBackup.HVBackupCore
             //copy config files
             foreach (string file in configFiles)
             {
-                archive.addFile(file, "Virtual Machines");
-                //System.IO.File.Copy(file, System.IO.Path.Combine(path, "Virtual Machines\\" + System.IO.Path.GetFileName(file)));
+                TransferDetails transferDetails = archive.addFile(file, "Virtual Machines");
+
+                transferDetailsSummary.bytesProcessed += transferDetails.bytesProcessed;
+                transferDetailsSummary.bytesTransfered += transferDetails.bytesTransfered;
+
             }
             archive.close();
 
@@ -645,6 +658,8 @@ namespace nxmBackup.HVBackupCore
                     currentVM.vmHDDs = hddsChangedResponse.newHDDs;
                 }
             }
+
+            return transferDetailsSummary;
 
         }
 
@@ -1004,13 +1019,6 @@ namespace nxmBackup.HVBackupCore
         {
             public bool hddsChanged;
             public List<VMHDD> newHDDs;
-        }
-
-        public struct BackupJobResult
-        {
-            public bool successful;
-            public UInt64 bytesProcessed;
-            public UInt64 bytesTransfered;
         }
 
     }

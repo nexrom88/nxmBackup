@@ -37,10 +37,5 @@ namespace Common
         List<string> listEntries();
     }
 
-    public struct TransferDetails
-    {
-        public UInt64 bytesProcessed;
-        public UInt64 bytesTransfered;
-        public bool successful;
-    }
+
 }

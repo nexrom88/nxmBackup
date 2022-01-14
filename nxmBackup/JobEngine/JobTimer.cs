@@ -75,13 +75,13 @@ namespace JobEngine
                 //incremental allowed?
                 bool incremental = this.Job.Incremental;
 
-                SnapshotHandler.BackupJobResult jobResult = ssHandler.performFullBackupProcess(ConsistencyLevel.ApplicationAware, true, incremental, this.job);
+                TransferDetails transferDetails = ssHandler.performFullBackupProcess(ConsistencyLevel.ApplicationAware, true, incremental, this.job);
 
                 //update bytes counter
-                totalBytesTransfered += jobResult.bytesTransfered;
-                totalBytesProcessed += jobResult.bytesProcessed;
+                totalBytesTransfered += transferDetails.bytesTransfered;
+                totalBytesProcessed += transferDetails.bytesProcessed;
 
-                if (!jobResult.successful) executionSuccessful = false;
+                if (!transferDetails.successful) executionSuccessful = false;
             }
 
             // set job execution state
