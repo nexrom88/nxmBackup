@@ -344,9 +344,6 @@ namespace Common
             {
                 using (DBConnection dbConn = new DBConnection())
                 {
-                    //get start time
-                    List<Dictionary<string, object>> result = dbConn.doReadQuery("SELECT startstamp FROM jobexecutions WHERE id=@id;", new Dictionary<string, object>() { { "id", jobExecutionId } }, null);
-
                     //close jobexecution
                     int affectedRows = dbConn.doWriteQuery("UPDATE jobexecutions SET stoptime=now(), isrunning=false, bytesProcessed=@bytesProcessed, bytesTransfered=@bytesTransfered, successful=@successful, warnings=@warnings, errors=@errors WHERE id=@id;",
                         new Dictionary<string, object>() {{ "bytesprocessed", (Int64)executionProperties.bytesProcessed }, { "bytestransfered", (Int64)executionProperties.bytesTransfered}, { "successful", executionProperties.successful }, { "warnings", executionProperties.warnings }, { "errors", executionProperties.errors }, { "id", int.Parse(jobExecutionId) } }, null);

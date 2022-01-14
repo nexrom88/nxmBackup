@@ -578,7 +578,9 @@ namespace nxmBackup.HVBackupCore
                     }
                     
                     //do a rct backup copy
-                    performrctbackup(hddPath[0], ((string[])rctBase["ResilientChangeTrackingIdentifiers"])[hddCounter], archive);
+                    TransferDetails transferDetails = performrctbackup(hddPath[0], ((string[])rctBase["ResilientChangeTrackingIdentifiers"])[hddCounter], archive);
+                    transferDetailsSummary.bytesProcessed += transferDetails.bytesProcessed;
+                    transferDetailsSummary.bytesTransfered += transferDetails.bytesTransfered;
 
                     backupType = "rct";
                 }
@@ -740,8 +742,10 @@ namespace nxmBackup.HVBackupCore
 
 
         //performs a rct backup copy
-        private void performrctbackup(string snapshothddPath, string rctID, Common.IArchive archive)
+        private TransferDetails performrctbackup(string snapshothddPath, string rctID, Common.IArchive archive)
         {
+            TransferDetails transferDetails = new TransferDetails();
+
             //read vhd size
             VirtualDiskHandler diskHandler = new VirtualDiskHandler(snapshothddPath);
             diskHandler.open(VirtualDiskHandler.VirtualDiskAccessMask.AttachReadOnly | VirtualDiskHandler.VirtualDiskAccessMask.GetInfo);
@@ -823,27 +827,23 @@ namespace nxmBackup.HVBackupCore
                     int eventId = this.eventHandler.raiseNewEvent("Verarbeite Blöcke...", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
                     int blockCount = ((ulong[])outParams["ChangedByteOffsets"]).Length;
                     ChangedBlock[] changedBlocks = new ChangedBlock[blockCount];
-
-                    //set max parallel tasks to cpu cores / 2
-                    int cpuCores = Environment.ProcessorCount;
-                    int availableCPUCores = (int)Math.Ceiling((float)cpuCores / 2);
-                    System.Threading.Tasks.ParallelOptions options = new System.Threading.Tasks.ParallelOptions();
-                    options.MaxDegreeOfParallelism = availableCPUCores;
+ 
 
                     ulong[] offsets = (ulong[])outParams["ChangedByteOffsets"];
                     ulong[] lengths = (ulong[])outParams["ChangedByteLengths"];
 
-                    System.Threading.Tasks.Parallel.For (0, blockCount, options, i => {
+                    for (int i = 0; i < changedBlocks.Length; i++) {
                         changedBlocks[i].offset = offsets[i];
                         changedBlocks[i].length = lengths[i];
-                    });
+                        transferDetails.bytesProcessed += lengths[i];
+                    }
 
                     this.eventHandler.raiseNewEvent("erfolgreich", true, false, eventId, EventStatus.successful);
 
                     //write backup output
                     DiffHandler diffWriter = new DiffHandler(this.eventHandler, null);
 
-                    diffWriter.writeDiffFile(changedBlocks, diskHandler, vhdxBlockSize, archive, System.IO.Path.GetFileName(snapshothddPath), batTable, bufferSize, rawBatTable, rawHeader, rawLog, rawMeta, vhdxSize);
+                    transferDetails.bytesTransfered = diffWriter.writeDiffFile(changedBlocks, diskHandler, vhdxBlockSize, archive, System.IO.Path.GetFileName(snapshothddPath), batTable, bufferSize, rawBatTable, rawHeader, rawLog, rawMeta, vhdxSize);
 
                     
                     //close vhd file
@@ -854,6 +854,8 @@ namespace nxmBackup.HVBackupCore
 
 
             }
+
+            return transferDetails;
         }
 
 
