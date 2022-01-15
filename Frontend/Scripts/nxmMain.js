@@ -893,6 +893,10 @@ function renderJobStateTable() {
 
       $("#jobStateTable").html(Mustache.render(jobStateTableTemplate, { running: data["IsRunning"], interval: intervalString, lastRun: lastRunString, lastState: successString, lastTransferrate: currentTransferrateString}));
 
+
+      //register cick handler for clicking link to show last execution details
+      $("#lastExecutionDetailsLink").click(showLastExecutionDetails);
+
       //set state color
       if (data["LastRun"] == "" && !data["IsRunning"]) {
         $("#jobDetailsRow").css("background-color", "#e6e6e6");
@@ -912,6 +916,11 @@ function renderJobStateTable() {
       }
 
     });
+}
+
+//click handler for showing stats for last execution
+function showLastExecutionDetails() {
+  alert("test");
 }
 
 //pretty prints file size

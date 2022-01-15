@@ -157,6 +157,10 @@ namespace ConfigHandler
                            
                             newJob.IsRunning = bool.Parse(jobExecution["isrunning"].ToString());
 
+                            newJob.LastBytesProcessed = UInt64.Parse(jobExecution["bytesprocessed"].ToString());
+
+                            newJob.LastBytesTransered = UInt64.Parse(jobExecution["bytestransfered"].ToString());
+
                             //read last transferrate
                             paramaters.Clear();
                             paramaters.Add("jobexecutionid", jobExecution["id"]);
@@ -445,6 +449,8 @@ namespace ConfigHandler
         private bool isRunning;
         private string lastRun;
         private bool successful;
+        private UInt64 lastBytesProcessed;
+        private UInt64 lastBytesTransfered;
         private UInt32 currentTransferrate;
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -515,6 +521,9 @@ namespace ConfigHandler
             }
             set => successful = bool.Parse(value); 
         }
+
+        public UInt64 LastBytesTransered { get => lastBytesTransfered; set => lastBytesTransfered = value; }
+        public UInt64 LastBytesProcessed { get => lastBytesProcessed; set => lastBytesProcessed = value; }
     }
 
     
