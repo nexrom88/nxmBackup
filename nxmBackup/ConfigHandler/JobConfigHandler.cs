@@ -152,14 +152,16 @@ namespace ConfigHandler
                         foreach (Dictionary<string, object> jobExecution in jobExecutions)
                         {
                             newJob.LastRun = jobExecution["startstamp"].ToString();
-                            
+
+                            newJob.LastStop = jobExecution["stoptime"].ToString();
+
                             newJob.Successful = jobExecution["successful"].ToString();
                            
                             newJob.IsRunning = bool.Parse(jobExecution["isrunning"].ToString());
 
                             newJob.LastBytesProcessed = UInt64.Parse(jobExecution["bytesprocessed"].ToString());
 
-                            newJob.LastBytesTransered = UInt64.Parse(jobExecution["bytestransfered"].ToString());
+                            newJob.LastBytesTransfered = UInt64.Parse(jobExecution["bytestransfered"].ToString());
 
                             //read last transferrate
                             paramaters.Clear();
@@ -430,7 +432,7 @@ namespace ConfigHandler
     // Structures:
 
     //represents one job within jobs.xml
-    public class OneJob : System.ComponentModel.INotifyPropertyChanged
+    public class OneJob
     {
         private int dbId;
         private bool enabled;
@@ -448,12 +450,11 @@ namespace ConfigHandler
         private LiveBackupWorker lbWorker;
         private bool isRunning;
         private string lastRun;
+        private string lastStop;
         private bool successful;
         private UInt64 lastBytesProcessed;
         private UInt64 lastBytesTransfered;
         private UInt32 currentTransferrate;
-
-        public event PropertyChangedEventHandler PropertyChanged;
 
         public string Name { get => name; set => name = value; }
         public bool Enabled { get => enabled; set => enabled = value; }
@@ -505,6 +506,8 @@ namespace ConfigHandler
 
         public UInt32 CurrentTransferrate { get => currentTransferrate; set => currentTransferrate = value; }
         public string LastRun { get => lastRun; set => lastRun = value; }
+
+        public string LastStop { get => lastStop; set => lastStop = value; }
         public string Successful 
         { 
             get 
@@ -522,7 +525,7 @@ namespace ConfigHandler
             set => successful = bool.Parse(value); 
         }
 
-        public UInt64 LastBytesTransered { get => lastBytesTransfered; set => lastBytesTransfered = value; }
+        public UInt64 LastBytesTransfered { get => lastBytesTransfered; set => lastBytesTransfered = value; }
         public UInt64 LastBytesProcessed { get => lastBytesProcessed; set => lastBytesProcessed = value; }
     }
 

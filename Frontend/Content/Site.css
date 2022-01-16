@@ -230,6 +230,10 @@
     margin-bottom:5%;
 }
 
+.executionDetailsRow{
+    text-align: left;
+}
+
 .detailsRowRunning {
     animation-name: color;
     animation-duration: 2s;

@@ -920,7 +920,63 @@ function renderJobStateTable() {
 
 //click handler for showing stats for last execution
 function showLastExecutionDetails() {
-  alert("test");
+  //show dialog box
+  Swal.fire({
+    title: 'Details der letzten Ausführung',
+    html: "<div id='executionDetailsPopUp'></div>",
+    confirmButtonColor: '#3085d6',
+    allowOutsideClick: true,
+    allowEscapeKey: true,
+    confirmButtonText: 'Schließen',
+  });
+
+  //load form
+  $.ajax({
+    url: "Templates/JobExecutionDetailsForm"
+  })
+    .done(function (detailsForm) {
+      //parse job data
+      var jobData = JSON.parse(lastJobStateData);
+
+      var bytesTransfered = prettyPrintBytes(jobData["LastBytesTransfered"]);
+      var bytesProcessed = prettyPrintBytes(jobData["LastBytesProcessed"]);
+
+      if (!jobData["LastStop"]) {
+        //calculate compression efficiency
+        var compressionEfficiency = parseFloat((jobData["LastBytesTransfered"] / jobData["LastBytesProcessed"]) * 100).toFixed(2);
+
+        //calculate execution duration
+        var startDate = moment(jobData["LastRun"], "DD.MM.YYYY HH:mm:ss");
+        var endDate = moment(jobData["LastStop"], "DD.MM.YYYY HH:mm:ss");
+
+        var duration = prettyPrintDuration(endDate.diff(startDate));
+        duration = duration.replace(".", ",");
+
+        var renderedDetailsForm = Mustache.render(detailsForm, { bytesTransfered: bytesTransfered, bytesProcessed: bytesProcessed, compressionEfficiency: compressionEfficiency, duration: duration });
+
+        $("#executionDetailsPopUp").html(renderedDetailsForm)
+
+      } else { //job not started yet
+        var renderedDetailsForm = Mustache.render(detailsForm, { bytesTransfered: bytesTransfered, bytesProcessed: bytesProcessed, compressionEfficiency: "0", duration: "-" });
+
+        $("#executionDetailsPopUp").html(renderedDetailsForm)
+      }
+
+
+
+    });
+}
+
+//pretty print milliseconds
+function prettyPrintDuration(ms) {
+    let seconds = (ms / 1000).toFixed(1);
+    let minutes = (ms / (1000 * 60)).toFixed(1);
+    let hours = (ms / (1000 * 60 * 60)).toFixed(1);
+    let days = (ms / (1000 * 60 * 60 * 24)).toFixed(1);
+    if (seconds < 60) return seconds + " Sekunden";
+    else if (minutes < 60) return minutes + " Minuten";
+    else if (hours < 24) return hours + " Stunden";
+    else return days + " Tage"
 }
 
 //pretty prints file size
