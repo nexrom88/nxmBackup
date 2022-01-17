@@ -941,9 +941,9 @@ function showLastExecutionDetails() {
       var bytesTransfered = prettyPrintBytes(jobData["LastBytesTransfered"]);
       var bytesProcessed = prettyPrintBytes(jobData["LastBytesProcessed"]);
 
-      if (!jobData["LastStop"]) {
+      if (jobData["LastStop"]) {
         //calculate compression efficiency
-        var compressionEfficiency = parseFloat((jobData["LastBytesTransfered"] / jobData["LastBytesProcessed"]) * 100).toFixed(2);
+        var compressionEfficiency = parseFloat(((jobData["LastBytesProcessed"] - jobData["LastBytesTransfered"]) / jobData["LastBytesProcessed"]) * 100).toFixed(2);
 
         //calculate execution duration
         var startDate = moment(jobData["LastRun"], "DD.MM.YYYY HH:mm:ss");
