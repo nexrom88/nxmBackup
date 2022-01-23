@@ -53,8 +53,16 @@ namespace nxmBackup.HVBackupCore
             //add job name and vm name to destination
             destination = System.IO.Path.Combine(destination, job.Name + "\\" + this.vm.vmID);
 
-            //create folder if it does not exist
-            System.IO.Directory.CreateDirectory(destination);
+            try
+            {
+                //create folder if it does not exist
+                System.IO.Directory.CreateDirectory(destination);
+            }catch(Exception ex)
+            {
+                DBQueries.addLog("error on creating folder", Environment.StackTrace, ex);
+                retVal.successful = false;
+                return retVal;
+            }
 
             List<ConfigHandler.BackupConfigHandler.BackupInfo> chain = ConfigHandler.BackupConfigHandler.readChain(destination);
             if (incremental) //incremental backup? get latest reference point
