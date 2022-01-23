@@ -59,6 +59,8 @@ namespace nxmBackup.HVBackupCore
                 System.IO.Directory.CreateDirectory(destination);
             }catch(Exception ex)
             {
+                this.eventHandler.raiseNewEvent("Der Sicherungspfad steht im aktuellen Kontext nicht zur Verfügung", false, false, NO_RELATED_EVENT, EventStatus.error);
+                this.eventHandler.raiseNewEvent("Backupvorgang fehlgeschlagen", false, false, NO_RELATED_EVENT, EventStatus.error);
                 DBQueries.addLog("error on creating folder", Environment.StackTrace, ex);
                 retVal.successful = false;
                 return retVal;
