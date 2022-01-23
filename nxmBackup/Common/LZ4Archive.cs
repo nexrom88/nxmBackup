@@ -70,8 +70,16 @@ namespace Common
             //get base io Streams
             System.IO.FileStream baseSourceStream = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
 
-            //create dest path
-            System.IO.Directory.CreateDirectory(System.IO.Path.Combine(this.path, path));
+            try
+            {
+                //create dest path
+                System.IO.Directory.CreateDirectory(System.IO.Path.Combine(this.path, path));
+            }catch(Exception ex)
+            {
+                Common.DBQueries.addLog("could not create directory", Environment.StackTrace, ex);
+                transferDetails.successful = false;
+                return transferDetails;
+            }
             
             //get dest stream
             System.IO.FileStream baseDestStream = new FileStream(System.IO.Path.Combine(this.path, path + "\\" + fileName) , FileMode.Create);
