@@ -169,12 +169,23 @@ namespace HVRestoreCore
                 if (configFiles.Length != 1)
                 {
                     this.eventHandler.raiseNewEvent("fehlgeschlagen", true, false, relatedEventId, Common.EventStatus.warning);
+                    this.eventHandler.raiseNewEvent("done", false, false, NO_RELATED_EVENT, Common.EventStatus.successful);
+                    return;
                 }
                 else
                 {
                     //import vm
-                    VMImporter.importVM(configFiles[0], destPath, true, vmName);
-                    this.eventHandler.raiseNewEvent("erfolgreich", true, false, relatedEventId, Common.EventStatus.successful);
+                    try
+                    {
+                        VMImporter.importVM(configFiles[0], destPath, true, vmName);
+                        this.eventHandler.raiseNewEvent("erfolgreich", true, false, relatedEventId, Common.EventStatus.successful);
+                    }catch(Exception ex)
+                    {
+                        Common.DBQueries.addLog("importVM failed", Environment.StackTrace, ex);
+                        this.eventHandler.raiseNewEvent("fehlgeschlagen", true, false, relatedEventId, Common.EventStatus.warning);
+                        this.eventHandler.raiseNewEvent("done", false, false, NO_RELATED_EVENT, Common.EventStatus.successful);
+                        return;
+                    }
                 }
 
 
