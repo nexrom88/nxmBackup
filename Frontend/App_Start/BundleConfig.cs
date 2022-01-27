@@ -28,6 +28,9 @@ namespace Frontend
             bundles.Add(new ScriptBundle("~/bundles/mustache").Include(
                         "~/Scripts/mustache.js"));
 
+            bundles.Add(new ScriptBundle("~/bundles/popper").Include(
+                        "~/Scripts/popper.js"));
+
             bundles.Add(new ScriptBundle("~/bundles/bootstrap").Include(
                       "~/Scripts/bootstrap.js"));
 

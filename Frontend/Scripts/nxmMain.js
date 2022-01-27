@@ -119,7 +119,7 @@ function showNewJobPage(pageNumber, selectedEditJob) {
           });
 
           //show current settings when editing a job
-          if (selectedJob) {
+          if (selectedEditJob) {
             showCurrentSettings(pageNumber, selectedEditJob);
           }
 
@@ -155,7 +155,7 @@ function showNewJobPage(pageNumber, selectedEditJob) {
               $("#newJobNextButton").attr("disabled", "disabled");
 
               //show current settings when editing a job
-              if (selectedJob) {
+              if (selectedEditJob) {
                 showCurrentSettings(pageNumber, selectedEditJob);
 
                 //activate next button when vm is selected
@@ -195,7 +195,7 @@ function showNewJobPage(pageNumber, selectedEditJob) {
           });
 
           //show current settings when editing a job
-          if (selectedJob) {
+          if (selectedEditJob) {
             showCurrentSettings(pageNumber, selectedEditJob);
           }
 
@@ -228,7 +228,7 @@ function showNewJobPage(pageNumber, selectedEditJob) {
           });
 
           //show current settings when editing a job
-          if (selectedJob) {
+          if (selectedEditJob) {
             showCurrentSettings(pageNumber, selectedEditJob);
           }
           break;
@@ -265,7 +265,7 @@ function showNewJobPage(pageNumber, selectedEditJob) {
             navigateToDirectory(selectedPath, "folder", data.node.id);
           });
           //show current settings when editing a job
-          if (selectedJob) {
+          if (selectedEditJob) {
             showCurrentSettings(pageNumber, selectedEditJob);
           }
 
