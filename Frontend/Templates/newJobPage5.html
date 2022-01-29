@@ -1,15 +1,14 @@
 ﻿<form id="page5Form">
     <h5 class="center_div subHeadline">Sicherungsziel auswählen</h5>
 
-    <div class="dropdown newJobElement center_div">
-        <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-            Dropdown button
-        </button>
-        <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-            <a class="dropdown-item" href="#">Action</a>
-            <a class="dropdown-item" href="#">Another action</a>
-            <a class="dropdown-item" href="#">Something else here</a>
-        </div>
+    <div class="newJobElement center_div">
+        <span class="centeredElementSpan">
+            <label class="enter_div" for="sbRotationType">Rotationstyp</label>
+            <select id="sbTargetType" class="form-control">
+                <option data-rotationtype="local" selected>Lokales Laufwerk</option>
+                <option data-rotationtype="smb">Netzlaufwerk</option>
+            </select>
+        </span>
     </div>
 
     <div id="folderBrowserContainer" class="newJobElement center_div">

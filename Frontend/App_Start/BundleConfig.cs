@@ -32,7 +32,7 @@ namespace Frontend
                         "~/Scripts/popper.js"));
 
             bundles.Add(new ScriptBundle("~/bundles/bootstrap").Include(
-                      "~/Scripts/bootstrap.js"));
+                      "~/Scripts/bootstrap.bundle.min.js"));
 
             bundles.Add(new ScriptBundle("~/bundles/bsInputSpinner").Include(
                         "~/Scripts/bsInputSpinner.js"));
@@ -57,7 +57,7 @@ namespace Frontend
                       "~/Scripts/globalAjaxHandler.js"));
 
             bundles.Add(new StyleBundle("~/Content/css").Include(
-                      "~/Content/bootstrap.css",
+                      "~/Content/bootstrap.min.css",
                       "~/Content/jstree/default/style.min.css",
                       "~/Content/font-awesome.css",
                       "~/Content/site.css"));
