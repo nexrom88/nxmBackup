@@ -3,17 +3,19 @@
 
     <div class="newJobElement center_div">
         <span class="centeredElementSpan">
-            <label class="enter_div" for="sbRotationType">Rotationstyp</label>
+            <label class="enter_div" for="sbTargetType">Zieltyp</label>
             <select id="sbTargetType" class="form-control">
-                <option data-rotationtype="local" selected>Lokales Laufwerk</option>
-                <option data-rotationtype="smb">Netzlaufwerk</option>
+                <option data-targettype="local" selected>Lokales Laufwerk</option>
+                <option data-targettype="smb">Netzlaufwerk</option>
             </select>
         </span>
     </div>
+    <hr />
 
-    <div id="folderBrowserContainer" class="newJobElement center_div">
-        <div id="folderBrowser"></div>
-    </div>
+        <div id="folderBrowserContainer" class="newJobElement center_div">
+            <div id="folderBrowser"></div>
+        </div>
+  
 
     <div class="text-center">
         <button id="newJobNextButton" type="button" class="btn btn-primary">Weiter</button>

@@ -236,34 +236,23 @@ function showNewJobPage(pageNumber, selectedEditJob) {
         case 5:
           $("#newJobPage").html(data);
           registerNextPageClickHandler(pageNumber, selectedEditJob);
-          $('#folderBrowser').jstree({
-            'core': {
-              'check_callback': true,
-              'data': null
-            },
-            types: {
-              "drive": {
-                "icon": "fa fa-hdd-o"
-              },
-              "folder": {
-                "icon": "fa fa-folder-open-o"
-              },
-              "default": {
-              }
-            }, plugins: ["types"]
+          buildFolderBrowser();
+
+          //register change on target type selection
+          $("#sbTargetType").on("change", function (event) {
+            var targetType = $(this).children("option:selected").data("targettype");
+
+            switch (targetType) {
+              case "local":
+                buildFolderBrowser();
+                break;
+              case "smb":
+                $('#folderBrowser').jstree("destroy");
+                buildSMBForm();
+                break;
+            }
           });
 
-          //init treeview
-          maxNodeID = 0;
-          navigateToDirectory("/", "drive", "#");
-          selectedDirectory = "";
-
-          //node select handler
-          $("#folderBrowser").on("select_node.jstree", function (e, data) {
-            var selectedPath = data.instance.get_path(data.node, '\\');
-            selectedDirectory = selectedPath;
-            navigateToDirectory(selectedPath, "folder", data.node.id);
-          });
           //show current settings when editing a job
           if (selectedEditJob) {
             showCurrentSettings(pageNumber, selectedEditJob);
@@ -276,6 +265,48 @@ function showNewJobPage(pageNumber, selectedEditJob) {
 
     });
 
+}
+
+//builds the form fpr smb credentials
+function buildSMBForm() {
+  $.ajax({
+    url: "Templates/smbCredentials"
+  })
+    .done(function (data) {
+      $("#folderBrowser").html(data);
+    });
+}
+
+//builds the folder browser elements on creating a new job
+function buildFolderBrowser() {
+  $('#folderBrowser').jstree({
+    'core': {
+      'check_callback': true,
+      'data': null
+    },
+    types: {
+      "drive": {
+        "icon": "fa fa-hdd-o"
+      },
+      "folder": {
+        "icon": "fa fa-folder-open-o"
+      },
+      "default": {
+      }
+    }, plugins: ["types"]
+  });
+
+  //init treeview
+  maxNodeID = 0;
+  navigateToDirectory("/", "drive", "#");
+  selectedDirectory = "";
+
+  //node select handler
+  $("#folderBrowser").on("select_node.jstree", function (e, data) {
+    var selectedPath = data.instance.get_path(data.node, '\\');
+    selectedDirectory = selectedPath;
+    navigateToDirectory(selectedPath, "folder", data.node.id);
+  });
 }
 
 //shows the current settings on a given page when editing a job
@@ -476,6 +507,9 @@ function registerNextPageClickHandler(currentPage, selectedEditJob) {
         break;
 
       case 5:
+        alert("testo");
+        return;
+
         //get selected node
         newJobObj["target"] = selectedDirectory;
 

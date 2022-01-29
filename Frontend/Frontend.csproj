@@ -269,6 +269,7 @@
     <Content Include="Templates\restoreOptions.html" />
     <Content Include="Templates\restorePointsTable.html" />
     <Content Include="Templates\settingsForm.html" />
+    <Content Include="Templates\smbCredentials.html" />
     <Content Include="Web.config" />
     <Content Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
