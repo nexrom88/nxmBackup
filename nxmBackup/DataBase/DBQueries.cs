@@ -367,6 +367,7 @@ namespace Common
             {
                 NpgsqlTransaction transaction = dbConn.beginTransaction();
                 dbConn.doWriteQuery("DELETE FROM log;", null, transaction);
+                dbConn.doWriteQuery("DELETE FROM storagetarget;", null, transaction);
                 dbConn.doWriteQuery("DELETE FROM jobvmrelation;", null, transaction);
                 dbConn.doWriteQuery("DELETE FROM vmhddrelation;", null, transaction);
                 dbConn.doWriteQuery("DELETE FROM vms;", null, transaction);

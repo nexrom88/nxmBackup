@@ -20,7 +20,10 @@ namespace Frontend.Controllers
             //convert Frontend job to OneJob object
             newJob.Name = value.name;
             newJob.Incremental = value.incremental;
-            newJob.BasePath = value.target;
+            newJob.TargetPath = value.targetPath;
+            newJob.TargetType = value.targetType;
+            newJob.TargetUsername = value.targetUsername;
+            newJob.TargetPassword = value.targetPassword;
             newJob.LiveBackup = value.livebackup;
             newJob.UseEncryption = value.useencryption;
             newJob.UsingDedupe = value.usingdedupe;
@@ -132,7 +135,10 @@ namespace Frontend.Controllers
             public bool usingdedupe { get; set; }
             public string encpassword { get; set; }
             public bool livebackup { get; set; }
-            public string target { get; set; }
+            public string targetType { get; set; }
+            public string targetUsername { get; set; }
+            public string targetPassword { get; set; }
+            public string targetPath { get; set; }
             public string interval { get; set; }
             public string minute { get; set; }
             public string hour { get; set; }

@@ -507,11 +507,30 @@ function registerNextPageClickHandler(currentPage, selectedEditJob) {
         break;
 
       case 5:
-        alert("testo");
-        return;
+        var targetType = $("#sbTargetType").children("option:selected").data("targettype");
 
-        //get selected node
-        newJobObj["target"] = selectedDirectory;
+        //set target type
+        newJobObj["targetType"] = targetType;
+
+        if (targetType == "smb") {
+          //get and set smb path, username and password
+          var username = $("#inputUsername").val();
+          var password = $("#inputPassword").val();
+          var smbDirectory = $("#smbPath").val();
+
+          newJobObj["targetUsername"] = username;
+          newJobObj["targetPassword"] = password;
+          newJobObj["targetPath"] = smbDirectory;
+
+
+        } else if (targetType == "local") {
+
+          //get and set selected node
+          newJobObj["targetPath"] = selectedDirectory;
+        }
+
+
+        
 
         //done creating new job, send to server
         saveNewJob();

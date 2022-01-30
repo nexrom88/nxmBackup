@@ -35,7 +35,7 @@ namespace ConfigHandler
                     queryExtension = " AND jobs.id=" + jobid;
                 }
 
-                List<Dictionary<string, object>> jobsDB = connection.doReadQuery("SELECT jobs.id, jobs.enabled, jobs.name, jobs.incremental, jobs.basepath, jobs.maxelements, jobs.blocksize, jobs.day, jobs.hour, jobs.minute, jobs.interval, jobs.livebackup, jobs.useencryption, jobs.aeskey, jobs.usededupe, rotationtype.name AS rotationname FROM jobs INNER JOIN rotationtype ON jobs.rotationtypeid=rotationtype.id WHERE jobs.deleted=FALSE" + queryExtension, null, null);
+                List<Dictionary<string, object>> jobsDB = connection.doReadQuery("SELECT jobs.id, jobs.enabled, jobs.name, jobs.incremental, jobs.basepath, jobs.maxelements, jobs.blocksize, jobs.day, jobs.hour, jobs.minute, jobs.interval, jobs.livebackup, jobs.useencryption, jobs.aeskey, jobs.usededupe, rotationtype.name AS rotationname FROM jobs INNER JOIN rotationtype ON jobs.rotationtypeid=rotationtype.id INNER JOIN storagetarget ON jobs.id=storagetarget.jobid WHERE jobs.deleted=FALSE" + queryExtension, null, null);
 
                 //check that jobs != null
                 if (jobsDB == null) //DB error
@@ -51,12 +51,16 @@ namespace ConfigHandler
                     OneJob newJob = new OneJob();
                     newJob.DbId = (int)jobDB["id"];
                     newJob.Enabled = (bool)jobDB["enabled"];
-                    newJob.BasePath = jobDB["basepath"].ToString();
                     newJob.Name = jobDB["name"].ToString();
                     newJob.BlockSize = (int)jobDB["blocksize"];
                     newJob.LiveBackup = (bool)jobDB["livebackup"];
                     newJob.Incremental = (bool)jobDB["incremental"];
                     newJob.UsingDedupe = (bool)jobDB["usededupe"];
+                    newJob.TargetType = jobDB["targettype"].ToString();
+                    newJob.TargetPath = jobDB["targetpath"].ToString();
+                    newJob.TargetUsername = jobDB["targetuser"].ToString();
+                    newJob.TargetPassword = jobDB["targetpassword"].ToString();
+
                     newJob.UseEncryption = (bool)jobDB["useencryption"];
 
                     if (newJob.UseEncryption)
@@ -228,7 +232,6 @@ namespace ConfigHandler
                 parameters.Add("minute", job.Interval.minute);
                 parameters.Add("hour", job.Interval.hour);
                 parameters.Add("day", job.Interval.day);
-                parameters.Add("basepath", job.BasePath);
                 parameters.Add("blocksize", job.BlockSize);
                 parameters.Add("maxelements", job.Rotation.maxElementCount);
                 parameters.Add("rotationtypeID", rotationID);
@@ -284,7 +287,6 @@ namespace ConfigHandler
                 parameters.Add("minute", job.Interval.minute);
                 parameters.Add("hour", job.Interval.hour);
                 parameters.Add("day", job.Interval.day);
-                parameters.Add("basepath", job.BasePath);
                 parameters.Add("blocksize", job.BlockSize);
                 parameters.Add("maxelements", job.Rotation.maxElementCount);
                 parameters.Add("rotationtypeID", rotationID);
@@ -294,9 +296,14 @@ namespace ConfigHandler
                 parameters.Add("usededupe", job.UsingDedupe);
 
 
-                values = connection.doReadQuery("INSERT INTO jobs (name, incremental, interval, minute, hour, day, basepath, blocksize, maxelements, livebackup, rotationtypeid, useencryption, aeskey, usededupe) VALUES(@name, @incremental, @interval, @minute, @hour, @day, @basepath, @blocksize, @maxelements, @livebackup, @rotationtypeID, @useencryption, @aeskey, @usededupe) RETURNING id;", parameters, transaction);
+                values = connection.doReadQuery("INSERT INTO jobs (name, incremental, interval, minute, hour, day, blocksize, maxelements, livebackup, rotationtypeid, useencryption, aeskey, usededupe) VALUES(@name, @incremental, @interval, @minute, @hour, @day, @blocksize, @maxelements, @livebackup, @rotationtypeID, @useencryption, @aeskey, @usededupe) RETURNING id;", parameters, transaction);
+
+
 
                 int jobID = (int)(values[0]["id"]);
+
+                //create target dtore entry
+                createTargetStorageEntry(jobID, job.TargetPath, job.TargetUsername, job.TargetPassword, job.TargetType, connection, transaction);
 
                 //create vms relation
                 List<string> alreadyExistedvmIDs = createJobVMRelation(job, jobID, connection, transaction);
@@ -308,6 +315,19 @@ namespace ConfigHandler
                 transaction.Commit();
             }
 
+        }
+
+        //creates a target storage db entry
+        private static void createTargetStorageEntry(int jobID, string path, string username, string password, string type, Common.DBConnection connection, NpgsqlTransaction transaction)
+        {
+            Dictionary<string, object>  parameters = new Dictionary<string, object>();
+            parameters.Add("targetjobid", jobID);
+            parameters.Add("targettype", type);
+            parameters.Add("targetpath", path);
+            parameters.Add("targetuser", username);
+            parameters.Add("targetpassword", password);
+
+            connection.doReadQuery("INSERT INTO storagetarget (targetjobid, targettype, targetpath, targetuser, targetpassword) VALUES (@targetjobid, @targettype, @targetpath, @targetuser, @targetpassword);", parameters, transaction);
         }
 
         //sets a given job to enabled/disabled
@@ -443,7 +463,6 @@ namespace ConfigHandler
         private bool incremental;
         private Interval interval;
         private List<JobVM> jobVMs;
-        private string basePath;
         private int blockSize;
         private Rotation rotation;
         private bool liveBackup;
@@ -455,6 +474,10 @@ namespace ConfigHandler
         private UInt64 lastBytesProcessed;
         private UInt64 lastBytesTransfered;
         private UInt32 currentTransferrate;
+        private string targetType;
+        private string targetPath;
+        private string targetUsername;
+        private string targetPassword;
 
         public string Name { get => name; set => name = value; }
         public bool Enabled { get => enabled; set => enabled = value; }
@@ -463,7 +486,6 @@ namespace ConfigHandler
         public byte[] AesKey { get => aesKey; set => aesKey = value; }
         public bool UsingDedupe { get => usingDedupe; set => usingDedupe = value; }
         public List<JobVM> JobVMs { get => jobVMs; set => jobVMs = value; }
-        public string BasePath { get => basePath; set => basePath = value; }
         public int BlockSize { get => blockSize; set => blockSize = value; }
         public Rotation Rotation { get => rotation; set => rotation = value; }
         public bool IsRunning { get => isRunning; set => isRunning = value; }
@@ -471,6 +493,12 @@ namespace ConfigHandler
         public int DbId { get => dbId; set => dbId = value; }
         public bool LiveBackup { get => liveBackup; set => liveBackup = value; }
         public LiveBackupWorker LiveBackupWorker { get => lbWorker; set => lbWorker = value; }
+
+        public string TargetType { get => targetType; set => targetType = value; }
+        public string TargetPath { get => targetPath; set => targetPath = value; }
+        public string TargetUsername { get => targetUsername; set => targetUsername = value; }
+        public string TargetPassword { get => targetPassword; set => targetPassword = value; }
+
         public string IntervalBaseForGUI
         {
             get
