@@ -105,7 +105,7 @@ namespace nxmBackup.HVBackupCore
             string guidFolder = g.ToString();
            
             //create lb folder
-            string destFolder = System.IO.Path.Combine(this.selectedJob.BasePath, this.selectedJob.Name + "\\" + vm.vmID + "\\" + guidFolder + ".nxm");
+            string destFolder = System.IO.Path.Combine(this.selectedJob.TargetPath, this.selectedJob.Name + "\\" + vm.vmID + "\\" + guidFolder + ".nxm");
             System.IO.Directory.CreateDirectory(destFolder);
 
             //create destination files and their corresponding streams
@@ -139,12 +139,12 @@ namespace nxmBackup.HVBackupCore
             foreach (Common.JobVM vm in this.selectedJob.JobVMs)
             {
                 //read existing backup chain
-                List<ConfigHandler.BackupConfigHandler.BackupInfo> currentChain = ConfigHandler.BackupConfigHandler.readChain(System.IO.Path.Combine(this.selectedJob.BasePath, this.selectedJob.Name + "\\" + vm.vmID));
+                List<ConfigHandler.BackupConfigHandler.BackupInfo> currentChain = ConfigHandler.BackupConfigHandler.readChain(System.IO.Path.Combine(this.selectedJob.TargetPath, this.selectedJob.Name + "\\" + vm.vmID));
 
                 //get parent backup
                 string parentInstanceID = currentChain[currentChain.Count - 1].instanceID;
 
-                ConfigHandler.BackupConfigHandler.addBackup(System.IO.Path.Combine(this.selectedJob.BasePath, this.selectedJob.Name + "\\" + vm.vmID), this.destGUIDFolder, "lb", "nxm:" + this.destGUIDFolder, parentInstanceID, false);
+                ConfigHandler.BackupConfigHandler.addBackup(System.IO.Path.Combine(this.selectedJob.TargetPath, this.selectedJob.Name + "\\" + vm.vmID), this.destGUIDFolder, "lb", "nxm:" + this.destGUIDFolder, parentInstanceID, false);
 
             }
 

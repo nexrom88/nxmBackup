@@ -38,7 +38,7 @@ namespace RestoreHelper
 
             //load restore points
             //build source path
-            string sourcePath = this.job.BasePath + "\\" + this.job.Name + "\\" + ((ComboBoxItem)cbVMs.SelectedItem).Tag.ToString();
+            string sourcePath = this.job.TargetPath + "\\" + this.job.Name + "\\" + ((ComboBoxItem)cbVMs.SelectedItem).Tag.ToString();
             if (!System.IO.Directory.Exists(sourcePath))
             {
                 MessageBox.Show("Backups können nicht geladen werden!", "Fehler beim Laden", MessageBoxButton.OK, MessageBoxImage.Error);
@@ -108,7 +108,7 @@ namespace RestoreHelper
             RestorePointForGUI restorePoint = (RestorePointForGUI)lvRestorePoints.SelectedItem;
             
 
-            string sourcePath = this.job.BasePath + "\\" + this.job.Name + "\\" + ((ComboBoxItem)cbVMs.SelectedItem).Tag.ToString();
+            string sourcePath = this.job.TargetPath + "\\" + this.job.Name + "\\" + ((ComboBoxItem)cbVMs.SelectedItem).Tag.ToString();
 
             //get requested restore type
             string restoreType = ((ComboBoxItem)cbRestoreType.SelectedItem).Tag.ToString();

@@ -38,10 +38,9 @@ namespace nxmBackup.HVBackupCore
         {
             TransferDetails retVal = new TransferDetails();
 
-            string destination = job.BasePath;
+            string destination = job.TargetPath;
             ManagementObject snapshot = createSnapshot(cLevel, allowSnapshotFallback);
             ManagementObject refP = null;
-
             //error occured while taking snapshot?
             if (snapshot == null)
             {

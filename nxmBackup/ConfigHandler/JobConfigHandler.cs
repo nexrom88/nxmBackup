@@ -35,7 +35,7 @@ namespace ConfigHandler
                     queryExtension = " AND jobs.id=" + jobid;
                 }
 
-                List<Dictionary<string, object>> jobsDB = connection.doReadQuery("SELECT jobs.id, jobs.enabled, jobs.name, jobs.incremental, jobs.basepath, jobs.maxelements, jobs.blocksize, jobs.day, jobs.hour, jobs.minute, jobs.interval, jobs.livebackup, jobs.useencryption, jobs.aeskey, jobs.usededupe, rotationtype.name AS rotationname FROM jobs INNER JOIN rotationtype ON jobs.rotationtypeid=rotationtype.id INNER JOIN storagetarget ON jobs.id=storagetarget.jobid WHERE jobs.deleted=FALSE" + queryExtension, null, null);
+                List<Dictionary<string, object>> jobsDB = connection.doReadQuery("SELECT storagetarget.targettype, storagetarget.targetpath, storagetarget.targetuser,storagetarget.targetpassword, jobs.id, jobs.enabled, jobs.name, jobs.incremental, jobs.maxelements, jobs.blocksize, jobs.day, jobs.hour, jobs.minute, jobs.interval, jobs.livebackup, jobs.useencryption, jobs.aeskey, jobs.usededupe, rotationtype.name AS rotationname FROM jobs INNER JOIN rotationtype ON jobs.rotationtypeid=rotationtype.id INNER JOIN storagetarget ON jobs.id=storagetarget.targetjobid WHERE jobs.deleted=FALSE" + queryExtension, null, null);
 
                 //check that jobs != null
                 if (jobsDB == null) //DB error
@@ -217,6 +217,11 @@ namespace ConfigHandler
                 NpgsqlTransaction transaction = connection.beginTransaction();
 
                 List<Dictionary<string, object>> values;
+                parameters.Add("id", updatedJobID);
+
+                //delete possible storagetarget
+                connection.doReadQuery("DELETE FROM storagetarget WHERE targetjobid=@id", parameters, transaction);
+
 
                 parameters = new Dictionary<string, object>();
                 //get rotationtype ID
@@ -240,10 +245,13 @@ namespace ConfigHandler
                 parameters.Add("usededupe", job.UsingDedupe);
 
 
-                values = connection.doReadQuery("UPDATE jobs SET name = @name, incremental = @incremental, interval = @interval, minute = @minute, hour = @hour, day = @day, basepath = @basepath, blocksize = @blocksize, maxelements = @maxelements, livebackup = @livebackup, rotationtypeid = @rotationtypeID, usededupe = @usededupe WHERE id=@updatejobID;", parameters, transaction);
+                values = connection.doReadQuery("UPDATE jobs SET name = @name, incremental = @incremental, interval = @interval, minute = @minute, hour = @hour, day = @day, blocksize = @blocksize, maxelements = @maxelements, livebackup = @livebackup, rotationtypeid = @rotationtypeID, usededupe = @usededupe WHERE id=@updatejobID;", parameters, transaction);
 
                 //delete existing JObVM relation
                 deleteJobVMRelation(updatedJobID, connection, transaction);
+
+                //create target dtore entry
+                createTargetStorageEntry(updatedJobID, job.TargetPath, job.TargetUsername, job.TargetPassword, job.TargetType, connection, transaction);
 
                 //create vms relation
                 List<string> alreadyExistedvmIDs = createJobVMRelation(job, updatedJobID, connection, transaction);

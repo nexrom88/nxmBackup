@@ -167,7 +167,7 @@ namespace nxmBackup
 
             //build job structure
             ConfigHandler.OneJob job = new ConfigHandler.OneJob();
-            job.BasePath = txtPath.Text;
+            job.TargetPath = txtPath.Text;
             job.Name = txtJobName.Text;
             job.BlockSize = this.blockSize;
             job.Rotation = this.rotation;
