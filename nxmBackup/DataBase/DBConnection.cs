@@ -13,7 +13,7 @@ namespace Common
         private string server = "localhost";
         private string database = "nxmBackup";
         private string user = "nxm";
-        private string password = "test123";
+        private string password = "31ACE875A263C33BD30465F8FD1008FF";
 
         public bool ConnectionEstablished { set; get; }
 
