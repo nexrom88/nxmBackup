@@ -5,8 +5,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
-using HyperVBackupRCT;
-using nxmBackup.MFUserMode;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
 using Microsoft.Isam.Esent.Interop;
@@ -20,7 +18,6 @@ namespace TestProject
 
         static void Main(string[] args)
         {
-
             Common.DBQueries.wipeDB();
 
             //System.Drawing.Icon icon =  System.Drawing.Icon.ExtractAssociatedIcon(@"c:\test.ini");
