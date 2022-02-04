@@ -13,6 +13,9 @@ namespace JobEngine
             //stop all already running timers
             stopAllTimers();
 
+            //clear credential cache
+            Common.CredentialCacheManager.wipe();
+
             //read all jobs
             ConfigHandler.JobConfigHandler.readJobsFromDB();
             List<ConfigHandler.OneJob> jobs = ConfigHandler.JobConfigHandler.Jobs;
@@ -22,11 +25,20 @@ namespace JobEngine
                 return false;
             }
 
-            //create one timer for each job
+            //create one timer for each job and add credentials to cache
             foreach (ConfigHandler.OneJob job in jobs)
             {
 
                 JobTimer timer = new JobTimer(job);
+
+                //add target credential if necessary
+                if (job.TargetType == "smb")
+                {
+                    Common.CredentialCacheManager.add(job.TargetPath, job.TargetUsername, job.TargetPassword);
+                }
+
+
+                //add job timer
                 this.jobTimers.Add(timer);
                 System.Timers.Timer t = new System.Timers.Timer(60000);
                 timer.underlyingTimer = t;

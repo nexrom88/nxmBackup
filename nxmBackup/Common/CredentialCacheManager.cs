@@ -10,23 +10,26 @@ namespace Common
     public class CredentialCacheManager
     {
         private static CredentialCache credentialCache = new CredentialCache();
+        private static List<Uri> cacheURIs = new List<Uri>();
         
         //adds a given credential to cache
-        private static void add(string host, string username, string password)
+        public static void add(string host, string username, string password)
         {
             NetworkCredential newCredential = new NetworkCredential(host + @"\" + username , password);
             credentialCache.Add(new Uri( @"\\" + host), "Basic", newCredential);
         }
 
         //wipes all credentials from cache
-        private static void wipe()
+        public static void wipe()
         {
-            System.Collections.IEnumerator enumerator = credentialCache.GetEnumerator();
-
-            while (enumerator.MoveNext())
+            //iterate through all cached uris and remove them
+            foreach (Uri uri in cacheURIs)
             {
-                credentialCache.
+                credentialCache.Remove(uri, "Basic");
             }
+
+            //clear uri-list
+            cacheURIs.Clear();
         }
     }
 }
