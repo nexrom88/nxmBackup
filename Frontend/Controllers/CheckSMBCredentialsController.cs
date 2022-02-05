@@ -17,15 +17,15 @@ namespace Frontend.Controllers
         private static extern Boolean CloseHandle(IntPtr hObject);
 
 
-        // GET api/<controller>
-        public HttpResponseMessage Get(SMBCredentials credentials)
+        // POST api/<controller>
+        public HttpResponseMessage Post(SMBCredentials credentials)
         {
             HttpResponseMessage message = new HttpResponseMessage();
             string username;
             string domainName;
 
             //domain user given?
-            if (credentials.Username.Contains(@"\"){
+            if (credentials.Username.Contains(@"\")){
                 string[] splitter = credentials.Username.Split(@"\".ToCharArray());
 
                 //domain given but no username?

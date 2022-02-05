@@ -238,6 +238,9 @@ function showNewJobPage(pageNumber, selectedEditJob) {
           registerNextPageClickHandler(pageNumber, selectedEditJob);
           buildFolderBrowser();
 
+          //register checkCredentialsButton click handler
+          $("#checkCredentialsButton").click(checkSMBCredentials);
+
           //register change on target type selection
           $("#sbTargetType").on("change", function (event) {
             var targetType = $(this).children("option:selected").data("targettype");
@@ -267,6 +270,21 @@ function showNewJobPage(pageNumber, selectedEditJob) {
 
     });
 
+}
+
+//checks given smb credentials
+function checkSMBCredentials() {
+  var path = $("#smbPath").val();
+  var username = $("#inputUsername").val();
+  var password = $("#inputPassword").val();
+
+    $.ajax({
+      url: "api/CheckSMBCredentials",
+      type: "post"
+    })
+      .done(function (data) {
+        data = null;
+      });
 }
 
 //builds the form fpr smb credentials
