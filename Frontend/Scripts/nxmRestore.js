@@ -76,7 +76,7 @@ function loadRestorePoints() {
   //build object to query restore points
   var restoreDetails = {};
   restoreDetails["jobName"] = selectedRestoreJob["Name"];
-  restoreDetails["basePath"] = selectedRestoreJob["BasePath"];
+  restoreDetails["basePath"] = selectedRestoreJob["TargetPath"];
 
   //get selected vm
   var selectedVM = $("#sbSourceVM option:selected").data("vmid");
@@ -162,7 +162,7 @@ function startRestore() {
   $("#startRestoreButton").prop("disabled", true);
 
   var restartStartDetails = {};
-  restartStartDetails["basePath"] = selectedRestoreJob["BasePath"];
+  restartStartDetails["basePath"] = selectedRestoreJob["TargetPath"];
   restartStartDetails["vmName"] = $("#sbSourceVM option:selected").text() + "_restored";
   restartStartDetails["vmID"] = $("#sbSourceVM option:selected").data("vmid");
   restartStartDetails["destPath"] = selectedDirectory;

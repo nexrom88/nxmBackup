@@ -328,6 +328,16 @@ namespace ConfigHandler
         //creates a target storage db entry
         private static void createTargetStorageEntry(int jobID, string path, string username, string password, string type, Common.DBConnection connection, NpgsqlTransaction transaction)
         {
+            //init value which are not set possibly
+            if (username == null)
+            {
+                username = "";
+            }
+            if (password == null)
+            {
+                password = "";
+            }
+
             Dictionary<string, object>  parameters = new Dictionary<string, object>();
             parameters.Add("targetjobid", jobID);
             parameters.Add("targettype", type);

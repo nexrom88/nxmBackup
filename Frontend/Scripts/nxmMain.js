@@ -518,6 +518,12 @@ function registerNextPageClickHandler(currentPage, selectedEditJob) {
           var password = $("#inputPassword").val();
           var smbDirectory = $("#smbPath").val();
 
+          //check if valid smb path
+          if (!/^\\\\.{1,}\\.{1,}$/.test(smbDirectory)) {
+            $("#smbPath").css("background-color", "#ff4d4d");
+            return;
+          }
+
           newJobObj["targetUsername"] = username;
           newJobObj["targetPassword"] = password;
           newJobObj["targetPath"] = smbDirectory;

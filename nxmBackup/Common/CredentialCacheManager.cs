@@ -16,7 +16,18 @@ namespace Common
         public static void add(string host, string username, string password)
         {
             NetworkCredential newCredential = new NetworkCredential(host + @"\" + username , password);
-            credentialCache.Add(new Uri( @"\\" + host), "Basic", newCredential);
+            Uri newUri = new Uri(@"\\" + host);
+
+            try
+            {
+                credentialCache.Add(newUri, "Basic", newCredential);
+            }catch (Exception ex)
+            {
+                DBQueries.addLog("error on adding credential to cache", Environment.StackTrace, ex);
+            }
+            
+
+            cacheURIs.Add(newUri);
         }
 
         //wipes all credentials from cache
