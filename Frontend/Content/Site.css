@@ -248,6 +248,12 @@
     margin-right: auto;
 }
 
+#checkCredentialsButton {
+    margin-top: 5%;
+    margin-bottom: 5%;
+    display:none;
+}
+
 @keyframes color {
     0% {
         background-color: #ffffb3;

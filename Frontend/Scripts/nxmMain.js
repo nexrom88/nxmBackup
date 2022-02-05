@@ -245,9 +245,11 @@ function showNewJobPage(pageNumber, selectedEditJob) {
             switch (targetType) {
               case "local":
                 buildFolderBrowser();
+                $("#checkCredentialsButton").css("display", "none");
                 break;
               case "smb":
                 $('#folderBrowser').jstree("destroy");
+                $("#checkCredentialsButton").css("display", "inline");
                 buildSMBForm();
                 break;
             }
@@ -528,6 +530,8 @@ function registerNextPageClickHandler(currentPage, selectedEditJob) {
           newJobObj["targetPassword"] = password;
           newJobObj["targetPath"] = smbDirectory;
 
+          //check access to smb path
+
 
         } else if (targetType == "local") {
 
@@ -550,6 +554,7 @@ function registerNextPageClickHandler(currentPage, selectedEditJob) {
     showNewJobPage(currentPage, selectedEditJob);
   });
 }
+
 
 //sends the new job data to server
 function saveNewJob() {
