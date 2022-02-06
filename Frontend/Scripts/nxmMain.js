@@ -280,9 +280,11 @@ function checkSMBCredentials() {
 
     $.ajax({
       url: "api/CheckSMBCredentials",
-      type: "post"
+      type: "post",
+      contentType: "application/json; charset=utf-8",
+      data: JSON.stringify({ Path: path, Username: username, Password: password })
     })
-      .done(function (data) {
+      .done(function (data, textStatus, jqXHR) {
         data = null;
       });
 }

@@ -17,7 +17,7 @@ namespace Frontend.Controllers
             ConfigHandler.JobConfigHandler.setJobEnabled(value.jobID, value.enabled);
 
             //reload jobs
-            App_Start.GUIJobHandler.initJob();
+            App_Start.GUIJobHandler.initJobs();
         }
 
         public class JobEnabled

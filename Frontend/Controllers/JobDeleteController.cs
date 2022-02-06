@@ -16,7 +16,7 @@ namespace Frontend.Controllers
             ConfigHandler.JobConfigHandler.deleteJob(int.Parse(value));
 
             //reload jobs
-            App_Start.GUIJobHandler.initJob();
+            App_Start.GUIJobHandler.initJobs();
         }
     }
 }

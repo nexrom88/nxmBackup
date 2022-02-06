@@ -9,69 +9,41 @@ namespace Frontend.Controllers
 {
     public class CheckSMBCredentialsController : ApiController
     {
-        [System.Runtime.InteropServices.DllImport("advapi32.dll", SetLastError = true)]
-        private static extern bool LogonUser(string lpszUsername, string lpszDomain, string lpszPassword,
-        int dwLogonType, int dwLogonProvider, ref IntPtr phToken);
-
-        [System.Runtime.InteropServices.DllImport("kernel32.dll")]
-        private static extern Boolean CloseHandle(IntPtr hObject);
-
-
         // POST api/<controller>
-        public HttpResponseMessage Post(SMBCredentials credentials)
+        public HttpResponseMessage Post([FromBody] SMBCredentials credentials)
         {
-            HttpResponseMessage message = new HttpResponseMessage();
-            string username;
-            string domainName;
+            HttpResponseMessage response = new HttpResponseMessage();
+            //stop jobs first
+            Frontend.App_Start.GUIJobHandler.jobHandler.stopAllTimers();
 
-            //domain user given?
-            if (credentials.Username.Contains(@"\")){
-                string[] splitter = credentials.Username.Split(@"\".ToCharArray());
+            //wipe all saved credentials
+            Common.CredentialCacheManager.wipe();
 
-                //domain given but no username?
-                if (splitter.Length != 2)
-                {
-                    message.StatusCode = HttpStatusCode.NotFound;
-                    return message;
-                }
-                else
-                {
-                    username = splitter[1];
-                    domainName = splitter[0];
-                }
-            }
-            else
-            {
-                //just username
-                username = credentials.Username;
-                domainName = "";
-            }
+            //add credentials to cacheManager
+            Common.CredentialCacheManager.add(credentials.Path, credentials.Username, credentials.Password);
 
-            IntPtr token = IntPtr.Zero;
+            //try to access targetPath
             try
             {
-                var logonSuccess = LogonUser(username, domainName, credentials.Password, 2, 0, ref token);
-                if (logonSuccess)
-                {
-                    using (System.Security.Principal.WindowsImpersonationContext person = new System.Security.Principal.WindowsIdentity(token).Impersonate())
-                    {
-                        System.IO.Directory.GetFiles(credentials.Path);
+                System.IO.Directory.GetFiles(credentials.Path);
+                response.StatusCode = HttpStatusCode.OK;
 
-                        person.Undo();
-                        CloseHandle(token);
-                    }
-                }
+                //reinit jobs
+                Frontend.App_Start.GUIJobHandler.initJobs();
 
-            }catch(Exception ex)
-            {
-                message.StatusCode = HttpStatusCode.NotFound;
-                return message;
+                return response;
+
             }
+            catch (Exception ex)
+            {
+                response.StatusCode = HttpStatusCode.NotFound;
 
-            message.StatusCode = HttpStatusCode.OK;
-            return message;
+                //reinit jobs
+                Frontend.App_Start.GUIJobHandler.initJobs();
+
+                return response;
+            }
         }
-
     }
 
     public class SMBCredentials

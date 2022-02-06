@@ -122,7 +122,7 @@ namespace Frontend.Controllers
             
 
             //refresh jobs
-            App_Start.GUIJobHandler.initJob();
+            App_Start.GUIJobHandler.initJobs();
         }
 
        

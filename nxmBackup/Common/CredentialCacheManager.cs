@@ -13,9 +13,14 @@ namespace Common
         private static List<Uri> cacheURIs = new List<Uri>();
         
         //adds a given credential to cache
-        public static void add(string host, string username, string password)
+        public static void add(string targetPath, string username, string password)
         {
-            NetworkCredential newCredential = new NetworkCredential(host + @"\" + username , password);
+            //to be considered: targetPath == \\host\share
+            //get host part
+            string host = targetPath.Substring(2);
+            host = host.Split(@"\".ToCharArray())[0];
+
+            NetworkCredential newCredential = new NetworkCredential(username , password);
             Uri newUri = new Uri(@"\\" + host);
 
             try

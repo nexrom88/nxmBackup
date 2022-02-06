@@ -9,7 +9,7 @@ namespace Frontend.App_Start
     {
         public static JobEngine.JobHandler jobHandler = null;
 
-        public static void initJob()
+        public static void initJobs()
         {
             //start job engine
             jobHandler = new JobEngine.JobHandler();
