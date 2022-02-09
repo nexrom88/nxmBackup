@@ -14,7 +14,7 @@ namespace JobEngine
             stopAllTimers();
 
             //clear credential cache
-            Common.CredentialCacheManager.wipe();
+            //Common.CredentialCacheManager.wipe();
 
             //read all jobs
             ConfigHandler.JobConfigHandler.readJobsFromDB();

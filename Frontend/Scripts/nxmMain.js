@@ -278,15 +278,35 @@ function checkSMBCredentials() {
   var username = $("#inputUsername").val();
   var password = $("#inputPassword").val();
 
+    //check if valid smb path
+    if (!checkForValidSMBPath(path)) {
+        $("#smbPath").css("background-color", "#ff4d4d");
+        return;
+    } else {
+        $("#smbPath").css("background-color", "initial");
+    }
+
     $.ajax({
-      url: "api/CheckSMBCredentials",
-      type: "post",
-      contentType: "application/json; charset=utf-8",
-      data: JSON.stringify({ Path: path, Username: username, Password: password })
+        url: "api/CheckSMBCredentials",
+        type: "post",
+        contentType: "application/json; charset=utf-8",
+        data: JSON.stringify({ Path: path, Username: username, Password: password })
     })
-      .done(function (data, textStatus, jqXHR) {
-        data = null;
-      });
+        .done(function (data) {
+            Swal.fire(
+                'Erfolgreich',
+                'Die angegebenen Daten wurden erfolgreich geprüft',
+                'success'
+            );
+
+        }).fail(function (data) {
+            Swal.fire(
+                'Fehler',
+                'Die angegebenen Daten sind fehlerhaft',
+                'error'
+            );
+
+    });
 }
 
 //builds the form fpr smb credentials
@@ -540,11 +560,11 @@ function registerNextPageClickHandler(currentPage, selectedEditJob) {
           var password = $("#inputPassword").val();
           var smbDirectory = $("#smbPath").val();
 
-          //check if valid smb path
-          if (!/^\\\\.{1,}\\.{1,}$/.test(smbDirectory)) {
-            $("#smbPath").css("background-color", "#ff4d4d");
-            return;
-          }
+            //check if valid smb path
+            if (!checkForValidSMBPath(smbDirectory)) {
+                $("#smbPath").css("background-color", "#ff4d4d");
+                return;
+            }
 
           newJobObj["targetUsername"] = username;
           newJobObj["targetPassword"] = password;
@@ -573,6 +593,11 @@ function registerNextPageClickHandler(currentPage, selectedEditJob) {
     currentPage += 1;
     showNewJobPage(currentPage, selectedEditJob);
   });
+}
+
+//checks if a given string is a valid smb path
+function checkForValidSMBPath(path) {
+    return /^\\\\.{1,}\\.{1,}$/.test(path);
 }
 
 
