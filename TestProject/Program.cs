@@ -19,20 +19,7 @@ namespace TestProject
 
         static void Main(string[] args)
         {
-            CredentialCache cache = new CredentialCache();
-            NetworkCredential newCredential = new NetworkCredential("matthias", "MaChRopor2");
-            Uri newUri = new Uri(@"\\192.168.178.5");
-
-            try
-            {
-                cache.Add(newUri, "Basic", newCredential);
-            }
-            catch (Exception ex)
-            {
-                
-            }
-            string[] files = System.IO.Directory.GetFiles(@"\\192.168.178.5\temp");
-            files = files;
+            
             //Common.DBQueries.wipeDB();
 
             //System.Drawing.Icon icon =  System.Drawing.Icon.ExtractAssociatedIcon(@"c:\test.ini");

@@ -395,15 +395,15 @@ namespace nxmBackup.MFUserMode
 
                 while (!this.processStopped)
                 {
-                    try
-                    {
+                    //try
+                    //{
                         this.kmConnection.handleFLRMessage();
-                    }
-                    catch (Exception ex)
-                    {
-                        DBQueries.addLog("FLR: Error on handling flr message", Environment.StackTrace, ex);
-                        mountState = ProcessState.error;
-                    }
+                    //}
+                    //catch (Exception ex)
+                    //{
+                    //    DBQueries.addLog("FLR: Error on handling flr message", Environment.StackTrace, ex);
+                    //    mountState = ProcessState.error;
+                    //}
                 }
             }
             else
