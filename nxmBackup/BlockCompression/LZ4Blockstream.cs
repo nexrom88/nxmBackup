@@ -275,17 +275,11 @@ namespace BlockCompression
                 cacheEntry.decompressedFileByteOffset = BitConverter.ToUInt64(buffer, 0);
                 cacheEntry.compressedBlockSize = BitConverter.ToUInt64(buffer, 8);
 
-                if (this.usingDedupe)
-                {
-                    //read payloadDataOffset
-                    UInt64 payloadDataOffset = BitConverter.ToUInt64(buffer, 16);
-                    cacheEntry.fileOffset = payloadDataOffset > 0 ? payloadDataOffset : (ulong)this.fileStream.Position;
-                    blockDeduped = payloadDataOffset > 0 ? true : false;
-                }
-                else
-                {
-                    cacheEntry.fileOffset = (ulong)this.fileStream.Position;
-                }
+                //read payloadDataOffset
+                UInt64 payloadDataOffset = BitConverter.ToUInt64(buffer, 16);
+                cacheEntry.fileOffset = payloadDataOffset > 0 ? payloadDataOffset : (ulong)this.fileStream.Position;
+                blockDeduped = payloadDataOffset > 0 ? true : false;
+
 
                 //add entry to cache
                 this.structCache.Add(cacheEntry);
