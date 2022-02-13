@@ -69,7 +69,15 @@ $(window).on('load', function () {
     }
 
   });
+
+    //register tooltips
+    registerTooltips();
 });
+
+//registers all tooltips
+function registerTooltips() {
+    $('[data-toggle="tooltip"]').tooltip({ 'delay': { show: 500, hide: 500 }});
+}
 
 
 //starts a job editing/creating process

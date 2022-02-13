@@ -254,6 +254,11 @@
     display:none;
 }
 
+.newJobButtons{
+    display:inline;
+    vertical-align:middle;
+}
+
 @keyframes color {
     0% {
         background-color: #ffffb3;
