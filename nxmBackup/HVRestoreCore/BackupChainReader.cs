@@ -107,6 +107,7 @@ namespace HVRestoreCore
                     //how much bytes can be read here from raw log section and where?
                     UInt64 readableBytes = (vhdxLogEndOffset - (UInt64)offset) + 1;
                     UInt64 readOffset = (UInt64)offset - vhdxLogOffset;
+                    
 
                     //do not read more than necessary
                     if (readableBytes > (UInt64)length)
