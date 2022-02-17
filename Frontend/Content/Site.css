@@ -259,6 +259,10 @@
     vertical-align:middle;
 }
 
+.newJobButtons svg:hover {
+    fill: #007bff;
+}
+
 @keyframes color {
     0% {
         background-color: #ffffb3;
