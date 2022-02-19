@@ -40,6 +40,9 @@ namespace Frontend
             bundles.Add(new ScriptBundle("~/bundles/sweetalert2").Include(
                        "~/Scripts/sweetalert2.js"));
 
+            bundles.Add(new Bundle("~/bundles/chart").Include(
+                        "~/Scripts/chart.min.js"));
+
             //own Scripts
             bundles.Add(new ScriptBundle("~/bundles/nxmSettings").Include(
                  "~/Scripts/nxmSettings.js"));
