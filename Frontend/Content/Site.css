@@ -239,7 +239,13 @@
     background-color: #ffffb3;
 }
 
-.newJobInput{
+#performanceChart{
+    height: 100%;
+    width: 100%;
+    background-color:red;
+}
+
+.newJobInput {
     width: 85%;
 }
 
