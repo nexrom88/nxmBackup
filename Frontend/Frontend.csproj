@@ -228,6 +228,7 @@
     <Content Include="Areas\HelpPage\Views\Help\Api.cshtml" />
     <Content Include="Scripts\bootstrap.bundle.min.js" />
     <Content Include="Scripts\bsInputSpinner.js" />
+    <Content Include="Scripts\chart.min.js" />
     <Content Include="Scripts\globalAjaxHandler.js" />
     <Content Include="fonts\FontAwesome.otf" />
     <Content Include="fonts\fontawesome-webfont.woff2" />
