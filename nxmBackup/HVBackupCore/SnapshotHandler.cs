@@ -309,7 +309,7 @@ namespace nxmBackup.HVBackupCore
                 eventId = this.eventHandler.raiseNewEvent("Rotiere Backups (Schritt 4 von 5)...", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
 
                 //create entry to backup chain
-                ConfigHandler.BackupConfigHandler.addBackup(path, guidFolder, "full", chain[1].instanceID, "", true);
+                ConfigHandler.BackupConfigHandler.addBackup(path,this.useEncryption, guidFolder, "full", chain[1].instanceID, "", true);
 
                 this.eventHandler.raiseNewEvent("erfolgreich", true, false, eventId, EventStatus.successful);
                 eventId = this.eventHandler.raiseNewEvent("Rotiere Backups (Schritt 5 von 5)...", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
@@ -631,7 +631,7 @@ namespace nxmBackup.HVBackupCore
                 parentiid = (string)rctBase["InstanceId"];
             }
 
-            ConfigHandler.BackupConfigHandler.addBackup(basePath, guidFolder, backupType, (string)refP["InstanceId"], parentiid, false);
+            ConfigHandler.BackupConfigHandler.addBackup(basePath, this.useEncryption, guidFolder, backupType, (string)refP["InstanceId"], parentiid, false);
 
             //now add lb backup to config.xml
             if (job.LiveBackup)

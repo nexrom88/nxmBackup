@@ -619,7 +619,15 @@ function saveNewJob() {
     cache: false,
     success: function (result) {
       location.reload();
-    }
+      },
+      error: function (result) {
+          Swal.fire(
+              'Fehlgeschlagen',
+              'Der neue Job konnte nicht erstellt werden',
+              'error'
+          );
+          $("#newJobOverlay").css("display", "none");
+      }
   });
 }
 

@@ -8,7 +8,7 @@ namespace ConfigHandler
     public class BackupConfigHandler
     {
         //adds a newly created backup to the config file
-        public static void addBackup(string basePath, string uuid, string type, string newInstanceID, string parentInstanceID, bool prepend)
+        public static void addBackup(string basePath, bool encryption, string uuid, string type, string newInstanceID, string parentInstanceID, bool prepend)
         {
             //check whether config file already exists
             if (!File.Exists(Path.Combine(basePath, "config.xml")))
@@ -26,6 +26,7 @@ namespace ConfigHandler
 
                 //generate attributes node
                 XmlElement attrElement = doc.CreateElement(string.Empty, "Attributes", string.Empty);
+                attrElement.SetAttribute("encryption", encryption.ToString());
                 bodyElement.AppendChild(attrElement);
 
                 //generate BackupChain node

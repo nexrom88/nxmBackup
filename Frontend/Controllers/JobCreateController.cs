@@ -13,8 +13,22 @@ namespace Frontend.Controllers
 
         
         // POST api/<controller>
-        public void Post([FromBody] NewFrontendJob value) //created or updates a job
+        public HttpResponseMessage Post([FromBody] NewFrontendJob value) //created or updates a job
         {
+            HttpResponseMessage response = new HttpResponseMessage();
+
+            //try to create dest folder first
+            try
+            {
+                System.IO.Directory.CreateDirectory(System.IO.Path.Combine(value.targetPath, value.name));
+            }
+            catch (Exception ex)
+            {
+                Common.DBQueries.addLog("error creating target path", Environment.StackTrace, ex);
+                response.StatusCode = HttpStatusCode.BadRequest;
+                return response;
+            }
+
             ConfigHandler.OneJob newJob = new ConfigHandler.OneJob();
 
             //convert Frontend job to OneJob object
@@ -123,6 +137,9 @@ namespace Frontend.Controllers
 
             //refresh jobs
             App_Start.GUIJobHandler.initJobs();
+
+            response.StatusCode = HttpStatusCode.OK;
+            return response;
         }
 
        
