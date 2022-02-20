@@ -170,7 +170,7 @@ namespace ConfigHandler
                             //read last transferrate
                             paramaters.Clear();
                             paramaters.Add("jobexecutionid", jobExecution["id"]);
-                            List<Dictionary<string, object>> transferrates = connection.doReadQuery("SELECT transferrate FROM transferrates WHERE jobexecutionid=@jobexecutionid ORDER BY id DESC", paramaters, null);
+                            List<Dictionary<string, object>> transferrates = connection.doReadQuery("SELECT transferrate FROM transferrates WHERE jobexecutionid=@jobexecutionid ORDER BY id ASC", paramaters, null);
                             if (transferrates != null)
                             {
                                 UInt32[] rates = new UInt32[transferrates.Count];

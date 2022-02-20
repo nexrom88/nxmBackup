@@ -1063,13 +1063,15 @@ function renderJobStateTable() {
             }
 
             transferrates = [];
-            var currentTransferrateString = prettyPrintBytes(data["Transferrates"][data["Transferrates"].length - 1]) + "/s";
-            var tempRates = data["Transferrates"];
+            if (data["Transferrates"]) {
+                var currentTransferrateString = prettyPrintBytes(data["Transferrates"][data["Transferrates"].length - 1]) + "/s";
+                var tempRates = data["Transferrates"];
 
-            //convert data rates to MB
-            for (var i = 0; i < tempRates.length; i++) {
-                if (tempRates[i] > 0) {
-                    transferrates.push(tempRates[i] / 1000000);
+                //convert data rates to MB
+                for (var i = 0; i < tempRates.length; i++) {
+                    if (tempRates[i] > 0) {
+                        transferrates.push(tempRates[i] / 1000000);
+                    }
                 }
             }
 
