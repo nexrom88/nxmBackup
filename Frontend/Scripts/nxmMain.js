@@ -11,8 +11,8 @@ var dbState; //current db state (values: init, error, success)
 var jobStateTableTemplate; //template for job state table
 var eventsListItemTemplate; //template for event list item
 var lastJobStateData; //last data for job state to decide whether to refresh jobStateTable or not
-var currentTransferrates = []; //array for current transferrates
 var transferratesChart; //var to hold the chart for displaying transferrates
+var transferrates = []; //var to hold the current transfer rates
 
 //global handler for http status 401 (login required)
 $.ajaxSetup({
@@ -858,6 +858,7 @@ function vmClickHandler(event) {
 
     //disable chart
     transferratesChart = null;
+    transferrates = []
 
     //set current element in GUI
     $(this).addClass("active");
@@ -939,21 +940,20 @@ function showCurrentEvents() {
             //display events
             $("#jobEventList").html(Mustache.render(eventsListItemTemplate, { events: eventsList }));
 
-            //build the chart for transferrates
-            buildTransferrateChart();
+            //step two: refresh backup job state panel
+            renderJobStateTable();
 
         });
 
-    //step two: refresh backup job state panel
-    renderJobStateTable();
+
 }
 
 //builds the transferrates chart
 function buildTransferrateChart() {
     var labels = [];
     //build labels
-    for (var i = 0; i < currentTransferrates.length; i++) {
-        labels.push(i);
+    for (var i = 0; i < transferrates.length; i++) {
+        labels.push("");
     }
 
     const data = {
@@ -962,21 +962,35 @@ function buildTransferrateChart() {
             label: 'Übertragungsrate',
             backgroundColor: 'rgb(255, 99, 132)',
             borderColor: 'rgb(255, 99, 132)',
-            data: [0, 10, 5, 2, 20, 30, 45],
+            data: transferrates,
         }]
     };
 
     const config = {
         type: 'line',
         data: data,
-        options: {}
+        options: {
+            elements: {
+                point: {
+                    radius: 0
+                }
+            },
+            scales: {
+                y: [{
+                    title: {
+                        display: true,
+                        text: 'MB/s'
+                    }
+                }]
+            }
+        }
     };
 
     if (!transferratesChart) { //init chart
         transferratesChart = new Chart(document.getElementById('chartCanvas'), config);
     } else { //update chart
         transferratesChart.data.labels = labels;
-        transferratesChart.data.datasets[0].data = data;
+        transferratesChart.data.datasets[0].data = transferrates;
         transferratesChart.update();
 
     }
@@ -1055,9 +1069,16 @@ function renderJobStateTable() {
                 successString = "Nicht zutreffend";
             }
 
-            var currentTransferrateString = prettyPrintBytes(data["CurrentTransferrate"]) + "/s";
-            currentTransferrates.push(data["CurrentTransferrate"]);
+            transferrates = [];
+            var currentTransferrateString = prettyPrintBytes(data["Transferrates"][data["Transferrates"].length - 1]) + "/s";
+            var tempRates = data["Transferrates"];
 
+            //convert data rates to MB
+            for (var i = 0; i < tempRates.length; i++) {
+                if (tempRates[i] > 0) {
+                    transferrates.push(tempRates[i] / 1000000);
+                }
+            }
 
             $("#jobStateTable").html(Mustache.render(jobStateTableTemplate, { running: data["IsRunning"], interval: intervalString, lastRun: lastRunString, lastState: successString, lastTransferrate: currentTransferrateString }));
 
@@ -1073,17 +1094,18 @@ function renderJobStateTable() {
                 if (data["Successful"] == "erfolgreich") {
                     $("#jobDetailsRow").css("background-color", "#ccffcc");
                     $("#jobDetailsRow").removeClass("detailsRowRunning");
-                    currentTransferrates = [];
                 } else {
                     $("#jobDetailsRow").css("background-color", "#ffb3b3");
                     $("#jobDetailsRow").removeClass("detailsRowRunning");
-                    currentTransferrates = [];
                 }
 
                 if (data.IsRunning) {
                     $("#jobDetailsRow").addClass("detailsRowRunning");
                 }
             }
+
+            //build the chart for transferrates
+            buildTransferrateChart();
 
         });
 }

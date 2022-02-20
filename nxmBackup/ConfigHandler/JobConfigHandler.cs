@@ -180,7 +180,7 @@ namespace ConfigHandler
                                     rates[counter] = UInt32.Parse(rate["transferrate"].ToString());
                                     counter++;
                                 }
-                                newJob.CurrentTransferrates = rates;
+                                newJob.Transferrates = rates;
                             }
 
                         }
@@ -498,7 +498,7 @@ namespace ConfigHandler
         private bool successful;
         private UInt64 lastBytesProcessed;
         private UInt64 lastBytesTransfered;
-        private UInt32[] currentTransferrates;
+        private UInt32[] transferrates;
         private string targetType;
         private string targetPath;
         private string targetUsername;
@@ -557,7 +557,7 @@ namespace ConfigHandler
             }
         }
 
-        public UInt32[] CurrentTransferrates { get => currentTransferrates; set => currentTransferrates = value; }
+        public UInt32[] Transferrates { get => transferrates; set => transferrates = value; }
         public string LastRun { get => lastRun; set => lastRun = value; }
 
         public string LastStop { get => lastStop; set => lastStop = value; }
