@@ -976,10 +976,10 @@ function buildTransferrateChart() {
                 }
             },
             scales: {
-                y: [{
-                    title: {
+                yAxes: [{
+                    scaleLabel: {
                         display: true,
-                        text: 'MB/s'
+                        labelString: 'MB'
                     }
                 }]
             }
