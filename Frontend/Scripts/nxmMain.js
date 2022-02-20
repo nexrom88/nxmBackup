@@ -959,9 +959,10 @@ function buildTransferrateChart() {
     const data = {
         labels: labels,
         datasets: [{
-            label: 'Übertragungsrate',
-            backgroundColor: 'rgb(255, 99, 132)',
-            borderColor: 'rgb(255, 99, 132)',
+            label: 'Übertragungsrate in MB/s',
+            fill: true,
+            backgroundColor: 'rgb(0, 123, 255)',
+            borderColor: 'rgb(0, 123, 255)',
             data: transferrates,
         }]
     };
@@ -974,14 +975,6 @@ function buildTransferrateChart() {
                 point: {
                     radius: 0
                 }
-            },
-            scales: {
-                yAxes: [{
-                    scaleLabel: {
-                        display: true,
-                        labelString: 'MB'
-                    }
-                }]
             }
         }
     };
