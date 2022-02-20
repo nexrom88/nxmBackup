@@ -40,7 +40,7 @@
 <hr />
 <h1 class="h2" id="vmDetailsCaption">VM Details</h1>
 
-<div class="container" id="vmContainer">
+<div id="vmContainer">
     <div class="row">
         <div class="col-3" id="vmList">
             <div class="list-group">
@@ -49,7 +49,9 @@
                 {{/vms}}
             </div>
         </div>
-        <div class="col-7 border-left" id="jobEventList"></div>
-        <div id="performanceChart" class="col-2"></div>
+        <div class="col-5 border-left" id="jobEventList"></div>
+        <div id="performanceChart" class="col-4">
+            <canvas id="chartCanvas"></canvas>
+        </div>
     </div>
 </div>
