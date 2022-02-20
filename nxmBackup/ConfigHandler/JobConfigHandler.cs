@@ -170,10 +170,17 @@ namespace ConfigHandler
                             //read last transferrate
                             paramaters.Clear();
                             paramaters.Add("jobexecutionid", jobExecution["id"]);
-                            List<Dictionary<string, object>> transferrates = connection.doReadQuery("SELECT transferrate FROM transferrates WHERE jobexecutionid=@jobexecutionid ORDER BY id DESC LIMIT 1", paramaters, null);
-                            if (transferrates != null && transferrates.Count > 0)
+                            List<Dictionary<string, object>> transferrates = connection.doReadQuery("SELECT transferrate FROM transferrates WHERE jobexecutionid=@jobexecutionid ORDER BY id DESC", paramaters, null);
+                            if (transferrates != null)
                             {
-                                newJob.CurrentTransferrate = UInt32.Parse(transferrates[0]["transferrate"].ToString());
+                                UInt32[] rates = new UInt32[transferrates.Count];
+                                UInt32 counter = 0;
+                                foreach (Dictionary<String, Object> rate in transferrates)
+                                {
+                                    rates[counter] = UInt32.Parse(rate["transferrate"].ToString());
+                                    counter++;
+                                }
+                                newJob.CurrentTransferrates = rates;
                             }
 
                         }
@@ -491,7 +498,7 @@ namespace ConfigHandler
         private bool successful;
         private UInt64 lastBytesProcessed;
         private UInt64 lastBytesTransfered;
-        private UInt32 currentTransferrate;
+        private UInt32[] currentTransferrates;
         private string targetType;
         private string targetPath;
         private string targetUsername;
@@ -550,7 +557,7 @@ namespace ConfigHandler
             }
         }
 
-        public UInt32 CurrentTransferrate { get => currentTransferrate; set => currentTransferrate = value; }
+        public UInt32[] CurrentTransferrates { get => currentTransferrates; set => currentTransferrates = value; }
         public string LastRun { get => lastRun; set => lastRun = value; }
 
         public string LastStop { get => lastStop; set => lastStop = value; }
