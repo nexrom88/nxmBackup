@@ -691,6 +691,10 @@ function buildJobsList() {
 //builds the vm list
 function buildJobDetailsPanel() {
 
+    //disable chart
+    transferratesChart = null;
+    transferrates = []
+
     //load vm details table
     $.ajax({
         url: "Templates/jobDetailsPanel"
@@ -855,10 +859,6 @@ function vmClickHandler(event) {
 
     //remove active-class from all vms
     $(".vm").removeClass("active");
-
-    //disable chart
-    transferratesChart = null;
-    transferrates = []
 
     //set current element in GUI
     $(this).addClass("active");
