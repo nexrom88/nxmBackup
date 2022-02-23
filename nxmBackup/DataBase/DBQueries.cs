@@ -227,7 +227,7 @@ namespace Common
         {
             using (DBConnection dbConn = new DBConnection())
             {
-                dbConn.doWriteQuery("INSERT INTO transferrates (jobexecutionid, transferrate, processrate) VALUES (@jobexecutionid, @transferrate);",
+                dbConn.doWriteQuery("INSERT INTO transferrates (jobexecutionid, transferrate, processrate) VALUES (@jobexecutionid, @transferrate, @processrate);",
                         new Dictionary<string, object>() { { "jobexecutionid", jobExecutionid }, { "transferrate", transferrate }, { "processrate", processrate } }, null);
             }
         }
