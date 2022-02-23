@@ -180,7 +180,7 @@ namespace Common
             //add transferrate
             if (eventProperties.transferRate >= 0)
             {
-                addTransferrate(eventProperties.jobExecutionId, eventProperties.transferRate);
+                addTransferrate(eventProperties.jobExecutionId, eventProperties.transferRate, eventProperties.processRate);
             }
 
             //check whether the given event is an update
@@ -223,12 +223,12 @@ namespace Common
         }
 
         //adds a tranferrate to DB
-        private static void addTransferrate(int jobExecutionid, Int64 transferrate)
+        private static void addTransferrate(int jobExecutionid, Int64 transferrate, Int64 processrate)
         {
             using (DBConnection dbConn = new DBConnection())
             {
-                dbConn.doWriteQuery("INSERT INTO transferrates (jobexecutionid, transferrate) VALUES (@jobexecutionid, @transferrate);",
-                        new Dictionary<string, object>() { { "jobexecutionid", jobExecutionid }, { "transferrate", transferrate } }, null);
+                dbConn.doWriteQuery("INSERT INTO transferrates (jobexecutionid, transferrate, processrate) VALUES (@jobexecutionid, @transferrate);",
+                        new Dictionary<string, object>() { { "jobexecutionid", jobExecutionid }, { "transferrate", transferrate }, { "processrate", processrate } }, null);
             }
         }
 

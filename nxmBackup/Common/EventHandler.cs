@@ -24,11 +24,11 @@ namespace Common
         //builds a EventProperties object and raises the "newEvent" event
         public int raiseNewEvent(string text, bool setDone, bool isUpdate, int relatedEventId, EventStatus status)
         {
-            return raiseNewEvent(text, -1, setDone, isUpdate, relatedEventId, status);
+            return raiseNewEvent(text, -1, -1, setDone, isUpdate, relatedEventId, status);
         }
 
         //builds a EventProperties object and raises the "newEvent" event (with transferrate)
-        public int raiseNewEvent(string text, Int64 transferRate, bool setDone, bool isUpdate, int relatedEventId, EventStatus status)
+        public int raiseNewEvent(string text, Int64 transferRate, Int64 processRate, bool setDone, bool isUpdate, int relatedEventId, EventStatus status)
         {
             //do not write to DB when execution ID < 0
             if (this.executionId < 0)
@@ -44,6 +44,7 @@ namespace Common
             props.eventIdToUpdate = relatedEventId;
             props.jobExecutionId = this.executionId;
             props.transferRate = transferRate;
+            props.processRate = processRate;
 
             return Common.DBQueries.addEvent(props, this.vmId);
 
