@@ -107,6 +107,8 @@ namespace Common
             Int64 byteTransferCounter = 0;
             Int64 lastTransferTimestamp = System.DateTimeOffset.Now.ToUnixTimeMilliseconds();
             Int64 transferRate = 0;
+            Int64 byteProcessCounter = 0;
+            Int64 processRate = 0;
 
             while (bytesRemaining > 0)//still bytes to read?
             {
@@ -127,11 +129,14 @@ namespace Common
                 //add read bytes to statistics counter
                 transferDetails.bytesProcessed += (UInt64)buffer.Length;
 
-                //transfer rate calculation
+                //rate calculations
                 byteTransferCounter += buffer.Length;
+                byteProcessCounter += buffer.Length;
                 if (System.DateTimeOffset.Now.ToUnixTimeMilliseconds() - 1000 >= lastTransferTimestamp)
                 {
                     transferRate = byteTransferCounter;
+                    processRate = byteProcessCounter;
+                    byteProcessCounter = 0;
                     byteTransferCounter = 0;
                     lastTransferTimestamp = System.DateTimeOffset.Now.ToUnixTimeMilliseconds();
                 }
@@ -143,7 +148,7 @@ namespace Common
                 //progress changed?
                 if (lastPercentage != (int)percentage && this.eventHandler != null)
                 {
-                    this.eventHandler.raiseNewEvent("Lese " + fileName + " - " + (int)percentage + "%", transferRate, false, true, relatedEventId, EventStatus.inProgress);
+                    this.eventHandler.raiseNewEvent("Lese " + fileName + " - " + (int)percentage + "%", transferRate, processRate, false, true, relatedEventId, EventStatus.inProgress);
                     lastPercentage = (int)percentage;
                 }
 

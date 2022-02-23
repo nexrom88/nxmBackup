@@ -169,6 +169,8 @@ namespace nxmBackup.HVBackupCore
                 long byteTransferCounter = 0;
                 long lastTransferTimestamp = 0;
                 long transferRate = 0;
+                long byteProcessCounter = 0;
+                long processRate = 0;
 
                 while (bytesRead < block.length)
                 {
@@ -202,11 +204,14 @@ namespace nxmBackup.HVBackupCore
                     //calculate progress
                     int percentage = (int)(((double)bytesReadCount / (double)totalBytesCount) * 100.0);
 
-                    //transfer rate calculation
+                    //rate calculations
                     byteTransferCounter += buffer.Length;
+                    byteProcessCounter += buffer.Length;
                     if (System.DateTimeOffset.Now.ToUnixTimeMilliseconds() - 1000 >= lastTransferTimestamp)
                     {
                         transferRate = byteTransferCounter;
+                        processRate = byteProcessCounter;
+                        byteProcessCounter = 0;
                         byteTransferCounter = 0;
                         lastTransferTimestamp = System.DateTimeOffset.Now.ToUnixTimeMilliseconds();
                     }
@@ -214,7 +219,7 @@ namespace nxmBackup.HVBackupCore
                     //new progress?
                     if (lastPercentage != percentage)
                     {
-                        this.eventHandler.raiseNewEvent("Erstelle Inkrement - " + percentage + "%", transferRate, false, true, relatedEventId, EventStatus.inProgress);
+                        this.eventHandler.raiseNewEvent("Erstelle Inkrement - " + percentage + "%", transferRate, processRate, false, true, relatedEventId, EventStatus.inProgress);
                         lastPercentage = percentage;
                     }
                 }
