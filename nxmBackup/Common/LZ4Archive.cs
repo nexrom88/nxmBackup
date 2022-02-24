@@ -104,7 +104,7 @@ namespace Common
                 relatedEventId = this.eventHandler.raiseNewEvent("Lese " + fileName + " - 0%", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
             }
 
-            Int64 byteTransferCounter = 0;
+            Int64 lastTotalByteTransferCounter = 0;
             Int64 lastTransferTimestamp = System.DateTimeOffset.Now.ToUnixTimeMilliseconds();
             Int64 transferRate = 0;
             Int64 byteProcessCounter = 0;
@@ -130,14 +130,17 @@ namespace Common
                 transferDetails.bytesProcessed += (UInt64)buffer.Length;
 
                 //rate calculations
-                byteTransferCounter += buffer.Length;
+
                 byteProcessCounter += buffer.Length;
                 if (System.DateTimeOffset.Now.ToUnixTimeMilliseconds() - 1000 >= lastTransferTimestamp)
                 {
-                    transferRate = byteTransferCounter;
+                    transferRate = (Int64)compressionStream.TotalCompressedBytesWritten - lastTotalByteTransferCounter;
+                    lastTotalByteTransferCounter = (Int64)compressionStream.TotalCompressedBytesWritten;
+
                     processRate = byteProcessCounter;
+                    
                     byteProcessCounter = 0;
-                    byteTransferCounter = 0;
+
                     lastTransferTimestamp = System.DateTimeOffset.Now.ToUnixTimeMilliseconds();
                 }
 

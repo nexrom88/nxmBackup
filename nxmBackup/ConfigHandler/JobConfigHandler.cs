@@ -170,17 +170,17 @@ namespace ConfigHandler
                             //read last transferrate
                             paramaters.Clear();
                             paramaters.Add("jobexecutionid", jobExecution["id"]);
-                            List<Dictionary<string, object>> transferrates = connection.doReadQuery("SELECT transferrate FROM transferrates WHERE jobexecutionid=@jobexecutionid ORDER BY id ASC", paramaters, null);
-                            if (transferrates != null)
+                            List<Dictionary<string, object>> rates = connection.doReadQuery("SELECT transferrate, processrate FROM transferrates WHERE jobexecutionid=@jobexecutionid ORDER BY id ASC", paramaters, null);
+                            if (rates != null)
                             {
-                                UInt32[] rates = new UInt32[transferrates.Count];
+                                newJob.Rates = new OneJob.Rate[rates.Count];
                                 UInt32 counter = 0;
-                                foreach (Dictionary<String, Object> rate in transferrates)
+                                foreach (Dictionary<String, Object> rate in rates)
                                 {
-                                    rates[counter] = UInt32.Parse(rate["transferrate"].ToString());
+                                    newJob.Rates[counter].transfer = UInt32.Parse(rate["transferrate"].ToString());
+                                    newJob.Rates[counter].transfer = UInt32.Parse(rate["processrate"].ToString());
                                     counter++;
                                 }
-                                newJob.Transferrates = rates;
                             }
 
                         }
@@ -498,7 +498,7 @@ namespace ConfigHandler
         private bool successful;
         private UInt64 lastBytesProcessed;
         private UInt64 lastBytesTransfered;
-        private UInt32[] transferrates;
+        private Rate[] rates;
         private string targetType;
         private string targetPath;
         private string targetUsername;
@@ -557,7 +557,7 @@ namespace ConfigHandler
             }
         }
 
-        public UInt32[] Transferrates { get => transferrates; set => transferrates = value; }
+        public Rate[] Rates { get => rates; set => rates = value; }
         public string LastRun { get => lastRun; set => lastRun = value; }
 
         public string LastStop { get => lastStop; set => lastStop = value; }
@@ -580,6 +580,12 @@ namespace ConfigHandler
 
         public UInt64 LastBytesTransfered { get => lastBytesTransfered; set => lastBytesTransfered = value; }
         public UInt64 LastBytesProcessed { get => lastBytesProcessed; set => lastBytesProcessed = value; }
+
+        public struct Rate
+        {
+            public UInt64 process;
+            public UInt64 transfer;
+        }
     }
 
     
