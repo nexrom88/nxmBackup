@@ -13,6 +13,7 @@ var eventsListItemTemplate; //template for event list item
 var lastJobStateData; //last data for job state to decide whether to refresh jobStateTable or not
 var transferratesChart; //var to hold the chart for displaying transferrates
 var transferrates = []; //var to hold the current transfer rates
+var processrates = []; //var to hold the current process rates
 
 //global handler for http status 401 (login required)
 $.ajaxSetup({
@@ -1062,15 +1063,17 @@ function renderJobStateTable() {
                 successString = "Nicht zutreffend";
             }
 
+            processrates = [];
             transferrates = [];
-            if (data["Transferrates"]) {
-                var currentTransferrateString = prettyPrintBytes(data["Transferrates"][data["Transferrates"].length - 1]) + "/s";
-                var tempRates = data["Transferrates"];
+            if (data["Rates"]) {
+                var currentTransferrateString = prettyPrintBytes(data["Rates"][data["Rates"].length - 1]["transfer"]) + "/s";
+                var tempRates = data["Rates"];
 
                 //convert data rates to MB
                 for (var i = 0; i < tempRates.length; i++) {
-                    if (tempRates[i] > 0) {
-                        transferrates.push(tempRates[i] / 1000000);
+                    if (tempRates[i]["process"] > 0 || tempRates[i]["transfer"] > 0) {
+                        transferrates.push(tempRates[i]["transfer"] / 1000000);
+                        processrates.push(tempRates[i]["process"] / 1000000);
                     }
                 }
             }
