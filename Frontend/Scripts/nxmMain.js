@@ -11,7 +11,7 @@ var dbState; //current db state (values: init, error, success)
 var jobStateTableTemplate; //template for job state table
 var eventsListItemTemplate; //template for event list item
 var lastJobStateData; //last data for job state to decide whether to refresh jobStateTable or not
-var transferratesChart; //var to hold the chart for displaying transferrates
+var ratesChart; //var to hold the chart for displaying transferrates
 var transferrates = []; //var to hold the current transfer rates
 var processrates = []; //var to hold the current process rates
 
@@ -693,7 +693,7 @@ function buildJobsList() {
 function buildJobDetailsPanel() {
 
     //disable chart
-    transferratesChart = null;
+    ratesChart = null;
     transferrates = []
 
     //load vm details table
@@ -965,7 +965,13 @@ function buildTransferrateChart() {
             backgroundColor: 'rgb(0, 123, 255)',
             borderColor: 'rgb(0, 123, 255)',
             data: transferrates,
-        }]
+        }, {
+            label: 'Verarbeitungsrate in MB/s',
+            fill: true,
+            backgroundColor: 'rgb(255, 26, 26)',
+            borderColor: 'rgb(255, 26, 26)',
+            data: processrates,
+            }]
     };
 
     const config = {
@@ -980,12 +986,13 @@ function buildTransferrateChart() {
         }
     };
 
-    if (!transferratesChart) { //init chart
-        transferratesChart = new Chart(document.getElementById('chartCanvas'), config);
+    if (!ratesChart) { //init chart
+        ratesChart = new Chart(document.getElementById('chartCanvas'), config);
     } else { //update chart
-        transferratesChart.data.labels = labels;
-        transferratesChart.data.datasets[0].data = transferrates;
-        transferratesChart.update();
+        ratesChart.data.labels = labels;
+        ratesChart.data.datasets[0].data = transferrates;
+        ratesChart.data.datasets[1].data = processrates;
+        ratesChart.update();
 
     }
 }

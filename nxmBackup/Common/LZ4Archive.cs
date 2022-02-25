@@ -130,7 +130,6 @@ namespace Common
                 transferDetails.bytesProcessed += (UInt64)buffer.Length;
 
                 //rate calculations
-
                 byteProcessCounter += buffer.Length;
                 if (System.DateTimeOffset.Now.ToUnixTimeMilliseconds() - 1000 >= lastTransferTimestamp)
                 {

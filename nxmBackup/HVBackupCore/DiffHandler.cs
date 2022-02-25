@@ -166,7 +166,7 @@ namespace nxmBackup.HVBackupCore
 
                 }
 
-                long byteTransferCounter = 0;
+                long lastTotalByteTransferCounter = 0;
                 long lastTransferTimestamp = 0;
                 long transferRate = 0;
                 long byteProcessCounter = 0;
@@ -205,14 +205,13 @@ namespace nxmBackup.HVBackupCore
                     int percentage = (int)(((double)bytesReadCount / (double)totalBytesCount) * 100.0);
 
                     //rate calculations
-                    byteTransferCounter += buffer.Length;
                     byteProcessCounter += buffer.Length;
                     if (System.DateTimeOffset.Now.ToUnixTimeMilliseconds() - 1000 >= lastTransferTimestamp)
                     {
-                        transferRate = byteTransferCounter;
+                        transferRate = (long)outStream.TotalCompressedBytesWritten - lastTotalByteTransferCounter;
+                        lastTotalByteTransferCounter = (long)outStream.TotalCompressedBytesWritten;
                         processRate = byteProcessCounter;
                         byteProcessCounter = 0;
-                        byteTransferCounter = 0;
                         lastTransferTimestamp = System.DateTimeOffset.Now.ToUnixTimeMilliseconds();
                     }
 
