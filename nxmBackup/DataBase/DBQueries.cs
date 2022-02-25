@@ -180,7 +180,7 @@ namespace Common
             //add transferrate
             if (eventProperties.transferRate >= 0)
             {
-                addTransferrate(eventProperties.jobExecutionId, eventProperties.transferRate, eventProperties.processRate);
+                addRate(eventProperties.jobExecutionId, eventProperties.transferRate, eventProperties.processRate);
             }
 
             //check whether the given event is an update
@@ -223,11 +223,11 @@ namespace Common
         }
 
         //adds a tranferrate to DB
-        private static void addTransferrate(int jobExecutionid, Int64 transferrate, Int64 processrate)
+        private static void addRate(int jobExecutionid, Int64 transferrate, Int64 processrate)
         {
             using (DBConnection dbConn = new DBConnection())
             {
-                dbConn.doWriteQuery("INSERT INTO transferrates (jobexecutionid, transferrate, processrate) VALUES (@jobexecutionid, @transferrate, @processrate);",
+                dbConn.doWriteQuery("INSERT INTO rates (jobexecutionid, transferrate, processrate) VALUES (@jobexecutionid, @transferrate, @processrate);",
                         new Dictionary<string, object>() { { "jobexecutionid", jobExecutionid }, { "transferrate", transferrate }, { "processrate", processrate } }, null);
             }
         }
@@ -374,7 +374,7 @@ namespace Common
                 dbConn.doWriteQuery("DELETE FROM hdds;", null, transaction);
                 dbConn.doWriteQuery("DELETE FROM jobexecutionevents;", null, transaction);
                 dbConn.doWriteQuery("DELETE FROM jobexecutions;", null, transaction);
-                dbConn.doWriteQuery("DELETE FROM transferrates;", null, transaction);
+                dbConn.doWriteQuery("DELETE FROM rates;", null, transaction);
                 dbConn.doWriteQuery("DELETE FROM jobs;", null, transaction);
                 transaction.Commit();
             }
