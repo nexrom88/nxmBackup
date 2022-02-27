@@ -114,6 +114,12 @@ namespace nxmBackup.HVBackupCore
 
             ulong bytesRead;
 
+            long lastTotalByteTransferCounter = 0;
+            long lastTransferTimestamp = 0;
+            long transferRate = 0;
+            long byteProcessCounter = 0;
+            long processRate = 0;
+
             //read and write blocks
             foreach (ChangedBlock block in changedBlocks)
             {
@@ -166,11 +172,6 @@ namespace nxmBackup.HVBackupCore
 
                 }
 
-                long lastTotalByteTransferCounter = 0;
-                long lastTransferTimestamp = 0;
-                long transferRate = 0;
-                long byteProcessCounter = 0;
-                long processRate = 0;
 
                 while (bytesRead < block.length)
                 {

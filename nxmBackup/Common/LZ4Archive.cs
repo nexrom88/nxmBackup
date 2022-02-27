@@ -238,7 +238,7 @@ namespace Common
             //open decoder stream
             BlockCompression.LZ4BlockStream blockCompressionStream = new BlockCompression.LZ4BlockStream(sourceStream, BlockCompression.AccessMode.read, this.useEncryption, this.aesKey, this.usingDedupe);
             if (!blockCompressionStream.init())
-            {
+            {                
                 return false;
             }
             

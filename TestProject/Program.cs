@@ -9,6 +9,7 @@ using System.ComponentModel;
 using System.Runtime.InteropServices;
 using Microsoft.Isam.Esent.Interop;
 using System.Net;
+using System.Diagnostics;
 
 namespace TestProject
 {
@@ -16,11 +17,18 @@ namespace TestProject
     {
         [DllImport("Kernel32.dll", CharSet = CharSet.Unicode)]
         private static extern uint QueryDosDevice([In] string lpDeviceName, [Out] StringBuilder lpTargetPath, [In] int ucchMax);
+        private static PerformanceCounter total_cpu = new PerformanceCounter("Processor", "% Processor Time", "_Total");
 
         static void Main(string[] args)
         {
             
-            Common.DBQueries.wipeDB();
+            PerformanceCounter process_cpu = new PerformanceCounter("Processor", "% Processor Time", Process.GetCurrentProcess().ProcessName);
+
+            float per = total_cpu.NextValue();
+            Console.WriteLine(per);
+            Console.Read();
+
+            //Common.DBQueries.wipeDB();
 
             //System.Drawing.Icon icon =  System.Drawing.Icon.ExtractAssociatedIcon(@"c:\test.ini");
             //icon = icon;
