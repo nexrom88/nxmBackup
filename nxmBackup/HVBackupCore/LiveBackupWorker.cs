@@ -46,7 +46,6 @@ namespace nxmBackup.HVBackupCore
             isRunning = true;
 
             //raise event
-            this.eventHandler = new Common.EventHandler(null, jobExecutionID);
             this.eventID = this.eventHandler.raiseNewEvent("LiveBackup läuft...", false, false, NO_RELATED_EVENT, Common.EventStatus.info);
 
             //connect to km and shared memory
