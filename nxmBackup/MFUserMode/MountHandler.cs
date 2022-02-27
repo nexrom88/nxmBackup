@@ -53,6 +53,13 @@ namespace nxmBackup.MFUserMode
             {
                 this.readableChains[i] = buildReadableBackupChain(sourceFiles.chains[i].files);
 
+                //chain could not be read?
+                if (this.readableChains[i] == null)
+                {
+                    DBQueries.addLog("LR: readable chain could not be built", Environment.StackTrace, null);
+                    mountState = ProcessState.error;
+                    return;
+                }
 
                 ulong decompressedFileSize = 0;
                 //open source file and read "decompressed file size" (first 8 bytes) when LR on full backup
@@ -343,6 +350,15 @@ namespace nxmBackup.MFUserMode
             this.mountFiles = new string[1];
             this.readableChains[0] = buildReadableBackupChain(sourceFiles);
 
+            //check if chain si uilt properly
+            if (this.readableChains[0] == null)
+            {
+                //error on building chain
+                DBQueries.addLog("FLR: could not build readable chain", Environment.StackTrace, null);
+                mountState = ProcessState.error;
+                return;
+            }
+
             ulong decompressedFileSize = 0;
             //open source file and read "decompressed file size" when flr on full backup
             if (sourceFiles.Length == 1)
@@ -561,22 +577,28 @@ namespace nxmBackup.MFUserMode
             //iterate through all rct backups in all chains
             foreach (BackupChainReader backupChain in this.readableChains)
             {
-                foreach (BackupChainReader.ReadableNonFullBackup nonFullBackup in backupChain.NonFullBackups)
+                if (backupChain != null)
                 {
-                    switch (nonFullBackup.backupType)
+                    foreach (BackupChainReader.ReadableNonFullBackup nonFullBackup in backupChain.NonFullBackups)
                     {
-                        case BackupChainReader.NonFullBackupType.lb:
-                            nonFullBackup.sourceStreamLB.Close();
-                            break;
-                        case BackupChainReader.NonFullBackupType.rct:
-                            nonFullBackup.sourceStreamRCT.Close();
-                            break;
-                    }
+                        switch (nonFullBackup.backupType)
+                        {
+                            case BackupChainReader.NonFullBackupType.lb:
+                                nonFullBackup.sourceStreamLB.Close();
+                                break;
+                            case BackupChainReader.NonFullBackupType.rct:
+                                nonFullBackup.sourceStreamRCT.Close();
+                                break;
+                        }
 
+                    }
                 }
 
-                //close full backup
-                backupChain.FullBackup.sourceStream.Close();
+                //close full backup if necessary
+                if (backupChain != null && backupChain.FullBackup.sourceStream != null)
+                {
+                    backupChain.FullBackup.sourceStream.Close();
+                }
             }
 
 
@@ -601,16 +623,19 @@ namespace nxmBackup.MFUserMode
             {
                 foreach (string file in this.mountFiles)
                 {
-                    string mountDir = Directory.GetParent(System.IO.Path.GetDirectoryName(file)).FullName;
-
-                    try
+                    if (file != null)
                     {
-                        System.IO.Directory.Delete(mountDir + "\\Virtual Hard Disks", true);
-                        System.IO.Directory.Delete(mountDir + "\\Virtual Machines", true);
-                    }
-                    catch (Exception ex)
-                    {
+                        string mountDir = Directory.GetParent(System.IO.Path.GetDirectoryName(file)).FullName;
 
+                        try
+                        {
+                            System.IO.Directory.Delete(mountDir + "\\Virtual Hard Disks", true);
+                            System.IO.Directory.Delete(mountDir + "\\Virtual Machines", true);
+                        }
+                        catch (Exception ex)
+                        {
+
+                        }
                     }
                 }
             }

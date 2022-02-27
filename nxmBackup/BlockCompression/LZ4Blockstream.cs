@@ -160,6 +160,7 @@ namespace BlockCompression
                 //encryption error?
                 if ((ivLength > 0 && !this.useEncryption) || (ivLength == 0 && this.useEncryption))
                 {
+                    Common.DBQueries.addLog("init decrypted blockCompression failed (IV error)", Environment.StackTrace, null);
                     this.fileStream.Close();
                     return false;
 
@@ -187,16 +188,30 @@ namespace BlockCompression
 
                     CryptoStream cryptoStream = new CryptoStream(memStream, this.decryptor, CryptoStreamMode.Read);
                     signature = new byte[16];
-                    int readBytes = cryptoStream.Read(signature, 0, 16);
-                    string signatureString = System.Text.Encoding.ASCII.GetString(signature, 0, readBytes);
-                    this.decompressedFileSizeOffset = this.fileStream.Position;
-                    cryptoStream.Close();
+                    string signatureString = String.Empty;
+                    try
+                    {
+                        int readBytes = cryptoStream.Read(signature, 0, 16);
+                        signatureString = System.Text.Encoding.ASCII.GetString(signature, 0, readBytes);
+                        this.decompressedFileSizeOffset = this.fileStream.Position;
+                    }catch(Exception ex)
+                    {
+                        Common.DBQueries.addLog("error on reading signature string (wrong decrypt pw?)", Environment.StackTrace, ex);
+                    }
+
+                    try
+                    {
+                        cryptoStream.Close();
+                    }
+                    catch (Exception ex) { }
+
                     memStream.Close();
                     cryptoStream.Dispose();
 
                     //decryption error
                     if (signatureString != "nxmlz4")
                     {
+                        Common.DBQueries.addLog("init decrypted blockCompression failed", Environment.StackTrace, null);
                         this.fileStream.Close();
                         return false;
                     }
@@ -218,6 +233,7 @@ namespace BlockCompression
                     //signature ok?
                     if (signatureString != "nxmlz4")
                     {
+                        Common.DBQueries.addLog("blockCompression signature verification failed", Environment.StackTrace, null);
                         this.fileStream.Close();
                         return false;
                     }
