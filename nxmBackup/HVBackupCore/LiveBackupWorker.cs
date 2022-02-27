@@ -31,8 +31,11 @@ namespace nxmBackup.HVBackupCore
         private UInt64 lastShownBytes = 0; //for progress calculation
         private string lastPrettyPrintedBytes = ""; //for progress calculation
 
-        public LiveBackupWorker(ConfigHandler.OneJob job)
+        public bool IsRunning { get => isRunning; set => isRunning = value; }
+
+        public LiveBackupWorker(ConfigHandler.OneJob job, Common.EventHandler eventHandler)
         {
+            this.eventHandler = eventHandler;
             this.selectedJob = job;
         }
 
@@ -42,8 +45,7 @@ namespace nxmBackup.HVBackupCore
 
             isRunning = true;
 
-            //add job to DB
-            this.jobExecutionID = Common.DBQueries.addJobExecution(this.selectedJob.DbId, "backup");
+            //raise event
             this.eventHandler = new Common.EventHandler(null, jobExecutionID);
             this.eventID = this.eventHandler.raiseNewEvent("LiveBackup läuft...", false, false, NO_RELATED_EVENT, Common.EventStatus.info);
 
