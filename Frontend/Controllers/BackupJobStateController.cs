@@ -15,6 +15,17 @@ namespace Frontend.Controllers
             List<ConfigHandler.OneJob> jobs = new List<ConfigHandler.OneJob>();
             ConfigHandler.JobConfigHandler.readJobsFromDB(jobs, jobId);
 
+            bool liveBackupActive = false;
+
+            //have to set livebackupactive? Look within loaded jobs
+            foreach (ConfigHandler.OneJob job in ConfigHandler.JobConfigHandler.Jobs)
+            {
+                if (job.LiveBackupActive && job.DbId == jobId)
+                {
+                    liveBackupActive = true;
+                }
+            }
+
             //check that result is valid
             if (jobs == null || jobs.Count == 0)
             {
@@ -23,6 +34,7 @@ namespace Frontend.Controllers
 
             //just use first job from result list
             ConfigHandler.OneJob selectedJob = jobs[0];
+            selectedJob.LiveBackupActive = liveBackupActive;
 
             HttpResponseMessage response = new HttpResponseMessage();
             response.StatusCode = HttpStatusCode.OK;

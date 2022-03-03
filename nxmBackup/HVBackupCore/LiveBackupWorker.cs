@@ -201,7 +201,6 @@ namespace nxmBackup.HVBackupCore
                 }
             }catch(Exception ex)
             {
-                ex = ex;
             }
         }
 

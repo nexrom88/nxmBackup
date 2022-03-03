@@ -113,6 +113,10 @@
     margin-bottom: 5%;
 }
 
+#stopLBButton{
+    display:none;
+}
+
 .boxElement {
     margin-top: 5%;
 }
