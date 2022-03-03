@@ -13,8 +13,19 @@ namespace JobEngine
             //stop all already running timers
             stopAllTimers();
 
-            //clear credential cache
-            //Common.CredentialCacheManager.wipe();
+            //stop livebackups
+            if (ConfigHandler.JobConfigHandler.Jobs != null)
+            {
+                foreach (ConfigHandler.OneJob job in ConfigHandler.JobConfigHandler.Jobs)
+                {
+                    if (job.LiveBackupActive && job.LiveBackupWorker != null)
+                    {
+                        job.LiveBackupActive = false;
+                        job.LiveBackupWorker.stopLB();
+                        job.LiveBackupWorker = null;
+                    }
+                }
+            }
 
             //read all jobs
             ConfigHandler.JobConfigHandler.readJobsFromDB();

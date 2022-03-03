@@ -491,6 +491,7 @@ namespace ConfigHandler
         private int blockSize;
         private Rotation rotation;
         private bool liveBackup;
+        private bool liveBackupActive;
         private LiveBackupWorker lbWorker;
         private bool isRunning;
         private string lastRun;
@@ -516,6 +517,7 @@ namespace ConfigHandler
         public bool IsRunning { get => isRunning; set => isRunning = value; }
         public bool Incremental { get => incremental; set => incremental = value; }
         public int DbId { get => dbId; set => dbId = value; }
+        public bool LiveBackupActive { get => liveBackupActive; set => liveBackupActive = value; }
         public bool LiveBackup { get => liveBackup; set => liveBackup = value; }
         public LiveBackupWorker LiveBackupWorker { get => lbWorker; set => lbWorker = value; }
 

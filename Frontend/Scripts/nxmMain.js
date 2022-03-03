@@ -739,6 +739,9 @@ function buildJobDetailsPanel() {
             //set restore button click handler
             $("#restoreButton").click(startRestoreHandler); //startRestoreHandler function is defined within nxmRestore.js
 
+            //set stop LB Button click handler
+            $("#stopLBButton").click(stopLBHandler);
+
             //edit enableJobButton caption
             $("#enableJobButtonCaption").html(selectedJobObj["Enabled"] ? "Job deaktivieren" : "Job aktivieren");
 
@@ -748,6 +751,21 @@ function buildJobDetailsPanel() {
         });
 
 }
+
+//stops running lb
+function stopLBHandler() {
+    $.ajax({
+        url: 'api/StopLB',
+        contentType: "application/json; charset=utf-8",
+        data: String(selectedJob),
+        type: 'POST',
+        cache: false,
+        success: function (result) {
+            $("#stopLBButton").css("display", "none");
+        }
+    });
+}
+
 
 //changes a given int to two digits
 function buildTwoDigitsInt(input) {
@@ -1058,6 +1076,13 @@ function renderJobStateTable() {
             } else {
                 //job is disabled
                 intervalString = "Job ist deaktiviert";
+            }
+
+            //livebackup working
+            if (data["LiveBackupActive"]) {
+                $("#stopLBButton").css("display", "inline-block");
+            } else {
+                $("#stopLBButton").css("display", "none");
             }
 
             var lastRunString = data["LastRun"];

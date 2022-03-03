@@ -619,6 +619,7 @@ namespace nxmBackup.HVBackupCore
             {
                 job.LiveBackupWorker = new nxmBackup.HVBackupCore.LiveBackupWorker(job, this.eventHandler);
                 job.LiveBackupWorker.startLB();
+                job.LiveBackupActive = true;
             }
 
             //convert the snapshot to a reference point

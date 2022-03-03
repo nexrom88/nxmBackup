@@ -176,6 +176,7 @@
     <Compile Include="Controllers\JobCreateController.cs" />
     <Compile Include="Controllers\LoginController.cs" />
     <Compile Include="Controllers\SettingsController.cs" />
+    <Compile Include="Controllers\StopLBController.cs" />
     <Compile Include="Controllers\TemplatesController.cs" />
     <Compile Include="Controllers\BackupJobEventController.cs" />
     <Compile Include="Controllers\JobStartController.cs" />

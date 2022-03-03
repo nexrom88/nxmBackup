@@ -56,6 +56,7 @@ namespace JobEngine
             {
                 this.job.LiveBackupWorker.stopLB();
                 this.job.LiveBackupWorker = null;
+                this.job.LiveBackupActive = false;
             }
 
             this.inProgress = true;
