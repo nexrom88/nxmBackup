@@ -364,8 +364,8 @@ namespace HVRestoreCore
                         sourceAndDestLength = (UInt64)length;
                     }
 
-                    //end offset is within current block
-                }
+
+                }//end offset is within current block
                 else if (block.offset < (UInt64)offset + (UInt64)length && (UInt64)offset + (UInt64)length < block.offset + block.length)
                 {
                     sourceOffset = 0;
@@ -373,11 +373,8 @@ namespace HVRestoreCore
                     destOffset = block.offset - (UInt64)offset;
                 }
                 //is location completely within block to read?
-                else if ((UInt64)offset < block.offset && (UInt64)offset + (UInt64)length > block.offset + block.length)
+                else if ((UInt64)offset < block.offset && (UInt64)offset + (UInt64)length >= block.offset + block.length)
                 {
-                    UInt64 blockStartSkippedBytes = block.offset - (ulong)offset;
-                    UInt64 blockEndSkippedBytes = ((UInt64)offset + (UInt64)length) - (block.offset + block.length);
-
                     //where to start reading within cb file?
                     sourceOffset = 0;
 

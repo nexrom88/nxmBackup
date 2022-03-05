@@ -282,15 +282,6 @@ namespace nxmBackup.MFUserMode
                 this.readableBackupChains[vhdxTargetIndex].readFromChain(offset, length, data, 0);
                 this.readableBackupChains[vhdxTargetIndex].readFromLB(offset, length, data);
 
-                //this.compareStream.Seek(offset, SeekOrigin.Begin);
-                //byte[] compareData = new byte[length];
-                //this.compareStream.Read(compareData, 0, (int)length);
-
-                //if (memcmp(data, compareData, length) != 0)
-                //{
-                //    requestType = requestType;
-                //}
-
 
                 //write payload data to shared memory
                 Marshal.Copy(data, 0, this.sharedMemoryHandler.SharedMemoryPointer, data.Length);
@@ -365,26 +356,12 @@ namespace nxmBackup.MFUserMode
             //have to read data?
             if (requestType == 1)
             {
-                //string output = "offset: " + offset + " length: " + length + "\n";
-                //System.Text.ASCIIEncoding enc = new System.Text.ASCIIEncoding();
-                //byte[] buffer = enc.GetBytes(output);
-
                 //read the requested data from backup chain and from lb
                 data = new byte[length];
 
                 //read from first element in chains. On FLR there can only be one chain
                 this.readableBackupChains[0].readFromChain(offset, length, data, 0);
                 this.readableBackupChains[0].readFromLB(offset, length, data);
-
-                //this.compareStream.Seek(offset, SeekOrigin.Begin);
-                //byte[] compareData = new byte[length];
-                //this.compareStream.Read(compareData, 0, (int)length);
-
-                //if (memcmp(data, compareData, length) != 0)
-                //{
-                //    requestType = requestType;
-                //}
-
             }
             else
             {
@@ -394,20 +371,6 @@ namespace nxmBackup.MFUserMode
 
             //write payload data to shared memory
             Marshal.Copy(data, 0, this.sharedMemoryHandler.SharedMemoryPointer, data.Length);
-
-            //if (System.IO.File.Exists("c:\\output.bin"))
-            //{
-            //    FileStream str = System.IO.File.OpenWrite("c:\\output.bin");
-            //    str.Seek(0, SeekOrigin.End);
-            //    str.Write(data, 0, data.Length);
-            //    str.Close();
-            //}
-
-            //byte[] temp = new byte[100];
-            //for (int i = 0; i < 100; i++)
-            //{
-            //    temp[i] = Marshal.ReadByte(this.sharedMemoryHandler.SharedMemoryPointer, i);
-            //}
 
             reply.replyHeader.messageId = dataReceive.messageHeader.messageId;
             reply.replyHeader.status = 0;
