@@ -11,9 +11,11 @@ namespace Common
         private string vmId = "";
         private int executionId;
 
+        public int ExecutionId { get => executionId; set => executionId = value; }
+
         public EventHandler (JobVM vm, int jobExecutionId)
         {
-            this.executionId = jobExecutionId;
+            this.ExecutionId = jobExecutionId;
             if (vm != null)
             {
                 this.vmId = vm.vmID;
@@ -31,7 +33,7 @@ namespace Common
         public int raiseNewEvent(string text, Int64 transferRate, Int64 processRate, bool setDone, bool isUpdate, int relatedEventId, EventStatus status)
         {
             //do not write to DB when execution ID < 0
-            if (this.executionId < 0)
+            if (this.ExecutionId < 0)
             {
                 return 0;
             }
@@ -42,12 +44,24 @@ namespace Common
             props.setDone = setDone;
             props.isUpdate = isUpdate;
             props.eventIdToUpdate = relatedEventId;
-            props.jobExecutionId = this.executionId;
+            props.jobExecutionId = this.ExecutionId;
             props.transferRate = transferRate;
             props.processRate = processRate;
 
             return Common.DBQueries.addEvent(props, this.vmId);
 
+        }
+
+        //sets the lbstop value within db
+        public void setLBStop()
+        {
+            Common.DBQueries.setLBStop(this.ExecutionId);
+        }
+
+        //sets the lbstart value within db
+        public void setLBStart()
+        {
+            Common.DBQueries.setLBStart(this.ExecutionId);
         }
 
     }

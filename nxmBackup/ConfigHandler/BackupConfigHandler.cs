@@ -8,7 +8,7 @@ namespace ConfigHandler
     public class BackupConfigHandler
     {
         //adds a newly created backup to the config file
-        public static void addBackup(string basePath, bool encryption, string uuid, string type, string newInstanceID, string parentInstanceID, bool prepend)
+        public static void addBackup(string basePath, bool encryption, string uuid, string type, string newInstanceID, string parentInstanceID, bool prepend, string jobExecutionId)
         {
             //check whether config file already exists
             if (!File.Exists(Path.Combine(basePath, "config.xml")))
@@ -53,6 +53,7 @@ namespace ConfigHandler
             newElement.SetAttribute("type", type);
             newElement.SetAttribute("InstanceId", newInstanceID);
             newElement.SetAttribute("ParentInstanceId", parentInstanceID);
+            newElement.SetAttribute("JobExecutionId", jobExecutionId);
 
             //prepend new node?
             if (prepend)
@@ -103,7 +104,7 @@ namespace ConfigHandler
         }
 
         //reads all backups from the backup chain
-        public static List<BackupInfo> readChain(string basePath)
+        public static List<BackupInfo> readChain(string basePath, bool loadLBTimestamps)
         {
             List<BackupInfo> backupChain = new List<BackupInfo>();
 
@@ -132,6 +133,16 @@ namespace ConfigHandler
                     backup.timeStamp = backupsElement.ChildNodes.Item(i).Attributes.GetNamedItem("timestamp").Value;
                     backup.instanceID = backupsElement.ChildNodes.Item(i).Attributes.GetNamedItem("InstanceId").Value;
                     backup.parentInstanceID = backupsElement.ChildNodes.Item(i).Attributes.GetNamedItem("ParentInstanceId").Value;
+                    backup.jobExecutionId = backupsElement.ChildNodes.Item(i).Attributes.GetNamedItem("JobExecutionId").Value;
+
+                    if (loadLBTimestamps && backup.type == "lb")
+                    {
+                        Common.LBTimestamps timestamps = Common.DBQueries.readLBTimestamps(int.Parse(backup.jobExecutionId));
+                        backup.lbStart = timestamps.start;
+                        backup.lbEnd = timestamps.end;
+                    }
+
+
                     backupChain.Add(backup);
                 }
 
@@ -265,6 +276,11 @@ namespace ConfigHandler
             public string type;
             public string instanceID;
             public string parentInstanceID;
+            public string jobExecutionId;
+
+            //vars not readble from xml directly. Values are from db:
+            public string lbStart;
+            public string lbEnd;
         }
 
     }
