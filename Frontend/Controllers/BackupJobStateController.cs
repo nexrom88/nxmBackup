@@ -32,6 +32,12 @@ namespace Frontend.Controllers
                 return null;
             }
 
+            //remove aeskey
+            jobs[0].AesKey = null;
+
+            //remove smb password
+            jobs[0].TargetPassword = "";
+
             //just use first job from result list
             ConfigHandler.OneJob selectedJob = jobs[0];
             selectedJob.LiveBackupActive = liveBackupActive;
