@@ -65,7 +65,7 @@ namespace nxmBackup.HVBackupCore
                 return retVal;
             }
 
-            List<ConfigHandler.BackupConfigHandler.BackupInfo> chain = ConfigHandler.BackupConfigHandler.readChain(destination);
+            List<ConfigHandler.BackupConfigHandler.BackupInfo> chain = ConfigHandler.BackupConfigHandler.readChain(destination, false);
             if (incremental) //incremental backup? get latest reference point
             {
                 if (chain == null || chain.Count == 0) //first backup must be full backup
@@ -103,7 +103,7 @@ namespace nxmBackup.HVBackupCore
             TransferDetails transferDetails = export(destination, snapshot, refP, job);
 
             //read current backup chain for further processing
-            chain = ConfigHandler.BackupConfigHandler.readChain(destination);
+            chain = ConfigHandler.BackupConfigHandler.readChain(destination, false);
 
             //if full backup, delete unnecessary reference points
             if (refP == null)
@@ -142,7 +142,7 @@ namespace nxmBackup.HVBackupCore
             }
 
             //read current backup chain for further processing
-            chain = ConfigHandler.BackupConfigHandler.readChain(destination);
+            chain = ConfigHandler.BackupConfigHandler.readChain(destination, false);
 
             //check whether max snapshot count is reached, then merge
             if (job.Rotation.type == RotationType.merge) //RotationType = "merge"
@@ -309,7 +309,7 @@ namespace nxmBackup.HVBackupCore
                 eventId = this.eventHandler.raiseNewEvent("Rotiere Backups (Schritt 4 von 5)...", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
 
                 //create entry to backup chain
-                ConfigHandler.BackupConfigHandler.addBackup(path,this.useEncryption, guidFolder, "full", chain[1].instanceID, "", true);
+                ConfigHandler.BackupConfigHandler.addBackup(path,this.useEncryption, guidFolder, "full", chain[1].instanceID, "", true, this.executionId.ToString());
 
                 this.eventHandler.raiseNewEvent("erfolgreich", true, false, eventId, EventStatus.successful);
                 eventId = this.eventHandler.raiseNewEvent("Rotiere Backups (Schritt 5 von 5)...", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
@@ -632,7 +632,7 @@ namespace nxmBackup.HVBackupCore
                 parentiid = (string)rctBase["InstanceId"];
             }
 
-            ConfigHandler.BackupConfigHandler.addBackup(basePath, this.useEncryption, guidFolder, backupType, (string)refP["InstanceId"], parentiid, false);
+            ConfigHandler.BackupConfigHandler.addBackup(basePath, this.useEncryption, guidFolder, backupType, (string)refP["InstanceId"], parentiid, false, this.executionId.ToString());
 
             //now add lb backup to config.xml
             if (job.LiveBackup)

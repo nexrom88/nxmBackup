@@ -25,7 +25,6 @@ namespace nxmBackup.HVBackupCore
         private Common.EventHandler eventHandler;
         private const int NO_RELATED_EVENT = -1;
 
-        private int jobExecutionID;
         private int eventID;
         private UInt64 processedBytes = 0;
         private UInt64 lastShownBytes = 0; //for progress calculation
@@ -91,6 +90,9 @@ namespace nxmBackup.HVBackupCore
                 }
             }
 
+            //set start timestamp to db
+            this.eventHandler.setLBStart();
+
             //start lb reading thred
             this.lbReadThread = new Thread(() => readLBMessages());
             this.lbReadThread.Start();
@@ -140,12 +142,12 @@ namespace nxmBackup.HVBackupCore
             foreach (Common.JobVM vm in this.selectedJob.JobVMs)
             {
                 //read existing backup chain
-                List<ConfigHandler.BackupConfigHandler.BackupInfo> currentChain = ConfigHandler.BackupConfigHandler.readChain(System.IO.Path.Combine(this.selectedJob.TargetPath, this.selectedJob.Name + "\\" + vm.vmID));
+                List<ConfigHandler.BackupConfigHandler.BackupInfo> currentChain = ConfigHandler.BackupConfigHandler.readChain(System.IO.Path.Combine(this.selectedJob.TargetPath, this.selectedJob.Name + "\\" + vm.vmID), false);
 
                 //get parent backup
                 string parentInstanceID = currentChain[currentChain.Count - 1].instanceID;
 
-                ConfigHandler.BackupConfigHandler.addBackup(System.IO.Path.Combine(this.selectedJob.TargetPath, this.selectedJob.Name + "\\" + vm.vmID), this.selectedJob.UseEncryption, this.destGUIDFolder, "lb", "nxm:" + this.destGUIDFolder, parentInstanceID, false);
+                ConfigHandler.BackupConfigHandler.addBackup(System.IO.Path.Combine(this.selectedJob.TargetPath, this.selectedJob.Name + "\\" + vm.vmID), this.selectedJob.UseEncryption, this.destGUIDFolder, "lb", "nxm:" + this.destGUIDFolder, parentInstanceID, false, this.eventHandler.ExecutionId.ToString());
 
             }
 
@@ -243,6 +245,8 @@ namespace nxmBackup.HVBackupCore
                 //wait a while to not force the thread to exit
                 Thread.Sleep(500);
 
+                //set start timestamp to db
+                this.eventHandler.setLBStop();
                 this.um.closeConnection();
                 this.lbReadThread.Abort();
 

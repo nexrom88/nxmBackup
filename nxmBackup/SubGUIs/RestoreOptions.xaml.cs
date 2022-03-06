@@ -46,7 +46,7 @@ namespace RestoreHelper
             }
 
             //read backup chain
-            List<ConfigHandler.BackupConfigHandler.BackupInfo> backups = ConfigHandler.BackupConfigHandler.readChain(sourcePath);
+            List<ConfigHandler.BackupConfigHandler.BackupInfo> backups = ConfigHandler.BackupConfigHandler.readChain(sourcePath, false);
 
             this.restorePoints = new List<RestorePointForGUI>();
             //fill backup list

@@ -16,22 +16,12 @@ namespace Frontend.Controllers
             string sourcePath = jobDetails.basePath + "\\" + jobDetails.jobName + "\\" + jobDetails.vmName;
 
             //read backup chain
-            List<ConfigHandler.BackupConfigHandler.BackupInfo> backups = ConfigHandler.BackupConfigHandler.readChain(sourcePath);
+            List<ConfigHandler.BackupConfigHandler.BackupInfo> backups = ConfigHandler.BackupConfigHandler.readChain(sourcePath, true);
 
             //build response
             HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.OK);
             response.Content = new StringContent(Newtonsoft.Json.JsonConvert.SerializeObject(backups));
             return response;
-        }
-
-        // PUT api/<controller>/5
-        public void Put(int id, [FromBody] string value)
-        {
-        }
-
-        // DELETE api/<controller>/5
-        public void Delete(int id)
-        {
         }
 
         public class RestoreDetails

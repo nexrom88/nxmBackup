@@ -23,7 +23,7 @@ namespace Common
             using (DBConnection dbConn = new DBConnection())
             {
                 dbConn.doWriteQuery("INSERT INTO log (text, stacktrace, exception) VALUES (@text, @stacktrace, @exception);",
-                        new Dictionary<string, object>() { { "text", text }, { "stacktrace", stacktrace }, {"exception", exception } }, null);
+                        new Dictionary<string, object>() { { "text", text }, { "stacktrace", stacktrace }, { "exception", exception } }, null);
             }
         }
 
@@ -37,7 +37,7 @@ namespace Common
                 NpgsqlTransaction transaction = dbConn.beginTransaction();
 
                 //iterate through each key
-                foreach(string key in settings.Keys)
+                foreach (string key in settings.Keys)
                 {
                     Dictionary<string, object> parameters = new Dictionary<string, object>();
                     parameters.Add("value", settings[key]);
@@ -88,7 +88,7 @@ namespace Common
                 {
                     //convert obj to string
                     Dictionary<string, string> retVal = new Dictionary<string, string>();
-                    foreach(Dictionary<string, object> oneSetting in result)
+                    foreach (Dictionary<string, object> oneSetting in result)
                     {
                         retVal.Add((string)oneSetting["name"], (string)oneSetting["value"]);
                     }
@@ -163,7 +163,7 @@ namespace Common
             }
             catch (Exception ex)
             {
-                Common.DBQueries.addLog ("error on adding jobExecution to DB", Environment.StackTrace , ex);
+                Common.DBQueries.addLog("error on adding jobExecution to DB", Environment.StackTrace, ex);
                 return -1;
             }
         }
@@ -203,7 +203,7 @@ namespace Common
                 using (DBConnection dbConn = new DBConnection())
                 {
                     List<Dictionary<string, object>> jobExecutionEventIds = dbConn.doReadQuery("INSERT INTO jobexecutionevents (vmid, info, jobexecutionid, status) VALUES (@vmId, @info, @jobExecutionId, (SELECT id FROM EventStatus WHERE text= @status)) RETURNING id;",
-                        new Dictionary<string, object>() { { "vmId", vmName }, { "info", eventProperties.text }, { "jobExecutionId", eventProperties.jobExecutionId}, {"status", eventProperties.eventStatus} }, null);
+                        new Dictionary<string, object>() { { "vmId", vmName }, { "info", eventProperties.text }, { "jobExecutionId", eventProperties.jobExecutionId }, { "status", eventProperties.eventStatus } }, null);
 
                     if (jobExecutionEventIds == null || jobExecutionEventIds.Count == 0)
                     {
@@ -279,7 +279,7 @@ namespace Common
 
 
         //gets all events for a given job
-        public static List<Dictionary<string,object>> getEvents (int jobId, string type)
+        public static List<Dictionary<string, object>> getEvents(int jobId, string type)
         {
             //not an update: do insert
             try
@@ -288,7 +288,7 @@ namespace Common
                 {
                     //get jobExecutions first
                     List<Dictionary<string, object>> jobExecutions = dbConn.doReadQuery("SELECT max(id) id FROM JobExecutions WHERE jobId = @jobId AND type = @type;",
-                        new Dictionary<string, object>() { { "jobId", jobId }, {"type", type } }, null);
+                        new Dictionary<string, object>() { { "jobId", jobId }, { "type", type } }, null);
 
                     //check if executionId is available
                     string jobExecutionId = jobExecutions[0]["id"].ToString();
@@ -346,7 +346,7 @@ namespace Common
                 {
                     //close jobexecution
                     int affectedRows = dbConn.doWriteQuery("UPDATE jobexecutions SET stoptime=now(), isrunning=false, bytesProcessed=@bytesProcessed, bytesTransfered=@bytesTransfered, successful=@successful, warnings=@warnings, errors=@errors WHERE id=@id;",
-                        new Dictionary<string, object>() {{ "bytesprocessed", (Int64)executionProperties.bytesProcessed }, { "bytestransfered", (Int64)executionProperties.bytesTransfered}, { "successful", executionProperties.successful }, { "warnings", executionProperties.warnings }, { "errors", executionProperties.errors }, { "id", int.Parse(jobExecutionId) } }, null);
+                        new Dictionary<string, object>() { { "bytesprocessed", (Int64)executionProperties.bytesProcessed }, { "bytestransfered", (Int64)executionProperties.bytesTransfered }, { "successful", executionProperties.successful }, { "warnings", executionProperties.warnings }, { "errors", executionProperties.errors }, { "id", int.Parse(jobExecutionId) } }, null);
 
                     if (affectedRows == 0)
                     {
@@ -357,6 +357,52 @@ namespace Common
             catch (Exception ex)
             {
                 Common.DBQueries.addLog("error on closing job execution within DB", Environment.StackTrace, ex);
+            }
+        }
+
+        //reads lb timestamps from a given execution id
+        public static LBTimestamps readLBTimestamps(int jobExecutionId)
+        {
+            LBTimestamps timestamps = new LBTimestamps();
+            using (DBConnection dbConn = new DBConnection())
+            {
+                Dictionary<string, object> parameters = new Dictionary<string, object>();
+                parameters.Add("id", jobExecutionId);
+                List<Dictionary<string, object>> result = dbConn.doReadQuery("SELECT lbstart, lbend FROM jobexecutions WHERE id=@id;", parameters, null);
+
+                //result valid?
+                if (result == null || result.Count == 0)
+                {
+                    return timestamps;
+                }
+                else
+                {
+                    timestamps.start = result[0]["lbstart"].ToString();
+                    timestamps.end = result[0]["lbend"].ToString();
+                    return timestamps;
+                }
+            }
+        }
+
+
+
+        //sets the lbstart value for a given jobexecution
+        public static void setLBStart(int jobExecutionId)
+        {
+            using (DBConnection dbConn = new DBConnection())
+            {
+                int affectedRows = dbConn.doWriteQuery("UPDATE jobexecutions SET lbstart=now() WHERE id=@id;",
+                        new Dictionary<string, object>() { { "id", jobExecutionId } }, null);
+            }
+        }
+
+        //sets the lbstop value for a given jobexecution
+        public static void setLBStop(int jobExecutionId)
+        {
+            using (DBConnection dbConn = new DBConnection())
+            {
+                int affectedRows = dbConn.doWriteQuery("UPDATE jobexecutions SET lbend=now() WHERE id=@id;",
+                        new Dictionary<string, object>() { { "id", jobExecutionId } }, null);
             }
         }
 
@@ -379,6 +425,12 @@ namespace Common
                 transaction.Commit();
             }
         }
-
     }
+
+    public struct LBTimestamps
+    {
+        public string start;
+        public string end;
+    }
+
 }
