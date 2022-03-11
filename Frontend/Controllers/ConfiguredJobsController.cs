@@ -14,9 +14,17 @@ namespace Frontend.Controllers
         // GET api/<controller>
         public HttpResponseMessage Get()
         {
-            HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.OK);
-            response.Content = new StringContent(Newtonsoft.Json.JsonConvert.SerializeObject(JobConfigHandler.Jobs));
-            return response;
+            HttpResponseMessage response;
+            try
+            {
+                response = new HttpResponseMessage(HttpStatusCode.OK);
+                response.Content = new StringContent(Newtonsoft.Json.JsonConvert.SerializeObject(JobConfigHandler.Jobs));
+                return response;
+            }catch(Exception ex)
+            {
+                response = new HttpResponseMessage(HttpStatusCode.BadRequest);
+                return response;
+            }
             
         }
 
