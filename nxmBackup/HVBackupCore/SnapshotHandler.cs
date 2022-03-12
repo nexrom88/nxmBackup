@@ -709,6 +709,7 @@ namespace nxmBackup.HVBackupCore
 
                     if (hdd.name == vmHDD.name)
                     {
+                        hdd.ldDestinationStream = vmHDD.ldDestinationStream;
                         hddFound = true;
                         break;
                     }
