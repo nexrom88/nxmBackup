@@ -257,7 +257,15 @@ namespace nxmBackup.HVBackupCore
                     {
                         //get vhdx size
                         System.IO.FileInfo fileInfo = new System.IO.FileInfo(hdd.path);
-                        UInt64 vhdxSize = (UInt64)fileInfo.Length;
+                        UInt64 vhdxSize;
+                        try
+                        {
+                            vhdxSize = (UInt64)fileInfo.Length;
+                        }
+                        catch (Exception)
+                        {
+                            vhdxSize = 0;
+                        }
 
                         //write vhdx size to file header
                         hdd.ldDestinationStream.Seek(0, System.IO.SeekOrigin.Begin);

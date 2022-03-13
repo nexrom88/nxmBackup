@@ -47,6 +47,7 @@ namespace JobEngine
                 {
                     if (transfer.jobId == job.DbId)
                     {
+
                         job.LiveBackupActive = true;
                         job.LiveBackupWorker = transfer.worker;
                     }
