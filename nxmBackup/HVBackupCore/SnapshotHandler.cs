@@ -614,12 +614,25 @@ namespace nxmBackup.HVBackupCore
             archive.close();
 
             //if LB activated for job, start it before converting to reference point
-            
+            LiveBackupWorker lbWorker = null;
             if (job.LiveBackup)
             {
-                job.LiveBackupWorker = new nxmBackup.HVBackupCore.LiveBackupWorker(job, this.eventHandler);
-                job.LiveBackupWorker.startLB();
-                job.LiveBackupActive = true;
+                //it is possible that the job structure changed while performing backup (e.g. new job created)
+                // => so we do not update the job structure here but we look for the current job within joblist and update that structure
+
+                
+                foreach(ConfigHandler.OneJob dbJob in ConfigHandler.JobConfigHandler.Jobs)
+                {
+                    if (dbJob.DbId == job.DbId)
+                    {
+                        lbWorker = new nxmBackup.HVBackupCore.LiveBackupWorker(job, this.eventHandler);
+                        dbJob.LiveBackupWorker = lbWorker;
+                        dbJob.LiveBackupWorker.startLB();
+                        dbJob.LiveBackupActive = true;
+                    }
+                }
+
+                
             }
 
             //convert the snapshot to a reference point
@@ -635,9 +648,9 @@ namespace nxmBackup.HVBackupCore
             ConfigHandler.BackupConfigHandler.addBackup(basePath, this.useEncryption, guidFolder, backupType, (string)refP["InstanceId"], parentiid, false, this.executionId.ToString());
 
             //now add lb backup to config.xml
-            if (job.LiveBackup)
+            if (job.LiveBackup && lbWorker != null)
             {
-                job.LiveBackupWorker.addToBackupConfig();
+                lbWorker.addToBackupConfig();
             }
 
             //hdds changed? write the new hdd config to job
@@ -679,14 +692,14 @@ namespace nxmBackup.HVBackupCore
         private ChangedHDDsResponse hddsChanged(List<ManagementObject> mountedHDDs, ConfigHandler.OneJob job)
         {
             ChangedHDDsResponse retVal = new ChangedHDDsResponse();
-            JobVM currentVM = new JobVM();
+            JobVM dbVM = new JobVM();
             //find the corresponding vm object
             foreach(JobVM vm in job.JobVMs)
             {
                 if (vm.vmID == this.vm.vmID)
                 {
                     //found vm object
-                    currentVM = vm;
+                    dbVM = vm;
                     break;
                 }
             }
@@ -704,12 +717,12 @@ namespace nxmBackup.HVBackupCore
 
                 bool hddFound = false;
                 //find corresponding HDD within job
-                foreach (VMHDD vmHDD in currentVM.vmHDDs)
+                foreach (VMHDD dbHDD in dbVM.vmHDDs)
                 {              
 
-                    if (hdd.name == vmHDD.name)
+                    if (hdd.name == dbHDD.name)
                     {
-                        hdd.ldDestinationStream = vmHDD.ldDestinationStream;
+                        hdd.ldDestinationStream = dbHDD.ldDestinationStream;
                         hddFound = true;
                         break;
                     }
@@ -722,7 +735,7 @@ namespace nxmBackup.HVBackupCore
             }
 
             //hdd count changed or hdds themself changed?
-            if (mountedHDDs.Count != currentVM.vmHDDs.Count || hddsHaveChanged)
+            if (mountedHDDs.Count != dbVM.vmHDDs.Count || hddsHaveChanged)
             {
                 retVal.hddsChanged = true;
             }
