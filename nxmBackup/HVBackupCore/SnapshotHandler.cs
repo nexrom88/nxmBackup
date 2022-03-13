@@ -667,8 +667,19 @@ namespace nxmBackup.HVBackupCore
 
                 //update job object
                 JobVM currentVM = null;
-                //find the corresponding vm object
-                foreach (JobVM vm in job.JobVMs)
+
+                //find the corresponding vm object within current joblist
+                ConfigHandler.OneJob currentJob = null;
+                foreach (ConfigHandler.OneJob newJob in ConfigHandler.JobConfigHandler.Jobs)
+                {
+                    if (newJob.DbId == job.DbId)
+                    {
+                        currentJob = newJob;
+                    }
+                }
+
+
+                foreach (JobVM vm in currentJob.JobVMs)
                 {
                     if (vm.vmID == this.vm.vmID)
                     {
@@ -680,6 +691,19 @@ namespace nxmBackup.HVBackupCore
 
                 if (currentVM != null)
                 {
+                    //migrate lb stream when necessary
+                    foreach(VMHDD newHDD in hddsChangedResponse.newHDDs)
+                    {
+                        foreach (VMHDD oldHDD in currentVM.vmHDDs)
+                        {
+                            if (oldHDD.name == newHDD.name)
+                            {
+                                newHDD.lbObjectID = oldHDD.lbObjectID;
+                                newHDD.ldDestinationStream = oldHDD.ldDestinationStream;
+                            }
+                        }
+                    }
+
                     currentVM.vmHDDs = hddsChangedResponse.newHDDs;
                 }
             }
@@ -722,7 +746,6 @@ namespace nxmBackup.HVBackupCore
 
                     if (hdd.name == dbHDD.name)
                     {
-                        hdd.ldDestinationStream = dbHDD.ldDestinationStream;
                         hddFound = true;
                         break;
                     }
