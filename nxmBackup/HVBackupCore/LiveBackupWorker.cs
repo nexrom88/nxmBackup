@@ -17,7 +17,7 @@ namespace nxmBackup.HVBackupCore
         [DllImport("Kernel32.dll", CharSet = CharSet.Unicode)]
         private static extern uint QueryDosDevice([In] string lpDeviceName, [Out] StringBuilder lpTargetPath, [In] int ucchMax);
 
-        private ConfigHandler.OneJob selectedJob;
+        private int selectedJobID;
         private bool isRunning = false;
         private MFUserMode.MFUserMode um;
         private Thread lbReadThread;
@@ -32,10 +32,10 @@ namespace nxmBackup.HVBackupCore
 
         public bool IsRunning { get => isRunning; set => isRunning = value; }
 
-        public LiveBackupWorker(ConfigHandler.OneJob job, Common.EventHandler eventHandler)
+        public LiveBackupWorker(int jobID, Common.EventHandler eventHandler)
         {
             this.eventHandler = eventHandler;
-            this.selectedJob = job;
+            this.selectedJobID = jobID;
         }
 
         //starts LB
@@ -51,8 +51,12 @@ namespace nxmBackup.HVBackupCore
             this.um = new MFUserMode.MFUserMode();
             bool status = this.um.connectToKM("\\nxmLBPort", "\\BaseNamedObjects\\nxmmflb");
 
+            //load job object. It gets loaded dynamically because the object can change while lb is running
+            ConfigHandler.OneJob jobObject = getJobObject();
+
+
             //quit when connection not successful
-            if (!status)
+            if (!status || jobObject == null)
             {
                 isRunning = false;
                 this.eventHandler.raiseNewEvent("Livebackup konnte nicht gestartet werden", false, true, this.eventID, Common.EventStatus.error);
@@ -60,13 +64,13 @@ namespace nxmBackup.HVBackupCore
                 return false;
             }
 
-            
+                        
 
             //iterate through all vms
-            foreach (Common.JobVM vm in this.selectedJob.JobVMs)
+            foreach (Common.JobVM vm in jobObject.JobVMs)
             {
                 //add vm-LB to backup config.xml
-                initFileStreams(vm);
+                initFileStreams(vm, jobObject);
 
                 //iterate through all hdds
                 foreach (Common.VMHDD hdd in vm.vmHDDs)
@@ -94,21 +98,35 @@ namespace nxmBackup.HVBackupCore
             this.eventHandler.setLBStart();
 
             //start lb reading thred
-            this.lbReadThread = new Thread(() => readLBMessages());
+            this.lbReadThread = new Thread(() => readLBMessages(jobObject));
             this.lbReadThread.Start();
 
             return true;
         }
 
+        //gets the current job object
+        private ConfigHandler.OneJob getJobObject()
+        {
+            foreach (ConfigHandler.OneJob job in ConfigHandler.JobConfigHandler.Jobs)
+            {
+                if (job.DbId == this.selectedJobID)
+                {
+                    return job;
+                }
+            }
+
+            return null;
+        }
+
         //returns filestreams for destination files
-        private void initFileStreams(Common.JobVM vm)
+        private void initFileStreams(Common.JobVM vm, ConfigHandler.OneJob jobObject)
         {
             //add new backup
             Guid g = Guid.NewGuid();
             string guidFolder = g.ToString();
            
             //create lb folder
-            string destFolder = System.IO.Path.Combine(this.selectedJob.TargetPath, this.selectedJob.Name + "\\" + vm.vmID + "\\" + guidFolder + ".nxm");
+            string destFolder = System.IO.Path.Combine(jobObject.TargetPath, jobObject.Name + "\\" + vm.vmID + "\\" + guidFolder + ".nxm");
             System.IO.Directory.CreateDirectory(destFolder);
 
             //create destination files and their corresponding streams
@@ -138,26 +156,36 @@ namespace nxmBackup.HVBackupCore
         //adds the vm-LB backup to destination config.xml file for the given vm
         public void addToBackupConfig()
         {
+            //load job object
+            ConfigHandler.OneJob jobObject = getJobObject();
+
+            if (jobObject == null)
+            {
+                Common.DBQueries.addLog("job object not found", Environment.StackTrace, null);
+                return;
+            }
+
             //iterate through all vms
-            foreach (Common.JobVM vm in this.selectedJob.JobVMs)
+            foreach (Common.JobVM vm in jobObject.JobVMs)
             {
                 //read existing backup chain
-                List<ConfigHandler.BackupConfigHandler.BackupInfo> currentChain = ConfigHandler.BackupConfigHandler.readChain(System.IO.Path.Combine(this.selectedJob.TargetPath, this.selectedJob.Name + "\\" + vm.vmID), false);
+                List<ConfigHandler.BackupConfigHandler.BackupInfo> currentChain = ConfigHandler.BackupConfigHandler.readChain(System.IO.Path.Combine(jobObject.TargetPath, jobObject.Name + "\\" + vm.vmID), false);
 
                 //get parent backup
                 string parentInstanceID = currentChain[currentChain.Count - 1].instanceID;
 
-                ConfigHandler.BackupConfigHandler.addBackup(System.IO.Path.Combine(this.selectedJob.TargetPath, this.selectedJob.Name + "\\" + vm.vmID), this.selectedJob.UseEncryption, this.destGUIDFolder, "lb", "nxm:" + this.destGUIDFolder, parentInstanceID, false, this.eventHandler.ExecutionId.ToString());
+                ConfigHandler.BackupConfigHandler.addBackup(System.IO.Path.Combine(jobObject.TargetPath, jobObject.Name + "\\" + vm.vmID), jobObject.UseEncryption, this.destGUIDFolder, "lb", "nxm:" + this.destGUIDFolder, parentInstanceID, false, this.eventHandler.ExecutionId.ToString());
 
             }
 
         }
 
         //reads km lb messages
-        private void readLBMessages()
+        private void readLBMessages(ConfigHandler.OneJob jobObject)
         {
             try
             {
+
                 while (this.isRunning)
                 {
                     MFUserMode.MFUserMode.LB_BLOCK lbBlock = this.um.handleLBMessage();
@@ -185,7 +213,7 @@ namespace nxmBackup.HVBackupCore
                         Common.JobVM targetVM;
                         Common.VMHDD targetHDD;
                         //look for corresponding vm and hdd
-                        foreach(Common.JobVM vm in this.selectedJob.JobVMs)
+                        foreach(Common.JobVM vm in jobObject.JobVMs)
                         {
                             foreach(Common.VMHDD hdd in vm.vmHDDs)
                             {
@@ -238,6 +266,9 @@ namespace nxmBackup.HVBackupCore
         //stops LB
         public void stopLB()
         {
+            //load job object dynamically
+            ConfigHandler.OneJob jobObject = getJobObject();
+
             if (isRunning)
             {
                 isRunning = false;
@@ -251,7 +282,7 @@ namespace nxmBackup.HVBackupCore
                 this.lbReadThread.Abort();
 
                 //close all open filestreams
-                foreach(Common.JobVM vm in this.selectedJob.JobVMs)
+                foreach(Common.JobVM vm in jobObject.JobVMs)
                 {
                     foreach(Common.VMHDD hdd in vm.vmHDDs)
                     {

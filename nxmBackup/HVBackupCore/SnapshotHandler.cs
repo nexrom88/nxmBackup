@@ -625,7 +625,7 @@ namespace nxmBackup.HVBackupCore
                 {
                     if (dbJob.DbId == job.DbId)
                     {
-                        lbWorker = new nxmBackup.HVBackupCore.LiveBackupWorker(job, this.eventHandler);
+                        lbWorker = new nxmBackup.HVBackupCore.LiveBackupWorker(job.DbId, this.eventHandler);
                         dbJob.LiveBackupWorker = lbWorker;
                         dbJob.LiveBackupWorker.startLB();
                         dbJob.LiveBackupActive = true;
