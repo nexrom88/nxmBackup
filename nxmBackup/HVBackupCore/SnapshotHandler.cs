@@ -626,8 +626,11 @@ namespace nxmBackup.HVBackupCore
                     if (dbJob.DbId == job.DbId)
                     {
                         lbWorker = new nxmBackup.HVBackupCore.LiveBackupWorker(job.DbId, this.eventHandler);
-                        dbJob.LiveBackupWorker = lbWorker;
-                        dbJob.LiveBackupWorker.startLB();
+                        
+                        //add worker to global list
+                        LiveBackupWorker.ActiveWorkers.Add(lbWorker);
+                        lbWorker.startLB();
+
                         dbJob.LiveBackupActive = true;
                     }
                 }

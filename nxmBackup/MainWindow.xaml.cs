@@ -251,14 +251,7 @@ namespace nxmBackup
 
         private void MainGUI_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            //look for active lb worker and close it
-            foreach(ConfigHandler.OneJob job in this.jobs)
-            {
-                if (job.LiveBackup && job.LiveBackupWorker != null)
-                {
-                    job.LiveBackupWorker.stopLB();
-                }
-            }
+            
         }
 
         private void lvJobs_MouseUp(object sender, MouseButtonEventArgs e)
