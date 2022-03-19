@@ -492,7 +492,6 @@ namespace ConfigHandler
         private Rotation rotation;
         private bool liveBackup;
         private bool liveBackupActive;
-        private LiveBackupWorker lbWorker;
         private bool isRunning;
         private string lastRun;
         private string lastStop;
@@ -519,7 +518,6 @@ namespace ConfigHandler
         public int DbId { get => dbId; set => dbId = value; }
         public bool LiveBackupActive { get => liveBackupActive; set => liveBackupActive = value; }
         public bool LiveBackup { get => liveBackup; set => liveBackup = value; }
-        public LiveBackupWorker LiveBackupWorker { get => lbWorker; set => lbWorker = value; }
 
         public string TargetType { get => targetType; set => targetType = value; }
         public string TargetPath { get => targetPath; set => targetPath = value; }

@@ -17,6 +17,9 @@ namespace nxmBackup.HVBackupCore
         [DllImport("Kernel32.dll", CharSet = CharSet.Unicode)]
         private static extern uint QueryDosDevice([In] string lpDeviceName, [Out] StringBuilder lpTargetPath, [In] int ucchMax);
 
+        private static List<LiveBackupWorker> workers = new List<LiveBackupWorker>();
+        public static List<LiveBackupWorker> ActiveWorkers { get => workers; set => workers = value; }
+
         private int selectedJobID;
         private bool isRunning = false;
         private MFUserMode.MFUserMode um;
@@ -33,6 +36,7 @@ namespace nxmBackup.HVBackupCore
         public bool IsRunning { get => isRunning; set => isRunning = value; }
         public int JobID { get => selectedJobID; set => selectedJobID = value; }
         public List<LBHDDWorker> RunningHDDWorker { get => runningHDDWorker; set => runningHDDWorker = value; }
+        
 
         private List<LBHDDWorker> runningHDDWorker = new List<LBHDDWorker> ();
 
@@ -266,6 +270,19 @@ namespace nxmBackup.HVBackupCore
             //load job object dynamically
             ConfigHandler.OneJob jobObject = getJobObject();
 
+            //remove myself from global list of workers
+            LiveBackupWorker.ActiveWorkers.Remove(this);
+
+            //look for corresponding job object
+            foreach (ConfigHandler.OneJob job in ConfigHandler.JobConfigHandler.Jobs)
+            {
+                //set lb to "not active"
+                if (job.DbId == this.JobID)
+                {
+                    job.LiveBackupActive = false;
+                }
+            }
+
             if (isRunning)
             {
                 isRunning = false;
@@ -300,6 +317,9 @@ namespace nxmBackup.HVBackupCore
 
                     //close stream
                     worker.lbFileStream.Close();
+
+                    
+
                 }
                 
 

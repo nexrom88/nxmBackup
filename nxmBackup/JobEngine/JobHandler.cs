@@ -13,23 +13,6 @@ namespace JobEngine
             //stop all already running timers
             stopAllTimers();
 
-            //read running livebackup jobs
-            List<LBTransfer> lbTransferList = new List<LBTransfer>();
-
-            if (ConfigHandler.JobConfigHandler.Jobs != null)
-            {
-                foreach (ConfigHandler.OneJob job in ConfigHandler.JobConfigHandler.Jobs)
-                {
-                    if (job.LiveBackupActive && job.LiveBackupWorker != null)
-                    {
-                        LBTransfer lbTransfer = new LBTransfer();
-                        lbTransfer.jobId = job.DbId;
-                        lbTransfer.worker = job.LiveBackupWorker;
-                        lbTransferList.Add(lbTransfer);
-                    }
-                }
-            }
-
 
             //read all jobs
             ConfigHandler.JobConfigHandler.readJobsFromDB();
@@ -44,14 +27,13 @@ namespace JobEngine
             foreach (ConfigHandler.OneJob job in jobs)
             {
 
-                //migrate running livebackup jobs to new struct
-                foreach (LBTransfer transfer in lbTransferList)
+                //check if lb is running for the given job
+                foreach(nxmBackup.HVBackupCore.LiveBackupWorker worker in nxmBackup.HVBackupCore.LiveBackupWorker.ActiveWorkers)
                 {
-                    if (transfer.jobId == job.DbId)
+                    if (worker.JobID == job.DbId)
                     {
-
                         job.LiveBackupActive = true;
-                        job.LiveBackupWorker = transfer.worker;
+                        break;
                     }
                 }
 

@@ -52,11 +52,14 @@ namespace JobEngine
             }
 
             //stop LB if in progress
-            if (this.job.LiveBackupWorker != null)
+            foreach(LiveBackupWorker worker in LiveBackupWorker.ActiveWorkers)
             {
-                this.job.LiveBackupWorker.stopLB();
-                this.job.LiveBackupWorker = null;
-                this.job.LiveBackupActive = false;
+                if (worker.JobID == this.Job.DbId)
+                {
+                    //lb worker found, now stop it
+                    worker.stopLB();
+                    break;
+                }
             }
 
             this.inProgress = true;

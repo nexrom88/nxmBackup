@@ -14,18 +14,13 @@ namespace Frontend.Controllers
         {
             int jobID = int.Parse(value);
 
-            if (ConfigHandler.JobConfigHandler.Jobs == null)
+            //iterate through all active lb workers
+            foreach (nxmBackup.HVBackupCore.LiveBackupWorker worker in nxmBackup.HVBackupCore.LiveBackupWorker.ActiveWorkers)
             {
-                return;
-            }
-
-            //iterate through all jobs
-            foreach (ConfigHandler.OneJob job in ConfigHandler.JobConfigHandler.Jobs)
-            {
-                if (job.DbId == jobID && job.LiveBackupWorker != null)
+                if (worker.JobID == jobID)
                 {
-                    job.LiveBackupWorker.stopLB();
-                    job.LiveBackupActive = false;
+                    worker.stopLB();
+                    break;
                 }
             }
         }
