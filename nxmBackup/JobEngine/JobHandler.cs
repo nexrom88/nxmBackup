@@ -13,23 +13,6 @@ namespace JobEngine
             //stop all already running timers
             stopAllTimers();
 
-            //read running livebackup jobs
-            List<LBTransfer> lbTransferList = new List<LBTransfer>();
-
-            if (ConfigHandler.JobConfigHandler.Jobs != null)
-            {
-                foreach (ConfigHandler.OneJob job in ConfigHandler.JobConfigHandler.Jobs)
-                {
-                    if (job.LiveBackupActive && job.LiveBackupWorker != null)
-                    {
-                        LBTransfer lbTransfer = new LBTransfer();
-                        lbTransfer.jobId = job.DbId;
-                        lbTransfer.worker = job.LiveBackupWorker;
-                        lbTransferList.Add(lbTransfer);
-                    }
-                }
-            }
-
             //read all jobs
             ConfigHandler.JobConfigHandler.readJobsFromDB();
             List<ConfigHandler.OneJob> jobs = ConfigHandler.JobConfigHandler.Jobs;
@@ -42,18 +25,6 @@ namespace JobEngine
             //create one timer for each job, add credentials to cache and add possible running liveback jobs to struct
             foreach (ConfigHandler.OneJob job in jobs)
             {
-                //migrate running livebackup jobs to new struct
-                foreach(LBTransfer transfer in lbTransferList)
-                {
-                    if (transfer.jobId == job.DbId)
-                    {
-
-                        job.LiveBackupActive = true;
-                        job.LiveBackupWorker = transfer.worker;
-                    }
-                }
-
-
 
                 JobTimer timer = new JobTimer(job);
 

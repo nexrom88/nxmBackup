@@ -8,7 +8,7 @@ using System.Threading;
 using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 using System.ComponentModel;
 using Microsoft.Extensions.Logging;
-
+using System.IO;
 
 namespace nxmBackup.HVBackupCore
 {
@@ -31,11 +31,16 @@ namespace nxmBackup.HVBackupCore
         private string lastPrettyPrintedBytes = ""; //for progress calculation
 
         public bool IsRunning { get => isRunning; set => isRunning = value; }
+        public int JobID { get => selectedJobID; set => selectedJobID = value; }
+        public List<LBHDDWorker> RunningHDDWorker { get => runningHDDWorker; set => runningHDDWorker = value; }
+
+        private List<LBHDDWorker> runningHDDWorker = new List<LBHDDWorker> ();
+
 
         public LiveBackupWorker(int jobID, Common.EventHandler eventHandler)
         {
             this.eventHandler = eventHandler;
-            this.selectedJobID = jobID;
+            this.JobID = jobID;
         }
 
         //starts LB
@@ -109,7 +114,7 @@ namespace nxmBackup.HVBackupCore
         {
             foreach (ConfigHandler.OneJob job in ConfigHandler.JobConfigHandler.Jobs)
             {
-                if (job.DbId == this.selectedJobID)
+                if (job.DbId == this.JobID)
                 {
                     return job;
                 }
@@ -140,14 +145,12 @@ namespace nxmBackup.HVBackupCore
                 byte[] buffer = new byte[8];
                 stream.Write(buffer, 0, 8);
 
-                //build new hdd struct, otherwise it cannot be changed within Arraylist
-                Common.VMHDD newHDD = new Common.VMHDD();
-                newHDD.lbObjectID = vm.vmHDDs[i].lbObjectID;
-                newHDD.name = vm.vmHDDs[i].name;
-                newHDD.path = vm.vmHDDs[i].path;
-                newHDD.ldDestinationStream = stream;
-                vm.vmHDDs.RemoveAt(i);
-                vm.vmHDDs.Insert(i,newHDD);
+                //build new lbworker struct
+                LBHDDWorker newWorker = new LBHDDWorker();
+                newWorker.lbFileStream = stream;
+                newWorker.hddPath = vm.vmHDDs[i].path;
+                newWorker.lbObjectID = vm.vmHDDs[i].lbObjectID;
+                RunningHDDWorker.Add(newWorker);
             }
 
             this.destGUIDFolder = guidFolder;
@@ -210,22 +213,16 @@ namespace nxmBackup.HVBackupCore
 
                     if (lbBlock.isValid)
                     {
-                        Common.JobVM targetVM;
-                        Common.VMHDD targetHDD;
                         //look for corresponding vm and hdd
-                        foreach(Common.JobVM vm in jobObject.JobVMs)
+                        foreach(LBHDDWorker hddWorker in RunningHDDWorker)
                         {
-                            foreach(Common.VMHDD hdd in vm.vmHDDs)
-                            {
-                                if (hdd.lbObjectID == lbBlock.objectID)
-                                {
-                                    targetHDD = hdd;
-                                    targetVM = vm;
 
-                                    //save the block to backup destination
-                                    storeLBBlock(lbBlock, vm, hdd);
-                                }
+                            if (lbBlock.objectID == hddWorker.lbObjectID)
+                            {
+                                //save the block to backup destination
+                                storeLBBlock(lbBlock, hddWorker.lbFileStream);
                             }
+
                         }
                     }  
                 }
@@ -235,31 +232,31 @@ namespace nxmBackup.HVBackupCore
         }
 
         //writes LB block to corresponding backup path
-        private void storeLBBlock(MFUserMode.MFUserMode.LB_BLOCK lbBlock, Common.JobVM vm, Common.VMHDD hdd)
+        private void storeLBBlock(MFUserMode.MFUserMode.LB_BLOCK lbBlock, System.IO.FileStream lbDestinationStream)
         {
             //write data to stream if stream exists
-            if (hdd.ldDestinationStream != null)
+            if (lbDestinationStream != null)
             {
                 byte[] buffer;
 
                 //write timestamp
                 ulong timeStamp = ulong.Parse(DateTime.Now.ToString("yyyyMMddHHmmss"));
                 buffer = BitConverter.GetBytes(timeStamp);
-                hdd.ldDestinationStream.Write(buffer, 0, 8);
+                lbDestinationStream.Write(buffer, 0, 8);
 
                 //write offset
                 buffer = BitConverter.GetBytes(lbBlock.offset);
-                hdd.ldDestinationStream.Write(buffer, 0, 8);
+                lbDestinationStream.Write(buffer, 0, 8);
 
                 //write length
                 buffer = BitConverter.GetBytes(lbBlock.length);
-                hdd.ldDestinationStream.Write(buffer, 0, 8);
+                lbDestinationStream.Write(buffer, 0, 8);
 
                 //write payload data
-                hdd.ldDestinationStream.Write(lbBlock.buffer, 0, (int)lbBlock.length);
+                lbDestinationStream.Write(lbBlock.buffer, 0, (int)lbBlock.length);
 
                 //flush stream
-                hdd.ldDestinationStream.Flush();
+                lbDestinationStream.Flush();
             }
         }
 
@@ -282,31 +279,29 @@ namespace nxmBackup.HVBackupCore
                 this.lbReadThread.Abort();
 
                 //close all open filestreams
-                foreach(Common.JobVM vm in jobObject.JobVMs)
+                foreach(LBHDDWorker worker in RunningHDDWorker)
                 {
-                    foreach(Common.VMHDD hdd in vm.vmHDDs)
+                    //get vhdx size
+                    System.IO.FileInfo fileInfo = new System.IO.FileInfo(worker.hddPath);
+                    UInt64 vhdxSize;
+                    try
                     {
-                        //get vhdx size
-                        System.IO.FileInfo fileInfo = new System.IO.FileInfo(hdd.path);
-                        UInt64 vhdxSize;
-                        try
-                        {
-                            vhdxSize = (UInt64)fileInfo.Length;
-                        }
-                        catch (Exception)
-                        {
-                            vhdxSize = 0;
-                        }
-
-                        //write vhdx size to file header
-                        hdd.ldDestinationStream.Seek(0, System.IO.SeekOrigin.Begin);
-                        byte[] buffer = BitConverter.GetBytes(vhdxSize);
-                        hdd.ldDestinationStream.Write(buffer, 0, 8);
-
-                        //close stream
-                        hdd.ldDestinationStream.Close();
+                        vhdxSize = (UInt64)fileInfo.Length;
                     }
+                    catch (Exception)
+                    {
+                        vhdxSize = 0;
+                    }
+
+                    //write vhdx size to file header
+                    worker.lbFileStream.Seek(0, System.IO.SeekOrigin.Begin);
+                    byte[] buffer = BitConverter.GetBytes(vhdxSize);
+                    worker.lbFileStream.Write(buffer, 0, 8);
+
+                    //close stream
+                    worker.lbFileStream.Close();
                 }
+                
 
                 //write stop to DB
                 this.eventHandler.raiseNewEvent("LiveBackup beendet. " + this.lastPrettyPrintedBytes + " verarbeitet", false, true, this.eventID, Common.EventStatus.info);
@@ -323,6 +318,13 @@ namespace nxmBackup.HVBackupCore
             return builder.ToString() + "\\" + path;
         }
 
+    }
+
+    public struct LBHDDWorker
+    {
+        public System.IO.FileStream lbFileStream;
+        public int lbObjectID;
+        public string hddPath;
     }
 }
 

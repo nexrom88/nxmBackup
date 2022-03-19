@@ -691,19 +691,6 @@ namespace nxmBackup.HVBackupCore
 
                 if (currentVM != null)
                 {
-                    //migrate lb stream when necessary
-                    foreach(VMHDD newHDD in hddsChangedResponse.newHDDs)
-                    {
-                        foreach (VMHDD oldHDD in currentVM.vmHDDs)
-                        {
-                            if (oldHDD.name == newHDD.name)
-                            {
-                                newHDD.lbObjectID = oldHDD.lbObjectID;
-                                newHDD.ldDestinationStream = oldHDD.ldDestinationStream;
-                            }
-                        }
-                    }
-
                     currentVM.vmHDDs = hddsChangedResponse.newHDDs;
                 }
             }
