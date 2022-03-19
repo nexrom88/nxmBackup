@@ -54,8 +54,7 @@ namespace Common
     {
         public string name;
         public string path;
-        public int lbObjectID; //random value for LB hdd identification
-        public System.IO.FileStream ldDestinationStream; //LB destination stream - gets set by LB worker
+        public int lbObjectID;
     }
 
     public struct TransferDetails
