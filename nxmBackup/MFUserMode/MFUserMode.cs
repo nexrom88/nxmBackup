@@ -101,6 +101,13 @@ namespace nxmBackup.MFUserMode
             System.Diagnostics.Process proc = System.Diagnostics.Process.Start(psi);
             proc.WaitForExit();
             int errorCode = proc.ExitCode;
+
+            //write to log when error
+            if (errorCode != 0)
+            {
+                string errorMessage = proc.StandardOutput.ReadToEnd();
+                Common.DBQueries.addLog("loading MF failed. Error Code: " + errorCode.ToString() + Environment.NewLine + errorMessage, Environment.StackTrace, null);
+            }
             return errorCode == 0;
         }
 
@@ -126,6 +133,7 @@ namespace nxmBackup.MFUserMode
             //load mf first
             if (!loadMF())
             {
+
                 return false;
             }
 
