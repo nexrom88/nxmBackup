@@ -154,7 +154,7 @@ namespace nxmBackup.HVBackupCore
             }
             else if (job.Rotation.type == RotationType.blockRotation) //RotationType = "blockRotation"
             {
-                if (job.Rotation.maxElementCount > 0 && getBlockCount(chain) > job.Rotation.maxElementCount)
+                if (job.Rotation.maxElementCount > 0 && getBlockCount(chain) > job.Rotation.maxElementCount +1)
                 {
                     blockRotate(destination, chain);
                 }
