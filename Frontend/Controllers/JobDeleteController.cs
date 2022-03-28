@@ -13,7 +13,19 @@ namespace Frontend.Controllers
         // POST api/<controller>
         public void Post([FromBody] string value)
         {
-            ConfigHandler.JobConfigHandler.deleteJob(int.Parse(value));
+            int jobID = int.Parse(value);
+
+            //stop lb if running
+            foreach (nxmBackup.HVBackupCore.LiveBackupWorker worker in nxmBackup.HVBackupCore.LiveBackupWorker.ActiveWorkers)
+            {
+                if (worker.JobID == jobID)
+                {
+                    worker.stopLB();
+                    break;
+                }
+            }
+
+            ConfigHandler.JobConfigHandler.deleteJob(jobID);
 
             //reload jobs
             App_Start.GUIJobHandler.initJobs();
