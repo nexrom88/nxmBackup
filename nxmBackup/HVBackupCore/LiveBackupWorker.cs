@@ -84,6 +84,11 @@ namespace nxmBackup.HVBackupCore
                 //iterate through all hdds
                 foreach (Common.VMHDD hdd in vm.vmHDDs)
                 {
+                    //message for KM struct:
+                    //1 byte = add(1), delete(2)
+                    //4 bytes = object id
+                    //256 bytes = path string
+
                     byte[] data = new byte[261];
                     data[0] = 1;
                     byte[] objectIDBuffer = BitConverter.GetBytes(hdd.lbObjectID);

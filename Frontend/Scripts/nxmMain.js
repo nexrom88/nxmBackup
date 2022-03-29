@@ -512,6 +512,16 @@ function registerNextPageClickHandler(currentPage, selectedEditJob) {
                 var selectedVMs = $(".availablevm.active");
                 newJobObj["vms"] = [];
 
+                //multiple VMs just possible when lb is disabled
+                if (selectedVMs.length > 1 && newJobObj["livebackup"]) {
+                    Swal.fire(
+                        'Eingabefehler',
+                        'Wenn LiveBackup aktiviert ist, darf der Job nur aus einer virtuellen Maschine bestehen',
+                        'error'
+                    );
+                    return;
+                }
+
                 //add vm IDs to newJob object
                 for (var i = 0; i < selectedVMs.length; i++) {
                     var vm = {};
