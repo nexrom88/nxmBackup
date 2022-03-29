@@ -617,25 +617,29 @@ namespace nxmBackup.HVBackupCore
             LiveBackupWorker lbWorker = null;
             if (job.LiveBackup)
             {
-                //it is possible that the job structure changed while performing backup (e.g. new job created)
-                // => so we do not update the job structure here but we look for the current job within joblist and update that structure
-
-                
-                foreach(ConfigHandler.OneJob dbJob in ConfigHandler.JobConfigHandler.Jobs)
+                //another lb job already running? cancel!
+                if (LiveBackupWorker.ActiveWorkers.Count > 0)
                 {
-                    if (dbJob.DbId == job.DbId)
-                    {
-                        lbWorker = new nxmBackup.HVBackupCore.LiveBackupWorker(job.DbId, this.eventHandler);
-                        
-                        //add worker to global list
-                        LiveBackupWorker.ActiveWorkers.Add(lbWorker);
-                        lbWorker.startLB();
-
-                        dbJob.LiveBackupActive = true;
-                    }
+                    this.eventHandler.raiseNewEvent("LiveBackup kann nicht gestartet werden, da ein anderer Live-Backup Job bereits läuft", false, false, NO_RELATED_EVENT, EventStatus.warning);
                 }
+                else
+                {
+                    //it is possible that the job structure changed while performing backup (e.g. new job created)
+                    // => so we do not update the job structure here but we look for the current job within joblist and update that structure                
+                    foreach (ConfigHandler.OneJob dbJob in ConfigHandler.JobConfigHandler.Jobs)
+                    {
+                        if (dbJob.DbId == job.DbId)
+                        {
+                            lbWorker = new nxmBackup.HVBackupCore.LiveBackupWorker(job.DbId, this.eventHandler);
 
-                
+                            //add worker to global list
+                            LiveBackupWorker.ActiveWorkers.Add(lbWorker);
+                            lbWorker.startLB();
+
+                            dbJob.LiveBackupActive = true;
+                        }
+                    }
+                }                    
             }
 
             //convert the snapshot to a reference point
