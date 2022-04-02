@@ -8,7 +8,7 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using Common;
 using System.Windows.Forms;
-using Npgsql;
+using Microsoft.Data.Sqlite;
 using nxmBackup.HVBackupCore;
 
 namespace ConfigHandler
@@ -221,7 +221,7 @@ namespace ConfigHandler
                 Dictionary<string, object> parameters = new Dictionary<string, object>();
 
                 //start DB transaction
-                NpgsqlTransaction transaction = connection.beginTransaction();
+                SqliteTransaction transaction = connection.beginTransaction();
 
                 List<Dictionary<string, object>> values;
                 parameters.Add("id", updatedJobID);
@@ -284,7 +284,7 @@ namespace ConfigHandler
                 Dictionary<string, object> parameters = new Dictionary<string, object>();
 
                 //start DB transaction
-                NpgsqlTransaction transaction = connection.beginTransaction();
+                SqliteTransaction transaction = connection.beginTransaction();
 
                 List<Dictionary<string, object>> values;
 
@@ -333,7 +333,7 @@ namespace ConfigHandler
         }
 
         //creates a target storage db entry
-        private static void createTargetStorageEntry(int jobID, string path, string username, string password, string type, Common.DBConnection connection, NpgsqlTransaction transaction)
+        private static void createTargetStorageEntry(int jobID, string path, string username, string password, string type, Common.DBConnection connection, SqliteTransaction transaction)
         {
             //init value which are not set possibly
             if (username == null)
@@ -370,7 +370,7 @@ namespace ConfigHandler
         }
 
         //creates a vm-hdd relation for all selected vms within a job. vm must be in DB already
-        private static void createVMHDDRelation(List<JobVM> vms, Common.DBConnection connection, NpgsqlTransaction transaction, List<string> alreadyExistedvmIDs)
+        private static void createVMHDDRelation(List<JobVM> vms, Common.DBConnection connection, SqliteTransaction transaction, List<string> alreadyExistedvmIDs)
         {
             //iterate through all vms
             foreach (JobVM vm in vms)
@@ -406,7 +406,7 @@ namespace ConfigHandler
 
 
         //deletes the JobVM relation for a given job
-        private static void deleteJobVMRelation(int jobID, Common.DBConnection connection, NpgsqlTransaction transaction)
+        private static void deleteJobVMRelation(int jobID, Common.DBConnection connection, SqliteTransaction transaction)
         {
             //build and execute delete query
             Dictionary<string, object> parameters = new Dictionary<string, object>();
@@ -415,7 +415,7 @@ namespace ConfigHandler
         }
 
         //creates a job-vms relation, return already existed vm ids
-        private static List<string> createJobVMRelation(OneJob job, int jobID, Common.DBConnection connection, NpgsqlTransaction transaction)
+        private static List<string> createJobVMRelation(OneJob job, int jobID, Common.DBConnection connection, SqliteTransaction transaction)
         {
             List<string> alreadyExistedvmIDs = new List<string>();
 

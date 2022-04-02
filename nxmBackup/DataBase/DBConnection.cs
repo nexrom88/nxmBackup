@@ -4,27 +4,27 @@ using System.Data.SqlClient;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Npgsql;
+using Microsoft.Data.Sqlite;
 
 namespace Common
 {
     public class DBConnection : IDisposable
     {
-        private string server = "localhost";
-        private string database = "nxmBackup";
-        private string user = "nxm";
-        private string password = "31ACE875A263C33BD30465F8FD1008FF";
+        //private string server = "localhost";
+        //private string database = "nxmBackup";
+        //private string user = "nxm";
+        //private string password = "31ACE875A263C33BD30465F8FD1008FF";
 
         public bool ConnectionEstablished { set; get; }
 
-        private NpgsqlConnection connection;
+        private SqliteConnection connection;
 
         public DBConnection()
         {
-            //start SQL Server connection
+            //start SQLite Server connection
             //build connection string
-            string connectionString = $"Server={this.server};Database={this.database};User Id={this.user};Password={this.password};";
-            this.connection = new NpgsqlConnection(connectionString);
+            string connectionString = "Data Source=nxm.db";
+            this.connection = new SqliteConnection(connectionString);
 
             try
             {
@@ -40,7 +40,7 @@ namespace Common
         }
 
         //opens a transaction
-        public NpgsqlTransaction beginTransaction()
+        public SqliteTransaction beginTransaction()
         {
             return connection.BeginTransaction();
         }
@@ -58,23 +58,23 @@ namespace Common
         }
 
         //sends a sql query
-        public List<Dictionary<string, object>> doReadQuery(string query, Dictionary<string, object> parameters, NpgsqlTransaction transaction)
+        public List<Dictionary<string, object>> doReadQuery(string query, Dictionary<string, object> parameters, SqliteTransaction transaction)
         {
             try
             {
 
 
-                NpgsqlCommand command;
+                SqliteCommand command;
 
                 if (transaction == null)
                 {
                     //query without transaction
-                    command = new NpgsqlCommand(query, connection);
+                    command = new SqliteCommand(query, connection);
                 }
                 else
                 {
                     //query within transaction
-                    command = new NpgsqlCommand(query, connection, transaction);
+                    command = new SqliteCommand(query, connection, transaction);
                 }
 
                 //add all query parameters
@@ -87,7 +87,7 @@ namespace Common
                 }
 
 
-                NpgsqlDataReader reader = command.ExecuteReader();
+                SqliteDataReader reader = command.ExecuteReader();
 
                 //retVal is a list of dictionaries
                 List<Dictionary<string, object>> result = new List<Dictionary<string, object>>();
@@ -124,19 +124,19 @@ namespace Common
         }
 
         // Do operation.
-        public int doWriteQuery(string query, Dictionary<string, object> parameters, NpgsqlTransaction transaction)
+        public int doWriteQuery(string query, Dictionary<string, object> parameters, SqliteTransaction transaction)
         {
-            NpgsqlCommand command;
+            SqliteCommand command;
 
             if (transaction == null)
             {
                 //query without transaction
-                command = new NpgsqlCommand(query, connection);
+                command = new SqliteCommand(query, connection);
             }
             else
             {
                 //query within transaction
-                command = new NpgsqlCommand(query, connection, transaction);
+                command = new SqliteCommand(query, connection, transaction);
             }
 
             //add all query parameters
