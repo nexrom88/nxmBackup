@@ -236,7 +236,9 @@
     <Content Include="fonts\fontawesome-webfont.woff" />
     <Content Include="fonts\fontawesome-webfont.ttf" />
     <Content Include="fonts\fontawesome-webfont.eot" />
-    <Content Include="nxm.db" />
+    <Content Include="nxm.db">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <None Include="Properties\PublishProfiles\IISProfile.pubxml" />
     <None Include="Scripts\jquery-3.6.0.intellisense.js" />
     <Content Include="Scripts\jquery-3.6.0.js" />
@@ -258,6 +260,9 @@
     <Content Include="Scripts\nxmSettings.js" />
     <Content Include="Scripts\restoreHeartbeatWebWorker.js" />
     <Content Include="Scripts\sweetalert2.js" />
+    <Content Include="SQLite.Interop.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Templates\eventsListItem.html" />
     <Content Include="Templates\flrBrowser.html" />
     <Content Include="Templates\fullRestoreLogContainer.html" />

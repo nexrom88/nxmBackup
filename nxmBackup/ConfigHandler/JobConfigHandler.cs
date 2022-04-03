@@ -8,7 +8,7 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using Common;
 using System.Windows.Forms;
-using Microsoft.Data.Sqlite;
+using System.Data.SQLite;
 using nxmBackup.HVBackupCore;
 
 namespace ConfigHandler
@@ -49,19 +49,19 @@ namespace ConfigHandler
                 {
                     //build structure
                     OneJob newJob = new OneJob();
-                    newJob.DbId = (int)jobDB["id"];
-                    newJob.Enabled = (bool)jobDB["enabled"];
+                    newJob.DbId = Convert.ToInt32(jobDB["id"]);
+                    newJob.Enabled = Convert.ToBoolean(jobDB["enabled"]);
                     newJob.Name = jobDB["name"].ToString();
-                    newJob.BlockSize = (int)jobDB["blocksize"];
-                    newJob.LiveBackup = (bool)jobDB["livebackup"];
-                    newJob.Incremental = (bool)jobDB["incremental"];
-                    newJob.UsingDedupe = (bool)jobDB["usededupe"];
+                    newJob.BlockSize = Convert.ToInt32(jobDB["blocksize"]);
+                    newJob.LiveBackup = Convert.ToBoolean(jobDB["livebackup"]);
+                    newJob.Incremental = Convert.ToBoolean(jobDB["incremental"]);
+                    newJob.UsingDedupe = Convert.ToBoolean(jobDB["usededupe"]);
                     newJob.TargetType = jobDB["targettype"].ToString();
                     newJob.TargetPath = jobDB["targetpath"].ToString();
                     newJob.TargetUsername = jobDB["targetuser"].ToString();
                     newJob.TargetPassword = jobDB["targetpassword"].ToString();
 
-                    newJob.UseEncryption = (bool)jobDB["useencryption"];
+                    newJob.UseEncryption = Convert.ToBoolean(jobDB["useencryption"]);
 
                     if (newJob.UseEncryption)
                     {
@@ -86,7 +86,7 @@ namespace ConfigHandler
                             break;
                     }
 
-                    rota.maxElementCount = (int)jobDB["maxelements"];
+                    rota.maxElementCount = Convert.ToInt32(jobDB["maxelements"]);
                     newJob.Rotation = rota;
 
 
@@ -105,13 +105,13 @@ namespace ConfigHandler
                             break;
                     }
                     interval.day = jobDB["day"].ToString();
-                    interval.minute = (int)jobDB["minute"];
-                    interval.hour = (int)jobDB["hour"];
+                    interval.minute = Convert.ToInt32(jobDB["minute"]);
+                    interval.hour = Convert.ToInt32(jobDB["hour"]);
                     newJob.Interval = interval;
 
                     //query VMs
                     Dictionary<string, object> paramaters = new Dictionary<string, object>();
-                    paramaters.Add("jobid", (int)jobDB["id"]);
+                    paramaters.Add("jobid", Convert.ToInt32(jobDB["id"]));
                     List<Dictionary<string, object>> vms = connection.doReadQuery("SELECT VMs.id, VMs.name FROM vms INNER JOIN jobvmrelation ON JobVMRelation.jobid=@jobid AND jobvmrelation.vmid=VMs.id", paramaters, null);
                     newJob.JobVMs = new List<JobVM>();
 
@@ -148,7 +148,7 @@ namespace ConfigHandler
 
                     //get last jobExecution attributes
                     paramaters.Clear();
-                    paramaters.Add("jobid", (int)jobDB["id"]);
+                    paramaters.Add("jobid", Convert.ToInt32(jobDB["id"]));
                     List<Dictionary<string, object>> jobExecutions = connection.doReadQuery("SELECT * FROM jobexecutions WHERE jobexecutions.jobid=@jobid and jobexecutions.id = (SELECT MAX(id) FROM jobexecutions WHERE jobexecutions.jobid=@jobid AND jobexecutions.type='backup')", paramaters, null);
 
                     if (jobExecutions.Count > 1) MessageBox.Show("db error: jobExecutions hat mehr als 1 result");
@@ -221,7 +221,7 @@ namespace ConfigHandler
                 Dictionary<string, object> parameters = new Dictionary<string, object>();
 
                 //start DB transaction
-                SqliteTransaction transaction = connection.beginTransaction();
+                SQLiteTransaction transaction = connection.beginTransaction();
 
                 List<Dictionary<string, object>> values;
                 parameters.Add("id", updatedJobID);
@@ -284,7 +284,7 @@ namespace ConfigHandler
                 Dictionary<string, object> parameters = new Dictionary<string, object>();
 
                 //start DB transaction
-                SqliteTransaction transaction = connection.beginTransaction();
+                SQLiteTransaction transaction = connection.beginTransaction();
 
                 List<Dictionary<string, object>> values;
 
@@ -292,7 +292,7 @@ namespace ConfigHandler
                 //get rotationtype ID
                 parameters.Add("name", job.Rotation.type.ToString().ToLower());
                 values = connection.doReadQuery("SELECT id FROM RotationType WHERE name=@name", parameters, transaction);
-                int rotationID = (int)(values[0]["id"]);
+                int rotationID = int.Parse(values[0]["id"].ToString());
 
                 //create job entry
                 parameters = new Dictionary<string, object>();
@@ -311,11 +311,9 @@ namespace ConfigHandler
                 parameters.Add("usededupe", job.UsingDedupe);
 
 
-                values = connection.doReadQuery("INSERT INTO jobs (name, incremental, interval, minute, hour, day, blocksize, maxelements, livebackup, rotationtypeid, useencryption, aeskey, usededupe) VALUES(@name, @incremental, @interval, @minute, @hour, @day, @blocksize, @maxelements, @livebackup, @rotationtypeID, @useencryption, @aeskey, @usededupe) RETURNING id;", parameters, transaction);
+                values = connection.doReadQuery("INSERT INTO jobs (name, incremental, interval, minute, hour, day, blocksize, maxelements, livebackup, rotationtypeid, useencryption, aeskey, usededupe) VALUES(@name, @incremental, @interval, @minute, @hour, @day, @blocksize, @maxelements, @livebackup, @rotationtypeID, @useencryption, @aeskey, @usededupe);", parameters, transaction);
 
-
-
-                int jobID = (int)(values[0]["id"]);
+                int jobID = (int)connection.getLastInsertedID();
 
                 //create target dtore entry
                 createTargetStorageEntry(jobID, job.TargetPath, job.TargetUsername, job.TargetPassword, job.TargetType, connection, transaction);
@@ -333,7 +331,7 @@ namespace ConfigHandler
         }
 
         //creates a target storage db entry
-        private static void createTargetStorageEntry(int jobID, string path, string username, string password, string type, Common.DBConnection connection, SqliteTransaction transaction)
+        private static void createTargetStorageEntry(int jobID, string path, string username, string password, string type, Common.DBConnection connection, SQLiteTransaction transaction)
         {
             //init value which are not set possibly
             if (username == null)
@@ -370,7 +368,7 @@ namespace ConfigHandler
         }
 
         //creates a vm-hdd relation for all selected vms within a job. vm must be in DB already
-        private static void createVMHDDRelation(List<JobVM> vms, Common.DBConnection connection, SqliteTransaction transaction, List<string> alreadyExistedvmIDs)
+        private static void createVMHDDRelation(List<JobVM> vms, Common.DBConnection connection, SQLiteTransaction transaction, List<string> alreadyExistedvmIDs)
         {
             //iterate through all vms
             foreach (JobVM vm in vms)
@@ -388,8 +386,8 @@ namespace ConfigHandler
                     Dictionary<string, object> parameters = new Dictionary<string, object>();
                     parameters.Add("name", currentHDD.name);
                     parameters.Add("path", currentHDD.path);
-                    List<Dictionary<string, object>> result = connection.doReadQuery("INSERT INTO hdds (name, path) VALUES (@name, @path) RETURNING id;", parameters, transaction);
-                    hddIDs.Add((int)(result[0]["id"]));
+                    List<Dictionary<string, object>> result = connection.doReadQuery("INSERT INTO hdds (name, path) VALUES (@name, @path);", parameters, transaction);
+                    hddIDs.Add((int)(connection.getLastInsertedID()));
                 }
 
                 //add vm hdd relations
@@ -406,7 +404,7 @@ namespace ConfigHandler
 
 
         //deletes the JobVM relation for a given job
-        private static void deleteJobVMRelation(int jobID, Common.DBConnection connection, SqliteTransaction transaction)
+        private static void deleteJobVMRelation(int jobID, Common.DBConnection connection, SQLiteTransaction transaction)
         {
             //build and execute delete query
             Dictionary<string, object> parameters = new Dictionary<string, object>();
@@ -415,7 +413,7 @@ namespace ConfigHandler
         }
 
         //creates a job-vms relation, return already existed vm ids
-        private static List<string> createJobVMRelation(OneJob job, int jobID, Common.DBConnection connection, SqliteTransaction transaction)
+        private static List<string> createJobVMRelation(OneJob job, int jobID, Common.DBConnection connection, SQLiteTransaction transaction)
         {
             List<string> alreadyExistedvmIDs = new List<string>();
 

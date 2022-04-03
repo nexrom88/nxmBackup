@@ -4,7 +4,7 @@ using System.Data.SqlClient;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Microsoft.Data.Sqlite;
+using System.Data.SQLite;
 
 namespace Common
 {
@@ -17,14 +17,30 @@ namespace Common
 
         public bool ConnectionEstablished { set; get; }
 
-        private SqliteConnection connection;
+        private SQLiteConnection connection;
+
+        private static string DBPath{ get; set;}
 
         public DBConnection()
         {
             //start SQLite Server connection
-            //build connection string
-            string connectionString = "Data Source=nxm.db";
-            this.connection = new SqliteConnection(connectionString);
+
+            //read base path from registry if necessary
+            if (DBPath == null)
+            {
+                string basePath = (string)Microsoft.Win32.Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\nxmBackup", "BasePath", "");
+                DBPath = System.IO.Path.Combine(basePath, "nxm.db");
+            }
+            
+
+            if (!System.IO.File.Exists(DBPath))
+            {
+                ConnectionEstablished = false;
+                return;
+            }
+
+            string connectionString = "Data Source=" + DBPath;
+            this.connection = new SQLiteConnection(connectionString);
 
             try
             {
@@ -40,41 +56,41 @@ namespace Common
         }
 
         //opens a transaction
-        public SqliteTransaction beginTransaction()
+        public SQLiteTransaction beginTransaction()
         {
             return connection.BeginTransaction();
         }
 
         //commits a transaction
-        public void commitTransaction(SqlTransaction transaction)
+        public void commitTransaction(SQLiteTransaction transaction)
         {
             transaction.Commit();
         }
 
         //performs a rollback for the given transaction
-        public void rollbackTransaction(SqlTransaction transaction)
+        public void rollbackTransaction(SQLiteTransaction transaction)
         {
             transaction.Rollback();
         }
 
         //sends a sql query
-        public List<Dictionary<string, object>> doReadQuery(string query, Dictionary<string, object> parameters, SqliteTransaction transaction)
+        public List<Dictionary<string, object>> doReadQuery(string query, Dictionary<string, object> parameters, SQLiteTransaction transaction)
         {
             try
             {
 
 
-                SqliteCommand command;
+                SQLiteCommand command;
 
                 if (transaction == null)
                 {
                     //query without transaction
-                    command = new SqliteCommand(query, connection);
+                    command = new SQLiteCommand(query, connection);
                 }
                 else
                 {
                     //query within transaction
-                    command = new SqliteCommand(query, connection, transaction);
+                    command = new SQLiteCommand(query, connection, transaction);
                 }
 
                 //add all query parameters
@@ -87,7 +103,7 @@ namespace Common
                 }
 
 
-                SqliteDataReader reader = command.ExecuteReader();
+                SQLiteDataReader reader = command.ExecuteReader();
 
                 //retVal is a list of dictionaries
                 List<Dictionary<string, object>> result = new List<Dictionary<string, object>>();
@@ -118,25 +134,29 @@ namespace Common
                 return result;
             }catch(Exception ex)
             {
-                Common.DBQueries.addLog("error on performing DB read query", Environment.StackTrace, ex);
+                try
+                {
+                    Common.DBQueries.addLog("error on performing DB read query", Environment.StackTrace, ex);
+                }
+                catch (Exception ex2) { }
                 return null;
             }
         }
 
         // Do operation.
-        public int doWriteQuery(string query, Dictionary<string, object> parameters, SqliteTransaction transaction)
+        public int doWriteQuery(string query, Dictionary<string, object> parameters, SQLiteTransaction transaction)
         {
-            SqliteCommand command;
+            SQLiteCommand command;
 
             if (transaction == null)
             {
                 //query without transaction
-                command = new SqliteCommand(query, connection);
+                command = new SQLiteCommand(query, connection);
             }
             else
             {
                 //query within transaction
-                command = new SqliteCommand(query, connection, transaction);
+                command = new SQLiteCommand(query, connection, transaction);
             }
 
             //add all query parameters
@@ -157,11 +177,19 @@ namespace Common
             }
         }
 
+        //gets the last inserted id
+        public Int64 getLastInsertedID()
+        {
+            return connection.LastInsertRowId;
+        }
+
         //closes the db connection
         public void Dispose()
         {
-            this.connection.Close();
-            this.connection.Dispose();
+            if (this.connection != null) {
+                this.connection.Close();
+                this.connection.Dispose();
+            }
         }
     }
 }
