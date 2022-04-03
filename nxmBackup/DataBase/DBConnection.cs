@@ -29,6 +29,10 @@ namespace Common
             if (DBPath == null)
             {
                 string basePath = (string)Microsoft.Win32.Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\nxmBackup", "BasePath", "");
+                if (basePath == null){
+                    ConnectionEstablished = false;
+                    return;
+                }
                 DBPath = System.IO.Path.Combine(basePath, "nxm.db");
             }
             
