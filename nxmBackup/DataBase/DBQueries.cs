@@ -1,4 +1,4 @@
-﻿using Microsoft.Data.Sqlite;
+﻿using System.Data.SQLite;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -34,7 +34,7 @@ namespace Common
             using (DBConnection dbConn = new DBConnection())
             {
                 //start transaction
-                SqliteTransaction transaction = dbConn.beginTransaction();
+                SQLiteTransaction transaction = dbConn.beginTransaction();
 
                 //iterate through each key
                 foreach (string key in settings.Keys)
@@ -102,7 +102,7 @@ namespace Common
         {
             using (DBConnection dbConn = new DBConnection())
             {
-                SqliteTransaction transaction = dbConn.beginTransaction();
+                SQLiteTransaction transaction = dbConn.beginTransaction();
 
                 //delete vm hdd relation
                 Dictionary<string, object> parameters = new Dictionary<string, object>();
@@ -411,7 +411,7 @@ namespace Common
         {
             using (DBConnection dbConn = new DBConnection())
             {
-                SqliteTransaction transaction = dbConn.beginTransaction();
+                SQLiteTransaction transaction = dbConn.beginTransaction();
                 dbConn.doWriteQuery("DELETE FROM log;", null, transaction);
                 dbConn.doWriteQuery("DELETE FROM storagetarget;", null, transaction);
                 dbConn.doWriteQuery("DELETE FROM jobvmrelation;", null, transaction);
