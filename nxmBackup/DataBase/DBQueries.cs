@@ -116,8 +116,8 @@ namespace Common
                     parameters.Clear();
                     parameters.Add("name", hdd.name);
                     parameters.Add("path", hdd.path);
-                    result = dbConn.doReadQuery("INSERT INTO hdds (name, path) VALUES (@name, @path) RETURNING id;", parameters, transaction);
-                    int newHDDID = (int)(result[0]["id"]);
+                    result = dbConn.doReadQuery("INSERT INTO hdds (name, path) VALUES (@name, @path);", parameters, transaction);
+                    int newHDDID = (int)dbConn.getLastInsertedID();
 
                     //add relation
                     parameters.Clear();
@@ -140,8 +140,8 @@ namespace Common
             {
                 using (DBConnection dbConn = new DBConnection())
                 {
-                    List<Dictionary<string, object>> jobExecutionIds = dbConn.doReadQuery("INSERT INTO jobexecutions (jobid, isrunning, bytesprocessed, bytestransfered, successful, warnings, errors, type) " +
-                        "VALUES(@jobId, @isRunning, @bytesprocessed, @bytestransfered, @successful, @warnings, @errors, @type) RETURNING id;",
+                    dbConn.doReadQuery("INSERT INTO jobexecutions (jobid, isrunning, bytesprocessed, bytestransfered, successful, warnings, errors, type) " +
+                        "VALUES(@jobId, @isRunning, @bytesprocessed, @bytestransfered, @successful, @warnings, @errors, @type);",
                         new Dictionary<string, object>() {
                             { "jobId", jobId },
                             { "isRunning", true },
@@ -153,12 +153,14 @@ namespace Common
                             { "type", type }
                         }, null);
 
-                    if (jobExecutionIds == null || jobExecutionIds.Count != 1)
+                    int newExecutionID = (int)dbConn.getLastInsertedID();
+
+                    if (newExecutionID <1)
                     {
                         throw new Exception("Error during insert operation (no insert id)");
                     }
 
-                    return (int)(jobExecutionIds[0]["id"]);
+                    return newExecutionID;
                 }
             }
             catch (Exception ex)
@@ -202,16 +204,18 @@ namespace Common
             {
                 using (DBConnection dbConn = new DBConnection())
                 {
-                    List<Dictionary<string, object>> jobExecutionEventIds = dbConn.doReadQuery("INSERT INTO jobexecutionevents (vmid, info, jobexecutionid, status) VALUES (@vmId, @info, @jobExecutionId, (SELECT id FROM EventStatus WHERE text= @status)) RETURNING id;",
+                    List<Dictionary<string, object>> jobExecutionEventIds = dbConn.doReadQuery("INSERT INTO jobexecutionevents (vmid, info, jobexecutionid, status) VALUES (@vmId, @info, @jobExecutionId, (SELECT id FROM EventStatus WHERE text= @status));",
                         new Dictionary<string, object>() { { "vmId", vmName }, { "info", eventProperties.text }, { "jobExecutionId", eventProperties.jobExecutionId }, { "status", eventProperties.eventStatus } }, null);
 
-                    if (jobExecutionEventIds == null || jobExecutionEventIds.Count == 0)
+                    int newEventID = (int)dbConn.getLastInsertedID();
+
+                    if (newEventID <1)
                     {
                         throw new Exception("Error during insert operation (affectedRows != 1)");
                     }
                     else
                     {
-                        return (int)(jobExecutionEventIds[0]["id"]);
+                        return newEventID;
                     }
                 }
             }
