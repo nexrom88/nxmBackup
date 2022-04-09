@@ -159,9 +159,9 @@ namespace ConfigHandler
 
                             newJob.LastStop = jobExecution["stoptime"].ToString();
 
-                            newJob.Successful = jobExecution["successful"].ToString();
+                            newJob.Successful = Convert.ToBoolean(jobExecution["successful"]).ToString();
                            
-                            newJob.IsRunning = bool.Parse(jobExecution["isrunning"].ToString());
+                            newJob.IsRunning = Convert.ToBoolean(jobExecution["isrunning"]);
 
                             newJob.LastBytesProcessed = UInt64.Parse(jobExecution["bytesprocessed"].ToString());
 

@@ -140,8 +140,8 @@ namespace Common
             {
                 using (DBConnection dbConn = new DBConnection())
                 {
-                    dbConn.doReadQuery("INSERT INTO jobexecutions (jobid, isrunning, bytesprocessed, bytestransfered, successful, warnings, errors, type) " +
-                        "VALUES(@jobId, @isRunning, @bytesprocessed, @bytestransfered, @successful, @warnings, @errors, @type);",
+                    dbConn.doReadQuery("INSERT INTO jobexecutions (jobid, isrunning, bytesprocessed, bytestransfered, successful, warnings, errors, type, startstamp) " +
+                        "VALUES(@jobId, @isRunning, @bytesprocessed, @bytestransfered, @successful, @warnings, @errors, @type, (datetime('now','localtime')));",
                         new Dictionary<string, object>() {
                             { "jobId", jobId },
                             { "isRunning", true },
@@ -150,7 +150,7 @@ namespace Common
                             { "successful", true },
                             { "warnings", 0 },
                             { "errors", 0 },
-                            { "type", type }
+                            { "type", type },
                         }, null);
 
                     int newExecutionID = (int)dbConn.getLastInsertedID();
@@ -204,7 +204,7 @@ namespace Common
             {
                 using (DBConnection dbConn = new DBConnection())
                 {
-                    List<Dictionary<string, object>> jobExecutionEventIds = dbConn.doReadQuery("INSERT INTO jobexecutionevents (vmid, info, jobexecutionid, status) VALUES (@vmId, @info, @jobExecutionId, (SELECT id FROM EventStatus WHERE text= @status));",
+                    List<Dictionary<string, object>> jobExecutionEventIds = dbConn.doReadQuery("INSERT INTO jobexecutionevents (vmid, info, jobexecutionid, status, timestamp) VALUES (@vmId, @info, @jobExecutionId, (SELECT id FROM EventStatus WHERE text= @status), (datetime('now','localtime')));",
                         new Dictionary<string, object>() { { "vmId", vmName }, { "info", eventProperties.text }, { "jobExecutionId", eventProperties.jobExecutionId }, { "status", eventProperties.eventStatus } }, null);
 
                     int newEventID = (int)dbConn.getLastInsertedID();
@@ -265,7 +265,7 @@ namespace Common
             {
                 using (DBConnection dbConn = new DBConnection())
                 {
-                    int affectedRows = dbConn.doWriteQuery("UPDATE JobExecutionEvents SET info=concat(info,@info), status=(SELECT id FROM EventStatus WHERE text= @status)  WHERE id=@id;",
+                    int affectedRows = dbConn.doWriteQuery("UPDATE JobExecutionEvents SET info= info || @info, status=(SELECT id FROM EventStatus WHERE text= @status)  WHERE id=@id;",
                         new Dictionary<string, object>() { { "info", eventProperties.text }, { "id", eventProperties.eventIdToUpdate }, { "status", eventProperties.eventStatus } }, null);
 
                     if (affectedRows == 0)
@@ -349,7 +349,7 @@ namespace Common
                 using (DBConnection dbConn = new DBConnection())
                 {
                     //close jobexecution
-                    int affectedRows = dbConn.doWriteQuery("UPDATE jobexecutions SET stoptime=now(), isrunning=false, bytesProcessed=@bytesProcessed, bytesTransfered=@bytesTransfered, successful=@successful, warnings=@warnings, errors=@errors WHERE id=@id;",
+                    int affectedRows = dbConn.doWriteQuery("UPDATE jobexecutions SET stoptime=(datetime('now','localtime')), isrunning=false, bytesProcessed=@bytesProcessed, bytesTransfered=@bytesTransfered, successful=@successful, warnings=@warnings, errors=@errors WHERE id=@id;",
                         new Dictionary<string, object>() { { "bytesprocessed", (Int64)executionProperties.bytesProcessed }, { "bytestransfered", (Int64)executionProperties.bytesTransfered }, { "successful", executionProperties.successful }, { "warnings", executionProperties.warnings }, { "errors", executionProperties.errors }, { "id", int.Parse(jobExecutionId) } }, null);
 
                     if (affectedRows == 0)

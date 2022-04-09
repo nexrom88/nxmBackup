@@ -67,6 +67,12 @@ namespace Common
             path = path.Replace("/", "\\");
             string fileName = Path.GetFileName(file);
 
+            bool calculateRates = false;
+            if (fileName.EndsWith("vhdx") || file.EndsWith("vhd"))
+            {
+                calculateRates = true;
+            }
+
             //get base io Streams
             System.IO.FileStream baseSourceStream = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
 
@@ -129,20 +135,27 @@ namespace Common
                 //add read bytes to statistics counter
                 transferDetails.bytesProcessed += (UInt64)buffer.Length;
 
-                //rate calculations
-                byteProcessCounter += buffer.Length;
-                if (System.DateTimeOffset.Now.ToUnixTimeMilliseconds() - 1000 >= lastTransferTimestamp)
+                if (calculateRates)
                 {
-                    transferRate = (Int64)compressionStream.TotalCompressedBytesWritten - lastTotalByteTransferCounter;
-                    lastTotalByteTransferCounter = (Int64)compressionStream.TotalCompressedBytesWritten;
+                    //rate calculations
+                    byteProcessCounter += buffer.Length;
+                    if (System.DateTimeOffset.Now.ToUnixTimeMilliseconds() - 1000 >= lastTransferTimestamp)
+                    {
+                        transferRate = (Int64)compressionStream.TotalCompressedBytesWritten - lastTotalByteTransferCounter;
+                        lastTotalByteTransferCounter = (Int64)compressionStream.TotalCompressedBytesWritten;
 
-                    processRate = byteProcessCounter;
-                    
-                    byteProcessCounter = 0;
+                        processRate = byteProcessCounter;
 
-                    lastTransferTimestamp = System.DateTimeOffset.Now.ToUnixTimeMilliseconds();
+                        byteProcessCounter = 0;
+
+                        lastTransferTimestamp = System.DateTimeOffset.Now.ToUnixTimeMilliseconds();
+                    }
                 }
-
+                else
+                {
+                    transferRate = -1;
+                    processRate = -1;
+                }
 
                 //calculate progress
                 float percentage = (((float)baseSourceStream.Length - (float)bytesRemaining) / (float)baseSourceStream.Length) * 100.0f;
