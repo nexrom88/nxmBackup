@@ -234,7 +234,7 @@ namespace ConfigHandler
                 //get rotationtype ID
                 parameters.Add("name", job.Rotation.type.ToString().ToLower());
                 values = connection.doReadQuery("SELECT id FROM RotationType WHERE name=@name", parameters, transaction);
-                int rotationID = (int)(values[0]["id"]);
+                int rotationID = int.Parse(values[0]["id"].ToString());
 
                 //create job entry
                 parameters = new Dictionary<string, object>();
