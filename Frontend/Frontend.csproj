@@ -183,6 +183,7 @@
     <Compile Include="Controllers\JobDeleteController.cs" />
     <Compile Include="Controllers\LogoutController.cs" />
     <Compile Include="Controllers\vmsController.cs" />
+    <Compile Include="Controllers\wipeDBController.cs" />
     <Compile Include="Controllers\WriteOnlyStreamWrapper.cs" />
     <Compile Include="Filter\AuthFilter.cs" />
     <Compile Include="Global.asax.cs">

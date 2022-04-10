@@ -272,6 +272,10 @@
     fill: #007bff;
 }
 
+#resetLink{
+    text-align:center;
+}
+
 @keyframes color {
     0% {
         background-color: #ffffb3;
