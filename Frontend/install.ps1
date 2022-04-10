@@ -13,16 +13,6 @@ function Randomize-String([string]$inputString){
 
 $installPath = "c:\users\administrator\Desktop\Release"
 
-#add registry key for base path
-$registryPath = "HKLM:\Software\nxmBackup"
-$key = try {
-    Get-Item -Path $registryPath -ErrorAction Stop
-}
-catch {
-    New-Item -Path $registryPath -Force
-}
-$valueName = "BasePath"
-New-ItemProperty -Path $registryPath -Name $valueName -Value $installPath -PropertyType STRING -Force
 
 #add firewall rule
 if (!(Get-NetFirewallRule -DisplayName "nxmBackup").Enabled){
