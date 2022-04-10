@@ -363,7 +363,7 @@ namespace nxmBackup.HVBackupCore
             //delete these snapshots
             foreach(ManagementObject snapshot in snapshots)
             {
-                ManagementObject refPoint = convertToReferencePoint(snapshot);
+                ManagementObject refPoint = convertToReferencePoint(snapshot, false);
                 removeReferencePoint(refPoint);
             }
 
@@ -463,10 +463,13 @@ namespace nxmBackup.HVBackupCore
 
         //converts a snapshot to a reference point
         /// <summary></summary>
-        public ManagementObject convertToReferencePoint(ManagementObject snapshot)
+        public ManagementObject convertToReferencePoint(ManagementObject snapshot, bool raiseEvents)
         {
             ManagementScope scope = new ManagementScope("\\\\localhost\\root\\virtualization\\v2", null);
-            int eventId = this.eventHandler.raiseNewEvent("Referenzpunkt wird erzeugt...", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
+            int eventId = 0;
+            if (raiseEvents) {
+               eventId = this.eventHandler.raiseNewEvent("Referenzpunkt wird erzeugt...", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
+            }
 
             using (ManagementObject settings = WmiUtilities.GetVirtualMachineSnapshotService(scope))
             using (ManagementObject service = WmiUtilities.GetVirtualMachineSnapshotService(scope))
@@ -493,7 +496,10 @@ namespace nxmBackup.HVBackupCore
                     {
                         refSnapshot = (System.Management.ManagementObject)iterator.Current;
                     }
-                    this.eventHandler.raiseNewEvent("erfolgreich", true, false, eventId, EventStatus.successful);
+                    if (raiseEvents)
+                    {
+                        this.eventHandler.raiseNewEvent("erfolgreich", true, false, eventId, EventStatus.successful);
+                    }
                     return refSnapshot;
                 }
             }
@@ -643,7 +649,7 @@ namespace nxmBackup.HVBackupCore
             }
 
             //convert the snapshot to a reference point
-            ManagementObject refP = this.convertToReferencePoint(currentSnapshot);
+            ManagementObject refP = this.convertToReferencePoint(currentSnapshot, true);
 
             //write backup xml
             string parentiid = "";
@@ -1047,7 +1053,7 @@ namespace nxmBackup.HVBackupCore
             List<ManagementObject> snapshots = this.getSnapshots(RECOVERY_SNAPSHOT_TYPE);
             foreach (ManagementObject snapshot in snapshots)
             {
-                this.convertToReferencePoint(snapshot);
+                this.convertToReferencePoint(snapshot, false);
             }
 
             List<ManagementObject> refPs = this.getReferencePoints();
