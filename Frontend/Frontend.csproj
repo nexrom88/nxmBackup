@@ -228,6 +228,7 @@
     <Content Include="Areas\HelpPage\Views\Help\DisplayTemplates\CollectionModelDescription.cshtml" />
     <Content Include="Areas\HelpPage\Views\Help\DisplayTemplates\ApiGroup.cshtml" />
     <Content Include="Areas\HelpPage\Views\Help\Api.cshtml" />
+    <Content Include="MiniFilter\nxmMF.inf" />
     <Content Include="Scripts\bootstrap.bundle.min.js" />
     <Content Include="Scripts\bsInputSpinner.js" />
     <Content Include="Scripts\chart.min.js" />
@@ -238,6 +239,8 @@
     <Content Include="fonts\fontawesome-webfont.ttf" />
     <Content Include="fonts\fontawesome-webfont.eot" />
     <Content Include="nxm.db" />
+    <Content Include="MiniFilter\nxmmf.cat" />
+    <Content Include="MiniFilter\nxmMF.sys" />
     <None Include="Properties\PublishProfiles\IISProfile.pubxml" />
     <None Include="Scripts\jquery-3.6.0.intellisense.js" />
     <Content Include="Scripts\jquery-3.6.0.js" />
