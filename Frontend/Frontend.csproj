@@ -241,6 +241,7 @@
     <Content Include="nxm.db" />
     <Content Include="MiniFilter\nxmmf.cat" />
     <Content Include="MiniFilter\nxmMF.sys" />
+    <Content Include="install.ps1" />
     <None Include="Properties\PublishProfiles\IISProfile.pubxml" />
     <None Include="Scripts\jquery-3.6.0.intellisense.js" />
     <Content Include="Scripts\jquery-3.6.0.js" />
