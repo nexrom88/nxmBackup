@@ -1107,7 +1107,7 @@ function renderJobStateTable() {
 
             processrates = [];
             transferrates = [];
-            if (data["Rates"]) {
+            if (data["Rates"] && data["Rates"].length > 0) {
                 var currentTransferrateString = prettyPrintBytes(data["Rates"][data["Rates"].length - 1]["transfer"]) + "/s";
                 var tempRates = data["Rates"];
 
