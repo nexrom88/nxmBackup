@@ -11,7 +11,7 @@ function Randomize-String([string]$inputString){
     return $outputString 
 }
 
-$installPath = "c:\users\administrator\Desktop\Release"
+$installPath = (Get-Location).Path
 
 
 #add firewall rule
