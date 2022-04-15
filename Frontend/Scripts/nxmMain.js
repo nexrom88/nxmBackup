@@ -14,6 +14,7 @@ var lastJobStateData; //last data for job state to decide whether to refresh job
 var ratesChart; //var to hold the chart for displaying transferrates
 var transferrates = []; //var to hold the current transfer rates
 var processrates = []; //var to hold the current process rates
+var versionControl = {} //object to hold version and update information
 
 //global handler for http status 401 (login required)
 $.ajaxSetup({
@@ -45,6 +46,19 @@ $(window).on('load', function () {
         }
     });
 
+    //check for update
+    $.ajax({
+        url: "api/Update",
+        success: function (jqXHR, exception) {
+            versionControl = JSON.parse(jqXHR);
+
+            //disable update notification when no update is available
+            if (!versionControl.UpdateAvailable) {
+                $("#versionInfo").css("display", "none");
+            }
+        }
+    });
+
     //load configured jobs
     $.ajax({
         url: "api/ConfiguredJobs"
@@ -62,6 +76,15 @@ $(window).on('load', function () {
     //register settings handler
     $("#settings").click(function () {
         showSettings();
+    });
+
+    //register settings handler
+    $("#versionInfo").click(function () {
+        Swal.fire(
+            'Update',
+            'Ein neues Update ' + versionControl.AvailableVersion + ' steht zur Verfügung. Besuchen Sie nxmBackup.com für weitere Infos!',
+            'info'
+        );
     });
 
     //register "add Job" Button handler
