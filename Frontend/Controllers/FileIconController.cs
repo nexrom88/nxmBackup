@@ -10,6 +10,7 @@ using System.Net.Http.Headers;
 
 namespace Frontend.Controllers
 {
+    [Frontend.Filter.AuthFilter]
     public class FileIconController : ApiController
     {
         public HttpResponseMessage Get(string path)

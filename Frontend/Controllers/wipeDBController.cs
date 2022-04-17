@@ -7,6 +7,7 @@ using System.Web.Http;
 
 namespace Frontend.Controllers
 {
+    [Frontend.Filter.AuthFilter]
     public class wipeDBController : ApiController
     {
         // GET api/<controller>/5

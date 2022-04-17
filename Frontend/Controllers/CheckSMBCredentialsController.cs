@@ -8,6 +8,7 @@ using System.Web.Http;
 
 namespace Frontend.Controllers
 {
+    [Frontend.Filter.AuthFilter]
     public class CheckSMBCredentialsController : ApiController
     {
         const int RESOURCE_CONNECTED = 0x00000001;
