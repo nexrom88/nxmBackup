@@ -31,8 +31,10 @@ $.ajaxSetup({
     }
 });
 
-$(window).on('load', function () {
-    dbState = "init";
+
+//init jobs post-login
+function init() {
+
     //check DB availability
     $.ajax({
         url: "api/DBConnectTest",
@@ -98,6 +100,21 @@ $(window).on('load', function () {
 
     //register tooltips
     registerTooltips();
+
+}
+
+$(window).on('load', function () {
+    dbState = "init";
+
+    //check if user is authenticated
+    $.ajax({
+        url: "api/CheckAuth",
+        success: function () {
+            //user is authenticated, init everything
+            init();
+        }
+    })
+    
 });
 
 //registers all tooltips
@@ -1262,11 +1279,14 @@ function prettyPrintBytes(bytes, si = true, dp = 2) {
 function showLoginForm(showError) {
     Swal.fire({
         title: 'Login',
-        html: `<input type="text" id="loginText" class="swal2-input" placeholder="Username">
-  <input type="password" id="passwordText" class="swal2-input" placeholder="Password">`,
+        html: `<input type="text" id="loginText" class="swal2-input" placeholder="Benutzername">
+  <input type="password" id="passwordText" class="swal2-input" placeholder="Passwort">`,
         showLoaderOnConfirm: true,
         confirmButtonText: "Anmelden",
         allowEnterKey: true,
+        didOpen: () => {
+            $("#loginText").focus();
+        },
         preConfirm: () => {
             const login = Swal.getPopup().querySelector('#loginText').value;
             const password = Swal.getPopup().querySelector('#passwordText').value;
@@ -1292,8 +1312,6 @@ function showLoginForm(showError) {
         })
         ajaxLogin(result.value);
     });
-
-    $("#loginText").focus();
 
     //register enter handler
     $(".swal2-popup").on("keypress", function (event) {

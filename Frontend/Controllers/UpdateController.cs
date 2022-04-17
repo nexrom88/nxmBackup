@@ -9,6 +9,7 @@ using System.IO;
 
 namespace Frontend.Controllers
 {
+    [Frontend.Filter.AuthFilter]
     public class UpdateController : ApiController
     {
 

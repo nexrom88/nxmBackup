@@ -7,6 +7,7 @@ using System.Web.Http;
 
 namespace Frontend.Controllers
 {
+    [Frontend.Filter.AuthFilter]
     public class BackupJobStateController : ApiController
     {
         // gets the job state to fill job panel
