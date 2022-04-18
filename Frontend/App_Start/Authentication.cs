@@ -29,6 +29,9 @@ namespace Frontend.App_Start
                 {
                     if (oneSession.sessionID == session)
                     {
+                        //update timestamp
+                        updateSession(session);
+
                         return true;
                     }
                 }
