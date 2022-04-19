@@ -5,14 +5,14 @@ namespace JobEngine
 {
     public class JobHandler
     {
-        private List<JobTimer> jobTimers = new List<JobTimer>();
+        private static List<JobTimer> jobTimers = new List<JobTimer>();
 
         //starts the job engine
         public bool startJobEngine()
         {
             //stop all already running timers
             stopAllTimers();
-
+            jobTimers = new List<JobTimer>();
 
             //read all jobs
             ConfigHandler.JobConfigHandler.readJobsFromDB();
@@ -47,7 +47,7 @@ namespace JobEngine
 
 
                 //add job timer
-                this.jobTimers.Add(timer);
+                jobTimers.Add(timer);
                 System.Timers.Timer t = new System.Timers.Timer(60000);
                 timer.underlyingTimer = t;
                 t.Elapsed += timer.tick;
@@ -61,7 +61,7 @@ namespace JobEngine
         //stops all timers
         public void stopAllTimers()
         {
-            foreach (JobTimer timer in this.jobTimers)
+            foreach (JobTimer timer in jobTimers)
             {
                 timer.underlyingTimer.Stop();
             }
@@ -71,19 +71,13 @@ namespace JobEngine
         public void startManually(int dbId)
         {
             //search for job object
-            foreach (JobTimer job in this.jobTimers)
+            foreach (JobTimer job in jobTimers)
             {
                 if (job.Job.DbId == dbId)
                 {
                     job.startJob(true);
                 }
             }
-        }
-
-        private struct LBTransfer
-        {
-            public int jobId;
-            public nxmBackup.HVBackupCore.LiveBackupWorker worker;
         }
     }
 }
