@@ -47,6 +47,8 @@ $appPool = New-WebAppPool -Name "nxm"
 $appPool.processModel.userName = "nxmUser"
 $appPool.processModel.password = $password
 $appPool.processModel.identityType = 3
+$appPool.idleTimeout = "00:00:00"
+$appPool.startMode = 1
 $appPool | Set-Item
 
 #import site
