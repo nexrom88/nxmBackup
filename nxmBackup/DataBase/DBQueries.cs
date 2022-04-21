@@ -22,7 +22,7 @@ namespace Common
 
             using (DBConnection dbConn = new DBConnection())
             {
-                dbConn.doWriteQuery("INSERT INTO log (text, stacktrace, exception) VALUES (@text, @stacktrace, @exception);",
+                dbConn.doWriteQuery("INSERT INTO log (text, stacktrace, exception, timestamp) VALUES (@text, @stacktrace, @exception, (datetime('now','localtime')));",
                         new Dictionary<string, object>() { { "text", text }, { "stacktrace", stacktrace }, { "exception", exception } }, null);
             }
         }
