@@ -197,8 +197,9 @@ namespace nxmBackup.HVBackupCore
         {
             try
             {
+                bool sizeLimitReached = false;
 
-                while (this.isRunning)
+                while (this.isRunning && !sizeLimitReached)
                 {
                     MFUserMode.MFUserMode.LB_BLOCK lbBlock = this.um.handleLBMessage();
 
@@ -207,6 +208,13 @@ namespace nxmBackup.HVBackupCore
                     //just show progress every 10 MB
                     if (this.processedBytes - this.lastShownBytes >= 10000000)
                     {
+                        //check whether lb has reached size limit
+                        if ((ulong)jobObject.LiveBackupSize *1000000000 <= this.processedBytes)
+                        {
+                            //size limit reached, cancel
+                            sizeLimitReached = true;
+                        }
+
                         this.lastShownBytes = this.processedBytes;
                         string prettyPrintedBytes = Common.PrettyPrinter.prettyPrintBytes((long)this.processedBytes);
 
@@ -235,6 +243,12 @@ namespace nxmBackup.HVBackupCore
                         }
                     }  
                 }
+
+                if (sizeLimitReached)
+                {
+                    stopLB();
+                }
+
             }catch(Exception ex)
             {
             }
