@@ -89,7 +89,7 @@ namespace nxmBackup.MFUserMode
         private bool loadMF()
         {
             //first unload if already running
-            unloadMF();
+            unloadMF(false);
 
             //start mf
             System.Diagnostics.ProcessStartInfo psi = new System.Diagnostics.ProcessStartInfo("fltmc.exe");
@@ -112,9 +112,20 @@ namespace nxmBackup.MFUserMode
         }
 
         //unloads the minifilter driver
-        private bool unloadMF()
+        private bool unloadMF(bool cancelLB)
         {
+            if (cancelLB)
+            {
+                //send stop signal to km
+                byte[] data = new byte[128];
+                data[0] = 3; //stop signal
 
+                //write data buffers to km
+                writeMessage(data);
+                System.Threading.Thread.Sleep(500);
+            }
+
+            //exec command: fltmc unload nxmmf
             System.Diagnostics.ProcessStartInfo psi = new System.Diagnostics.ProcessStartInfo("fltmc.exe");
             psi.Arguments = "unload " + mfName;
             psi.UseShellExecute = true;
@@ -154,7 +165,7 @@ namespace nxmBackup.MFUserMode
         }
 
         //close the km connection
-        public void closeConnection()
+        public void closeConnection(bool cancelLB)
         {
             CloseHandle(this.kmHandle);
 
@@ -165,7 +176,7 @@ namespace nxmBackup.MFUserMode
             }
 
             //unload mf
-            unloadMF();
+            unloadMF(cancelLB);
         }
 
         //writes one "standalone" message to km (no response)

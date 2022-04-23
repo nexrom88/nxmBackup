@@ -85,7 +85,7 @@ namespace nxmBackup.HVBackupCore
                 foreach (Common.VMHDD hdd in vm.vmHDDs)
                 {
                     //message for KM struct:
-                    //1 byte = add(1), delete(2)
+                    //1 byte = add(1), delete(2), stoplb(3)
                     //4 bytes = object id
                     //256 bytes = path string
 
@@ -104,7 +104,7 @@ namespace nxmBackup.HVBackupCore
                     }
 
                     //write data buffers to km
-                    um.writeMessage(data);
+                    this.um.writeMessage(data);
                 }
             }
 
@@ -311,8 +311,13 @@ namespace nxmBackup.HVBackupCore
 
                 //set start timestamp to db
                 this.eventHandler.setLBStop();
-                this.um.closeConnection();
-                this.lbReadThread.Abort();
+                this.um.closeConnection(true);
+
+                //just cancel thread when lbReadThread is not current thread
+                if (this.lbReadThread != Thread.CurrentThread)
+                {
+                    this.lbReadThread.Abort();
+                }
 
                 //close all open filestreams
                 foreach(LBHDDWorker worker in RunningHDDWorker)
