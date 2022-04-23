@@ -571,7 +571,7 @@ namespace nxmBackup.MFUserMode
             //close km connection
             if (this.kmConnection != null)
             {
-                this.kmConnection.closeConnection();
+                this.kmConnection.closeConnection(false);
             }
 
             //iterate through all rct backups in all chains
