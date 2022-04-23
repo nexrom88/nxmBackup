@@ -96,8 +96,9 @@
     margin-top:5%;
 }
 
-#page5Form{
-
+#lbSize{
+    display: none;
+    text-align:center;
 }
 
 #restorePointTable .active {

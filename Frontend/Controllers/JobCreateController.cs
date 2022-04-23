@@ -39,6 +39,7 @@ namespace Frontend.Controllers
             newJob.TargetUsername = value.targetUsername;
             newJob.TargetPassword = value.targetPassword;
             newJob.LiveBackup = value.livebackup;
+            newJob.LiveBackupSize = int.Parse(value.livebackupsize);
             newJob.UseEncryption = value.useencryption;
             newJob.UsingDedupe = value.usingdedupe;
 
@@ -152,6 +153,7 @@ namespace Frontend.Controllers
             public bool usingdedupe { get; set; }
             public string encpassword { get; set; }
             public bool livebackup { get; set; }
+            public string livebackupsize { get; set; }
             public string targetType { get; set; }
             public string targetUsername { get; set; }
             public string targetPassword { get; set; }
