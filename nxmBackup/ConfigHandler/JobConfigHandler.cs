@@ -35,7 +35,7 @@ namespace ConfigHandler
                     queryExtension = " AND jobs.id=" + jobid;
                 }
 
-                List<Dictionary<string, object>> jobsDB = connection.doReadQuery("SELECT storagetarget.targettype, storagetarget.targetpath, storagetarget.targetuser,storagetarget.targetpassword, jobs.id, jobs.enabled, jobs.name, jobs.incremental, jobs.maxelements, jobs.blocksize, jobs.day, jobs.hour, jobs.minute, jobs.interval, jobs.livebackup, jobs.useencryption, jobs.aeskey, jobs.usededupe, rotationtype.name AS rotationname FROM jobs INNER JOIN rotationtype ON jobs.rotationtypeid=rotationtype.id INNER JOIN storagetarget ON jobs.id=storagetarget.targetjobid WHERE jobs.deleted=FALSE" + queryExtension, null, null);
+                List<Dictionary<string, object>> jobsDB = connection.doReadQuery("SELECT storagetarget.targettype, storagetarget.targetpath, storagetarget.targetuser,storagetarget.targetpassword, jobs.id, jobs.enabled, jobs.name, jobs.incremental, jobs.maxelements, jobs.blocksize, jobs.day, jobs.hour, jobs.minute, jobs.interval, jobs.livebackup, jobs.livebackupsize, jobs.useencryption, jobs.aeskey, jobs.usededupe, rotationtype.name AS rotationname FROM jobs INNER JOIN rotationtype ON jobs.rotationtypeid=rotationtype.id INNER JOIN storagetarget ON jobs.id=storagetarget.targetjobid WHERE jobs.deleted=FALSE" + queryExtension, null, null);
 
                 //check that jobs != null
                 if (jobsDB == null) //DB error
@@ -54,6 +54,7 @@ namespace ConfigHandler
                     newJob.Name = jobDB["name"].ToString();
                     newJob.BlockSize = Convert.ToInt32(jobDB["blocksize"]);
                     newJob.LiveBackup = Convert.ToBoolean(jobDB["livebackup"]);
+                    newJob.LiveBackupSize = Convert.ToInt32(jobDB["livebackupsize"]);
                     newJob.Incremental = Convert.ToBoolean(jobDB["incremental"]);
                     newJob.UsingDedupe = Convert.ToBoolean(jobDB["usededupe"]);
                     newJob.TargetType = jobDB["targettype"].ToString();
@@ -248,11 +249,12 @@ namespace ConfigHandler
                 parameters.Add("maxelements", job.Rotation.maxElementCount);
                 parameters.Add("rotationtypeID", rotationID);
                 parameters.Add("livebackup", job.LiveBackup);
+                parameters.Add("livebackupsize", job.LiveBackupSize);
                 parameters.Add("updatejobID", updatedJobID);
                 parameters.Add("usededupe", job.UsingDedupe);
 
 
-                values = connection.doReadQuery("UPDATE jobs SET name = @name, incremental = @incremental, interval = @interval, minute = @minute, hour = @hour, day = @day, blocksize = @blocksize, maxelements = @maxelements, livebackup = @livebackup, rotationtypeid = @rotationtypeID, usededupe = @usededupe WHERE id=@updatejobID;", parameters, transaction);
+                values = connection.doReadQuery("UPDATE jobs SET name = @name, incremental = @incremental, interval = @interval, minute = @minute, hour = @hour, day = @day, blocksize = @blocksize, maxelements = @maxelements, livebackup = @livebackup, rotationtypeid = @rotationtypeID, usededupe = @usededupe, livebackupsize = @livebackupsize WHERE id=@updatejobID;", parameters, transaction);
 
                 //delete existing JObVM relation
                 deleteJobVMRelation(updatedJobID, connection, transaction);
@@ -306,12 +308,13 @@ namespace ConfigHandler
                 parameters.Add("maxelements", job.Rotation.maxElementCount);
                 parameters.Add("rotationtypeID", rotationID);
                 parameters.Add("livebackup", job.LiveBackup);
+                parameters.Add("livebackupsize", job.LiveBackupSize);
                 parameters.Add("useencryption", job.UseEncryption);
                 parameters.Add("aeskey", job.AesKey);
                 parameters.Add("usededupe", job.UsingDedupe);
 
 
-                values = connection.doReadQuery("INSERT INTO jobs (name, incremental, interval, minute, hour, day, blocksize, maxelements, livebackup, rotationtypeid, useencryption, aeskey, usededupe) VALUES(@name, @incremental, @interval, @minute, @hour, @day, @blocksize, @maxelements, @livebackup, @rotationtypeID, @useencryption, @aeskey, @usededupe);", parameters, transaction);
+                values = connection.doReadQuery("INSERT INTO jobs (name, incremental, interval, minute, hour, day, blocksize, maxelements, livebackup, rotationtypeid, useencryption, aeskey, usededupe, livebackupsize) VALUES(@name, @incremental, @interval, @minute, @hour, @day, @blocksize, @maxelements, @livebackup, @rotationtypeID, @useencryption, @aeskey, @usededupe, @livebackupsize);", parameters, transaction);
 
                 int jobID = (int)connection.getLastInsertedID();
 
@@ -489,6 +492,7 @@ namespace ConfigHandler
         private int blockSize;
         private Rotation rotation;
         private bool liveBackup;
+        private int liveBackupSize;
         private bool liveBackupActive;
         private bool isRunning;
         private string lastRun;
@@ -516,6 +520,7 @@ namespace ConfigHandler
         public int DbId { get => dbId; set => dbId = value; }
         public bool LiveBackupActive { get => liveBackupActive; set => liveBackupActive = value; }
         public bool LiveBackup { get => liveBackup; set => liveBackup = value; }
+        public int LiveBackupSize { get => liveBackupSize; set => liveBackupSize = value; }
 
         public string TargetType { get => targetType; set => targetType = value; }
         public string TargetPath { get => targetPath; set => targetPath = value; }

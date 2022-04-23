@@ -169,6 +169,18 @@ function showNewJobPage(pageNumber, selectedEditJob) {
                         }
                     });
 
+                    //click handler for encryption checkBox
+                    $("#cbLiveBackup").click(function () {
+                        if ($("#cbLiveBackup").prop("checked")) {
+                            $("#lbSize").css("display", "block");
+                        } else {
+                            $("#lbSize").css("display", "none");
+                        }
+                    });
+
+                    //enable input number spinner for lbSize
+                    $("input[type='number']").inputSpinner();
+
                     //show current settings when editing a job
                     if (selectedEditJob) {
                         showCurrentSettings(pageNumber, selectedEditJob);
@@ -409,9 +421,16 @@ function showCurrentSettings(pageNumber, selectedEditJob) {
             $("#txtJobName").val(selectedEditJob["Name"]);
             $("#cbIncremental").prop("checked", selectedEditJob["Incremental"]);
             $("#cbLiveBackup").prop("checked", selectedEditJob["LiveBackup"]);
+            $("#spLiveBackupSize").val(selectedEditJob["LiveBackupSize"]);
             $("#cbDedupe").prop("checked", selectedEditJob["UsingDedupe"]);
             $("#cbEncryption").prop("checked", selectedEditJob["UseEncryption"]);
             $("#cbEncryption").prop("disabled", true); //encrpytion setting not changeable
+
+            //show lb size area if necessary
+            if (selectedEditJob["LiveBackup"]) {
+                $("#lbSize").css("display", "block");
+            }
+
             break;
 
         case 2:
@@ -539,6 +558,7 @@ function registerNextPageClickHandler(currentPage, selectedEditJob) {
 
                 //use live backup?
                 newJobObj["livebackup"] = $("#cbLiveBackup").prop("checked");
+                newJobObj["livebackupsize"] = $("#spLiveBackupSize").val();
 
                 //use encryption?
                 newJobObj["useencryption"] = $("#cbEncryption").prop("checked");

@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
-using Microsoft.Isam.Esent.Interop;
 using System.Net;
 using System.Diagnostics;
 

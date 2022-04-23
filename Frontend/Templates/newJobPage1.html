@@ -18,7 +18,7 @@
         </div>
         <div class="form-check center_div newJobElement">
             <span class="centeredElementSpan">
-                <input type="checkbox" id="cbLiveBackup" disabled>
+                <input type="checkbox" id="cbLiveBackup">
                 <label class="form-check-label" for="cbLiveBackup">LiveBackup verwenden</label>
             </span>
         </div>
@@ -30,6 +30,10 @@
         </div>
         <div class="form-group center_div newJobElement">
             <input type="password" class="form-control centeredElement" id="txtEncryptionPassword" placeholder="Passwort für die Verschlüsselung">
+        </div>
+        <div id="lbSize" class="form-group center_div newJobElement">
+            <label id="lbllbSize" class="enter_div" for="spLiveBackupSize">Maximale LiveBackup Größe in Gigabyte</label>
+            <input id="spLiveBackupSize" type="number" value="2" min="1" max="50" step="1" />
         </div>
         <div class="text-center">
             <button id="newJobNextButton" type="button" class="btn btn-primary centeredElement">Weiter</button>
