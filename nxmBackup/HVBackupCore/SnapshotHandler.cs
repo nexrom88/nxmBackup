@@ -735,11 +735,12 @@ namespace nxmBackup.HVBackupCore
             List<VMHDD> newHDDS = new List<VMHDD>(); //struct for new HDDs retVal
 
             bool hddsHaveChanged = false;
+            int lbObjectID = 1;
             //iterate through all currently mounted HDDs
             foreach (ManagementObject mountedHDD in mountedHDDs) 
             {
                 VMHDD hdd;
-                hdd = buildHDDStructure(mountedHDD);
+                hdd = buildHDDStructure(mountedHDD, lbObjectID);
                 newHDDS.Add(hdd);
 
                 bool hddFound = false;
@@ -758,6 +759,8 @@ namespace nxmBackup.HVBackupCore
                 {
                     hddsHaveChanged = true;
                 }
+
+                lbObjectID++;
             }
 
             //hdd count changed or hdds themself changed?
@@ -775,7 +778,7 @@ namespace nxmBackup.HVBackupCore
         }
 
         //builds a hdd structure from a given ManagementObject
-        private VMHDD buildHDDStructure(ManagementObject mo)
+        private VMHDD buildHDDStructure(ManagementObject mo, int currentLBObjectID)
         {
             VMHDD newHDD = new VMHDD();
             //get vhdx id from vhdx file
@@ -783,7 +786,8 @@ namespace nxmBackup.HVBackupCore
 
 
             string hddID = Convert.ToBase64String(vhdxParser.getVHDXIDFromFile(vhdxPath));
-
+            
+            newHDD.lbObjectID = currentLBObjectID;
             newHDD.name = hddID;
             newHDD.path = vhdxPath;
 
