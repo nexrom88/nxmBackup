@@ -50,18 +50,19 @@ namespace nxmBackup.HVBackupCore
         //starts LB
         public bool startLB()
         {
-
+            
             isRunning = true;
 
             //raise event
             this.eventID = this.eventHandler.raiseNewEvent("LiveBackup läuft...", false, false, NO_RELATED_EVENT, Common.EventStatus.info);
 
+            //load job object. It gets loaded dynamically because the object can change while lb is running
+            ConfigHandler.OneJob jobObject = getJobObject();
+
+
             //connect to km and shared memory
             this.um = new MFUserMode.MFUserMode();
             bool status = this.um.connectToKM("\\nxmLBPort", "\\BaseNamedObjects\\nxmmflb");
-
-            //load job object. It gets loaded dynamically because the object can change while lb is running
-            ConfigHandler.OneJob jobObject = getJobObject();
 
 
             //quit when connection not successful

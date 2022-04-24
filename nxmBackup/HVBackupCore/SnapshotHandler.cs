@@ -619,6 +619,49 @@ namespace nxmBackup.HVBackupCore
             }
             archive.close();
 
+            //hdds changed? write the new hdd config to job
+            if (hddsChangedResponse.hddsChanged)
+            {
+                //build hdd string list
+                List<string> hddStrings = new List<string>();
+                foreach (ManagementObject hdd in hdds)
+                {
+                    hddStrings.Add((string)hdd["InstanceID"]);
+                }
+                DBQueries.refreshHDDs(hddsChangedResponse.newHDDs, this.vm.vmID);
+                this.eventHandler.raiseNewEvent("Veränderter Datenspeicher inventarisiert", false, false, NO_RELATED_EVENT, EventStatus.info);
+
+                //update job object
+                JobVM currentVM = null;
+
+                //find the corresponding vm object within current joblist
+                ConfigHandler.OneJob currentJob = null;
+                foreach (ConfigHandler.OneJob newJob in ConfigHandler.JobConfigHandler.Jobs)
+                {
+                    if (newJob.DbId == job.DbId)
+                    {
+                        currentJob = newJob;
+                    }
+                }
+
+
+                foreach (JobVM vm in currentJob.JobVMs)
+                {
+                    if (vm.vmID == this.vm.vmID)
+                    {
+                        //found vm object
+                        currentVM = vm;
+                        break;
+                    }
+                }
+
+                if (currentVM != null)
+                {
+                    currentVM.vmHDDs = hddsChangedResponse.newHDDs;
+                }
+            }
+
+
             //if LB activated for job, start it before converting to reference point
             LiveBackupWorker lbWorker = null;
             if (job.LiveBackup)
@@ -666,47 +709,7 @@ namespace nxmBackup.HVBackupCore
                 lbWorker.addToBackupConfig();
             }
 
-            //hdds changed? write the new hdd config to job
-            if (hddsChangedResponse.hddsChanged)
-            {
-                //build hdd string list
-                List<string> hddStrings = new List<string>();
-                foreach (ManagementObject hdd in hdds)
-                {
-                    hddStrings.Add((string)hdd["InstanceID"]);
-                }
-                DBQueries.refreshHDDs(hddsChangedResponse.newHDDs, this.vm.vmID);
-                this.eventHandler.raiseNewEvent("Veränderter Datenspeicher inventarisiert", false, false, NO_RELATED_EVENT, EventStatus.info);
-
-                //update job object
-                JobVM currentVM = null;
-
-                //find the corresponding vm object within current joblist
-                ConfigHandler.OneJob currentJob = null;
-                foreach (ConfigHandler.OneJob newJob in ConfigHandler.JobConfigHandler.Jobs)
-                {
-                    if (newJob.DbId == job.DbId)
-                    {
-                        currentJob = newJob;
-                    }
-                }
-
-
-                foreach (JobVM vm in currentJob.JobVMs)
-                {
-                    if (vm.vmID == this.vm.vmID)
-                    {
-                        //found vm object
-                        currentVM = vm;
-                        break;
-                    }
-                }
-
-                if (currentVM != null)
-                {
-                    currentVM.vmHDDs = hddsChangedResponse.newHDDs;
-                }
-            }
+            
 
             return transferDetailsSummary;
 
