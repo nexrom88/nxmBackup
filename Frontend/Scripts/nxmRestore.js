@@ -148,6 +148,7 @@ function convertBackupProperties(properties) {
 //starts the restore process
 function startRestore() {
   //check whether backup is selected
+  var backupType = $('#restorePointTable tr.active').data("backuptype");
   var instanceID = $('#restorePointTable tr.active').data("instanceid");
   if (!instanceID) {
     Swal.fire({
