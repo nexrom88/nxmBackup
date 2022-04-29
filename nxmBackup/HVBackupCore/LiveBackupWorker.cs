@@ -24,7 +24,7 @@ namespace nxmBackup.HVBackupCore
         private bool isRunning = false;
         private MFUserMode.MFUserMode um;
         private Thread lbReadThread;
-        private string destGUIDFolder;
+        private string backupuuid;
         private Common.EventHandler eventHandler;
         private const int NO_RELATED_EVENT = -1;
 
@@ -163,7 +163,7 @@ namespace nxmBackup.HVBackupCore
                 RunningHDDWorker.Add(newWorker);
             }
 
-            this.destGUIDFolder = guidFolder;
+            this.backupuuid = guidFolder;
         }
 
         //adds the vm-LB backup to destination config.xml file for the given vm
@@ -187,10 +187,34 @@ namespace nxmBackup.HVBackupCore
                 //get parent backup
                 string parentInstanceID = currentChain[currentChain.Count - 1].instanceID;
 
-                ConfigHandler.BackupConfigHandler.addBackup(System.IO.Path.Combine(jobObject.TargetPath, jobObject.Name + "\\" + vm.vmID), jobObject.UseEncryption, this.destGUIDFolder, "lb", "nxm:" + this.destGUIDFolder, parentInstanceID, false, this.eventHandler.ExecutionId.ToString());
+                ConfigHandler.BackupConfigHandler.addBackup(System.IO.Path.Combine(jobObject.TargetPath, jobObject.Name + "\\" + vm.vmID), jobObject.UseEncryption, this.backupuuid, "lb", "nxm:" + this.backupuuid, parentInstanceID, false, this.eventHandler.ExecutionId.ToString());
 
             }
 
+        }
+
+        //sets the lb end time within backup xml file
+        private void setLBEndTime()
+        {
+            //load job object
+            ConfigHandler.OneJob jobObject = getJobObject();
+
+            if (jobObject == null)
+            {
+                Common.DBQueries.addLog("job object not found for setting lb end time", Environment.StackTrace, null);
+                return;
+            }
+
+            //iterate through all vms
+            foreach (Common.JobVM vm in jobObject.JobVMs)
+            {
+                //read existing backup chain
+                List<ConfigHandler.BackupConfigHandler.BackupInfo> currentChain = ConfigHandler.BackupConfigHandler.readChain(System.IO.Path.Combine(jobObject.TargetPath, jobObject.Name + "\\" + vm.vmID), false);
+
+                //get parent backup
+                string parentInstanceID = currentChain[currentChain.Count - 1].instanceID;
+                ConfigHandler.BackupConfigHandler.setLBEndTime(System.IO.Path.Combine(jobObject.TargetPath, jobObject.Name + "\\" + vm.vmID), this.backupuuid);
+            }
         }
 
         //reads km lb messages
@@ -313,6 +337,9 @@ namespace nxmBackup.HVBackupCore
                 //set start timestamp to db
                 this.eventHandler.setLBStop();
                 this.um.closeConnection(true);
+
+                //set end time to xml file
+                setLBEndTime();
 
                 //just cancel thread when lbReadThread is not current thread
                 if (this.lbReadThread != Thread.CurrentThread)
