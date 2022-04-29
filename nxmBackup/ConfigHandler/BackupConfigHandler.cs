@@ -72,6 +72,39 @@ namespace ConfigHandler
 
         }
 
+        //sets to lb end time for a given backup uuid
+        public static void setLBEndTime(string basePath, string uuid)
+        {
+            //open xml
+            FileStream baseStream = new FileStream(Path.Combine(basePath, "config.xml"), FileMode.Open, FileAccess.ReadWrite);
+            XmlDocument xml = new XmlDocument();
+            xml.Load(baseStream);
+            baseStream.Close();
+
+            //open required nodes
+            //open VMBackup
+            XmlElement rootElement = (XmlElement)xml.SelectSingleNode("VMBackup");
+            XmlElement backupsElement = (XmlElement)rootElement.SelectSingleNode("BackupChain");
+
+            //read backups
+            for (int i = 0; i < backupsElement.ChildNodes.Count; i++)
+            {
+                XmlElement currentBackup = (XmlElement)backupsElement.ChildNodes.Item(i);
+                
+                //lb backup found?
+                if (currentBackup.GetAttribute("uuid") == uuid)
+                {
+                    currentBackup.SetAttribute("lbEndTime", DateTime.Now.ToString("yyyyMMddHHmmssfff"));
+                    break;
+                }
+            }
+
+            //save changed xml
+            xml.Save(baseStream);
+            baseStream.Close();
+
+        }
+
         //removes a backup from the chain identified by uuid
         public static void removeBackup(string basePath, string uuid)
         {
