@@ -76,7 +76,7 @@ namespace ConfigHandler
         public static void setLBEndTime(string basePath, string uuid)
         {
             //open xml
-            FileStream baseStream = new FileStream(Path.Combine(basePath, "config.xml"), FileMode.Open, FileAccess.ReadWrite);
+            FileStream baseStream = new FileStream(Path.Combine(basePath, "config.xml"), FileMode.Open, FileAccess.Read);
             XmlDocument xml = new XmlDocument();
             xml.Load(baseStream);
             baseStream.Close();
@@ -89,17 +89,20 @@ namespace ConfigHandler
             //read backups
             for (int i = 0; i < backupsElement.ChildNodes.Count; i++)
             {
-                XmlElement currentBackup = (XmlElement)backupsElement.ChildNodes.Item(i);
+                XmlNode currentNode = backupsElement.ChildNodes[i];
+                XmlElement currentBackup = (XmlElement)currentNode;
                 
                 //lb backup found?
                 if (currentBackup.GetAttribute("uuid") == uuid)
                 {
                     currentBackup.SetAttribute("lbEndTime", DateTime.Now.ToString("yyyyMMddHHmmssfff"));
+                    backupsElement.ReplaceChild(currentBackup, currentNode);
                     break;
                 }
             }
 
             //save changed xml
+            baseStream = new FileStream(Path.Combine(basePath, "config.xml"), FileMode.Create, FileAccess.Write);
             xml.Save(baseStream);
             baseStream.Close();
 
