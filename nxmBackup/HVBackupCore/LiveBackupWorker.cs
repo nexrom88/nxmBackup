@@ -182,7 +182,7 @@ namespace nxmBackup.HVBackupCore
             foreach (Common.JobVM vm in jobObject.JobVMs)
             {
                 //read existing backup chain
-                List<ConfigHandler.BackupConfigHandler.BackupInfo> currentChain = ConfigHandler.BackupConfigHandler.readChain(System.IO.Path.Combine(jobObject.TargetPath, jobObject.Name + "\\" + vm.vmID), false);
+                List<ConfigHandler.BackupConfigHandler.BackupInfo> currentChain = ConfigHandler.BackupConfigHandler.readChain(System.IO.Path.Combine(jobObject.TargetPath, jobObject.Name + "\\" + vm.vmID));
 
                 //get parent backup
                 string parentInstanceID = currentChain[currentChain.Count - 1].instanceID;
@@ -209,7 +209,7 @@ namespace nxmBackup.HVBackupCore
             foreach (Common.JobVM vm in jobObject.JobVMs)
             {
                 //read existing backup chain
-                List<ConfigHandler.BackupConfigHandler.BackupInfo> currentChain = ConfigHandler.BackupConfigHandler.readChain(System.IO.Path.Combine(jobObject.TargetPath, jobObject.Name + "\\" + vm.vmID), false);
+                List<ConfigHandler.BackupConfigHandler.BackupInfo> currentChain = ConfigHandler.BackupConfigHandler.readChain(System.IO.Path.Combine(jobObject.TargetPath, jobObject.Name + "\\" + vm.vmID));
 
                 //get parent backup
                 string parentInstanceID = currentChain[currentChain.Count - 1].instanceID;
