@@ -16,7 +16,7 @@ namespace Frontend.Controllers
             string sourcePath = jobDetails.basePath + "\\" + jobDetails.jobName + "\\" + jobDetails.vmName;
 
             //read backup chain
-            List<ConfigHandler.BackupConfigHandler.BackupInfo> backups = ConfigHandler.BackupConfigHandler.readChain(sourcePath, true);
+            List<ConfigHandler.BackupConfigHandler.BackupInfo> backups = ConfigHandler.BackupConfigHandler.readChain(sourcePath);
 
             //build response
             HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.OK);

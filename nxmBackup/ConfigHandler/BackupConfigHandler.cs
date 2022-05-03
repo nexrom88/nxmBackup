@@ -140,7 +140,7 @@ namespace ConfigHandler
         }
 
         //reads all backups from the backup chain
-        public static List<BackupInfo> readChain(string basePath, bool loadLBTimestamps)
+        public static List<BackupInfo> readChain(string basePath)
         {
             List<BackupInfo> backupChain = new List<BackupInfo>();
 
@@ -171,11 +171,9 @@ namespace ConfigHandler
                     backup.parentInstanceID = backupsElement.ChildNodes.Item(i).Attributes.GetNamedItem("ParentInstanceId").Value;
                     backup.jobExecutionId = backupsElement.ChildNodes.Item(i).Attributes.GetNamedItem("JobExecutionId").Value;
 
-                    if (loadLBTimestamps && backup.type == "lb")
+                    if (backup.type == "lb")
                     {
-                        Common.LBTimestamps timestamps = Common.DBQueries.readLBTimestamps(int.Parse(backup.jobExecutionId));
-                        backup.lbStart = timestamps.start;
-                        backup.lbEnd = timestamps.end;
+                        backup.lbEndTime = backupsElement.ChildNodes.Item(i).Attributes.GetNamedItem("lbEndTime").Value;
                     }
 
 
@@ -309,14 +307,11 @@ namespace ConfigHandler
         {
             public string uuid;
             public string timeStamp;
+            public string lbEndTime;
             public string type;
             public string instanceID;
             public string parentInstanceID;
             public string jobExecutionId;
-
-            //vars not readble from xml directly. Values are from db:
-            public string lbStart;
-            public string lbEnd;
         }
 
     }

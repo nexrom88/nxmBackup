@@ -65,7 +65,7 @@ namespace nxmBackup.HVBackupCore
                 return retVal;
             }
 
-            List<ConfigHandler.BackupConfigHandler.BackupInfo> chain = ConfigHandler.BackupConfigHandler.readChain(destination, false);
+            List<ConfigHandler.BackupConfigHandler.BackupInfo> chain = ConfigHandler.BackupConfigHandler.readChain(destination);
             if (incremental) //incremental backup? get latest reference point
             {
                 if (chain == null || chain.Count == 0) //first backup must be full backup
@@ -103,7 +103,7 @@ namespace nxmBackup.HVBackupCore
             TransferDetails transferDetails = export(destination, snapshot, refP, job);
 
             //read current backup chain for further processing
-            chain = ConfigHandler.BackupConfigHandler.readChain(destination, false);
+            chain = ConfigHandler.BackupConfigHandler.readChain(destination);
 
             //if full backup, delete unnecessary reference points
             if (refP == null)
@@ -142,7 +142,7 @@ namespace nxmBackup.HVBackupCore
             }
 
             //read current backup chain for further processing
-            chain = ConfigHandler.BackupConfigHandler.readChain(destination, false);
+            chain = ConfigHandler.BackupConfigHandler.readChain(destination);
 
             //check whether max snapshot count is reached, then merge
             if (job.Rotation.type == RotationType.merge) //RotationType = "merge"
