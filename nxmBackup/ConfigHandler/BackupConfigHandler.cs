@@ -173,7 +173,12 @@ namespace ConfigHandler
 
                     if (backup.type == "lb")
                     {
-                        backup.lbEndTime = backupsElement.ChildNodes.Item(i).Attributes.GetNamedItem("lbEndTime").Value;
+                        XmlNode endTimeNode = backupsElement.ChildNodes.Item(i).Attributes.GetNamedItem("lbEndTime");
+
+                        if (endTimeNode != null)
+                        {
+                            backup.lbEndTime = backupsElement.ChildNodes.Item(i).Attributes.GetNamedItem("lbEndTime").Value;
+                        }
                     }
 
 

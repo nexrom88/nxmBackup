@@ -136,9 +136,14 @@ function convertBackupProperties(properties) {
         break;
     }
 
-    //parse timestamp
+    //parse timestamps
     var parsedDate = moment(properties[i].timeStamp, "YYYYMMDDhhmmss").format("DD.MM.YYYY HH:mm");
     properties[i].timeStamp = parsedDate;
+
+    if (properties[i].lbEndTime) {
+        parsedDate = moment(properties[i].lbEndTime, "YYYYMMDDhhmmss").format("DD.MM.YYYY HH:mm");
+        properties[i].lbEndTime = parsedDate;
+    }
 
   }
 

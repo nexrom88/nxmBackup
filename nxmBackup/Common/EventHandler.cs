@@ -52,17 +52,5 @@ namespace Common
 
         }
 
-        //sets the lbstop value within db
-        public void setLBStop()
-        {
-            Common.DBQueries.setLBStop(this.ExecutionId);
-        }
-
-        //sets the lbstart value within db
-        public void setLBStart()
-        {
-            Common.DBQueries.setLBStart(this.ExecutionId);
-        }
-
     }
 }
