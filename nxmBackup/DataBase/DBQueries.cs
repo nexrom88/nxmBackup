@@ -364,51 +364,6 @@ namespace Common
             }
         }
 
-        //reads lb timestamps from a given execution id
-        public static LBTimestamps readLBTimestamps(int jobExecutionId)
-        {
-            LBTimestamps timestamps = new LBTimestamps();
-            using (DBConnection dbConn = new DBConnection())
-            {
-                Dictionary<string, object> parameters = new Dictionary<string, object>();
-                parameters.Add("id", jobExecutionId);
-                List<Dictionary<string, object>> result = dbConn.doReadQuery("SELECT lbstart, lbend FROM jobexecutions WHERE id=@id;", parameters, null);
-
-                //result valid?
-                if (result == null || result.Count == 0)
-                {
-                    return timestamps;
-                }
-                else
-                {
-                    timestamps.start = result[0]["lbstart"].ToString();
-                    timestamps.end = result[0]["lbend"].ToString();
-                    return timestamps;
-                }
-            }
-        }
-
-
-
-        //sets the lbstart value for a given jobexecution
-        public static void setLBStart(int jobExecutionId)
-        {
-            using (DBConnection dbConn = new DBConnection())
-            {
-                int affectedRows = dbConn.doWriteQuery("UPDATE jobexecutions SET lbstart=now() WHERE id=@id;",
-                        new Dictionary<string, object>() { { "id", jobExecutionId } }, null);
-            }
-        }
-
-        //sets the lbstop value for a given jobexecution
-        public static void setLBStop(int jobExecutionId)
-        {
-            using (DBConnection dbConn = new DBConnection())
-            {
-                int affectedRows = dbConn.doWriteQuery("UPDATE jobexecutions SET lbend=now() WHERE id=@id;",
-                        new Dictionary<string, object>() { { "id", jobExecutionId } }, null);
-            }
-        }
 
         //removes dynamic data from db
         public static void wipeDB()

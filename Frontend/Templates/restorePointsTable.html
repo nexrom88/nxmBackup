@@ -7,7 +7,12 @@
 <tbody>
     {{#restorePoints}}
     <tr class="restoreBackup" data-instanceID="{{instanceID}}" data-backupType="{{type}}">
-        <td>{{timeStamp}}</td>
+        {{#lbEndTime}}
+            <td>{{lbEndTime}}</td>
+        {{/lbEndTime}}
+        {{^lbEndTime}}
+            <td>{{timeStamp}}</td>
+        {{/lbEndTime}}
         <td>{{type}}</td>
     </tr>
     {{/restorePoints}}

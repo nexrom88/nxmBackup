@@ -109,9 +109,6 @@ namespace nxmBackup.HVBackupCore
                 }
             }
 
-            //set start timestamp to db
-            this.eventHandler.setLBStart();
-
             //start lb reading thred
             this.lbReadThread = new Thread(() => readLBMessages(jobObject));
             this.lbReadThread.Start();
@@ -334,8 +331,7 @@ namespace nxmBackup.HVBackupCore
                 //wait a while to not force the thread to exit
                 Thread.Sleep(500);
 
-                //set start timestamp to db
-                this.eventHandler.setLBStop();
+
                 this.um.closeConnection(true);
 
                 //set end time to xml file
