@@ -1,6 +1,7 @@
 ﻿var selectedRestoreJob = {}; //the job selected for restore
 var selectedRestoreHDD = ""; //the selected hdd for restore
 var fullRestoreLogContainerTemplate = ""; // the template for the full restore log container
+var loadedBackupChain = {} //the currently loaded backup chain for restore
 
 //starts the restore process
 function startRestoreHandler() {
