@@ -173,7 +173,6 @@ function startRestore() {
     restartStartDetails["basePath"] = selectedRestoreJob["TargetPath"];
     restartStartDetails["vmName"] = $("#sbSourceVM option:selected").text() + "_restored";
     restartStartDetails["vmID"] = $("#sbSourceVM option:selected").data("vmid");
-    restartStartDetails["backupType"] = $("#sbSourceVM option:selected").data("backuptype");
     restartStartDetails["destPath"] = selectedDirectory;
     restartStartDetails["instanceID"] = instanceID;
     restartStartDetails["type"] = $("#sbRestoreType option:selected").data("type");
