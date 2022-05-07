@@ -237,7 +237,7 @@ namespace nxmBackup.HVBackupCore
 
 
         //merges a lb file with a vhdx
-        public void merge_lb(System.IO.FileStream lbStream, string destinationSnapshot)
+        public void merge_lb(System.IO.FileStream lbStream, string destinationSnapshot, UInt64 lbTimeLimit)
         {
             int relatedEventId = -1;
             if (this.eventHandler != null)
@@ -256,6 +256,16 @@ namespace nxmBackup.HVBackupCore
             //iterate through each lb block
             foreach (HyperVBackupRCT.LBBlock currentBlock in parsedLBFile.blocks)
             {
+                //if block is newer than lb time limit? -> cancel
+                if (lbTimeLimit > 0)
+                {
+                    UInt64 blockTime = UInt64.Parse(currentBlock.timestamp.ToString("yyyyMMddHHmmss"));
+                    if (blockTime > lbTimeLimit)
+                    {
+                        break;
+                    }
+                }
+
                 //read current block payload from source stream
                 lbStream.Seek((long)currentBlock.lbFileOffset, SeekOrigin.Begin);
                 byte[] blockPayload = new byte[currentBlock.length];

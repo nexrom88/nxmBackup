@@ -36,7 +36,7 @@ namespace HVRestoreCore
         }
 
         //performs a full restore process
-        public void performFullRestoreProcess(string basePath, string destPath, string vmName, string instanceID, bool importToHyperV)
+        public void performFullRestoreProcess(string basePath, string destPath, string vmName, string instanceID, bool importToHyperV, UInt64 lbTimeLimit)
         {
             int relatedEventId = -1;
             if (this.eventHandler != null)
@@ -148,7 +148,7 @@ namespace HVRestoreCore
                         FileStream lbStream = new FileStream(System.IO.Path.Combine(basePath, currentBackup.uuid + ".nxm\\" + System.IO.Path.GetFileName(hddFile) + ".lb"), FileMode.Open, FileAccess.Read);
 
                         //merge the files
-                        diffRestore.merge_lb(lbStream, hddFile);
+                        diffRestore.merge_lb(lbStream, hddFile, lbTimeLimit);
                     }
 
                 }

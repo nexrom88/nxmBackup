@@ -68,7 +68,7 @@ namespace Frontend.Controllers
                     
                     int jobExecutionId = Common.DBQueries.addJobExecution(restoreStartDetails.jobID, "restore");
                     HVRestoreCore.FullRestoreHandler fullRestoreHandler = new HVRestoreCore.FullRestoreHandler(new Common.EventHandler(vmObject, jobExecutionId), jobObject.UseEncryption, jobObject.AesKey, jobObject.UsingDedupe);
-                    System.Threading.Thread frThread = new System.Threading.Thread(() => fullRestoreHandler.performFullRestoreProcess(sourcePath, restoreStartDetails.destPath, vmObject.vmName + "_restored", restoreStartDetails.instanceID, importToHyperV));
+                    System.Threading.Thread frThread = new System.Threading.Thread(() => fullRestoreHandler.performFullRestoreProcess(sourcePath, restoreStartDetails.destPath, vmObject.vmName + "_restored", restoreStartDetails.instanceID, importToHyperV, lbTimeLimit));
                     frThread.Start();
 
                     //set global object
