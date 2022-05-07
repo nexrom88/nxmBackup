@@ -280,7 +280,7 @@ namespace nxmBackup.HVBackupCore
                 HVRestoreCore.FullRestoreHandler restHandler = new HVRestoreCore.FullRestoreHandler(null, this.useEncryption, this.aesKey, this.usingDedupe);
 
                 //perform restore to staging directory (including merge with second backup)
-                restHandler.performFullRestoreProcess(path, System.IO.Path.Combine(path, "staging"), "", chain[1].instanceID, false);
+                restHandler.performFullRestoreProcess(path, System.IO.Path.Combine(path, "staging"), "", chain[1].instanceID, false, 0);
 
                 this.eventHandler.raiseNewEvent("erfolgreich", true, false, eventId, EventStatus.successful);
                 eventId = this.eventHandler.raiseNewEvent("Rotiere Backups (Schritt 2 von 5)...", false, false, NO_RELATED_EVENT, EventStatus.inProgress);

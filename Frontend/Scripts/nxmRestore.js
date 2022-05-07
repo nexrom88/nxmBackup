@@ -234,9 +234,11 @@ function prepareRestore() {
                         $("#lbTime").html(lbStartDate.format("DD.MM.YYYY HH:mm"));
                     }
                 }).then(function (value) {
-                    var tempTime = lbStartDate.clone();
-                    tempTime.add(value.value, "minutes");
-                    restoreStartDetails["lbLimit"] = tempTime.format("YYYYMMDDhhmmss");
+                    if (lbDuration.asMinutes() != value.value) { //slider not fully right -> send lb limit val
+                        var tempTime = lbStartDate.clone();
+                        tempTime.add(value.value, "minutes");
+                        restoreStartDetails["lbLimit"] = tempTime.format("YYYYMMDDHHmmss");                        
+                    }
                     startRestore(restoreStartDetails);
                 });
 
