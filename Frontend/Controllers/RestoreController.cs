@@ -15,6 +15,14 @@ namespace Frontend.Controllers
         {
             HttpResponseMessage response = new HttpResponseMessage();
 
+            //parse lbLimit if necessary
+            UInt64 lbTimeLimit = 0;
+            if (restoreStartDetails.lbLimit != null)
+            {
+                lbTimeLimit = UInt64.Parse(restoreStartDetails.lbLimit);
+            }
+
+
             ConfigHandler.OneJob jobObject = null;
             //look for the matching job object
             foreach (ConfigHandler.OneJob job in ConfigHandler.JobConfigHandler.Jobs)
@@ -76,7 +84,7 @@ namespace Frontend.Controllers
                     App_Start.RunningRestoreJobs.CurrentLiveRestore = lrHandler;
 
 
-                    System.Threading.Thread lrThread = new System.Threading.Thread(() => lrHandler.performLiveRestore(sourcePath, vmObject.vmName, restoreStartDetails.instanceID, false));
+                    System.Threading.Thread lrThread = new System.Threading.Thread(() => lrHandler.performLiveRestore(sourcePath, vmObject.vmName, restoreStartDetails.instanceID, false, lbTimeLimit));
                     lrThread.Start();
 
                     //wait for init
@@ -106,7 +114,7 @@ namespace Frontend.Controllers
                     App_Start.RunningRestoreJobs.CurrentFileLevelRestore = flrHandler;
 
                     //start thread
-                    System.Threading.Thread flrThread = new System.Threading.Thread(() => flrHandler.performGuestFilesRestore(sourcePath, restoreStartDetails.instanceID, false, restoreStartDetails.selectedHDD));
+                    System.Threading.Thread flrThread = new System.Threading.Thread(() => flrHandler.performGuestFilesRestore(sourcePath, restoreStartDetails.instanceID, false, restoreStartDetails.selectedHDD, lbTimeLimit));
                     flrThread.Start();
 
                     //wait for init
@@ -181,6 +189,7 @@ namespace Frontend.Controllers
             public string vmName { get; set; }
             public string instanceID { get; set; }
             public int jobID { get; set; }
+            public string lbLimit { get; set; }
             public string vmID { get; set; }
             public string selectedHDD { get; set; }
         }

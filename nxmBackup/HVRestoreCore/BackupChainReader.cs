@@ -336,7 +336,7 @@ namespace HVRestoreCore
         
 
         //try read from lb
-        public void readFromLB(Int64 offset, Int64 length, byte[] buffer)
+        public void readFromLB(Int64 offset, Int64 length, byte[] buffer, UInt64 lbTimeLimit)
         {
             //just continue when LB is first non-full backup
             if (this.nonFullBackups.Count == 0 || this.nonFullBackups[0].backupType != NonFullBackupType.lb)
@@ -349,6 +349,17 @@ namespace HVRestoreCore
             foreach (LBBlock block in this.nonFullBackups[0].lbStructure.blocks)
             {
                 UInt64 sourceOffset = 0, destOffset = 0, sourceAndDestLength = 0;
+
+                //if current block is "newer" than lbTimeLimit -> cancel
+                if (lbTimeLimit > 0)
+                {
+                    UInt64 blockDate = UInt64.Parse(block.timestamp.ToString("yyyyMMddHHmmss"));
+                    if (blockDate > lbTimeLimit)
+                    {
+                        break;
+                    }
+                }
+
 
                 //start offset is within current block?
                 if (block.offset <= (UInt64)offset && (UInt64)offset < block.offset + block.length)
