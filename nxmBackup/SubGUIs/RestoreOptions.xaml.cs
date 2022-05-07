@@ -142,11 +142,11 @@ namespace RestoreHelper
                     break;
                 case "flr":
                     HVRestoreCore.FileLevelRestoreHandler flrHandler = new HVRestoreCore.FileLevelRestoreHandler(this.job.UseEncryption, this.job.AesKey, this.job.UsingDedupe);
-                    flrHandler.performGuestFilesRestore(sourcePath, restorePoint.InstanceId, true, "");
+                    flrHandler.performGuestFilesRestore(sourcePath, restorePoint.InstanceId, true, "", 0);
                     break;
                 case "lr":
                     HVRestoreCore.LiveRestore lrHandler = new HVRestoreCore.LiveRestore(this.job.UseEncryption, this.job.AesKey, this.job.UsingDedupe);
-                    lrHandler.performLiveRestore(sourcePath, ((ComboBoxItem)cbVMs.SelectedItem).Content.ToString(), restorePoint.InstanceId, true);
+                    lrHandler.performLiveRestore(sourcePath, ((ComboBoxItem)cbVMs.SelectedItem).Content.ToString(), restorePoint.InstanceId, true, 0);
                     break;
             }
 

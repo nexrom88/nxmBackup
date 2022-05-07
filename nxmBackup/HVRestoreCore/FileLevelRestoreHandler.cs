@@ -42,7 +42,7 @@ namespace HVRestoreCore
 
 
         //performs a guest files restore
-        public void performGuestFilesRestore(string basePath, string instanceID, bool windowMode, string guiSelectedHDD)
+        public void performGuestFilesRestore(string basePath, string instanceID, bool windowMode, string guiSelectedHDD, UInt64 lbTimeLimit)
         {
             //get full backup chain
             List<ConfigHandler.BackupConfigHandler.BackupInfo> backupChain = ConfigHandler.BackupConfigHandler.readChain(basePath);
@@ -158,7 +158,7 @@ namespace HVRestoreCore
             MountHandler mountHandler = new MountHandler(MountHandler.RestoreMode.flr, this.useEncryption, this.aesKey, this.usingDedupe);
 
             MountHandler.ProcessState mountState = MountHandler.ProcessState.pending;
-            Thread mountThread = new Thread(() => mountHandler.startMfHandlingForFLR(hddFiles, ref mountState));
+            Thread mountThread = new Thread(() => mountHandler.startMfHandlingForFLR(hddFiles, ref mountState, lbTimeLimit));
             mountThread.Start();
 
             //wait for mounting process

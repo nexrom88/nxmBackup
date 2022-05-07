@@ -33,7 +33,7 @@ namespace HVRestoreCore
         }
 
 
-        public void performLiveRestore(string basePath, string vmName, string instanceID, bool wpfMode)
+        public void performLiveRestore(string basePath, string vmName, string instanceID, bool wpfMode, UInt64 lbTimeLimit)
         {
             //get full backup chain
             List<ConfigHandler.BackupConfigHandler.BackupInfo> backupChain = ConfigHandler.BackupConfigHandler.readChain(basePath);
@@ -95,7 +95,7 @@ namespace HVRestoreCore
 
             MountHandler mountHandler = new MountHandler(MountHandler.RestoreMode.lr, this.useEncryption, this.aesKey, this.usingDedupe);
 
-            Thread mountThread = new Thread(() => mountHandler.startMfHandlingForLR(hddFiles, backupBasePath, vmName));
+            Thread mountThread = new Thread(() => mountHandler.startMfHandlingForLR(hddFiles, backupBasePath, vmName, lbTimeLimit));
             mountThread.Start();
 
             //wait for mounting process

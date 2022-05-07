@@ -42,7 +42,7 @@ namespace nxmBackup.MFUserMode
         public string LrVMID { get => lrVMID; }
 
         //starts the mount process for LR
-        public void startMfHandlingForLR(BackupConfigHandler.LRBackupChains sourceFiles, string basePath, string vmName)
+        public void startMfHandlingForLR(BackupConfigHandler.LRBackupChains sourceFiles, string basePath, string vmName, UInt64 lbTimeLimit)
         {
             string mountDirectory = String.Empty;
             this.readableChains = new BackupChainReader[sourceFiles.chains.Length];
@@ -159,7 +159,7 @@ namespace nxmBackup.MFUserMode
 
 
             //connect to MF Kernel Mode
-            this.kmConnection = new MFUserMode(this.readableChains);
+            this.kmConnection = new MFUserMode(this.readableChains, lbTimeLimit);
             if (this.kmConnection.connectToKM("\\nxmLRPort", "\\BaseNamedObjects\\nxmmflr"))
             {
                 //send target vhdx path to km
@@ -343,7 +343,7 @@ namespace nxmBackup.MFUserMode
         }
 
         //starts the mount process for FLR
-        public void startMfHandlingForFLR(string[] sourceFiles, ref ProcessState mountState)
+        public void startMfHandlingForFLR(string[] sourceFiles, ref ProcessState mountState, UInt64 lbTimeLimit)
         {
             //build readable backup chain structure first
             this.readableChains = new BackupChainReader[1]; //on flr there can be just one chain
@@ -404,7 +404,7 @@ namespace nxmBackup.MFUserMode
             this.destStream.Dispose();
 
             //connect to MF Kernel Mode
-            this.kmConnection = new MFUserMode(this.readableChains);
+            this.kmConnection = new MFUserMode(this.readableChains, lbTimeLimit);
             if (this.kmConnection.connectToKM("\\nxmFLRPort", "\\BaseNamedObjects\\nxmmfflr"))
             {
                 mountState = ProcessState.successful;

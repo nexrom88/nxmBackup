@@ -68,15 +68,19 @@ namespace nxmBackup.MFUserMode
         //minifilter instance name
         private const string mfName = "nxmmf";
 
+        //lb time limit
+        private UInt64 lbTimeLimit;
+
         //FileStream compareStream = new FileStream(@"d:\original_fixed.vhdx", System.IO.FileMode.Open, System.IO.FileAccess.Read);
 
 
         //shared memory with km
         SharedMemory sharedMemoryHandler = new SharedMemory();
 
-        public MFUserMode(BackupChainReader[] readableBackupChains)
+        public MFUserMode(BackupChainReader[] readableBackupChains, UInt64 lbTimeLimit)
         {
             this.readableBackupChains = readableBackupChains;
+            this.lbTimeLimit = lbTimeLimit;
         }
 
         //empty constructor for debugging purposes
@@ -299,7 +303,7 @@ namespace nxmBackup.MFUserMode
 
                 //read payload data from backup chain
                 this.readableBackupChains[vhdxTargetIndex].readFromChain(offset, length, data, 0);
-                this.readableBackupChains[vhdxTargetIndex].readFromLB(offset, length, data);
+                this.readableBackupChains[vhdxTargetIndex].readFromLB(offset, length, data, lbTimeLimit);
 
 
                 //write payload data to shared memory
@@ -380,7 +384,7 @@ namespace nxmBackup.MFUserMode
 
                 //read from first element in chains. On FLR there can only be one chain
                 this.readableBackupChains[0].readFromChain(offset, length, data, 0);
-                this.readableBackupChains[0].readFromLB(offset, length, data);
+                this.readableBackupChains[0].readFromLB(offset, length, data, this.lbTimeLimit);
             }
             else
             {

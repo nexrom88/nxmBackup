@@ -55,7 +55,7 @@ function startRestoreHandler() {
             if (restoreType == "full" || restoreType == "fullImport") {
                 showFolderBrowserDialog();
             } else {
-                startRestore();
+                prepareRestore();
             }
         });
 
@@ -153,7 +153,7 @@ function convertBackupProperties(properties) {
 }
 
 //starts the restore process
-function startRestore() {
+function prepareRestore() {
     //check whether backup is selected
     var backupType = $('#restorePointTable tr.active').data("backuptype");
     var instanceID = $('#restorePointTable tr.active').data("instanceid");
@@ -169,19 +169,90 @@ function startRestore() {
     //disable start restore button
     $("#startRestoreButton").prop("disabled", true);
 
-    var restartStartDetails = {};
-    restartStartDetails["basePath"] = selectedRestoreJob["TargetPath"];
-    restartStartDetails["vmName"] = $("#sbSourceVM option:selected").text() + "_restored";
-    restartStartDetails["vmID"] = $("#sbSourceVM option:selected").data("vmid");
-    restartStartDetails["destPath"] = selectedDirectory;
-    restartStartDetails["instanceID"] = instanceID;
-    restartStartDetails["type"] = $("#sbRestoreType option:selected").data("type");
-    restartStartDetails["jobID"] = selectedRestoreJob["DbId"];
-    restartStartDetails["selectedHDD"] = selectedRestoreHDD;
+    var restoreStartDetails = {};
+    restoreStartDetails["basePath"] = selectedRestoreJob["TargetPath"];
+    restoreStartDetails["vmName"] = $("#sbSourceVM option:selected").text() + "_restored";
+    restoreStartDetails["vmID"] = $("#sbSourceVM option:selected").data("vmid");
+    restoreStartDetails["destPath"] = selectedDirectory;
+    restoreStartDetails["instanceID"] = instanceID;
+    restoreStartDetails["type"] = $("#sbRestoreType option:selected").data("type");
+    restoreStartDetails["jobID"] = selectedRestoreJob["DbId"];
+    restoreStartDetails["selectedHDD"] = selectedRestoreHDD;
+    restoreStartDetails["backupType"] = backupType;
 
     //reset selected hdd
     selectedRestoreHDD = "";
 
+
+    //when backup type is "lb" -> show time slider
+    if (backupType == "LiveBackup") {
+
+        //look for backup within chain
+        var selectedBackup = {};
+        for (var i = 0; i < loadedBackupChain.length; i++) {
+            if (loadedBackupChain[i].instanceID == instanceID) {
+                selectedBackup = loadedBackupChain[i];
+                break;
+            }
+        }
+
+        //parse start an end dates
+        var lbStartDate = moment(selectedBackup["timeStamp"], "DD.MM.YYYY HH:mm");
+        var lbEndDate = moment(selectedBackup["lbEndTime"], "DD.MM.YYYY HH:mm");
+        var lbDuration = moment.duration(lbEndDate.diff(lbStartDate));
+
+
+        $.ajax({
+            url: "Templates/lbTimeSelection"
+        })
+            .done(function (lbTimeSelection) {
+
+                //show swal with time picker
+                Swal.fire({
+                    input: 'range',
+                    html: lbTimeSelection,
+                    inputAttributes: {
+                        min: 0,
+                        max: lbDuration.asMinutes(),
+                        step: 1
+                    },
+                    inputValue: 0,
+                    title: 'Zeitpunkt auswählen',
+                    didOpen: () => {
+                        const inputControl = Swal.getInput();
+
+                        inputControl.style.width = '100%';
+                        inputControl.nextElementSibling.style.display = 'none';
+
+                        //on change event handler
+                        inputControl.addEventListener('input', () => {
+                            var tempTime = lbStartDate.clone();
+                            $("#lbTime").html(tempTime.add(inputControl.value, "minutes").format("DD.MM.YYYY HH:mm"));
+                        });
+
+                        //set defaukt value to div
+                        $("#lbTime").html(lbStartDate.format("DD.MM.YYYY HH:mm"));
+                    }
+                }).then(function (value) {
+                    var tempTime = lbStartDate.clone();
+                    tempTime.add(value.value, "minutes");
+                    restoreStartDetails["lbLimit"] = tempTime.format("YYYYMMDDhhmmss");
+                    startRestore(restoreStartDetails);
+                });
+
+            });
+
+
+    } else {
+        startRestore(restoreStartDetails);
+    }
+
+
+
+}
+
+//starts the restore process
+function startRestore(restoreStartDetails) {
     //show loading screen
     Swal.fire({
         title: 'Initialisierung',
@@ -197,7 +268,7 @@ function startRestore() {
     $.ajax({
         url: "api/Restore",
         contentType: "application/json; charset=utf-8",
-        data: JSON.stringify(restartStartDetails),
+        data: JSON.stringify(restoreStartDetails),
         type: 'POST',
         cache: false,
     })
@@ -208,7 +279,7 @@ function startRestore() {
             //re-enable start restore button
             $("#startRestoreButton").prop("disabled", false);
 
-            switch (restartStartDetails["type"]) {
+            switch (restoreStartDetails["type"]) {
                 case "full":
                 case "fullImport":
                     handleRunningFullRestore();
@@ -275,12 +346,11 @@ function startRestore() {
                     selectedRestoreHDD = hddOptions[value["value"]];
 
                     //restart restore
-                    startRestore();
+                    prepareRestore();
                 });
             };
 
         });
-
 }
 
 //handles a currently running flr
@@ -428,7 +498,7 @@ function showFolderBrowserDialog() {
 
             //directory ok?
             if (selectedDirectory != "") {
-                startRestore();
+                prepareRestore();
             } else {
                 Swal.fire({
                     title: 'Fehler',
