@@ -14,14 +14,37 @@ namespace TestProject
 {
     class Program
     {
-        [DllImport("Kernel32.dll", CharSet = CharSet.Unicode)]
-        private static extern uint QueryDosDevice([In] string lpDeviceName, [Out] StringBuilder lpTargetPath, [In] int ucchMax);
+        [DllImport("virtdisk.dll", CharSet = CharSet.Unicode)]
+        public static extern Int32 OpenVirtualDisk(ref Common.VirtualDiskHandler.VIRTUAL_STORAGE_TYPE type,
+        string Path,
+        Common.VirtualDiskHandler.VIRTUAL_DISK_ACCESS_MASK VirtualDiskAccessMask,
+        Common.VirtualDiskHandler.OPEN_VIRTUAL_DISK_FLAG Flags,
+        ref Common.VirtualDiskHandler.OPEN_VIRTUAL_DISK_PARAMETERS Parameters,
+        ref Common.VirtualDiskSafeHandle Handle);
 
         static void Main(string[] args)
         {
-            
+            var parameters = new Common.VirtualDiskHandler.OPEN_VIRTUAL_DISK_PARAMETERS();
+            parameters.Version = Common.VirtualDiskHandler.OPEN_VIRTUAL_DISK_VERSION.OPEN_VIRTUAL_DISK_VERSION_1;
+            parameters.Version1.RWDepth = 1;
 
-            Common.DBQueries.wipeDB();
+            var storageType = new Common.VirtualDiskHandler.VIRTUAL_STORAGE_TYPE();
+            storageType.DeviceId = Common.VirtualDiskHandler.VIRTUAL_STORAGE_TYPE_DEVICE_VHDX;
+            storageType.VendorId = Common.VirtualDiskHandler.VIRTUAL_STORAGE_TYPE_VENDOR_MICROSOFT;
+
+
+            //fileAccessMask = ((fileAccessMask & VirtualDiskAccessMask.GetInfo) == VirtualDiskAccessMask.GetInfo) ?VirtualDiskAccessMask.GetInfo : 0;
+            //fileAccessMask |= VirtualDiskAccessMask.AttachReadOnly;
+
+            Common.VirtualDiskSafeHandle handle = new Common.VirtualDiskSafeHandle();
+
+            int res = OpenVirtualDisk(ref storageType, @"f:\mounted.vhdx",
+                Common.VirtualDiskHandler.VIRTUAL_DISK_ACCESS_MASK.VIRTUAL_DISK_ACCESS_READ,
+                Common.VirtualDiskHandler.OPEN_VIRTUAL_DISK_FLAG.OPEN_VIRTUAL_DISK_FLAG_NONE, ref parameters, ref handle);
+
+            handle.Close();
+
+            //Common.DBQueries.wipeDB();
 
             //System.Drawing.Icon icon =  System.Drawing.Icon.ExtractAssociatedIcon(@"c:\test.ini");
             //icon = icon;
@@ -236,18 +259,6 @@ namespace TestProject
             //worker.stopLB();
 
         }
-
-
-
-        //replaces the drive letter with nt device path
-        private static string replaceDriveLetterByDevicePath(string path)
-        {
-            StringBuilder builder = new StringBuilder(255);
-            QueryDosDevice(path.Substring(0, 2), builder, 255);
-            path = path.Substring(3);
-            return builder.ToString() + "\\" + path;
-        }
-
 
     }
 }
