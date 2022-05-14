@@ -25,7 +25,7 @@ namespace HVRestoreCore
         public bool mountVHD()
         {
             diskHandler = new Common.VirtualDiskHandler(this.vhdPath);
-            if (!diskHandler.open(Common.VirtualDiskHandler.VirtualDiskAccessMask.AttachReadOnly))
+            if (!diskHandler.open(Common.VirtualDiskHandler.VirtualDiskAccessMask.AttachReadWrite))
             {
                 DBQueries.addLog("Mount: opening vhdx failed", Environment.StackTrace, null);
                 return false;
