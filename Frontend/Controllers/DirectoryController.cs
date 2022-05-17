@@ -22,9 +22,21 @@ namespace Frontend.Controllers
             if (requestedPath == "/")
             {
                 DriveInfo[] drives = DriveInfo.GetDrives();
-                returnDirectories = new string[drives.Length];
+                 returnDirectories = new string[drives.Length];
                 for (int i = 0; i < drives.Length; i++)
                 {
+                    //just list ntfs drives
+                    try
+                    {
+                        if (drives[i].DriveFormat.ToLower() != "ntfs")
+                        {
+                            continue;
+                        }
+                    }catch(Exception ex)
+                    {
+                        continue;
+                    }
+
                     //just add drive if accessible
                     try
                     {
@@ -33,6 +45,8 @@ namespace Frontend.Controllers
                     {
                         continue;
                     }
+
+                 
 
                     tempDrivesList.Add(drives[i].RootDirectory.FullName);
                 }
