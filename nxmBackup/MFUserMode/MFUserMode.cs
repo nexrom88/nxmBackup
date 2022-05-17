@@ -86,7 +86,7 @@ namespace nxmBackup.MFUserMode
         //empty constructor for debugging purposes
         public MFUserMode()
         {
-            
+
         }
 
         //loads the minifilter driver
@@ -154,7 +154,7 @@ namespace nxmBackup.MFUserMode
 
             //start km connection
             this.kmHandle = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(IntPtr)));
-            uint result = FilterConnectCommunicationPort(portName, 0, IntPtr.Zero, 0, IntPtr.Zero,  out kmHandle);
+            uint result = FilterConnectCommunicationPort(portName, 0, IntPtr.Zero, 0, IntPtr.Zero, out kmHandle);
 
             //alloc shared memory
             if (result == 0)
@@ -164,7 +164,7 @@ namespace nxmBackup.MFUserMode
             else
             {
                 return false;
-            }    
+            }
 
         }
 
@@ -203,7 +203,7 @@ namespace nxmBackup.MFUserMode
             LB_BLOCK retVal = new LB_BLOCK();
 
             int headerSize = Marshal.SizeOf(dataReceive.messageHeader);
-            
+
             int dataSize = BUFFER_SIZE + headerSize;
 
             //read message
@@ -217,7 +217,7 @@ namespace nxmBackup.MFUserMode
             }
 
             byte[] managedBuffer = new byte[8 + 8 + 4];
-            for(int i = 0; i < managedBuffer.Length; i++)
+            for (int i = 0; i < managedBuffer.Length; i++)
             {
                 managedBuffer[i] = dataReceive.messageContent[i];
             }
@@ -305,6 +305,9 @@ namespace nxmBackup.MFUserMode
                 this.readableBackupChains[vhdxTargetIndex].readFromChain(offset, length, data, 0);
                 this.readableBackupChains[vhdxTargetIndex].readFromLB(offset, length, data, lbTimeLimit);
 
+                //set LogGUID to zero to disable log replay
+                disableLogReplay(data, offset, length);
+
 
                 //write payload data to shared memory
                 Marshal.Copy(data, 0, this.sharedMemoryHandler.SharedMemoryPointer, data.Length);
@@ -385,10 +388,13 @@ namespace nxmBackup.MFUserMode
                 //read from first element in chains. On FLR there can only be one chain
                 this.readableBackupChains[0].readFromChain(offset, length, data, 0);
                 this.readableBackupChains[0].readFromLB(offset, length, data, this.lbTimeLimit);
+
+                //set LogGUID to zero to disable log replay
+                disableLogReplay(data, offset, length);
             }
             else
             {
-                
+
             }
 
 
@@ -402,6 +408,53 @@ namespace nxmBackup.MFUserMode
             int size = sizeof(FILTER_REPLY_MESSAGE);
 
             status = FilterReplyMessage(this.kmHandle, ref reply, size);
+
+        }
+
+        //sets LogGUID to zero to disable log replay
+        private void disableLogReplay(byte[] data, Int64 offset, Int64 length)
+        {
+            //header offset
+            Int32 headerOffset = 65536;
+
+            //loop to adjust both headers
+            for (int i = 0; i < 2; i++)
+            {
+                Int32 logGuidOffset = headerOffset + 48;
+                if (logGuidOffset >= offset && logGuidOffset < offset + length)
+                {
+                    Int64 dataOffset = logGuidOffset - offset;
+                    Int64 bytesToWrite = (offset + length) - dataOffset;
+                    if (bytesToWrite > 16)
+                    {
+                        bytesToWrite = 16;
+                    }
+
+                    //location found, now write zeros
+                    byte[] zeroData = new byte[bytesToWrite];
+                    Array.Copy(zeroData, 0, data, dataOffset, bytesToWrite);
+
+                    //adjust header checksum
+                    Int32 checksumOffset = headerOffset + 4;
+                    byte[] headerData = new byte[4096];
+                    Array.Copy(data, headerOffset - offset, headerData, 0, 4096);
+
+                    //set crc bytes to zero
+                    headerData[4] = 0;
+                    headerData[5] = 0;
+                    headerData[6] = 0;
+                    headerData[7] = 0;
+
+                    //calculate crc32c
+                    byte[] crcData = BitConverter.GetBytes(Force.Crc32.Crc32CAlgorithm.Compute(headerData));
+
+                    //copy back crc value
+                    Array.Copy(crcData, 0, data, checksumOffset, 4);
+
+                }
+                //jump to header 2
+                headerOffset *= 2;
+            }
 
         }
 

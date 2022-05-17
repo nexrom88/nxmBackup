@@ -397,8 +397,17 @@ namespace nxmBackup.MFUserMode
             }
 
             //build dummy dest file
-            System.IO.Directory.CreateDirectory(System.IO.Path.GetDirectoryName(this.MountFiles[0]));
-            this.destStream = new System.IO.FileStream(this.MountFiles[0], System.IO.FileMode.Create, System.IO.FileAccess.Write);
+            try
+            {
+                System.IO.Directory.CreateDirectory(System.IO.Path.GetDirectoryName(this.MountFiles[0]));
+                this.destStream = new System.IO.FileStream(this.MountFiles[0], System.IO.FileMode.Create, System.IO.FileAccess.Write);
+            }catch(Exception ex)
+            {
+                DBQueries.addLog("FLR: Failed to create dummy file", Environment.StackTrace, null);
+                mountState = ProcessState.error;
+                return;
+            }
+
             this.destStream.SetLength((long)decompressedFileSize);
             this.destStream.Close();
             this.destStream.Dispose();
