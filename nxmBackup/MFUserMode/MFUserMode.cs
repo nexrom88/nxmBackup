@@ -216,15 +216,17 @@ namespace nxmBackup.MFUserMode
 
             }
 
-            byte[] managedBuffer = new byte[8 + 8 + 4];
+            byte[] managedBuffer = new byte[1+ 8 + 8 + 4];
             for (int i = 0; i < managedBuffer.Length; i++)
             {
                 managedBuffer[i] = dataReceive.messageContent[i];
             }
 
-            long offset = BitConverter.ToInt64(managedBuffer, 0);
-            long length = BitConverter.ToInt64(managedBuffer, 8);
-            int objectID = BitConverter.ToInt32(managedBuffer, 16);
+            //ignore first byte, because it is always set to 1 (write mode)
+
+            long offset = BitConverter.ToInt64(managedBuffer, 1);
+            long length = BitConverter.ToInt64(managedBuffer, 9);
+            int objectID = BitConverter.ToInt32(managedBuffer, 17);
 
             //copy shared memory to retVal struct
             retVal.buffer = new byte[length];
