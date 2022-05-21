@@ -287,7 +287,7 @@ namespace nxmBackup.MFUserMode
             LROperationMode operationMode = new LROperationMode();
             switch (data[0])
             {
-                case 0:
+                case 2:
                     operationMode = LROperationMode.write;
                     break;
                 case 1:
@@ -309,7 +309,7 @@ namespace nxmBackup.MFUserMode
                 this.readableBackupChains[vhdxTargetIndex].readFromLB(offset, length, data, lbTimeLimit);
 
                 //set LogGUID to zero to disable log replay
-                disableLogReplay(data, offset, length);
+                //disableLogReplay(data, offset, length);
 
 
                 //write payload data to shared memory
@@ -322,6 +322,18 @@ namespace nxmBackup.MFUserMode
                 int size = sizeof(FILTER_REPLY_MESSAGE);
 
                 status = FilterReplyMessage(this.kmHandle, ref reply, size);
+            }else if (operationMode == LROperationMode.write)
+            {
+                SYSTEM_WRITTEN_BLOCK newBlock = new SYSTEM_WRITTEN_BLOCK();
+                newBlock.length = length;
+                newBlock.offset = offset;
+
+                //copy shared memory to struct
+                newBlock.buffer = new byte[length];
+                Marshal.Copy(this.sharedMemoryHandler.SharedMemoryPointer, newBlock.buffer, 0, (int)length);
+
+                //copy to list
+                this.systemWrittenBlocks.Add(newBlock);
             }
 
             //perform a write request
@@ -393,7 +405,7 @@ namespace nxmBackup.MFUserMode
                 this.readableBackupChains[0].readFromLB(offset, length, data, this.lbTimeLimit);
 
                 //set LogGUID to zero to disable log replay
-                disableLogReplay(data, offset, length);
+                //disableLogReplay(data, offset, length);
             }
             else if(requestType == 2) //write buffer received
             {
