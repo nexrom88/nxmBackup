@@ -15,6 +15,8 @@ namespace nxmBackup.MFUserMode
 
     public class MFUserMode
     {
+        //list for system written blocks to vhdx file (flr and lr)
+        List<SYSTEM_WRITTEN_BLOCK> systemWrittenBlocks = new List<SYSTEM_WRITTEN_BLOCK>();
 
         // Constant buffer size
         public const int BUFFER_SIZE = 100;
@@ -222,8 +224,7 @@ namespace nxmBackup.MFUserMode
                 managedBuffer[i] = dataReceive.messageContent[i];
             }
 
-            //ignore first byte, because it is always set to 1 (write mode)
-
+            //ignore first byte, because it is always set to 2 (write mode)
             long offset = BitConverter.ToInt64(managedBuffer, 1);
             long length = BitConverter.ToInt64(managedBuffer, 9);
             int objectID = BitConverter.ToInt32(managedBuffer, 17);
@@ -394,9 +395,18 @@ namespace nxmBackup.MFUserMode
                 //set LogGUID to zero to disable log replay
                 disableLogReplay(data, offset, length);
             }
-            else
+            else if(requestType == 2) //write buffer received
             {
+                SYSTEM_WRITTEN_BLOCK newBlock = new SYSTEM_WRITTEN_BLOCK();
+                newBlock.length = length;
+                newBlock.offset = offset;
 
+                //copy shared memory to struct
+                newBlock.buffer = new byte[length];
+                Marshal.Copy(this.sharedMemoryHandler.SharedMemoryPointer, newBlock.buffer, 0, (int)length);
+
+                //copy to list
+                this.systemWrittenBlocks.Add(newBlock);
             }
 
 
@@ -465,6 +475,14 @@ namespace nxmBackup.MFUserMode
         {
             public bool isValid;
             public int objectID;
+            public long offset;
+            public long length;
+            public byte[] buffer;
+        }
+
+        //a written block used by flr and lr
+        public struct SYSTEM_WRITTEN_BLOCK
+        {
             public long offset;
             public long length;
             public byte[] buffer;
