@@ -17,6 +17,8 @@ namespace HVRestoreCore
         public ReadableFullBackup FullBackup { get => fullBackup; set => fullBackup = value; }
         public List<ReadableNonFullBackup> NonFullBackups { get => nonFullBackups; set => nonFullBackups = value; }
 
+        public List<nxmBackup.MFUserMode.MFUserMode.SYSTEM_WRITTEN_BLOCK> systemWrittenBlocks = new List<nxmBackup.MFUserMode.MFUserMode.SYSTEM_WRITTEN_BLOCK>();
+
 
         //reads the given data from backup chain
         public void readFromChain(Int64 offset, Int64 length, byte[] buffer, Int32 bufferOffset, int callDepth = 0)
@@ -335,6 +337,59 @@ namespace HVRestoreCore
 
         
 
+        //after reading from lb, read from system written blocks
+        private void readFromSWB (Int64 offset, Int64 length, byte[] buffer)
+        {
+            //iterate through all swb
+            foreach (nxmBackup.MFUserMode.MFUserMode.SYSTEM_WRITTEN_BLOCK block in this.systemWrittenBlocks)
+            {
+                UInt64 sourceOffset = 0, destOffset = 0, sourceAndDestLength = 0;
+
+                //start offset is within current block?
+                if (block.offset <= offset && offset < block.offset + block.length)
+                {
+                    //where and how much to read from this block?
+                    destOffset = 0;
+                    sourceOffset = (ulong)(offset - block.offset);
+                    sourceAndDestLength = (ulong)((block.offset + block.length) - offset);
+
+                    //adjust blockLength
+                    if (sourceAndDestLength > (UInt64)length)
+                    {
+                        sourceAndDestLength = (UInt64)length;
+                    }
+
+
+                }//end offset is within current block
+                else if (block.offset < offset + length && offset + length < block.offset + block.length)
+                {
+                    sourceOffset = 0;
+                    sourceAndDestLength = (ulong)((offset + length) - block.offset);
+                    destOffset = (ulong)(block.offset - offset);
+                }
+                //is location completely within block to read?
+                else if (offset < block.offset && offset + length >= block.offset + block.length)
+                {
+                    //where to start reading within swb buffer?
+                    sourceOffset = 0;
+
+                    //how much to read?
+                    sourceAndDestLength = (ulong)block.length;
+
+                    //where to put the data?
+                    destOffset = (ulong)(block.offset - offset);
+                }
+
+                //copy to dest array
+                if (sourceAndDestLength != 0)
+                {
+                    //read from lb
+
+                    Buffer.BlockCopy(block.buffer, (int)sourceOffset, buffer, (int)destOffset, (int)sourceAndDestLength);
+                }
+            }
+        }
+
         //try read from lb
         public void readFromLB(Int64 offset, Int64 length, byte[] buffer, UInt64 lbTimeLimit)
         {
@@ -407,6 +462,9 @@ namespace HVRestoreCore
                     Buffer.BlockCopy(sourceBuffer, 0, buffer,(int)destOffset, (int)sourceAndDestLength);
                 }
             }
+
+            //read system written blocks
+            readFromSWB(offset, length, buffer);
         }
 
         //one readable full backup
