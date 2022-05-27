@@ -306,7 +306,7 @@ namespace nxmBackup.MFUserMode
 
                 //read payload data from backup chain
                 this.readableBackupChains[vhdxTargetIndex].readFromChain(offset, length, data, 0);
-                this.readableBackupChains[vhdxTargetIndex].readFromLB(offset, length, data, lbTimeLimit);
+                this.readableBackupChains[vhdxTargetIndex].readFromLB(offset, length, data, lbTimeLimit); //read from lb and system written blocks
 
                 //set LogGUID to zero to disable log replay
                 //disableLogReplay(data, offset, length);
@@ -404,6 +404,9 @@ namespace nxmBackup.MFUserMode
                 this.readableBackupChains[0].readFromChain(offset, length, data, 0);
                 this.readableBackupChains[0].readFromLB(offset, length, data, this.lbTimeLimit);
 
+                //write payload data to shared memory
+                Marshal.Copy(data, 0, this.sharedMemoryHandler.SharedMemoryPointer, data.Length);
+
                 //set LogGUID to zero to disable log replay
                 //disableLogReplay(data, offset, length);
             }
@@ -418,12 +421,8 @@ namespace nxmBackup.MFUserMode
                 Marshal.Copy(this.sharedMemoryHandler.SharedMemoryPointer, newBlock.buffer, 0, (int)length);
 
                 //copy to list
-                this.systemWrittenBlocks.Add(newBlock);
+                this.readableBackupChains[0].systemWrittenBlocks.Add(newBlock);
             }
-
-
-            //write payload data to shared memory
-            Marshal.Copy(data, 0, this.sharedMemoryHandler.SharedMemoryPointer, data.Length);
 
             reply.replyHeader.messageId = dataReceive.messageHeader.messageId;
             reply.replyHeader.status = 0;
