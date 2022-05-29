@@ -256,6 +256,13 @@ namespace nxmBackup.HVBackupCore
             //iterate through each lb block
             foreach (HyperVBackupRCT.LBBlock currentBlock in parsedLBFile.blocks)
             {
+
+                //stop flag set?
+                if (this.stopRequest.value)
+                {
+                    break;
+                }
+
                 //if block is newer than lb time limit? -> cancel
                 if (lbTimeLimit > 0)
                 {
@@ -282,8 +289,17 @@ namespace nxmBackup.HVBackupCore
                 if (progress != lastProgress)
                 {
                     lastProgress = progress;
-                    this.eventHandler.raiseNewEvent("Verarbeite LiveBackup... " + progress, false, true, relatedEventId, EventStatus.inProgress);
+                    this.eventHandler.raiseNewEvent("Verarbeite LiveBackup... " + progress + "%", false, true, relatedEventId, EventStatus.inProgress);
                 }
+            }
+
+            if (this.stopRequest.value)
+            {
+                this.eventHandler.raiseNewEvent("Verarbeite LiveBackup... abgebrochen", true, true, relatedEventId, EventStatus.error);
+            }
+            else
+            {
+                this.eventHandler.raiseNewEvent("Verarbeite LiveBackup... erfolgreich", true, true, relatedEventId, EventStatus.successful);
             }
 
             //close dest stream
