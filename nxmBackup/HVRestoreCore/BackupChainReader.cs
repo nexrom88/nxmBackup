@@ -384,7 +384,6 @@ namespace HVRestoreCore
                 if (sourceAndDestLength != 0)
                 {
                     //read from lb
-
                     Buffer.BlockCopy(block.buffer, (int)sourceOffset, buffer, (int)destOffset, (int)sourceAndDestLength);
                 }
             }
