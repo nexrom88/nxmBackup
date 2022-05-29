@@ -15,9 +15,6 @@ namespace nxmBackup.MFUserMode
 
     public class MFUserMode
     {
-        //list for system written blocks to vhdx file (flr and lr)
-        List<SYSTEM_WRITTEN_BLOCK> systemWrittenBlocks = new List<SYSTEM_WRITTEN_BLOCK>();
-
         // Constant buffer size
         public const int BUFFER_SIZE = 100;
 
@@ -283,7 +280,7 @@ namespace nxmBackup.MFUserMode
             byte vhdxTargetIndex = data[17];
 
 
-            //get lr operation mode (0 = write, 1 = read)
+            //get lr operation mode (2 = write, 1 = read)
             LROperationMode operationMode = new LROperationMode();
             switch (data[0])
             {
@@ -315,13 +312,7 @@ namespace nxmBackup.MFUserMode
                 //write payload data to shared memory
                 Marshal.Copy(data, 0, this.sharedMemoryHandler.SharedMemoryPointer, data.Length);
 
-                //build reply struct
-                reply.replyHeader.messageId = dataReceive.messageHeader.messageId;
-                reply.replyHeader.status = 0;
 
-                int size = sizeof(FILTER_REPLY_MESSAGE);
-
-                status = FilterReplyMessage(this.kmHandle, ref reply, size);
             }else if (operationMode == LROperationMode.write)
             {
                 SYSTEM_WRITTEN_BLOCK newBlock = new SYSTEM_WRITTEN_BLOCK();
@@ -333,8 +324,16 @@ namespace nxmBackup.MFUserMode
                 Marshal.Copy(this.sharedMemoryHandler.SharedMemoryPointer, newBlock.buffer, 0, (int)length);
 
                 //copy to list
-                this.systemWrittenBlocks.Add(newBlock);
+                this.readableBackupChains[vhdxTargetIndex].systemWrittenBlocks.Add(newBlock);
             }
+
+            //build reply struct
+            reply.replyHeader.messageId = dataReceive.messageHeader.messageId;
+            reply.replyHeader.status = 0;
+
+            int size = sizeof(FILTER_REPLY_MESSAGE);
+
+            status = FilterReplyMessage(this.kmHandle, ref reply, size);
 
             //perform a write request
             //if (operationMode == LROperationMode.write)
