@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using HyperVBackupRCT;
 using nxmBackup.HVBackupCore;
+using K4os.Compression.LZ4.Streams;
 
 namespace HVRestoreCore
 {
@@ -454,10 +455,19 @@ namespace HVRestoreCore
                 if (sourceAndDestLength != 0)
                 {
                     //read from lb
-                    byte[] sourceBuffer = new byte[sourceAndDestLength];
+                    byte[] sourceBuffer = new byte[block.compressedEncryptedLength];
                     this.nonFullBackups[0].sourceStreamLB.Seek((Int64)(block.lbFileOffset + sourceOffset), System.IO.SeekOrigin.Begin);
-                    this.nonFullBackups[0].sourceStreamLB.Read(sourceBuffer, 0, (int)sourceAndDestLength);
+                    this.nonFullBackups[0].sourceStreamLB.Read(sourceBuffer, 0, (int)block.compressedEncryptedLength); //read whole block
 
+                    //decompress block
+                    using (System.IO.MemoryStream memStream = new System.IO.MemoryStream())
+                    using (LZ4DecoderStream lz4Decoder = LZ4Stream.Decode(memStream, 0, false))
+                    {
+                        lz4Decoder.Write(sourceBuffer, 0, (int)block.compressedEncryptedLength);
+                        lz4Decoder.Close();
+                    }
+
+                    
                     Buffer.BlockCopy(sourceBuffer, 0, buffer,(int)destOffset, (int)sourceAndDestLength);
                 }
             }

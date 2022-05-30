@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 using System.ComponentModel;
 using Microsoft.Extensions.Logging;
 using System.IO;
+using K4os.Compression.LZ4.Streams;
 
 namespace nxmBackup.HVBackupCore
 {
@@ -40,11 +41,14 @@ namespace nxmBackup.HVBackupCore
 
         private List<LBHDDWorker> runningHDDWorker = new List<LBHDDWorker> ();
 
+        private LZ4EncoderSettings encoderSettings = new LZ4EncoderSettings();
+
 
         public LiveBackupWorker(int jobID, Common.EventHandler eventHandler)
         {
             this.eventHandler = eventHandler;
             this.JobID = jobID;
+            this.encoderSettings.CompressionLevel = K4os.Compression.LZ4.LZ4Level.L00_FAST;
         }
 
         //starts LB
@@ -297,8 +301,21 @@ namespace nxmBackup.HVBackupCore
                 buffer = BitConverter.GetBytes(lbBlock.length);
                 lbDestinationStream.Write(buffer, 0, 8);
 
-                //write payload data
-                lbDestinationStream.Write(lbBlock.buffer, 0, (int)lbBlock.length);
+                //compress raw data
+                using (MemoryStream memStream = new MemoryStream())
+                using (LZ4EncoderStream lz4Stream = LZ4Stream.Encode(memStream, this.encoderSettings, true))
+                {
+                    lz4Stream.Write(lbBlock.buffer, 0, (int)lbBlock.length);
+                    lz4Stream.Close();
+
+                    //write compressed/encrypted length
+                    buffer = BitConverter.GetBytes(memStream.Length);
+                    lbDestinationStream.Write(buffer, 0, 8);
+
+                    //write payload data to file
+                    memStream.WriteTo(lbDestinationStream);
+                }
+                
 
                 //flush stream
                 lbDestinationStream.Flush();
@@ -403,4 +420,5 @@ namespace nxmBackup.HVBackupCore
 //8 bytes: timestamp (yyyyMMddHHmmss)
 //8 bytes: payload offset
 //8 bytes: payload length
+//8 bytes: compressed/encrypted length
 //x bytes: payload
