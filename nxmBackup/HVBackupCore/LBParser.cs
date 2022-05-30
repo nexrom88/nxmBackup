@@ -34,10 +34,12 @@ namespace HyperVBackupRCT
                 UInt64 timestamp = BitConverter.ToUInt64(buffer, 0);
                 UInt64 offset = BitConverter.ToUInt64(buffer, 8);
                 UInt64 length = BitConverter.ToUInt64(buffer, 16);
+                UInt64 compressedEncryptedLength = BitConverter.ToUInt64(buffer, 24);
 
                 currentStructure.timestamp = DateTime.ParseExact(timestamp.ToString(), "yyyyMMddHHmmss", CultureInfo.InvariantCulture);
                 currentStructure.offset = offset;
                 currentStructure.length = length;
+                currentStructure.compressedEncryptedLength = compressedEncryptedLength;
 
                 //set payload offset to current stream offset 
                 currentStructure.lbFileOffset = (UInt64)inStream.Position;
@@ -69,6 +71,7 @@ namespace HyperVBackupRCT
         public DateTime timestamp;
         public UInt64 offset;
         public UInt64 length;
+        public UInt64 compressedEncryptedLength;
         public UInt64 lbFileOffset;
     }
 
@@ -87,4 +90,5 @@ namespace HyperVBackupRCT
 //8 bytes: timestamp (yyyyMMddHHmmss)
 //8 bytes: payload offset
 //8 bytes: payload length
+//8 bytes: compressed/encrypted length
 //x bytes: payload
