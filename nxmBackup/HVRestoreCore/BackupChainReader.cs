@@ -456,19 +456,20 @@ namespace HVRestoreCore
                 {
                     //read from lb
                     byte[] sourceBuffer = new byte[block.compressedEncryptedLength];
+                    //byte[] rawBuffer = new byte[block.length];
                     this.nonFullBackups[0].sourceStreamLB.Seek((Int64)(block.lbFileOffset + sourceOffset), System.IO.SeekOrigin.Begin);
                     this.nonFullBackups[0].sourceStreamLB.Read(sourceBuffer, 0, (int)block.compressedEncryptedLength); //read whole block
 
                     //decompress block
-                    using (System.IO.MemoryStream memStream = new System.IO.MemoryStream())
+                    using (System.IO.MemoryStream memStream = new System.IO.MemoryStream(sourceBuffer))
                     using (LZ4DecoderStream lz4Decoder = LZ4Stream.Decode(memStream, 0, false))
                     {
-                        lz4Decoder.Write(sourceBuffer, 0, (int)block.compressedEncryptedLength);
+                        lz4Decoder.Read(buffer, (int)destOffset, (int)sourceAndDestLength);
                         lz4Decoder.Close();
                     }
-
+                                        
                     
-                    Buffer.BlockCopy(sourceBuffer, 0, buffer,(int)destOffset, (int)sourceAndDestLength);
+                    //Buffer.BlockCopy(sourceBuffer, 0, buffer,(int)destOffset, (int)sourceAndDestLength);
                 }
             }
 
