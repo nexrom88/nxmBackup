@@ -27,9 +27,9 @@ namespace HyperVBackupRCT
             while (readBytes < (ulong)inStream.Length)
             {
                 LBBlock currentStructure = new LBBlock();
-                //read 24 header bytes
-                byte[] buffer = new byte[24];
-                int read = inStream.Read(buffer, 0, 24);
+                //read 32 header bytes
+                byte[] buffer = new byte[32];
+                int read = inStream.Read(buffer, 0, 32);
 
                 UInt64 timestamp = BitConverter.ToUInt64(buffer, 0);
                 UInt64 offset = BitConverter.ToUInt64(buffer, 8);
@@ -45,7 +45,7 @@ namespace HyperVBackupRCT
                 currentStructure.lbFileOffset = (UInt64)inStream.Position;
 
                 //jump over payload
-                inStream.Seek((Int64)length, System.IO.SeekOrigin.Current);
+                inStream.Seek((Int64)compressedEncryptedLength, System.IO.SeekOrigin.Current);
 
                 //add to list
                 retVal.blocks.Add(currentStructure);
