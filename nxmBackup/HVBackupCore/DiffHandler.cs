@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.IO;
 using Common;
+using K4os.Compression.LZ4.Streams;
 
 namespace nxmBackup.HVBackupCore
 {
@@ -256,7 +257,6 @@ namespace nxmBackup.HVBackupCore
             //iterate through each lb block
             foreach (HyperVBackupRCT.LBBlock currentBlock in parsedLBFile.blocks)
             {
-
                 //stop flag set?
                 if (this.stopRequest.value)
                 {
@@ -275,12 +275,18 @@ namespace nxmBackup.HVBackupCore
 
                 //read current block payload from source stream
                 lbStream.Seek((long)currentBlock.lbFileOffset, SeekOrigin.Begin);
-                byte[] blockPayload = new byte[currentBlock.length];
-                lbStream.Read(blockPayload, 0, (int)currentBlock.length);
+                byte[] blockPayload = new byte[currentBlock.compressedEncryptedLength];
+                lbStream.Read(blockPayload, 0, (int)currentBlock.compressedEncryptedLength);
 
-                //write current block payload to dest stream
-                destinationStream.Seek((long)currentBlock.offset, SeekOrigin.Begin);
-                destinationStream.Write(blockPayload, 0, (int)currentBlock.length);
+                //decompress block
+                using (MemoryStream memStream = new MemoryStream(blockPayload))
+                using (LZ4DecoderStream lz4Decoder = LZ4Stream.Decode(memStream, 0, false))
+                {
+                    //decompress current block payload to dest stream
+                    destinationStream.Seek((long)currentBlock.offset, SeekOrigin.Begin);
+                    lz4Decoder.CopyTo(destinationStream);
+                    lz4Decoder.Close();
+                }
 
                 blockCounter++;
 
