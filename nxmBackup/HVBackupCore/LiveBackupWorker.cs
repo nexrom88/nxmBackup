@@ -229,7 +229,7 @@ namespace nxmBackup.HVBackupCore
                 {
                     MFUserMode.MFUserMode.LB_BLOCK lbBlock = this.um.handleLBMessage();
 
-                    this.processedBytes += (UInt64)lbBlock.length;
+                    //this.processedBytes += (UInt64)lbBlock.length;
 
                     //just show progress every 10 MB
                     if (this.processedBytes - this.lastShownBytes >= 10000000)
@@ -262,8 +262,8 @@ namespace nxmBackup.HVBackupCore
 
                             if (lbBlock.objectID == hddWorker.lbObjectID)
                             {
-                                //save the block to backup destination
-                                storeLBBlock(lbBlock, hddWorker.lbFileStream);
+                                //save the block to backup destination and add written bytes to counter
+                                this.processedBytes += storeLBBlock(lbBlock, hddWorker.lbFileStream);
                             }
 
                         }
@@ -281,8 +281,9 @@ namespace nxmBackup.HVBackupCore
         }
 
         //writes LB block to corresponding backup path
-        private void storeLBBlock(MFUserMode.MFUserMode.LB_BLOCK lbBlock, System.IO.FileStream lbDestinationStream)
+        private UInt64 storeLBBlock(MFUserMode.MFUserMode.LB_BLOCK lbBlock, System.IO.FileStream lbDestinationStream)
         {
+            UInt64 retVal = 0;
             //write data to stream if stream exists
             if (lbDestinationStream != null)
             {
@@ -309,6 +310,7 @@ namespace nxmBackup.HVBackupCore
                     lz4Stream.Close();
 
                     //write compressed/encrypted length
+                    retVal = (UInt64)memStream.Length;
                     buffer = BitConverter.GetBytes(memStream.Length);
                     lbDestinationStream.Write(buffer, 0, 8);
 
@@ -320,6 +322,8 @@ namespace nxmBackup.HVBackupCore
                 //flush stream
                 lbDestinationStream.Flush();
             }
+
+            return retVal;
         }
 
         //stops LB
