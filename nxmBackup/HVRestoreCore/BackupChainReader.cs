@@ -466,7 +466,15 @@ namespace HVRestoreCore
                     {
                         byte[] rawBuffer = new byte[block.length];
 
-                        lz4Decoder.Read(rawBuffer, 0, (int)block.length);
+                        //read bytes from compression stream until everything is read
+                        int readBytes = 0;
+
+                        while (readBytes < (int)block.length)
+                        {
+                            readBytes += lz4Decoder.Read(rawBuffer, readBytes, (int)block.length - readBytes);
+                        }
+
+
                         lz4Decoder.Close();
 
                         //copy rawbuffer to buffer

@@ -51,7 +51,7 @@ namespace HyperVBackupRCT
                 retVal.blocks.Add(currentStructure);
 
                 //increase counter
-                readBytes += (UInt64)buffer.Length + length; //header size + payload size
+                readBytes += (UInt64)buffer.Length + compressedEncryptedLength; //header size + payload size
             }
 
             //close filestream?
