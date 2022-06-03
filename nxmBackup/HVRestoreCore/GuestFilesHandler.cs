@@ -22,7 +22,7 @@ namespace HVRestoreCore
         }
 
         //mounts vhdx file without driveletter
-        public bool mountVHD()
+        public bool mountVHD() //important: has to be opened with write access because of possible log replay
         {
             diskHandler = new Common.VirtualDiskHandler(this.vhdPath);
             if (!diskHandler.open(Common.VirtualDiskHandler.VirtualDiskAccessMask.AttachReadWrite))
@@ -30,7 +30,7 @@ namespace HVRestoreCore
                 DBQueries.addLog("Mount: opening vhdx failed", Environment.StackTrace, null);
                 return false;
             }
-            if (!diskHandler.attach(Common.VirtualDiskHandler.ATTACH_VIRTUAL_DISK_FLAG.ATTACH_VIRTUAL_DISK_FLAG_NO_DRIVE_LETTER | Common.VirtualDiskHandler.ATTACH_VIRTUAL_DISK_FLAG.ATTACH_VIRTUAL_DISK_FLAG_READ_ONLY))
+            if (!diskHandler.attach(Common.VirtualDiskHandler.ATTACH_VIRTUAL_DISK_FLAG.ATTACH_VIRTUAL_DISK_FLAG_NO_DRIVE_LETTER))
             {
                 DBQueries.addLog("FLR: attaching vhdx failed", Environment.StackTrace, null);
                 return false;
