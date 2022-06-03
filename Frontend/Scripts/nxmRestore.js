@@ -474,6 +474,13 @@ function flrDoNavigate(path, parentNode, rawNode) {
         .done(function (data) {
             var fsEntries = JSON.parse(data);
 
+            //clear all already existing nodes
+            var children = $('#flrBrowser').jstree().get_children_dom(parentNode);
+            for (var i = 0; i < children.length; i++) {
+                $('#flrBrowser').jstree().delete_node(children[i].id);
+            }
+
+            //add new entries to node
             for (var i = 0; i < fsEntries.length; i++) {
                 //get last path element
                 var buffer = fsEntries[i]["path"].split("\\");
