@@ -166,6 +166,8 @@ function prepareRestore() {
         return;
     }
 
+    selectedRestoreHDD = "";
+
     //disable start restore button
     $("#startRestoreButton").prop("disabled", true);
 
@@ -230,7 +232,7 @@ function prepareRestore() {
                             $("#lbTime").html(tempTime.add(inputControl.value, "minutes").format("DD.MM.YYYY HH:mm"));
                         });
 
-                        //set defaukt value to div
+                        //set default value to div
                         $("#lbTime").html(lbStartDate.format("DD.MM.YYYY HH:mm"));
                     }
                 }).then(function (value) {
@@ -346,9 +348,10 @@ function startRestore(restoreStartDetails) {
                     text: 'Bitte wählen Sie hier eine virtuelle Festplatte aus, auf die die Wiederherstellung gestartet wird',
                 }).then(function (value) {
                     selectedRestoreHDD = hddOptions[value["value"]];
+                    restoreStartDetails["selectedHDD"] = selectedRestoreHDD;
 
                     //restart restore
-                    prepareRestore();
+                    startRestore(restoreStartDetails);
                 });
             };
 
