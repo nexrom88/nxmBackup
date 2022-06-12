@@ -10,6 +10,8 @@ using System.ComponentModel;
 using Microsoft.Extensions.Logging;
 using System.IO;
 using K4os.Compression.LZ4.Streams;
+using System.Security.Cryptography;
+
 
 namespace nxmBackup.HVBackupCore
 {
@@ -43,12 +45,27 @@ namespace nxmBackup.HVBackupCore
 
         private LZ4EncoderSettings encoderSettings = new LZ4EncoderSettings();
 
+        private AesCryptoServiceProvider aesProvider;
+        private ICryptoTransform encryptor;
+        private byte[] aesKey;
+
 
         public LiveBackupWorker(int jobID, Common.EventHandler eventHandler)
         {
             this.eventHandler = eventHandler;
             this.JobID = jobID;
             this.encoderSettings.CompressionLevel = K4os.Compression.LZ4.LZ4Level.L00_FAST;
+
+            //init encryption if necessary
+            ConfigHandler.OneJob currentJob = getJobObject();
+            if (currentJob.UseEncryption)
+            {
+                this.aesProvider = new AesCryptoServiceProvider();
+                this.aesProvider.KeySize = 256;
+                this.aesProvider.Key = currentJob.AesKey;
+                this.aesProvider.GenerateIV();
+                this.encryptor = this.aesProvider.CreateEncryptor(this.aesProvider.Key, this.aesProvider.IV);
+            }
         }
 
         //starts LB
@@ -63,7 +80,7 @@ namespace nxmBackup.HVBackupCore
             //load job object. It gets loaded dynamically because the object can change while lb is running
             ConfigHandler.OneJob jobObject = getJobObject();
 
-
+            
             //connect to km and shared memory
             this.um = new MFUserMode.MFUserMode();
             bool status = this.um.connectToKM("\\nxmLBPort", "\\BaseNamedObjects\\nxmmflb");
@@ -225,6 +242,8 @@ namespace nxmBackup.HVBackupCore
             {
                 bool sizeLimitReached = false;
 
+                ConfigHandler.OneJob currentJob = getJobObject();
+
                 while (this.isRunning && !sizeLimitReached)
                 {
                     MFUserMode.MFUserMode.LB_BLOCK lbBlock = this.um.handleLBMessage();
@@ -263,7 +282,7 @@ namespace nxmBackup.HVBackupCore
                             if (lbBlock.objectID == hddWorker.lbObjectID)
                             {
                                 //save the block to backup destination and add written bytes to counter
-                                this.processedBytes += storeLBBlock(lbBlock, hddWorker.lbFileStream);
+                                this.processedBytes += storeLBBlock(lbBlock, hddWorker.lbFileStream, currentJob);
                             }
 
                         }
@@ -281,7 +300,7 @@ namespace nxmBackup.HVBackupCore
         }
 
         //writes LB block to corresponding backup path
-        private UInt64 storeLBBlock(MFUserMode.MFUserMode.LB_BLOCK lbBlock, System.IO.FileStream lbDestinationStream)
+        private UInt64 storeLBBlock(MFUserMode.MFUserMode.LB_BLOCK lbBlock, System.IO.FileStream lbDestinationStream, ConfigHandler.OneJob currentJob)
         {
             UInt64 retVal = 0;
             //write data to stream if stream exists
@@ -302,7 +321,7 @@ namespace nxmBackup.HVBackupCore
                 buffer = BitConverter.GetBytes(lbBlock.length);
                 lbDestinationStream.Write(buffer, 0, 8);
 
-                //compress raw data
+                //compress/encrypt raw data
                 using (MemoryStream memStream = new MemoryStream())
                 using (LZ4EncoderStream lz4Stream = LZ4Stream.Encode(memStream, this.encoderSettings, true))
                 {
@@ -312,10 +331,27 @@ namespace nxmBackup.HVBackupCore
                     //write compressed/encrypted length
                     retVal = (UInt64)memStream.Length;
                     buffer = BitConverter.GetBytes(memStream.Length);
-                    lbDestinationStream.Write(buffer, 0, 8);
 
-                    //write payload data to file
-                    memStream.WriteTo(lbDestinationStream);
+                    if (currentJob.UseEncryption) //data has to get encrypted
+                    {
+                        //init enryptor module
+                        MemoryStream cryptoMemStream = new MemoryStream();
+                        CryptoStream cryptoStream = new CryptoStream(cryptoMemStream, this.encryptor, CryptoStreamMode.Write);
+
+                        //aes is 16 byte aligned
+                        compressedBlockSize = compMemStream.Length;
+                        compressedBlockSize += 16 - (compressedBlockSize % 16);
+                        buffer = BitConverter.GetBytes(compressedBlockSize);
+                    }
+                    else //no encryption
+                    {
+                        lbDestinationStream.Write(buffer, 0, 8);
+
+                        //write payload data to file
+                        memStream.WriteTo(lbDestinationStream);
+                    }
+                    
+                   
                 }
                 
 
