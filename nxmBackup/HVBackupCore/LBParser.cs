@@ -78,6 +78,7 @@ namespace HyperVBackupRCT
     public struct LBStructure
     {
         public UInt64 vhdxSize;
+
         public List<LBBlock> blocks;
     }
 

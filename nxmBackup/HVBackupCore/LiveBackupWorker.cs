@@ -339,9 +339,22 @@ namespace nxmBackup.HVBackupCore
                         CryptoStream cryptoStream = new CryptoStream(cryptoMemStream, this.encryptor, CryptoStreamMode.Write);
 
                         //aes is 16 byte aligned
-                        compressedBlockSize = compMemStream.Length;
+                        Int64 compressedBlockSize = memStream.Length;
                         compressedBlockSize += 16 - (compressedBlockSize % 16);
                         buffer = BitConverter.GetBytes(compressedBlockSize);
+
+                        //write compressed/encrypted length
+                        lbDestinationStream.Write(buffer, 0, 8);
+
+                        //write encrypted data to storage
+                        memStream.WriteTo(cryptoStream);
+                        cryptoStream.FlushFinalBlock();
+                        cryptoMemStream.WriteTo(lbDestinationStream);
+
+                        //close encryptor module
+                        cryptoStream.Dispose();
+                        cryptoMemStream.Dispose();
+
                     }
                     else //no encryption
                     {
