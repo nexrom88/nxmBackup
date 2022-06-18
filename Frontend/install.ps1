@@ -56,8 +56,8 @@ $appPool | Set-Item
 Import-Module WebAdministration
 New-WebSite -Name "nxmbackup" -PhysicalPath $installPath -ApplicationPool "nxm" -Port 8008
 
-Set-WebConfigurationProperty -filter /system.WebServer/security/authentication/AnonymousAuthentication -name enabled -value "True" -Location "IIS:\Sites\nxmbackup"
-Set-WebConfigurationProperty -filter /system.WebServer/security/authentication/AnonymousAuthentication -name username -value "nxmUser" -Location "IIS:\Sites\nxmbackup"
-Set-WebConfigurationProperty -filter /system.WebServer/security/authentication/AnonymousAuthentication -name password -value $password -Location "IIS:\Sites\nxmbackup"
+Set-WebConfigurationProperty -filter /system.WebServer/security/authentication/AnonymousAuthentication -name enabled -value "True" -PSPath IIS:\ -location nxmbackup
+Set-WebConfigurationProperty -filter /system.webServer/security/authentication/AnonymousAuthentication -name username -value "nxmUser" -PSPath IIS:\ -location nxmbackup
+Set-WebConfigurationProperty -filter /system.WebServer/security/authentication/AnonymousAuthentication -name password -value $password -PSPath IIS:\ -location nxmbackup
 
 Start-WebSite -Name "nxmbackup"
