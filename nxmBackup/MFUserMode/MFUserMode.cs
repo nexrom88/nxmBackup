@@ -70,16 +70,22 @@ namespace nxmBackup.MFUserMode
         //lb time limit
         private UInt64 lbTimeLimit;
 
+        //vars used for encryption
+        private bool useEncryption;
+        private byte[] aesKey;
+
         //FileStream compareStream = new FileStream(@"d:\original_fixed.vhdx", System.IO.FileMode.Open, System.IO.FileAccess.Read);
 
 
         //shared memory with km
         SharedMemory sharedMemoryHandler = new SharedMemory();
 
-        public MFUserMode(BackupChainReader[] readableBackupChains, UInt64 lbTimeLimit)
+        public MFUserMode(BackupChainReader[] readableBackupChains, UInt64 lbTimeLimit, bool useEncryption, byte[]aesKey)
         {
             this.readableBackupChains = readableBackupChains;
             this.lbTimeLimit = lbTimeLimit;
+            this.aesKey = aesKey;
+            this.useEncryption = useEncryption;
         }
 
         //empty constructor for debugging purposes
@@ -303,7 +309,7 @@ namespace nxmBackup.MFUserMode
 
                 //read payload data from backup chain
                 this.readableBackupChains[vhdxTargetIndex].readFromChain(offset, length, data, 0);
-                this.readableBackupChains[vhdxTargetIndex].readFromLB(offset, length, data, lbTimeLimit); //read from lb and system written blocks
+                this.readableBackupChains[vhdxTargetIndex].readFromLB(offset, length, data, lbTimeLimit, this.useEncryption, this.aesKey); //read from lb and system written blocks
 
                 //set LogGUID to zero to disable log replay
                 //disableLogReplay(data, offset, length);

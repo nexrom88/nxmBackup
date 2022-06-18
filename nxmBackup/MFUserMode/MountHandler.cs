@@ -157,9 +157,9 @@ namespace nxmBackup.MFUserMode
             }
 
 
-
+            
             //connect to MF Kernel Mode
-            this.kmConnection = new MFUserMode(this.readableChains, lbTimeLimit);
+            this.kmConnection = new MFUserMode(this.readableChains, lbTimeLimit, this.useEncryption, this.aesKey);
             if (this.kmConnection.connectToKM("\\nxmLRPort", "\\BaseNamedObjects\\nxmmflr"))
             {
                 //send target vhdx path to km
@@ -413,7 +413,7 @@ namespace nxmBackup.MFUserMode
             this.destStream.Dispose();
 
             //connect to MF Kernel Mode
-            this.kmConnection = new MFUserMode(this.readableChains, lbTimeLimit);
+            this.kmConnection = new MFUserMode(this.readableChains, lbTimeLimit, this.useEncryption, this.aesKey);
             if (this.kmConnection.connectToKM("\\nxmFLRPort", "\\BaseNamedObjects\\nxmmfflr"))
             {
                 mountState = ProcessState.successful;

@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using HyperVBackupRCT;
 using nxmBackup.HVBackupCore;
 using K4os.Compression.LZ4.Streams;
+using System.Security.Cryptography;
 
 namespace HVRestoreCore
 {
@@ -19,6 +20,7 @@ namespace HVRestoreCore
         public List<ReadableNonFullBackup> NonFullBackups { get => nonFullBackups; set => nonFullBackups = value; }
 
         public List<nxmBackup.MFUserMode.MFUserMode.SYSTEM_WRITTEN_BLOCK> systemWrittenBlocks = new List<nxmBackup.MFUserMode.MFUserMode.SYSTEM_WRITTEN_BLOCK>();
+
 
 
         //reads the given data from backup chain
@@ -391,7 +393,7 @@ namespace HVRestoreCore
         }
 
         //try read from lb
-        public void readFromLB(Int64 offset, Int64 length, byte[] buffer, UInt64 lbTimeLimit)
+        public void readFromLB(Int64 offset, Int64 length, byte[] buffer, UInt64 lbTimeLimit, bool useEncryption, byte[] aesKey)
         {
             //just continue when LB is first non-full backup
             if (this.nonFullBackups.Count == 0 || this.nonFullBackups[0].backupType != NonFullBackupType.lb)
@@ -459,6 +461,9 @@ namespace HVRestoreCore
                     //byte[] rawBuffer = new byte[block.length];
                     this.nonFullBackups[0].sourceStreamLB.Seek((Int64)(block.lbFileOffset), System.IO.SeekOrigin.Begin);
                     this.nonFullBackups[0].sourceStreamLB.Read(sourceBuffer, 0, (int)block.compressedEncryptedLength); //read whole block
+
+                    //decrypt block
+                    if ()
 
                     //decompress block
                     using (System.IO.MemoryStream memStream = new System.IO.MemoryStream(sourceBuffer))
