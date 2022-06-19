@@ -22,6 +22,20 @@ namespace HyperVBackupRCT
             retVal.vhdxSize = BitConverter.ToUInt64(vhdxSizeBuffer, 0);
             readBytes += 8;
 
+            //read iv length
+            byte[] ivLengthBuffer = new byte[4];
+            inStream.Read(ivLengthBuffer, 0, 4);
+            retVal.ivLength = BitConverter.ToInt32(ivLengthBuffer, 0);
+            readBytes += 4;
+
+            //when iv > 0 read iv
+            if (retVal.ivLength > 0)
+            {
+                byte[] iv = new byte[retVal.ivLength];
+                inStream.Read(iv, 0, iv.Length);
+                retVal.iv = iv;
+                readBytes += (ulong)iv.Length;
+            }
 
             //read until everything is read
             while (readBytes < (ulong)inStream.Length)
@@ -78,6 +92,8 @@ namespace HyperVBackupRCT
     public struct LBStructure
     {
         public UInt64 vhdxSize;
+        public Int32 ivLength;
+        public byte[] iv;
 
         public List<LBBlock> blocks;
     }
@@ -86,6 +102,8 @@ namespace HyperVBackupRCT
 
 //file structure
 //8 bytes = vhdx size
+//4 bytes: aes IV length
+//IV length bytes: aes IV
 
 //one block:
 //8 bytes: timestamp (yyyyMMddHHmmss)
