@@ -173,6 +173,26 @@ namespace nxmBackup.HVBackupCore
                 byte[] buffer = new byte[8];
                 stream.Write(buffer, 0, 8);
 
+                //write aes IV
+                
+                if (getJobObject().UseEncryption)
+                {
+                    //write IV length first
+                    Int32 ivLength = 0;
+                    ivLength = this.aesProvider.IV.Length;
+                    buffer = BitConverter.GetBytes(ivLength);
+                    stream.Write(buffer, 0, 4);
+
+                    //write iv itself
+                    stream.Write(this.aesProvider.IV, 0, ivLength);
+                }
+                else
+                {
+                    //no aes encryption -> write zero iv length
+                    buffer = BitConverter.GetBytes(0);
+                    stream.Write(buffer, 0, 4);
+                }
+
                 //build new lbworker struct
                 LBHDDWorker newWorker = new LBHDDWorker();
                 newWorker.lbFileStream = stream;
@@ -468,6 +488,8 @@ namespace nxmBackup.HVBackupCore
 
 //file structure
 //8 bytes = vhdx size
+//4 bytes: aes IV length
+//IV length bytes: aes IV
 
 //one block:
 //8 bytes: timestamp (yyyyMMddHHmmss)
