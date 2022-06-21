@@ -497,6 +497,7 @@ namespace nxmBackup.MFUserMode
         public BackupChainReader buildReadableBackupChain(string[] sourceFiles)
         {
             BackupChainReader chain = new BackupChainReader();
+            chain.AesKey = this.aesKey;
             chain.NonFullBackups = new List<BackupChainReader.ReadableNonFullBackup>();
 
             //iterate through cb files first
