@@ -309,7 +309,7 @@ namespace nxmBackup.MFUserMode
 
                 //read payload data from backup chain
                 this.readableBackupChains[vhdxTargetIndex].readFromChain(offset, length, data, 0);
-                this.readableBackupChains[vhdxTargetIndex].readFromLB(offset, length, data, lbTimeLimit, this.useEncryption, this.aesKey); //read from lb and system written blocks
+                this.readableBackupChains[vhdxTargetIndex].readFromLB(offset, length, data, lbTimeLimit); //read from lb and system written blocks
 
                 //set LogGUID to zero to disable log replay
                 //disableLogReplay(data, offset, length);

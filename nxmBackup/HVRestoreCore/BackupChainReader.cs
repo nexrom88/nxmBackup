@@ -8,6 +8,7 @@ using HyperVBackupRCT;
 using nxmBackup.HVBackupCore;
 using K4os.Compression.LZ4.Streams;
 using System.Security.Cryptography;
+using System.IO;
 
 namespace HVRestoreCore
 {
@@ -21,6 +22,25 @@ namespace HVRestoreCore
 
         public List<nxmBackup.MFUserMode.MFUserMode.SYSTEM_WRITTEN_BLOCK> systemWrittenBlocks = new List<nxmBackup.MFUserMode.MFUserMode.SYSTEM_WRITTEN_BLOCK>();
 
+        public byte[] AesKey { get; set; }
+
+        //used for lb decryption
+        AesCryptoServiceProvider aesProvider;
+        ICryptoTransform encryptor;
+        ICryptoTransform decryptor;
+        private bool lbEncryptionInitiated = false;
+
+        //inits the lb encryption if necessary
+        private void initLBEncryption(byte[] iv)
+        {
+            //init crypto
+            this.aesProvider = new AesCryptoServiceProvider();
+            this.aesProvider.KeySize = 256;
+            this.aesProvider.Key = AesKey;
+            this.aesProvider.IV = iv;
+            this.decryptor = this.aesProvider.CreateDecryptor(this.aesProvider.Key, this.aesProvider.IV);
+            this.lbEncryptionInitiated = true;
+        }
 
 
         //reads the given data from backup chain
@@ -393,7 +413,7 @@ namespace HVRestoreCore
         }
 
         //try read from lb
-        public void readFromLB(Int64 offset, Int64 length, byte[] buffer, UInt64 lbTimeLimit, bool useEncryption, byte[] aesKey)
+        public void readFromLB(Int64 offset, Int64 length, byte[] buffer, UInt64 lbTimeLimit)
         {
             //just continue when LB is first non-full backup
             if (this.nonFullBackups.Count == 0 || this.nonFullBackups[0].backupType != NonFullBackupType.lb)
@@ -462,8 +482,23 @@ namespace HVRestoreCore
                     this.nonFullBackups[0].sourceStreamLB.Seek((Int64)(block.lbFileOffset), System.IO.SeekOrigin.Begin);
                     this.nonFullBackups[0].sourceStreamLB.Read(sourceBuffer, 0, (int)block.compressedEncryptedLength); //read whole block
 
-                    //decrypt block
-                    if ()
+                    //decrypt block necessary?
+                    if (this.nonFullBackups[0].lbStructure.ivLength > 0)
+                    {
+                        //init encryption when not done already
+                        if (!this.lbEncryptionInitiated)
+                        {
+                            initLBEncryption(this.nonFullBackups[0].lbStructure.iv);
+                        }
+
+                        //do decryption
+                        using (MemoryStream memStream = new MemoryStream(sourceBuffer, true))
+                        using (CryptoStream cryptoStream = new CryptoStream(memStream, this.decryptor, CryptoStreamMode.Read))
+                        {
+                            cryptoStream.Read(sourceBuffer, 0, (int)block.compressedEncryptedLength);
+                        }
+
+                    }
 
                     //decompress block
                     using (System.IO.MemoryStream memStream = new System.IO.MemoryStream(sourceBuffer))
