@@ -80,6 +80,11 @@ function init() {
         showSettings();
     });
 
+    //register help handler
+    $("#settings").click(function () {
+        showHelpForm();
+    });
+
     //register settings handler
     $("#versionInfo").click(function () {
         Swal.fire(
