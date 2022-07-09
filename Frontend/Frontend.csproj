@@ -271,6 +271,7 @@
     <Content Include="Templates\eventsListItem.html" />
     <Content Include="Templates\flrBrowser.html" />
     <Content Include="Templates\fullRestoreLogContainer.html" />
+    <Content Include="Templates\helpForm.html" />
     <Content Include="Templates\JobExecutionDetailsForm.html" />
     <Content Include="Templates\jobStateTable.html" />
     <Content Include="Templates\lbTimeSelection.html" />
