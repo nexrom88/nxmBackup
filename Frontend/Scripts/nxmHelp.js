@@ -7,7 +7,7 @@ function showHelpForm() {
         confirmButtonColor: '#3085d6',
         allowOutsideClick: true,
         allowEscapeKey: true,
-        confirmButtonText: 'ok'
+        confirmButtonText: 'OK'
 
     });
 
@@ -16,9 +16,6 @@ function showHelpForm() {
         url: "Templates/helpForm"
     })
         .done(function (settingsForm) {
-            $("#settingsPopUp").html(settingsForm);
-
-            //show settings
-            $("#inputMountPath").val(globalSettings["mountpath"]);
+            $("#helpForm").html(settingsForm);
         });
 }
