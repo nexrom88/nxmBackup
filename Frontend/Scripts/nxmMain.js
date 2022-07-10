@@ -81,7 +81,7 @@ function init() {
     });
 
     //register help handler
-    $("#settings").click(function () {
+    $("#help").click(function () {
         showHelpForm();
     });
 

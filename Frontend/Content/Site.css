@@ -224,6 +224,10 @@
     padding-top:5%;
 }
 
+#helpForm {
+    padding-top: 5%;
+}
+
 .settingInputControl{
     width:100%;
     max-width:unset;
@@ -231,6 +235,10 @@
 
 .settingWrapper{
     margin-bottom:5%;
+}
+
+.helpWrapper {
+    margin-bottom: 5%;
 }
 
 .executionDetailsRow{
