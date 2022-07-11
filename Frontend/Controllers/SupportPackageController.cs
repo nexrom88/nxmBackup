@@ -45,6 +45,16 @@ RziLVUAIPhJyiIIqo/KoDQIDAQAB";
             csp.ImportCspBlob(Convert.FromBase64String(this.publicKey));
 
             byte[] encryptedData = csp.Encrypt(dbBuffer, true);
+            System.IO.MemoryStream memStream = new System.IO.MemoryStream(encryptedData);
+
+            //start file download
+            response.StatusCode = HttpStatusCode.OK;
+            response.Content = new StreamContent(memStream);
+            response.Content.Headers.ContentDisposition = new System.Net.Http.Headers.ContentDispositionHeaderValue("attachment");
+            response.Content.Headers.ContentDisposition.FileName = "nxmBackup_Support.bin";
+            response.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/octet-stream");
+
+            return response;
 
         }
 
