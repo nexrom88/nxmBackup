@@ -10,18 +10,7 @@ namespace Frontend.Controllers
 {
     public class SupportPackageController : ApiController
     {
-        private string publicKey = @"MIICITANBgkqhkiG9w0BAQEFAAOCAg4AMIICCQKCAgBl7HW0pqlpI1ZHLCwa8fA+
-YrbuO+o+GdSExvlwhIktDfRQj68xxwrRw15OQnbdHr5caM7cDRC8TRaUCtXEfHdU
-W3kcomQPbNdaVumw965kLvWDGKLNxn9Nr/wxYrmNHKw8WAqkoC6BsH1WHYWZVAje
-wa1TUnuyA8xFGUv7Fwc8R8aXYnmEZ6gGkrjtofXXFraL7ZJs4Y37L7IJXz3cdCuV
-6EqdCWlODor7xRjN9fns4cvMzKLa4l/COxLuVxqP79bLfJGIrXs7YBdxf646j2r+
-kSuvdafpnJ098DPF1s7B3K5BEInQk3S29fJJ4MV0eqsoDrUVveDI8LFx2MIKNXeQ
-f3Ovxp+4F8eYhJ5XirH6hXXHUhiVrigpH5O2T1sKfIty8vXEqSXF6Q5OL1t7eCJS
-l5g2jC1+lj1dp8lbUROmwcJOcopy9ZoF7Jxmq2MjEsDwx5/gR1qHInnfPhVUpItc
-fw5yTtevkTHVZUZNPijCD1TSRyAAkE+/BHoQnaL/g6lJEb4Z86WPovBvGpWNigDr
-equVl1AnbEkMTN8GvhOhTAdO1QOeAPV/IaZ4kqQ1vKGpoTYi3vAQ3ltC4VVYKIMR
-fCDqHW0CJPyFTSeQfOUbWCVJyNHu0l+vkSEg9BIdU37t/8SvrwNg34NzsNbacHtY
-RziLVUAIPhJyiIIqo/KoDQIDAQAB";
+        private string publicKey = @"BgIAAACkAABSU0ExABAAAAEAAQCB2pWs9AOXhjuFyUgcDC6lJ86bQ5hDwM14GvBLQ1A+KATplmKCkc3LT7o7TBqaCxrHjwBcV6a2rhvYQeyzCNZGxgQsju1Zk82F3R7iKSHa6zgvzJcIYEI7w8WvVDFkPcM9ntAX/b/dUVGY3GH2+WiKJyLJoanjN0qYFLSQa0Tu5552OUSBBJZgdNNhM8LAtclmJB+A+4yyVNdGrsaVcxv4NH78OZ9A0ACtMiAMAFQYIpFj/uvuaY94lOci81piR3/zHrtSyMdsI6ITwXQLRnW4aew/8WuOoLwsir5k9c0QuSX91HSwJwob8vwWlH7pfrVeIDoa/RNEJLlM32r5sgx6dvDZ+3/xtWFhhAyDHrfIiezegu1xugkEFoc2X/4DjO4K0N9Udg3F8Y1PandJ/bNNgeVq0cFi3GghBzQzUvP7bbROSlPAxXM25OR/0gvgft4WGFn37m+PEvbOtoYA1U0U1yXFqE71i/4ibiUizh7APySG8/RTQDnl81UzNZo28XOrh2SNiiy623V7WGRHQ4P6E8T8/d7cAJS4d2mg8cho3Su5FFAeR47tKv7EEhFlHWl3n/2oU9ovPWdr1eUxI3MlIMLi1hYjdbOXFpH89Q5kInnJ9TLtJsGUtLqZ4j1Uu6GNrJkpzit9YQpmoRCW4bVpXGiTs7kB3G5C1A3AX/iAwg==";
 
         // starts the encrypted file download
         public HttpResponseMessage Get()
@@ -42,10 +31,12 @@ RziLVUAIPhJyiIIqo/KoDQIDAQAB";
 
             //init rsa module
             RSACryptoServiceProvider csp = new RSACryptoServiceProvider();
+            
             csp.ImportCspBlob(Convert.FromBase64String(this.publicKey));
 
             byte[] encryptedData = csp.Encrypt(dbBuffer, true);
             System.IO.MemoryStream memStream = new System.IO.MemoryStream(encryptedData);
+            
 
             //start file download
             response.StatusCode = HttpStatusCode.OK;
