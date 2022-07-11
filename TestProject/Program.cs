@@ -9,6 +9,7 @@ using System.ComponentModel;
 using System.Runtime.InteropServices;
 using System.Net;
 using System.Diagnostics;
+using System.Security.Cryptography;
 
 namespace TestProject
 {
@@ -24,25 +25,30 @@ namespace TestProject
 
         static void Main(string[] args)
         {
-            var parameters = new Common.VirtualDiskHandler.OPEN_VIRTUAL_DISK_PARAMETERS();
-            parameters.Version = Common.VirtualDiskHandler.OPEN_VIRTUAL_DISK_VERSION.OPEN_VIRTUAL_DISK_VERSION_1;
-            parameters.Version1.RWDepth = 1;
+            RSACryptoServiceProvider csp = new RSACryptoServiceProvider(4096);
+            string privateKey = Convert.ToBase64String(csp.ExportCspBlob(true));
+            string publicKey = Convert.ToBase64String(csp.ExportCspBlob(false));
+            return;
 
-            var storageType = new Common.VirtualDiskHandler.VIRTUAL_STORAGE_TYPE();
-            storageType.DeviceId = Common.VirtualDiskHandler.VIRTUAL_STORAGE_TYPE_DEVICE_VHDX;
-            storageType.VendorId = Common.VirtualDiskHandler.VIRTUAL_STORAGE_TYPE_VENDOR_MICROSOFT;
+            //var parameters = new Common.VirtualDiskHandler.OPEN_VIRTUAL_DISK_PARAMETERS();
+            //parameters.Version = Common.VirtualDiskHandler.OPEN_VIRTUAL_DISK_VERSION.OPEN_VIRTUAL_DISK_VERSION_1;
+            //parameters.Version1.RWDepth = 1;
+
+            //var storageType = new Common.VirtualDiskHandler.VIRTUAL_STORAGE_TYPE();
+            //storageType.DeviceId = Common.VirtualDiskHandler.VIRTUAL_STORAGE_TYPE_DEVICE_VHDX;
+            //storageType.VendorId = Common.VirtualDiskHandler.VIRTUAL_STORAGE_TYPE_VENDOR_MICROSOFT;
 
 
-            //fileAccessMask = ((fileAccessMask & VirtualDiskAccessMask.GetInfo) == VirtualDiskAccessMask.GetInfo) ?VirtualDiskAccessMask.GetInfo : 0;
-            //fileAccessMask |= VirtualDiskAccessMask.AttachReadOnly;
+            ////fileAccessMask = ((fileAccessMask & VirtualDiskAccessMask.GetInfo) == VirtualDiskAccessMask.GetInfo) ?VirtualDiskAccessMask.GetInfo : 0;
+            ////fileAccessMask |= VirtualDiskAccessMask.AttachReadOnly;
 
-            Common.VirtualDiskSafeHandle handle = new Common.VirtualDiskSafeHandle();
+            //Common.VirtualDiskSafeHandle handle = new Common.VirtualDiskSafeHandle();
 
-            int res = OpenVirtualDisk(ref storageType, @"f:\mounted.vhdx",
-                Common.VirtualDiskHandler.VIRTUAL_DISK_ACCESS_MASK.VIRTUAL_DISK_ACCESS_READ,
-                Common.VirtualDiskHandler.OPEN_VIRTUAL_DISK_FLAG.OPEN_VIRTUAL_DISK_FLAG_NONE, ref parameters, ref handle);
+            //int res = OpenVirtualDisk(ref storageType, @"f:\mounted.vhdx",
+            //    Common.VirtualDiskHandler.VIRTUAL_DISK_ACCESS_MASK.VIRTUAL_DISK_ACCESS_READ,
+            //    Common.VirtualDiskHandler.OPEN_VIRTUAL_DISK_FLAG.OPEN_VIRTUAL_DISK_FLAG_NONE, ref parameters, ref handle);
 
-            handle.Close();
+            //handle.Close();
 
             //Common.DBQueries.wipeDB();
 
