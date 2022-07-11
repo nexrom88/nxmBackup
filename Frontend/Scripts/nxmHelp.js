@@ -11,11 +11,24 @@ function showHelpForm() {
 
     });
 
-    //load settings form
+    //load help form
     $.ajax({
         url: "Templates/helpForm"
     })
         .done(function (settingsForm) {
             $("#helpForm").html(settingsForm);
+
+            $("#createSupportPackage").click(function () {
+                $.ajax({
+                    url: "api/SupportPackage",
+                    error: function (result) {
+                        Swal.fire(
+                            'Fehlgeschlagen',
+                            'Das Support Paket konnte nicht generiert werden',
+                            'error'
+                        );
+                    }
+                });
+            });
         });
 }
