@@ -63,13 +63,14 @@ namespace Frontend.Controllers
                 cs.Write(dbBuffer, 0, dbBuffer.Length);
                 //move encrypted data to download-stream
                 aesOutputStream.WriteTo(downloadStream);
+                downloadStream.Seek(0, System.IO.SeekOrigin.Begin);
             }
 
             //start file download
             response.StatusCode = HttpStatusCode.OK;
             response.Content = new StreamContent(downloadStream);
             response.Content.Headers.ContentDisposition = new System.Net.Http.Headers.ContentDispositionHeaderValue("attachment");
-            response.Content.Headers.ContentDisposition.FileName = "nxmBackup_Support.bin";
+            response.Content.Headers.ContentDisposition.FileName = "nxmBackup_Support.nxms";
             response.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/octet-stream");
 
             return response;
