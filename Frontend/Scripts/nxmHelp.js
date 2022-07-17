@@ -17,18 +17,9 @@ function showHelpForm() {
     })
         .done(function (settingsForm) {
             $("#helpForm").html(settingsForm);
-
+            
             $("#createSupportPackage").click(function () {
-                $.ajax({
-                    url: "api/SupportPackage",
-                    error: function (result) {
-                        Swal.fire(
-                            'Fehlgeschlagen',
-                            'Das Support Paket konnte nicht generiert werden',
-                            'error'
-                        );
-                    }
-                });
+                window.location = "api/SupportPackage";
             });
         });
 }

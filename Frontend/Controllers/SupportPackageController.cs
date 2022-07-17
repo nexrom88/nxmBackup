@@ -36,12 +36,12 @@ namespace Frontend.Controllers
 
             //build download stream
             System.IO.MemoryStream downloadStream = new System.IO.MemoryStream();
-            downloadStream.Write(BitConverter.GetBytes(aes.KeySize / 8), 0, 4);
 
-            //build buffer for key header
-            byte[] keyBuffer = new byte[16 + aes.KeySize / 8];
+            //build buffer for key an iv header
+            byte[] keyBuffer = new byte[aes.KeySize / 8];
+            byte[] ivBuffer = new byte[16];
             Array.Copy(aes.Key, 0, keyBuffer, 0, aes.Key.Length);
-            Array.Copy(aes.IV, 0, keyBuffer, aes.Key.Length, 16);
+            Array.Copy(aes.IV, 0, ivBuffer, 0, 16);
 
 
             //init rsa module
@@ -51,7 +51,19 @@ namespace Frontend.Controllers
 
             //encrypt key by using rsa
             byte[] encryptedData = csp.Encrypt(keyBuffer, true);
-            
+
+            //write key length
+            downloadStream.Write(BitConverter.GetBytes(encryptedData.Length), 0, 4);
+
+            //write encrypted data to download-stream
+            downloadStream.Write(encryptedData, 0, encryptedData.Length);
+
+            //encrypt iv by using rsa
+            encryptedData = csp.Encrypt(ivBuffer, true);
+
+            //write iv length
+            downloadStream.Write(BitConverter.GetBytes(encryptedData.Length), 0, 4);
+
             //write encrypted data to download-stream
             downloadStream.Write(encryptedData, 0, encryptedData.Length);
 
@@ -61,6 +73,7 @@ namespace Frontend.Controllers
             using (CryptoStream cs = new CryptoStream(aesOutputStream, encryptor, CryptoStreamMode.Write))
             {
                 cs.Write(dbBuffer, 0, dbBuffer.Length);
+                cs.FlushFinalBlock();
                 //move encrypted data to download-stream
                 aesOutputStream.WriteTo(downloadStream);
             }
@@ -71,7 +84,7 @@ namespace Frontend.Controllers
             response.StatusCode = HttpStatusCode.OK;
             response.Content = new StreamContent(downloadStream);
             response.Content.Headers.ContentDisposition = new System.Net.Http.Headers.ContentDispositionHeaderValue("attachment");
-            response.Content.Headers.ContentDisposition.FileName = "nxmBackup_Support.bin";
+            response.Content.Headers.ContentDisposition.FileName = "nxmBackup_Support.nxms";
             response.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/octet-stream");
 
             return response;
@@ -85,5 +98,6 @@ namespace Frontend.Controllers
 //file structure
 // 4 byte: key length
 // key length bytes: key
-//16 length bytes: iv
+//4 byte: iv length
+//iv length bytes: iv
 //db byte data
