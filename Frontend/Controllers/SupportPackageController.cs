@@ -27,7 +27,11 @@ namespace Frontend.Controllers
             string dbPath = System.IO.Path.Combine(basePath, "nxm.db");
 
             //read whole db file
-            byte[] dbBuffer = System.IO.File.ReadAllBytes(dbPath);
+            System.IO.FileStream inputStream = new System.IO.FileStream(dbPath, System.IO.FileMode.Open, System.IO.FileAccess.Read, System.IO.FileShare.ReadWrite);
+
+            byte[] dbBuffer = new byte[inputStream.Length];
+            inputStream.Read(dbBuffer, 0, dbBuffer.Length);
+            inputStream.Close();
 
             //init aes module
             AesManaged aes = new AesManaged();
