@@ -39,6 +39,12 @@ namespace Common
                 //iterate through each key
                 foreach (string key in settings.Keys)
                 {
+                    //ignore write when mailpassword is empty => no change
+                    if (key == "mailpassword" && settings[key] == "")
+                    {
+                        continue;
+                    }
+
                     Dictionary<string, object> parameters = new Dictionary<string, object>();
                     parameters.Add("value", settings[key]);
                     parameters.Add("name", key);
@@ -90,6 +96,12 @@ namespace Common
                     Dictionary<string, string> retVal = new Dictionary<string, string>();
                     foreach (Dictionary<string, object> oneSetting in result)
                     {
+                        //filter mailpassword to not sending it to frontend
+                        if ((string)oneSetting["name"] == "mailpassword")
+                        {
+                            continue;
+                        }
+
                         retVal.Add((string)oneSetting["name"], (string)oneSetting["value"]);
                     }
                     return retVal;
