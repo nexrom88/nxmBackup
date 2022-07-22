@@ -38,12 +38,21 @@ function showSettingsPopUp() {
     }   
 
     //set settings object to new values
-    globalSettings["mountpath"] = $("#inputMountPath").val();
+      globalSettings["mountpath"] = $("#inputMountPath").val();
+      globalSettings["mailserver"] = $("#inputMailServer").val();
+      globalSettings["mailssl"] = $("#inputMailSSL").prop("checked");
+      globalSettings["mailserver"] = $("#inputMailServer").val();
+      globalSettings["mailuser"] = $("#inputMailUser").val();
+      globalSettings["mailpassword"] = $("#inputMailPassword").val();
+      globalSettings["mailsender"] = $("#inputMailSender").val();
+      globalSettings["mailrecipient"] = $("#inputMailRecipient").val();
 
-    //remove last backslash
+    //remove last backslash from mountpath
     if (globalSettings["mountpath"].endsWith("\\")) {
       globalSettings["mountpath"] = globalSettings["mountpath"].substring(0, globalSettings["mountpath"].length - 1);
     }
+
+
 
     //send settings object to backend
     $.ajax({
