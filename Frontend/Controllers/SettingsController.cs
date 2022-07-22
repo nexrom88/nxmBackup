@@ -42,6 +42,12 @@ namespace Frontend.Controllers
         public class SettingsObject
         {
             public string mountpath { get; set; }
+            public string mailserver { get; set; }
+            public string mailssl { get; set; }
+            public string mailuser { get; set; }
+            public string mailpassword { get; set; }
+            public string mailsender { get; set; }
+            public string mailrecipient { get; set; }
         }
 
     }
