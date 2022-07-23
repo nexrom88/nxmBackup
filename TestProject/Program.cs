@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
-using System.Net;
+using System.Net.Mail;
 using System.Diagnostics;
 using System.Security.Cryptography;
 
@@ -25,10 +25,9 @@ namespace TestProject
 
         static void Main(string[] args)
         {
-            RSACryptoServiceProvider csp = new RSACryptoServiceProvider(4096);
-            string privateKey = Convert.ToBase64String(csp.ExportCspBlob(true));
-            string publicKey = Convert.ToBase64String(csp.ExportCspBlob(false));
-            return;
+            string to = "m.rohrmueller@gmail.com";
+            string from = "system@nexrom.de";
+            
 
             //var parameters = new Common.VirtualDiskHandler.OPEN_VIRTUAL_DISK_PARAMETERS();
             //parameters.Version = Common.VirtualDiskHandler.OPEN_VIRTUAL_DISK_VERSION.OPEN_VIRTUAL_DISK_VERSION_1;

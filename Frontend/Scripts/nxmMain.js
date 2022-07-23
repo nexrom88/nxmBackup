@@ -424,6 +424,7 @@ function showCurrentSettings(pageNumber, selectedEditJob) {
     switch (pageNumber) {
         case 1:
             $("#txtJobName").val(selectedEditJob["Name"]);
+            $("#cbMail").prop("checked", selectedEditJob["MailNotifications"])
             $("#cbIncremental").prop("checked", selectedEditJob["Incremental"]);
             $("#cbLiveBackup").prop("checked", selectedEditJob["LiveBackup"]);
             $("#spLiveBackupSize").val(selectedEditJob["LiveBackupSize"]);
@@ -557,6 +558,9 @@ function registerNextPageClickHandler(currentPage, selectedEditJob) {
                 } else {
                     $("#txtEncryptionPassword").css("background-color", "initial");
                 }
+
+                //mail notifications enabled?
+                newJobObj["mailnotifications"] = $("#cbMail").prop("checked");
 
                 //use dedupe?
                 newJobObj["usingdedupe"] = $("#cbDedupe").prop("checked");
