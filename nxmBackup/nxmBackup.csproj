@@ -202,6 +202,7 @@
     <Compile Include="BlockCompression\LZ4Blockstream.cs" />
     <Compile Include="Common\ChangedBlock.cs" />
     <Compile Include="Common\CredentialCacheManager.cs" />
+    <Compile Include="Common\MailClient.cs" />
     <Compile Include="Common\SHA1Provider.cs" />
     <Compile Include="Common\SHA256Provider.cs" />
     <Compile Include="DataBase\JetBlue.cs" />
@@ -315,7 +316,7 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
     <EmbeddedResource Include="Properties\Resources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
+      <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <None Include="app.manifest" />
@@ -375,6 +376,9 @@
       <ProductName>.NET Framework 3.5 SP1</ProductName>
       <Install>false</Install>
     </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\mailNotification.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

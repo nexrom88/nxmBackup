@@ -42,6 +42,7 @@ namespace Frontend.Controllers
             newJob.LiveBackupSize = int.Parse(value.livebackupsize);
             newJob.UseEncryption = value.useencryption;
             newJob.UsingDedupe = value.usingdedupe;
+            newJob.MailNotifications = value.mailnotifications;
 
             if (newJob.UseEncryption) {
                 newJob.AesKey = Common.SHA256Provider.computeHash(System.Text.Encoding.UTF8.GetBytes(value.encpassword));
@@ -148,6 +149,7 @@ namespace Frontend.Controllers
         {
             public string updatedJob { get; set; }
             public string name { get; set; }
+            public bool mailnotifications { get; set; }
             public bool incremental { get; set; }
             public bool useencryption { get; set; }
             public bool usingdedupe { get; set; }

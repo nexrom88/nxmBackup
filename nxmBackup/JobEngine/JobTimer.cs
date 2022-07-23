@@ -5,6 +5,9 @@ using ConfigHandler;
 using HyperVBackupRCT;
 using Common;
 using nxmBackup.HVBackupCore;
+using System.Reflection;
+using System.Linq;
+using System.IO;
 
 namespace JobEngine
 {
@@ -34,6 +37,15 @@ namespace JobEngine
         //starts the job
         public void startJob(bool force)
         {
+
+            //read html file from ressources
+            Assembly assembly = Assembly.GetExecutingAssembly();
+            string resourceName = assembly.GetManifestResourceNames().Single(str => str.EndsWith("mailNotification"));
+            using (Stream stream = assembly.GetManifestResourceStream(resourceName))
+            using (StreamReader reader = new StreamReader(stream))
+            {
+                string htmlBase = reader.ReadToEnd();
+            }
 
             //just check "job due" when it is not forced
             if (!force)
@@ -104,7 +116,30 @@ namespace JobEngine
             }
             Common.DBQueries.closeJobExecution(executionProps, executionId.ToString());
 
+            //send notification mail
+            if (this.job.MailNotifications)
+            {
+                sendNotificationMail(executionProps);
+            }
+
             this.inProgress = false;
+        }
+
+        //sends the notification mail after job execution finished
+        private void sendNotificationMail(JobExecutionProperties properties)
+        {
+            Dictionary<string,string> settings = DBQueries.readGlobalSettings();
+
+            Common.MailClient mailClient = new MailClient(settings["mailserver"], settings["mailuser"], settings["mailpassword"], settings["mailsender"], settings["mailssl"] == "true" ? true:false);
+
+            //read html file from ressources
+            Assembly assembly = Assembly.GetExecutingAssembly();
+            string resourceName = assembly.GetManifestResourceNames().Single(str => str.EndsWith("mailNotification.txt"));
+            using (Stream stream = assembly.GetManifestResourceStream(resourceName))
+            using (StreamReader reader = new StreamReader(stream))
+            {
+                string htmlBase = reader.ReadToEnd();
+            }
         }
 
         //checks whether the job has to start now or not

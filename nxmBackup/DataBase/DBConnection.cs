@@ -46,11 +46,32 @@ namespace Common
             string connectionString = "Data Source=" + DBPath;
             this.connection = new SQLiteConnection(connectionString);
 
+
+
             try
             {
                 //open DB connection
                 connection.Open();
-            }catch(Exception ex)
+
+                //read db version
+                List<Dictionary<string, object>> dbResult = doReadQuery("SELECT value FROM settings WHERE name='dbversion'", null, null);
+                if (dbResult.Count != 1)
+                {
+                    //wrong number of results
+                    ConnectionEstablished = false;
+                    return;
+                }
+                else
+                {
+                    if ((string)dbResult[0]["value"] != "101")
+                    {
+                        //wrong db version
+                        ConnectionEstablished = false;
+                        return;
+                    }
+                }
+            }
+            catch(Exception ex)
             {
                 ConnectionEstablished = false;
                 return;
