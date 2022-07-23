@@ -78,7 +78,7 @@ namespace Common
         }
 
         //reads all global settings from db
-        public static Dictionary<string, string> readGlobalSettings()
+        public static Dictionary<string, string> readGlobalSettings(bool readPasswords)
         {
             using (DBConnection dbConn = new DBConnection())
             {
@@ -97,7 +97,7 @@ namespace Common
                     foreach (Dictionary<string, object> oneSetting in result)
                     {
                         //filter mailpassword to not sending it to frontend
-                        if ((string)oneSetting["name"] == "mailpassword")
+                        if ((string)oneSetting["name"] == "mailpassword" && !readPasswords)
                         {
                             continue;
                         }

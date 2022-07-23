@@ -9,6 +9,7 @@ namespace Common
     public struct JobExecutionProperties
     {
         public DateTime startStamp;
+        public DateTime endStamp;
         public UInt64 bytesProcessed;
         public UInt64 bytesTransfered;
         public bool successful;

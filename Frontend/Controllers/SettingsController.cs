@@ -13,7 +13,7 @@ namespace Frontend.Controllers
         // read all global settings
         public HttpResponseMessage Get()
         {
-            Dictionary<string, string> result = Common.DBQueries.readGlobalSettings();
+            Dictionary<string, string> result = Common.DBQueries.readGlobalSettings(false);
             HttpResponseMessage response = new HttpResponseMessage();
             response.StatusCode = HttpStatusCode.OK;
             response.Content = new StringContent(Newtonsoft.Json.JsonConvert.SerializeObject(result));

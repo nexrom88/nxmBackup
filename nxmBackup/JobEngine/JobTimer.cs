@@ -38,15 +38,6 @@ namespace JobEngine
         public void startJob(bool force)
         {
 
-            //read html file from ressources
-            Assembly assembly = Assembly.GetExecutingAssembly();
-            string resourceName = assembly.GetManifestResourceNames().Single(str => str.EndsWith("mailNotification"));
-            using (Stream stream = assembly.GetManifestResourceStream(resourceName))
-            using (StreamReader reader = new StreamReader(stream))
-            {
-                string htmlBase = reader.ReadToEnd();
-            }
-
             //just check "job due" when it is not forced
             if (!force)
             {
@@ -80,6 +71,8 @@ namespace JobEngine
             int executionId = Common.DBQueries.addJobExecution(job.DbId, "backup");
             bool executionSuccessful = true;
 
+            DateTime startTime = DateTime.Now;
+
             //iterate vms within the current job
 
             UInt64 totalBytesTransfered = 0;
@@ -90,6 +83,7 @@ namespace JobEngine
 
                 //incremental allowed?
                 bool incremental = this.Job.Incremental;
+
 
                 TransferDetails transferDetails = ssHandler.performFullBackupProcess(ConsistencyLevel.ApplicationAware, true, incremental, this.job);
 
@@ -102,6 +96,8 @@ namespace JobEngine
 
             // set job execution state
             JobExecutionProperties executionProps = new JobExecutionProperties();
+            executionProps.startStamp = startTime;
+            executionProps.endStamp = DateTime.Now;
             executionProps.bytesProcessed = totalBytesProcessed;
             executionProps.bytesTransfered = totalBytesTransfered;
             executionProps.successful = executionSuccessful;
@@ -128,18 +124,29 @@ namespace JobEngine
         //sends the notification mail after job execution finished
         private void sendNotificationMail(JobExecutionProperties properties)
         {
-            Dictionary<string,string> settings = DBQueries.readGlobalSettings();
+            //read html file from ressources
+            string mailHTML = nxmBackup.Properties.Resources.mailNotification;
+
+            Dictionary<string,string> settings = DBQueries.readGlobalSettings(true);
+
+            //cancel if mailserver is not set
+            if (settings["mailserver"] == "")
+            {
+                DBQueries.addLog("mail cannot be sent. No server given", Environment.StackTrace, null);
+                return;
+            }
 
             Common.MailClient mailClient = new MailClient(settings["mailserver"], settings["mailuser"], settings["mailpassword"], settings["mailsender"], settings["mailssl"] == "true" ? true:false);
 
-            //read html file from ressources
-            Assembly assembly = Assembly.GetExecutingAssembly();
-            string resourceName = assembly.GetManifestResourceNames().Single(str => str.EndsWith("mailNotification.txt"));
-            using (Stream stream = assembly.GetManifestResourceStream(resourceName))
-            using (StreamReader reader = new StreamReader(stream))
-            {
-                string htmlBase = reader.ReadToEnd();
-            }
+
+            //fill in placeholders within html form
+            mailHTML = mailHTML.Replace("{{jobname}}", this.Job.Name);
+            mailHTML = mailHTML.Replace("{{state}}", properties.successful? "Erfolgreich":"Fehler");
+            mailHTML = mailHTML.Replace("{{starttime}}", properties.startStamp.ToString("dd.MM.yyyy HH:mm"));
+            mailHTML = mailHTML.Replace("{{endtime}}", properties.endStamp.ToString("dd.MM.yyyy HH:mm"));
+            mailHTML = mailHTML.Replace("{{transfered}}", Common.PrettyPrinter.prettyPrintBytes((long)properties.bytesTransfered));
+
+            mailClient.sendMail("nxmBackup - Jobbericht", mailHTML, true, settings["mailrecipient"]);
         }
 
         //checks whether the job has to start now or not

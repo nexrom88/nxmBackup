@@ -65,19 +65,17 @@ namespace nxmBackup.Properties {
         ///&lt;head&gt;
         ///    &lt;title&gt;nxmBackup Job-Benachrichtigung&lt;/title&gt;
         ///    &lt;style&gt;
-        ///        @charset &quot;UTF-8&quot;; /*!
-        /// * Bootstrap  v5.2.0 (https://getbootstrap.com/)
-        /// * Copyright 2011-2022 The Bootstrap Authors
-        /// * Copyright 2011-2022 Twitter, Inc.
-        /// * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
-        /// */
+        ///               @charset &quot;UTF-8&quot;; /*!
+        ///        * Bootstrap  v5.2.0 (https://getbootstrap.com/)
+        ///        * Copyright 2011-2022 The Bootstrap Authors
+        ///        * Copyright 2011-2022 Twitter, Inc.
+        ///        * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
+        ///        */
         ///
-        ///        :root {
-        ///            --bs-blue: #0d6efd;
-        ///            --bs-indigo: #6610f2;
-        ///            --bs-purple: #6f42c1;
-        ///            --bs-pink: #d63384;
-        ///            --bs-red [Rest der Zeichenfolge wurde abgeschnitten]&quot;; ähnelt.
+        ///               :root {
+        ///                   --bs-blue: #0d6efd;
+        ///                   --bs-indigo: #6610f2;
+        ///                   --bs-p [Rest der Zeichenfolge wurde abgeschnitten]&quot;; ähnelt.
         /// </summary>
         public static string mailNotification {
             get {
