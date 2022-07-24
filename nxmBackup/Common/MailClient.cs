@@ -21,7 +21,7 @@ namespace Common
         }
 
         //sends a given mail by using smtp
-        public void sendMail(string subject, string body, bool html, string recipient)
+        public bool sendMail(string subject, string body, bool html, string recipient)
         {
             MailMessage message = new MailMessage(this.sender, recipient);
             message.Subject = subject;
@@ -31,7 +31,16 @@ namespace Common
             client.UseDefaultCredentials = true;
             client.EnableSsl = this.ssl;
             client.Credentials = new System.Net.NetworkCredential(this.user, this.password);
-            client.Send(message);
+
+            try
+            {
+                client.Send(message);
+            }catch(Exception ex)
+            {
+                DBQueries.addLog("error on sending mail", Environment.StackTrace, ex);
+                return false;
+            }
+            return true;
         }
     }
 }
