@@ -122,7 +122,7 @@ namespace JobEngine
         }
 
         //sends the notification mail after job execution finished
-        private void sendNotificationMail(JobExecutionProperties properties)
+        private bool sendNotificationMail(JobExecutionProperties properties)
         {
             //read html file from ressources
             string mailHTML = nxmBackup.Properties.Resources.mailNotification;
@@ -133,7 +133,7 @@ namespace JobEngine
             if (settings["mailserver"] == "")
             {
                 DBQueries.addLog("mail cannot be sent. No server given", Environment.StackTrace, null);
-                return;
+                return false;
             }
 
             Common.MailClient mailClient = new MailClient(settings["mailserver"], settings["mailuser"], settings["mailpassword"], settings["mailsender"], settings["mailssl"] == "true" ? true:false);
@@ -146,7 +146,7 @@ namespace JobEngine
             mailHTML = mailHTML.Replace("{{endtime}}", properties.endStamp.ToString("dd.MM.yyyy HH:mm"));
             mailHTML = mailHTML.Replace("{{transfered}}", Common.PrettyPrinter.prettyPrintBytes((long)properties.bytesTransfered));
 
-            mailClient.sendMail("nxmBackup - Jobbericht", mailHTML, true, settings["mailrecipient"]);
+            return mailClient.sendMail("nxmBackup - Jobbericht", mailHTML, true, settings["mailrecipient"]);
         }
 
         //checks whether the job has to start now or not
