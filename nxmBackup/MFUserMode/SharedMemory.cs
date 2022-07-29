@@ -20,6 +20,9 @@ namespace nxmBackup.MFUserMode
         [DllImport("ntdll.dll", SetLastError = true)]
         static extern uint NtUnmapViewOfSection(IntPtr hProc, IntPtr baseAddr);
 
+        [DllImport("kernel32.dll", SetLastError = true)]
+        static extern bool CloseHandle(IntPtr hHandle);
+
         private const uint SECTION_MAP_WRITE = 2;
         private const uint SECTION_MAP_READ = 4;
 
@@ -73,12 +76,24 @@ namespace nxmBackup.MFUserMode
         }
 
         //unmaps a view to the km memory shared section
-        public void unmapSharedBuffer()
+        public void unmapSharedBuffer(bool closeSection)
         {
             if (this.baseAddress != IntPtr.Zero)
             {
                 NtUnmapViewOfSection(System.Diagnostics.Process.GetCurrentProcess().Handle, this.baseAddress);
+
+                //close section necessary?
+                if (closeSection)
+                {
+                    closeSectionHandle();
+                }
             }
+        }
+
+        //closes the open shared memory section
+        private void closeSectionHandle()
+        {
+            CloseHandle(this.sectionHandle);
         }
 
         //native structs for win32 API

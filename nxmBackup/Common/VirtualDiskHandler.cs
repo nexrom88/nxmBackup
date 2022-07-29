@@ -52,9 +52,9 @@ namespace Common
         }
 
         //opens the virtual disk
-        public void open(VirtualDiskAccessMask accessMask)
+        public bool open(VirtualDiskAccessMask accessMask)
         {
-            openvhdx(this.path, accessMask);
+            return openvhdx(this.path, accessMask);
         }
 
         //releases the vhd handle
@@ -64,7 +64,7 @@ namespace Common
             this.diskHandle.SetHandleAsInvalid();
         }
 
-        private void openvhdx(string fileName, VirtualDiskAccessMask fileAccessMask)
+        private bool openvhdx(string fileName, VirtualDiskAccessMask fileAccessMask)
         {
             var parameters = new OPEN_VIRTUAL_DISK_PARAMETERS();
             parameters.Version = OPEN_VIRTUAL_DISK_VERSION.OPEN_VIRTUAL_DISK_VERSION_1;
@@ -87,25 +87,26 @@ namespace Common
             if (res == ERROR_SUCCESS)
             {
                 this.diskHandle = handle;
+                return true;
             }
             else
             {
                 handle.SetHandleAsInvalid();
                 if ((res == ERROR_FILE_NOT_FOUND) || (res == ERROR_PATH_NOT_FOUND))
                 {
-                    throw new FileNotFoundException("File not found.");
+                    return false;
                 }
                 else if (res == ERROR_ACCESS_DENIED)
                 {
-                    throw new IOException("Access is denied.");
+                    return false;
                 }
                 else if (res == ERROR_FILE_CORRUPT)
                 {
-                    throw new InvalidDataException("File type not recognized.");
+                    return false;
                 }
                 else
                 {
-                    throw new System.ComponentModel.Win32Exception(res);
+                    return false;
                 }
             }
         }
@@ -195,6 +196,7 @@ namespace Common
                 errCode = Marshal.GetLastWin32Error();
                 System.Threading.Thread.Sleep(10);
             }
+
 
             if (this.readErrorCode == 0) //return buffer
             {

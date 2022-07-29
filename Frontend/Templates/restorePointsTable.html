@@ -1,0 +1,19 @@
+﻿<thead>
+    <tr>
+        <th scope="col">Datum/Uhrzeit</th>
+        <th scope="col">Backuptyp</th>
+    </tr>
+</thead>
+<tbody>
+    {{#restorePoints}}
+    <tr class="restoreBackup" data-instanceID="{{instanceID}}" data-backupType="{{type}}">
+        {{#lbEndTime}}
+            <td>{{lbEndTime}}</td>
+        {{/lbEndTime}}
+        {{^lbEndTime}}
+            <td>{{timeStamp}}</td>
+        {{/lbEndTime}}
+        <td>{{type}}</td>
+    </tr>
+    {{/restorePoints}}
+</tbody>

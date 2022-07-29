@@ -5,32 +5,139 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
-using HyperVBackupRCT;
-using nxmBackup.MFUserMode;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
+using System.Net.Mail;
+using System.Diagnostics;
+using System.Security.Cryptography;
 
 namespace TestProject
 {
     class Program
     {
-        [DllImport("Kernel32.dll", CharSet = CharSet.Unicode)]
-        private static extern uint QueryDosDevice([In] string lpDeviceName, [Out] StringBuilder lpTargetPath, [In] int ucchMax);
+        [DllImport("virtdisk.dll", CharSet = CharSet.Unicode)]
+        public static extern Int32 OpenVirtualDisk(ref Common.VirtualDiskHandler.VIRTUAL_STORAGE_TYPE type,
+        string Path,
+        Common.VirtualDiskHandler.VIRTUAL_DISK_ACCESS_MASK VirtualDiskAccessMask,
+        Common.VirtualDiskHandler.OPEN_VIRTUAL_DISK_FLAG Flags,
+        ref Common.VirtualDiskHandler.OPEN_VIRTUAL_DISK_PARAMETERS Parameters,
+        ref Common.VirtualDiskSafeHandle Handle);
 
         static void Main(string[] args)
         {
-            MFUserMode um = new MFUserMode();
-            if (um.connectToKM("\\nxmLRPort", "\\BaseNamedObjects\\nxmmflr"))
-            {
+            string to = "m.rohrmueller@gmail.com";
+            string from = "system@nexrom.de";
+            
 
-                byte[] data = Encoding.Unicode.GetBytes(replaceDriveLetterByDevicePath("c:\\test\\test.vhdx"));
-                byte[] sendData = new byte[data.Length + 1];
-                Array.Copy(data, sendData, data.Length);
-                sendData[sendData.Length - 2] = 0;
+            //var parameters = new Common.VirtualDiskHandler.OPEN_VIRTUAL_DISK_PARAMETERS();
+            //parameters.Version = Common.VirtualDiskHandler.OPEN_VIRTUAL_DISK_VERSION.OPEN_VIRTUAL_DISK_VERSION_1;
+            //parameters.Version1.RWDepth = 1;
 
-                um.writeMessage(data);
-                um.closeConnection();
-            }
+            //var storageType = new Common.VirtualDiskHandler.VIRTUAL_STORAGE_TYPE();
+            //storageType.DeviceId = Common.VirtualDiskHandler.VIRTUAL_STORAGE_TYPE_DEVICE_VHDX;
+            //storageType.VendorId = Common.VirtualDiskHandler.VIRTUAL_STORAGE_TYPE_VENDOR_MICROSOFT;
+
+
+            ////fileAccessMask = ((fileAccessMask & VirtualDiskAccessMask.GetInfo) == VirtualDiskAccessMask.GetInfo) ?VirtualDiskAccessMask.GetInfo : 0;
+            ////fileAccessMask |= VirtualDiskAccessMask.AttachReadOnly;
+
+            //Common.VirtualDiskSafeHandle handle = new Common.VirtualDiskSafeHandle();
+
+            //int res = OpenVirtualDisk(ref storageType, @"f:\mounted.vhdx",
+            //    Common.VirtualDiskHandler.VIRTUAL_DISK_ACCESS_MASK.VIRTUAL_DISK_ACCESS_READ,
+            //    Common.VirtualDiskHandler.OPEN_VIRTUAL_DISK_FLAG.OPEN_VIRTUAL_DISK_FLAG_NONE, ref parameters, ref handle);
+
+            //handle.Close();
+
+            //Common.DBQueries.wipeDB();
+
+            //System.Drawing.Icon icon =  System.Drawing.Icon.ExtractAssociatedIcon(@"c:\test.ini");
+            //icon = icon;
+
+
+            //Common.JetBlue db = new Common.JetBlue(@"C:\Users\Administrator\Downloads\nxmBackupFLR\Mailbox Database 0621326406.edb");
+
+            //db.openDB();
+            //List<string> tables = db.getTables();
+            //db.getTable("Message");
+            //db.closeDB();
+
+            //tables = null;
+            //UInt64 desiredOffset = 17096990720;
+            //string file = @"F:\nxm\Fixed\1661C788-7F70-4203-8255-628F95087182\74fcbe14-b042-4802-ad18-93f46cfbe008.nxm\Win10_Fixed.vhdx.cb";
+            //FileStream stream = new FileStream(file, FileMode.Open, FileAccess.Read);
+            //BlockCompression.LZ4BlockStream blockStream = new BlockCompression.LZ4BlockStream(stream, BlockCompression.AccessMode.read, false, null);
+            //blockStream.init();
+
+
+            //CbStructure cbStructure = CBParser.parseCBFile(blockStream, false);
+
+
+            //UInt64 smallestDist = Int64.MaxValue;
+            //UInt64 smallestOffset;
+            //UInt64 smallestIndex = 0;
+
+            //UInt64 i = 0;
+            //foreach (CbBlock block in cbStructure.blocks)
+            //{
+            //    foreach (VhdxBlockLocation loc in block.vhdxBlockLocations)
+            //    {
+            //        if (loc.vhdxOffset <= desiredOffset &&  (Int64)desiredOffset - (Int64)loc.vhdxOffset < (Int64)smallestDist)
+            //        {
+            //            smallestDist = (UInt64)Math.Abs((Int64)loc.vhdxOffset - (Int64)desiredOffset);
+            //            smallestOffset = loc.vhdxOffset;
+            //            smallestIndex = i;
+            //        }
+            //    }
+
+            //    i++;
+            //}
+
+
+            //UInt32 bufferSize = 10000000;
+            //byte[] buffer = new byte[bufferSize];
+            //UInt64 bytesRead = 0;
+            //UInt64 blockLength = cbStructure.blocks[(int)smallestIndex].changedBlockLength;
+            //blockStream.Seek((long)cbStructure.blocks[(int)smallestIndex].cbFileOffset, SeekOrigin.Begin);
+
+            //System.IO.FileStream outStream = new FileStream(@"f:\debug.bin", FileMode.Create, FileAccess.Write);
+
+            ////read blocks
+            //while (bytesRead + bufferSize <= blockLength) {
+            //    blockStream.Read(buffer, 0, (int)bufferSize);
+            //    outStream.Write(buffer, 0, buffer.Length);
+            //    bytesRead += bufferSize;
+            //}
+
+            ////read last block
+            //if (bytesRead < blockLength)
+            //{
+            //    buffer = new byte[blockLength - bytesRead];
+            //    blockStream.Read(buffer, 0, buffer.Length);
+            //    outStream.Write(buffer, 0, buffer.Length);
+            //}
+            //outStream.Close();
+            //blockStream.Close();
+
+
+            //string json = JsonConvert.SerializeObject(cbStructure.blocks);
+            //json = json;
+
+
+
+
+            //MFUserMode um = new MFUserMode();
+            //if (um.connectToKM("\\nxmLRPort", "\\BaseNamedObjects\\nxmmflr"))
+            //{
+
+            //    byte[] data = Encoding.Unicode.GetBytes(replaceDriveLetterByDevicePath("c:\\test\\test.vhdx"));
+            //    byte[] sendData = new byte[data.Length + 1];
+            //    Array.Copy(data, sendData, data.Length);
+            //    sendData[sendData.Length - 2] = 0;
+
+            //    um.writeMessage(data);
+            //    um.closeConnection();
+            //}
 
 
 
@@ -39,18 +146,46 @@ namespace TestProject
             //string output = JsonConvert.SerializeObject(parsedFile);
 
             //Common.JobVM vm = new Common.JobVM();
-            //vm.vmID = "CCC0F353-7B94-4F6C-B51D-8BDD2D7BC86B";
-            //HyperVBackupRCT.SnapshotHandler sh = new HyperVBackupRCT.SnapshotHandler(vm, -1);
+            //vm.vmID = "2FA559B4-71C4-4D9A-8904-FC8311636BE9"; //Win10
+            ////vm.vmID = "7A571DAE-9111-4576-897C-8E266EE51FFB"; //ubuntu
+            ////vm.vmID = "2F8C8382-4D06-4AD7-BCC3-0BFED03199AC"; //Lubuntu
+            ////vm.vmID = "25BA5143-5604-4A2C-A0E5-60D06630DAD2"; //win10_2hdd
+            //nxmBackup.HVBackupCore.SnapshotHandler sh = new nxmBackup.HVBackupCore.SnapshotHandler(vm, -1, false, null, true);
             //sh.cleanUp();
 
 
             //RestoreHelper.VMImporter.importVM(@"F:\target\Virtual Machines\78D3C2AC-AEE7-4752-8648-0C3BCA41AE1A.vmcx", @"F:\target", false);
 
 
-            //Common.vhdxParser parser = new Common.vhdxParser(@"C:\VMs\Win10.vhdx");
+            //Common.vhdxParser parser = new Common.vhdxParser(@"d:\original_fixed.vhdx");
+            //Common.RawLog log = parser.getRawLog();
             //Common.RegionTable regionTable = parser.parseRegionTable();
             //Common.MetadataTable metadataTable = parser.parseMetadataTable(regionTable);
-            //byte[] id = parser.getVirtualDiskID(metadataTable);
+            //uint lss = parser.getLogicalSectorSize(metadataTable);
+            //uint blockSize = parser.getBlockSize(metadataTable);
+
+            //UInt32 vhdxChunkRatio = (UInt32)((Math.Pow(2, 23) * (double)lss) / (double)blockSize);
+
+            //UInt64 dbc = (UInt64)Math.Ceiling((double)parser.getVirtualDiskSize(metadataTable) / (double)blockSize);
+
+            //UInt32 sectorBitmapBlocksCount = (UInt32)Math.Ceiling((double)dbc / (double)vhdxChunkRatio);
+
+            //Common.BATTable bat = parser.parseBATTable(regionTable, vhdxChunkRatio, sectorBitmapBlocksCount, true);
+
+
+
+            //UInt64 desiredOffset = 17083400192;
+            //for(int i = 0; i < bat.entries.Count; i++)
+            //{
+            //    if (bat.entries[i].FileOffsetMB * 1048576 == desiredOffset)
+            //    {
+            //        i = i;
+            //    }
+            //}
+
+
+            //string json = JsonConvert.SerializeObject(bat.entries);
+            //json = json;
 
             //MFUserMode. um = new MFUserMode.MFUserMode();
             //um.connectToKM("\\nxmLBPort", "\\BaseNamedObjects\\nxmmflb");
@@ -129,18 +264,6 @@ namespace TestProject
             //worker.stopLB();
 
         }
-
-
-
-        //replaces the drive letter with nt device path
-        private static string replaceDriveLetterByDevicePath(string path)
-        {
-            StringBuilder builder = new StringBuilder(255);
-            QueryDosDevice(path.Substring(0, 2), builder, 255);
-            path = path.Substring(3);
-            return builder.ToString() + "\\" + path;
-        }
-
 
     }
 }

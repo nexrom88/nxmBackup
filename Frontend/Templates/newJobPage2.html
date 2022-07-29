@@ -1,0 +1,11 @@
+﻿<form>
+    <h5 class="center_div subHeadline">Zu sichernde VMs auswählen</h5>
+    <ul id="newJobvmList" class="list-group newJobElement newJobInput">
+        {{#vms}}
+        <li class="list-group-item availablevm" data-vmname="{{name}}" data-vmid="{{id}}">{{name}}</li>
+        {{/vms}}
+    </ul>
+    <div class="text-center">
+        <button id="newJobNextButton" type="button" class="btn btn-primary">Weiter</button>
+    </div>
+</form>

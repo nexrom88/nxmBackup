@@ -16,7 +16,7 @@ using System.Security.Principal;
 using System.Threading;
 using WpfAnimatedGif;
 
-namespace RestoreHelper
+namespace HVRestoreCore
 {
     /// <summary>
     /// Interaktionslogik für MainWindow.xaml
@@ -69,7 +69,7 @@ namespace RestoreHelper
 
             setLoadingState(true);
             setLoadingAnim();
-
+            //return;
 
             Thread initThread = new Thread(() => init());
             initThread.Start();
@@ -169,7 +169,7 @@ namespace RestoreHelper
                 //try to read files and folders
                 entries = System.IO.Directory.GetFileSystemEntries(path, "*", System.IO.SearchOption.TopDirectoryOnly);
             }
-            catch
+            catch (Exception ex)
             {
                 entries = new string[0];
             }

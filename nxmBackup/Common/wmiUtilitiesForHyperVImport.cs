@@ -189,26 +189,14 @@ namespace Common
         public static ManagementObject GetResourceAllocationsettingDataDefault
         (
             ManagementScope scope,
-            UInt16 resourceType,
-            string resourceSubType,
-            string otherResourceType
+            string resourceSubType
             )
         {
             ManagementObject RASD = null;
 
-            string query = String.Format("select * from Msvm_ResourcePool where ResourceType = '{0}' and ResourceSubType ='{1}' and OtherResourceType = '{2}'",
-                             resourceType, resourceSubType, otherResourceType);
-
-            if (resourceType == ResourceType.Other)
-            {
-                query = String.Format("select * from Msvm_ResourcePool where ResourceType = '{0}' and ResourceSubType = null and OtherResourceType = {1}",
-                                             resourceType, otherResourceType);
-            }
-            else
-            {
-                query = String.Format("select * from Msvm_ResourcePool where ResourceType = '{0}' and ResourceSubType ='{1}' and OtherResourceType = null",
-                                             resourceType, resourceSubType);
-            }
+            string query =  String.Format("select * from Msvm_ResourcePool where ResourceSubType ='{0}'",
+                                             resourceSubType);
+            
 
             ManagementObjectSearcher searcher = new ManagementObjectSearcher(scope, new ObjectQuery(query));
 
@@ -240,51 +228,53 @@ namespace Common
         }
 
 
-        public static ManagementObject GetResourceAllocationsettingData
+        public static List<ManagementObject> GetStorageAllocationsettingData
         (
-            ManagementObject vm,
-            UInt16 resourceType,
-            string resourceSubType,
-            string otherResourceType
+            ManagementObject vm
             )
         {
             //vm->vmsettings->RASD for IDE controller
-            ManagementObject RASD = null;
+            List<ManagementObject> retValList = new List<ManagementObject>();
             ManagementObjectCollection settingDatas = vm.GetRelated("Msvm_VirtualSystemsettingData");
             foreach (ManagementObject settingData in settingDatas)
             {
                 //retrieve the rasd
-                ManagementObjectCollection RASDs = settingData.GetRelated("Msvm_ResourceAllocationsettingData");
+                ManagementObjectCollection RASDs = settingData.GetRelated("Msvm_StorageAllocationsettingData");
                 foreach (ManagementObject rasdInstance in RASDs)
                 {
-                    if (Convert.ToUInt16(rasdInstance["ResourceType"]) == resourceType)
-                    {
-                        //found the matching type
-                        if (resourceType == ResourceType.Other)
-                        {
-                            if (rasdInstance["OtherResourceType"].ToString() == otherResourceType)
-                            {
-                                RASD = rasdInstance;
-                                break;
-                            }
-                        }
-                        else
-                        {
-                            if (rasdInstance["ResourceSubType"].ToString() == resourceSubType)
-                            {
-                                RASD = rasdInstance;
-                                break;
-                            }
-                        }
-                    }
+                    retValList.Add(rasdInstance);                      
+                        
                 }
 
             }
-            return RASD;
+            return retValList;
+        }
+
+
+        public static List<ManagementObject> GetResourceAllocationsettingData
+(
+ManagementObject vm
+)
+        {
+            List<ManagementObject> retValList = new List<ManagementObject>();
+            ManagementObjectCollection settingDatas = vm.GetRelated("Msvm_VirtualSystemsettingData");
+            foreach (ManagementObject settingData in settingDatas)
+            {
+                if (settingData["SettingType"].ToString() == "3")
+                {
+                    
+                }
+
+            }
+            return retValList;
         }
     }
 
-    public static class ResourceType
+
+
+}
+
+public static class ResourceType
     {
         public const UInt16 Other = 1;
         public const UInt16 ComputerSystem = 2;
@@ -326,7 +316,8 @@ namespace Common
         public const string DisketteDrive = "Microsoft Synthetic Diskette Drive";
         public const string ParallelSCSIHBA = "Microsoft Synthetic SCSI Controller";
         public const string IDEController = "Microsoft Emulated IDE Controller";
-        public const string DiskSynthetic = "Microsoft Synthetic Disk Drive";
+        public const string DiskSynthetic = "Microsoft:Hyper-V:Synthetic Disk Drive";
+        public const string VirtualDisk = "Microsoft:Hyper-V:Virtual Hard Disk";
         public const string DiskPhysical = "Microsoft Physical Disk Drive";
         public const string DVDPhysical = "Microsoft Physical DVD Drive";
         public const string DVDSynthetic = "Microsoft Synthetic DVD Drive";
@@ -364,4 +355,4 @@ namespace Common
         public const UInt32 SystemNotAvailable = 32777;
         public const UInt32 OutofMemory = 32778;
     }
-}
+

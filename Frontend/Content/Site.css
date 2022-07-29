@@ -1,0 +1,322 @@
+﻿body {
+    padding-bottom: 20px;
+}
+
+/* Set padding to keep content from hitting the edges */
+.body-content {
+    padding-left: 15px;
+    padding-right: 15px;
+}
+
+#vmContainer{
+    margin-left:0;
+    margin-right:0;
+}
+#jobStateTable{
+    margin-left:15px;
+}
+
+#vmDetailsCaption{
+    margin-bottom: 24px;
+    
+}
+
+#jobControlls{
+    margin-bottom: 24px;
+    padding-left: 15px;
+}
+
+
+.overlayPopUp {
+    position: fixed; /* Sit on top of the page content */
+    display: none; /* Hidden by default */
+    width: 100%; /* Full width (cover the whole page) */
+    height: 100%; /* Full height (cover the whole page) */
+    margin: auto;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    background-color: rgba(0,0,0,0.5); /* Black background with opacity */
+    z-index: 3; /* Specify a stack order in case you're using a different order for other elements */
+    cursor: pointer; /* Add a pointer on hover */
+}
+
+.overlayContainer {
+    background-color: white;
+    margin-top: 5%;
+    width: 40%;
+    max-height: 80%;
+    margin-left: auto;
+    margin-right: auto;
+    padding-top: 1%;
+    overflow:auto;
+    position:relative;
+}
+
+.overlayClose{
+    position:absolute;
+    top:0;
+    right:0;
+}
+
+.center_div {
+    margin: 0 auto;
+    width: 80% /* value of your choice which suits your alignment */
+}
+
+#newJobHeader{
+    text-align:center;
+}
+
+#restoreHeader {
+    text-align: center;
+}
+
+#newJobNextButton {
+    margin-top: 5%;
+    margin-bottom: 5%;
+    width: 50%;
+}
+
+.newJobElement{
+    margin-top: 5%;
+}
+
+.restoreElement {
+    margin-top: 5%;
+}
+
+#txtEncryptionPassword{
+    display:none;
+}
+
+.subHeadline{
+    text-align:center;
+    margin-top:5%;
+}
+
+#lbSize{
+    display: none;
+    text-align:center;
+}
+
+#restorePointTable .active {
+    background-color: #b3b3ff;
+}
+
+#restorePointTable{
+    overflow-y:scroll;
+}
+
+#startRestoreButton {
+    margin-top: 5%;
+    margin-bottom: 5%;
+}
+
+#stopLBButton{
+    display:none;
+}
+
+.boxElement {
+    margin-top: 5%;
+}
+
+.liLeftAlign{
+    text-align:left;
+}
+
+.flrSwalStyles{
+    max-height: 80%;
+}
+
+.fullRestoreSwalStyles{
+    max-height: 80%;
+}
+
+#flrBrowser {
+    max-height: 30vh;
+    overflow: scroll;
+}
+
+#fullRestoreLogContainer {
+    max-height: 50vh;
+    overflow-y:scroll;
+}
+
+
+.vakata-context {
+    z-index: 10000;
+}
+
+.welcomeTextError{
+    color:red;
+}
+
+.folderBrowserOnRestore{
+    text-align:left;
+}
+
+#restoreContainer{
+    overflow-x:hidden;
+    overflow-y:scroll;
+}
+
+.centeredElement{
+    margin:auto;
+}
+
+
+#jobCheckBoxes{
+    width:80%;
+}
+
+#sbJobInterval {
+    display: block;
+}
+
+#sbJobDay {
+    display: inline;
+}
+
+#sbRotationType{
+    display: inline;
+}
+
+#nxmLogo {
+    max-width: 41.666667%;
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    margin:auto;
+    transform: translateY(-50%);
+}
+
+#mainPanel{
+    position:relative;
+}
+
+.headerLink {
+    list-style-type: none;
+}
+
+.headerLink a{
+    color: #fff;
+}
+
+.headerLink a:hover{
+    color:gray;
+}
+
+.jobLinkDisabled {
+    color: #ff4d4d;
+}
+
+
+.settingInput {
+    display:inline-block;
+    text-align:left;
+    min-width:80%;
+}
+
+#settingsForm{
+    padding-top:5%;
+}
+
+#settingsTabContent{
+    padding-top:5%;
+}
+
+#helpForm {
+    padding-top: 5%;
+}
+
+.settingInputControl{
+    width:100%;
+    max-width:unset;
+}
+
+.settingWrapper{
+    margin-bottom:5%;
+}
+
+.helpWrapper {
+    margin-bottom: 5%;
+}
+
+.executionDetailsRow{
+    text-align: left;
+}
+
+.detailsRowRunning {
+    animation-name: color;
+    animation-duration: 2s;
+    animation-iteration-count: infinite;
+    background-color: #ffffb3;
+}
+
+#performanceChart{
+    height: 100%;
+    width: 100%;
+}
+
+.newJobInput {
+    width: 85%;
+}
+
+#newJobvmList{
+    margin-left: auto;
+    margin-right: auto;
+}
+
+#checkCredentialsButton {
+    margin-top: 5%;
+    margin-bottom: 5%;
+    display:none;
+}
+
+.newJobButtons{
+    display:inline-block;
+    vertical-align:middle;
+}
+
+.newJobButtons svg:hover {
+    fill: #007bff;
+}
+
+#resetLink{
+    text-align:center;
+}
+
+@keyframes color {
+    0% {
+        background-color: #ffffb3;
+    }
+
+    50% {
+        background-color: #ffffe6;
+    }
+
+    100% {
+        background-color: #ffffb3;
+    }
+}
+
+#waitingHourglass {
+    animation-name: rotatingHourglass;
+    animation-iteration-count: infinite;
+    transform-origin: 50% 50%;
+    animation-timing-function: ease-in-out;
+    animation-duration: 2.0s;
+}
+
+@keyframes rotatingHourglass {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace HyperVBackupRCT
+namespace nxmBackup.HVBackupCore
 {
   public enum ConsistencyLevel {ApplicationAware, CrashConsistent}
 }

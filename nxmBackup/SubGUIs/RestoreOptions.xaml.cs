@@ -38,7 +38,7 @@ namespace RestoreHelper
 
             //load restore points
             //build source path
-            string sourcePath = this.job.BasePath + "\\" + this.job.Name + "\\" + ((ComboBoxItem)cbVMs.SelectedItem).Tag.ToString();
+            string sourcePath = this.job.TargetPath + "\\" + this.job.Name + "\\" + ((ComboBoxItem)cbVMs.SelectedItem).Tag.ToString();
             if (!System.IO.Directory.Exists(sourcePath))
             {
                 MessageBox.Show("Backups können nicht geladen werden!", "Fehler beim Laden", MessageBoxButton.OK, MessageBoxImage.Error);
@@ -108,7 +108,7 @@ namespace RestoreHelper
             RestorePointForGUI restorePoint = (RestorePointForGUI)lvRestorePoints.SelectedItem;
             
 
-            string sourcePath = this.job.BasePath + "\\" + this.job.Name + "\\" + ((ComboBoxItem)cbVMs.SelectedItem).Tag.ToString();
+            string sourcePath = this.job.TargetPath + "\\" + this.job.Name + "\\" + ((ComboBoxItem)cbVMs.SelectedItem).Tag.ToString();
 
             //get requested restore type
             string restoreType = ((ComboBoxItem)cbRestoreType.SelectedItem).Tag.ToString();
@@ -137,16 +137,16 @@ namespace RestoreHelper
                     }
 
                     int jobExecutionId = Common.DBQueries.addJobExecution(this.job.DbId, "restore");
-                    RestoreHelper.FullRestoreHandler fullRestoreHandler = new RestoreHelper.FullRestoreHandler(new Common.EventHandler(targetVM, jobExecutionId));
-                    fullRestoreHandler.performFullRestoreProcess(sourcePath, "f:\\target", ((ComboBoxItem)cbVMs.SelectedItem).Content.ToString() + "_restored", restorePoint.InstanceId, importToHyperV);
+                    HVRestoreCore.FullRestoreHandler fullRestoreHandler = new HVRestoreCore.FullRestoreHandler(new Common.EventHandler(targetVM, jobExecutionId), this.job.UseEncryption, this.job.AesKey, this.job.UsingDedupe);
+                    fullRestoreHandler.performFullRestoreProcess(sourcePath, "c:\\target", ((ComboBoxItem)cbVMs.SelectedItem).Content.ToString() + "_restored", restorePoint.InstanceId, importToHyperV, 0);
                     break;
                 case "flr":
-                    RestoreHelper.FileLevelRestoreHandler flrHandler = new RestoreHelper.FileLevelRestoreHandler();
-                    flrHandler.performGuestFilesRestore(sourcePath, restorePoint.InstanceId);
+                    HVRestoreCore.FileLevelRestoreHandler flrHandler = new HVRestoreCore.FileLevelRestoreHandler(this.job.UseEncryption, this.job.AesKey, this.job.UsingDedupe);
+                    flrHandler.performGuestFilesRestore(sourcePath, restorePoint.InstanceId, true, "", 0);
                     break;
                 case "lr":
-                    RestoreHelper.LiveRestore lrHandler = new LiveRestore();
-                    lrHandler.performLiveRestore(sourcePath, ((ComboBoxItem)cbVMs.SelectedItem).Content.ToString() + "_LiveRestore", restorePoint.InstanceId);
+                    HVRestoreCore.LiveRestore lrHandler = new HVRestoreCore.LiveRestore(this.job.UseEncryption, this.job.AesKey, this.job.UsingDedupe);
+                    lrHandler.performLiveRestore(sourcePath, ((ComboBoxItem)cbVMs.SelectedItem).Content.ToString(), restorePoint.InstanceId, true, 0);
                     break;
             }
 

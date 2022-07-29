@@ -8,7 +8,7 @@ namespace ConfigHandler
     public class BackupConfigHandler
     {
         //adds a newly created backup to the config file
-        public static void addBackup(string basePath, string uuid, string type, string newInstanceID, string parentInstanceID, bool prepend)
+        public static void addBackup(string basePath, bool encryption, string uuid, string type, string newInstanceID, string parentInstanceID, bool prepend, string jobExecutionId)
         {
             //check whether config file already exists
             if (!File.Exists(Path.Combine(basePath, "config.xml")))
@@ -26,6 +26,7 @@ namespace ConfigHandler
 
                 //generate attributes node
                 XmlElement attrElement = doc.CreateElement(string.Empty, "Attributes", string.Empty);
+                attrElement.SetAttribute("encryption", encryption.ToString());
                 bodyElement.AppendChild(attrElement);
 
                 //generate BackupChain node
@@ -52,6 +53,7 @@ namespace ConfigHandler
             newElement.SetAttribute("type", type);
             newElement.SetAttribute("InstanceId", newInstanceID);
             newElement.SetAttribute("ParentInstanceId", parentInstanceID);
+            newElement.SetAttribute("JobExecutionId", jobExecutionId);
 
             //prepend new node?
             if (prepend)
@@ -65,6 +67,42 @@ namespace ConfigHandler
 
             //close xml file
             baseStream = new FileStream(Path.Combine(basePath, "config.xml"), FileMode.Create, FileAccess.ReadWrite);
+            xml.Save(baseStream);
+            baseStream.Close();
+
+        }
+
+        //sets to lb end time for a given backup uuid
+        public static void setLBEndTime(string basePath, string uuid)
+        {
+            //open xml
+            FileStream baseStream = new FileStream(Path.Combine(basePath, "config.xml"), FileMode.Open, FileAccess.Read);
+            XmlDocument xml = new XmlDocument();
+            xml.Load(baseStream);
+            baseStream.Close();
+
+            //open required nodes
+            //open VMBackup
+            XmlElement rootElement = (XmlElement)xml.SelectSingleNode("VMBackup");
+            XmlElement backupsElement = (XmlElement)rootElement.SelectSingleNode("BackupChain");
+
+            //read backups
+            for (int i = 0; i < backupsElement.ChildNodes.Count; i++)
+            {
+                XmlNode currentNode = backupsElement.ChildNodes[i];
+                XmlElement currentBackup = (XmlElement)currentNode;
+                
+                //lb backup found?
+                if (currentBackup.GetAttribute("uuid") == uuid)
+                {
+                    currentBackup.SetAttribute("lbEndTime", DateTime.Now.ToString("yyyyMMddHHmmssfff"));
+                    backupsElement.ReplaceChild(currentBackup, currentNode);
+                    break;
+                }
+            }
+
+            //save changed xml
+            baseStream = new FileStream(Path.Combine(basePath, "config.xml"), FileMode.Create, FileAccess.Write);
             xml.Save(baseStream);
             baseStream.Close();
 
@@ -109,30 +147,52 @@ namespace ConfigHandler
             //check whether config file exists
             if (!File.Exists(Path.Combine(basePath, "config.xml"))) { return null; }
 
-            //file exists, open it
-            FileStream baseStream = new FileStream(Path.Combine(basePath, "config.xml"), FileMode.Open, FileAccess.ReadWrite);
-            XmlDocument xml = new XmlDocument();
-            xml.Load(baseStream);
-            baseStream.Close();
-
-            //open VMBackup
-            XmlElement rootElement = (XmlElement)xml.SelectSingleNode("VMBackup");
-            XmlElement backupsElement = (XmlElement)rootElement.SelectSingleNode("BackupChain");
-
-            //iterate through all backups
-            for (int i = 0; i < backupsElement.ChildNodes.Count; i++)
+            try
             {
-                //build structure
-                BackupInfo backup = new BackupInfo();
-                backup.uuid = backupsElement.ChildNodes.Item(i).Attributes.GetNamedItem("uuid").Value;
-                backup.type = backupsElement.ChildNodes.Item(i).Attributes.GetNamedItem("type").Value;
-                backup.timeStamp = backupsElement.ChildNodes.Item(i).Attributes.GetNamedItem("timestamp").Value;
-                backup.instanceID = backupsElement.ChildNodes.Item(i).Attributes.GetNamedItem("InstanceId").Value;
-                backup.parentInstanceID = backupsElement.ChildNodes.Item(i).Attributes.GetNamedItem("ParentInstanceId").Value;
-                backupChain.Add(backup);
-            }
+                //file exists, open it
+                FileStream baseStream = new FileStream(Path.Combine(basePath, "config.xml"), FileMode.Open, FileAccess.Read);
+                XmlDocument xml = new XmlDocument();
+                xml.Load(baseStream);
+                baseStream.Close();
 
-            return backupChain;
+                //open VMBackup
+                XmlElement rootElement = (XmlElement)xml.SelectSingleNode("VMBackup");
+                XmlElement backupsElement = (XmlElement)rootElement.SelectSingleNode("BackupChain");
+
+                //iterate through all backups
+                for (int i = 0; i < backupsElement.ChildNodes.Count; i++)
+                {
+                    //build structure
+                    BackupInfo backup = new BackupInfo();
+                    backup.uuid = backupsElement.ChildNodes.Item(i).Attributes.GetNamedItem("uuid").Value;
+                    backup.type = backupsElement.ChildNodes.Item(i).Attributes.GetNamedItem("type").Value;
+                    backup.timeStamp = backupsElement.ChildNodes.Item(i).Attributes.GetNamedItem("timestamp").Value;
+                    backup.instanceID = backupsElement.ChildNodes.Item(i).Attributes.GetNamedItem("InstanceId").Value;
+                    backup.parentInstanceID = backupsElement.ChildNodes.Item(i).Attributes.GetNamedItem("ParentInstanceId").Value;
+                    backup.jobExecutionId = backupsElement.ChildNodes.Item(i).Attributes.GetNamedItem("JobExecutionId").Value;
+
+                    if (backup.type == "lb")
+                    {
+                        XmlNode endTimeNode = backupsElement.ChildNodes.Item(i).Attributes.GetNamedItem("lbEndTime");
+
+                        if (endTimeNode != null)
+                        {
+                            backup.lbEndTime = backupsElement.ChildNodes.Item(i).Attributes.GetNamedItem("lbEndTime").Value;
+                        }
+                    }
+
+
+                    backupChain.Add(backup);
+                }
+
+                return backupChain;
+
+            }
+            catch
+            {
+                //config.xml is not accesible
+                return null;
+            }
         }
 
         //builds an array of hdd files from a given backup chain
@@ -177,13 +237,86 @@ namespace ConfigHandler
 
         }
 
+        //builds an array of hdd files from a given backup chain for lr
+        public static LRBackupChains getHDDFilesFromChainForLR(List<BackupInfo> restoreChain, string basePath)
+        {
+            LRBackupChains retVal = new LRBackupChains();
+
+            
+            string[] targetHDDs = null;
+
+            //iterate through all backups within chain in reverse to read full backup first
+            for (int i = restoreChain.Count - 1; i >= 0; i--)
+            {
+                if (restoreChain[i].type == "full") 
+                {
+
+                    //get all vhdx files
+                    string vmBasePath = System.IO.Path.Combine(basePath, restoreChain[i].uuid + ".nxm\\" + "Virtual Hard Disks");
+                    string[] entries = System.IO.Directory.GetFiles(vmBasePath, "*.vhdx");
+
+                    //init chains
+                    retVal.chains = new LRBackupChain[entries.Length];
+                    targetHDDs = new string[entries.Length];
+                    for(int j = 0; j < retVal.chains.Length; j++)
+                    {
+                        retVal.chains[j].files = new string[restoreChain.Count];
+                    }
+                    
+                    //iterate entries
+                    for (int j = 0; j < entries.Length; j++)
+                    {
+                        retVal.chains[j].files[i] = entries[j];
+                        targetHDDs[j] = System.IO.Path.GetFileName(entries[j]);
+                    }
+
+                    
+
+                }
+                else if (restoreChain[i].type == "rct")
+                {
+                    string vmBasePath = System.IO.Path.Combine(basePath, restoreChain[i].uuid + ".nxm\\");
+
+                    for (int j = 0; j < targetHDDs.Length; j++)
+                    {
+                        retVal.chains[j].files[i] = System.IO.Path.Combine(vmBasePath, targetHDDs[j] + ".cb");
+                    }
+                    
+                }
+                else if (restoreChain[i].type == "lb")
+                {
+                    string vmBasePath = System.IO.Path.Combine(basePath, restoreChain[i].uuid + ".nxm\\");
+                    for (int j = 0; j < targetHDDs.Length; j++)
+                    {
+                        retVal.chains[j].files[i] = System.IO.Path.Combine(vmBasePath, targetHDDs[j] + ".lb");
+                    }
+                }
+            }
+
+            return retVal;
+
+        }
+
+        public struct LRBackupChains
+        {
+            public LRBackupChain[] chains;
+        }
+
+        public struct LRBackupChain
+        {
+            public string[] files;
+        }
+
+
         public struct BackupInfo
         {
             public string uuid;
             public string timeStamp;
+            public string lbEndTime;
             public string type;
             public string instanceID;
             public string parentInstanceID;
+            public string jobExecutionId;
         }
 
     }

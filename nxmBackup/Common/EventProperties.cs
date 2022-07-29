@@ -15,6 +15,8 @@ namespace Common
         public bool isUpdate; //updates the last event
         public int eventIdToUpdate; //when isUpdate this value specifies the event to be updated
         public double progress; //optional: progress in percentage
+        public Int64 transferRate; //optional: current transfer rate
+        public Int64 processRate; //optional: current process rate
 
         //optional: current element (e.g. restore item 5/10)
         public uint elementsCount;

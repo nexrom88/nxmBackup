@@ -6,6 +6,13 @@ using System.Threading.Tasks;
 
 namespace Common
 {
+    //defines properties for enryption
+    public struct EncryptionProperties
+    {
+        public bool useEncryption;
+        public byte[] aesKey;
+    }
+
     //defines rotation type
     public struct Rotation
     {
@@ -47,7 +54,13 @@ namespace Common
     {
         public string name;
         public string path;
-        public int lbObjectID; //random value for LB hdd identification
-        public System.IO.FileStream ldDestinationStream; //LB destination stream - gets set by LB worker
+        public int lbObjectID;
+    }
+
+    public struct TransferDetails
+    {
+        public UInt64 bytesProcessed;
+        public UInt64 bytesTransfered;
+        public bool successful;
     }
 }

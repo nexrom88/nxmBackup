@@ -25,7 +25,7 @@ namespace nxmBackup
     /// </summary>
     public partial class MainWindow : Window
     {
-        private delegate void UpdateEvents(List<Dictionary<string, string>> events);
+        private delegate void UpdateEvents(List<Dictionary<string, object>> events);
         JobEngine.JobHandler jobHandler;
         List<ConfigHandler.OneJob> jobs = new List<ConfigHandler.OneJob>();
         ObservableCollection<ConfigHandler.OneJob> jobsObservable = new ObservableCollection<ConfigHandler.OneJob>();
@@ -123,7 +123,7 @@ namespace nxmBackup
             {
                 ConfigHandler.OneJob job = this.jobsObservable[lvJobs.SelectedIndex];
                 bool result = ConfigHandler.JobConfigHandler.deleteJob(job.DbId);
-                if (!result) Common.EventHandler.writeToLog("job delete failed", new System.Diagnostics.StackTrace());
+                if (!result) Common.DBQueries.addLog("error on deleting job", Environment.StackTrace, null);
                 initJobs();
             }
         }
@@ -184,7 +184,7 @@ namespace nxmBackup
                 //just load events if a job is selected
                 if (this.selectedJobId > -1)
                 {
-                    List<Dictionary<string, string>> events = Common.DBQueries.getEvents(this.selectedJobId, "backup");
+                    List<Dictionary<string, object>> events = Common.DBQueries.getEvents(this.selectedJobId, "backup");
 
                     lvEvents.Dispatcher.Invoke(new UpdateEvents(this.UpdateEventList), new object[] { events });
 
@@ -209,15 +209,15 @@ namespace nxmBackup
         }
 
         //updates the event ListView within GUI thread
-        private void UpdateEventList(List<Dictionary<string, string>> events)
+        private void UpdateEventList(List<Dictionary<string, object>> events)
         {
             lvEvents.Items.Clear();
-            foreach (Dictionary<string, string> oneEvent in events)
+            foreach (Dictionary<string, object> oneEvent in events)
             {
-                if (oneEvent["vmid"] == this.selectedVMId)
+                if (oneEvent["vmid"].ToString() == this.selectedVMId)
                 {
                     EventListEntry ele = new EventListEntry();
-                    ele.Text = oneEvent["info"];
+                    ele.Text = oneEvent["info"].ToString();
 
                     //select icon
                     switch (oneEvent["status"])
@@ -251,14 +251,7 @@ namespace nxmBackup
 
         private void MainGUI_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            //look for active lb worker and close it
-            foreach(ConfigHandler.OneJob job in this.jobs)
-            {
-                if (job.LiveBackup && job.LiveBackupWorker != null)
-                {
-                    job.LiveBackupWorker.stopLB();
-                }
-            }
+            
         }
 
         private void lvJobs_MouseUp(object sender, MouseButtonEventArgs e)

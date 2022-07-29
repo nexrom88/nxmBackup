@@ -92,6 +92,40 @@ namespace Common
             return header;
         }
 
+        //gets the raw log section
+        public RawLog getRawLog()
+        {
+            RawLog rawLog = new RawLog();
+
+            //jump the Header1
+            this.sourceStream.Seek(65536, SeekOrigin.Begin); //64KB * 1024
+
+            //jump to Header entry number 18
+            this.sourceStream.Seek(68, SeekOrigin.Current); //4 * 17
+
+            //read log length
+            byte[] buffer = new byte[4];
+            this.sourceStream.Read(buffer, 0, 4);
+            UInt64 logLength = BitConverter.ToUInt32(buffer, 0);
+
+            //read log offset
+            this.sourceStream.Read(buffer, 0, 4);
+            UInt64 logOffset = BitConverter.ToUInt32(buffer, 0);
+
+            //jump to log offset
+            this.sourceStream.Seek((Int32)logOffset, SeekOrigin.Begin);
+
+            //read log section
+            buffer = new byte[logLength];
+            this.sourceStream.Read(buffer, 0, buffer.Length);
+
+            rawLog.rawData = buffer;
+            rawLog.logLength = logLength;
+            rawLog.vhdxOffset = logOffset;
+
+            return rawLog;
+        }
+
         //reads blockSize from MetadataTable
         public UInt32 getBlockSize(MetadataTable metadataTable)
         {
@@ -110,8 +144,8 @@ namespace Common
             this.sourceStream.Seek(offset, SeekOrigin.Begin);
 
             //read block size
-            byte[] buffer = new byte[8];
-            this.sourceStream.Read(buffer, 0, 8);
+            byte[] buffer = new byte[4];
+            this.sourceStream.Read(buffer, 0, 4);
 
             return BitConverter.ToUInt32(buffer, 0);
         }
@@ -158,11 +192,69 @@ namespace Common
             this.sourceStream.Seek(offset, SeekOrigin.Begin);
 
             //read logicalSectorSize size
-            byte[] buffer = new byte[8];
-            this.sourceStream.Read(buffer, 0, 8);
+            byte[] buffer = new byte[4];
+            this.sourceStream.Read(buffer, 0, 4);
 
             return BitConverter.ToUInt32(buffer, 0);
         }
+
+        //reads virtualDiskSize from MetadataTable
+        public UInt64 getVirtualDiskSize(MetadataTable metadataTable)
+        {
+            UInt32 offset = 0;
+            UInt32 length = 0;
+            foreach (MetadataTableEntry entry in metadataTable.entries)
+            {
+                if (entry.itemID[0] == 0x24)
+                {
+                    offset = entry.offset;
+                    length = entry.length;
+                }
+            }
+
+            //jump to destination
+            this.sourceStream.Seek(offset, SeekOrigin.Begin);
+
+            //read logicalSectorSize size
+            byte[] buffer = new byte[8];
+            this.sourceStream.Read(buffer, 0, 8);
+
+            return BitConverter.ToUInt64(buffer, 0);
+        }
+
+        //gets the raw MetadataTable
+        public RawMetadataTable getRawMetadataTable(RegionTable table)
+        {
+            RawMetadataTable rawMetadataTable = new RawMetadataTable();
+
+            MetadataTable metadataTable = new MetadataTable();
+            metadataTable.entries = new List<MetadataTableEntry>();
+            UInt64 metadataTableOffset = 0;
+            UInt32 metadataTableLength = 0;
+
+            //read offset and length for BAT table
+            foreach (RegionTableEntry entry in table.entries)
+            {
+                if (entry.guid[0] == 0x06)
+                {
+                    metadataTableOffset = entry.fileOffset;
+                    metadataTableLength = entry.length;
+                    break;
+                }
+            }
+
+            rawMetadataTable.length = metadataTableLength;
+            rawMetadataTable.vhdxOffset = metadataTableOffset;
+
+            //read whole table
+            this.sourceStream.Seek((long)metadataTableOffset, SeekOrigin.Begin);
+            byte[] buffer = new byte[metadataTableLength];
+            this.sourceStream.Read(buffer, 0, buffer.Length);
+            rawMetadataTable.rawData = buffer;
+
+            return rawMetadataTable;
+        }
+
 
         //parses the metadata region
         public MetadataTable parseMetadataTable(RegionTable table)
@@ -225,7 +317,7 @@ namespace Common
 
 
         //parses the BAT table (chunkSize just necessary when removeSectorMask is set)
-        public BATTable parseBATTable(RegionTable table, UInt32 chunkSize, bool removeSectorMask)
+        public BATTable parseBATTable(RegionTable table, UInt32 chunkSize, UInt32 sectorBitmapBlocksCount, bool removeSectorMask)
         {
             BATTable batTable = new BATTable();
             batTable.entries = new List<BATEntry>();
@@ -248,15 +340,22 @@ namespace Common
 
             //read whole table
             byte[] buffer = new byte[batLength];
-            this.sourceStream.Read(buffer, 0, (int)batLength);
+            int bytesRead = this.sourceStream.Read(buffer, 0, (int)batLength);
+            if (bytesRead != batLength)
+            {
+            }
 
             //each entry consists of 64bit, iterate
             UInt32 entryCount = batLength / 64;
+            UInt32 lastSectorMaskDistance = 0;
+            UInt32 removedSectorBitmapMasks = 0;
             for (int i = 0; i < entryCount; i++)
             {
                 //jump over sector mask?
-                if (removeSectorMask && i > 0 && i % chunkSize == 0)
+                if (removeSectorMask && removedSectorBitmapMasks < sectorBitmapBlocksCount && lastSectorMaskDistance > 0 && lastSectorMaskDistance % chunkSize == 0)
                 {
+                    lastSectorMaskDistance = 0;
+                    removedSectorBitmapMasks++;
                     continue;
                 }
 
@@ -272,10 +371,17 @@ namespace Common
                 newEntry.reserved = reserved;
 
                 batTable.entries.Add(newEntry);
+
+                if (removedSectorBitmapMasks < sectorBitmapBlocksCount && removeSectorMask)
+                {
+                    lastSectorMaskDistance++;
+                }
             }
 
             return batTable;
         }
+
+
 
         //parses the region table
         public RegionTable parseRegionTable()
@@ -292,9 +398,10 @@ namespace Common
             this.sourceStream.Seek(192 * 1024, SeekOrigin.Begin);
 
             //reserve buffer
-            int regionSize = 256 * 1024 - 128 * 1024;
+            int regionSize = 256 * 1024 - 192 * 1024;
             byte[] buffer = new byte[regionSize];
             this.sourceStream.Read(buffer, 0, regionSize);
+
 
             RegionTable regionTable = new RegionTable();
 
@@ -421,6 +528,18 @@ namespace Common
 
     public struct RawHeader
     {
+        public byte[] rawData;
+    }
+
+    public struct RawMetadataTable
+    {
+        public UInt64 vhdxOffset, length;
+        public byte[] rawData;
+    }
+
+    public struct RawLog
+    {
+        public UInt64 vhdxOffset, logLength;
         public byte[] rawData;
     }
 

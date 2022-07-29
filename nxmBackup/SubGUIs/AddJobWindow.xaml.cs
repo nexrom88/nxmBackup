@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -20,10 +21,16 @@ namespace nxmBackup
     /// </summary>
     public partial class AddJobWindow : Window
     {
+
+        //for detail window settings
         private bool windowReady = false;
         private Common.Rotation rotation = new Common.Rotation();
         private bool lb = false;
         private int blockSize = 2;
+        private bool useEncryption;
+        private string encryptionPW;
+
+
         List<Common.WMIHelper.OneVM> vms;
 
         public AddJobWindow()
@@ -160,11 +167,22 @@ namespace nxmBackup
 
             //build job structure
             ConfigHandler.OneJob job = new ConfigHandler.OneJob();
-            job.BasePath = txtPath.Text;
+            job.TargetPath = txtPath.Text;
             job.Name = txtJobName.Text;
             job.BlockSize = this.blockSize;
             job.Rotation = this.rotation;
             job.LiveBackup = this.lb;
+            job.UseEncryption = this.useEncryption;
+
+            //generate aes key by hasing pw by using SHA256
+            if (this.useEncryption)
+            {
+                job.AesKey = Common.SHA256Provider.computeHash(System.Text.Encoding.UTF8.GetBytes(this.encryptionPW));
+            }
+            else
+            {
+                job.AesKey = new byte[1];
+            }
             
 
 
@@ -262,6 +280,9 @@ namespace nxmBackup
 
             this.rotation.maxElementCount = (int)detailWindow.slMaxElements.Value;
 
+            this.useEncryption = (bool)detailWindow.cbEncryption.IsChecked;
+
+            this.encryptionPW = detailWindow.txtEncKey.Password;
         }
 
         private void cbCompression_SelectionChanged(object sender, SelectionChangedEventArgs e)

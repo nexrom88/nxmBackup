@@ -1,0 +1,7 @@
+﻿<label class="center_div" for="sbDriveSelect">Laufwerk auswählen:</label>
+<select id="sbDriveSelect" class="form-control center_div boxElement">
+    {{#volumes}}
+    <option data-path="{{path}}">{{caption}}</option>
+    {{/volumes}}
+</select>
+<div class="boxElement" id="flrBrowser"></div>

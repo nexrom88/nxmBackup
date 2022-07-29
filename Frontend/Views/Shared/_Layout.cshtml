@@ -1,0 +1,31 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>nxmBackup</title>
+    @Styles.Render("~/Content/css")
+    @Scripts.Render("~/bundles/modernizr")
+</head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<body>
+    @RenderBody()
+    @Scripts.Render("~/bundles/jquery")
+    @Scripts.Render("~/bundles/jquery.cookie")
+    @Scripts.Render("~/bundles/jstree")
+    @Scripts.Render("~/bundles/mustache")
+    @Scripts.Render("~/bundles/bootstrap")
+    @Scripts.Render("~/bundles/bsInputSpinner")
+    @Scripts.Render("~/bundles/sweetalert2")
+    @Scripts.Render("~/bundles/chart")
+    @Scripts.Render("~/bundles/momentjs")
+    @Scripts.Render("~/bundles/nxmSettings")
+    @Scripts.Render("~/bundles/nxmRestore")
+    @Scripts.Render("~/bundles/nxmHelp")
+    @Scripts.Render("~/bundles/popper")
+    @Scripts.Render("~/bundles/nxmMain")
+    @Scripts.Render("~/bundles/globalAjaxHandler")
+    @RenderSection("scripts", required: false)
+</body>
+</html>

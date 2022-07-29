@@ -25,15 +25,17 @@ namespace Common
         System.IO.Stream openAndGetFileStream(string path);
 
         //adds a file to the archive
-        void addFile(string file, string path);
+        TransferDetails addFile(string file, string path);
 
         //adds a whole folder to the archive
         void addDirectory(string folder);
 
         //gets a file from the archive
-        void getFile(string archivePath, string destinationPath);
+        bool getFile(string archivePath, string destinationPath);
 
         //lists all archive entries
         List<string> listEntries();
     }
+
+
 }

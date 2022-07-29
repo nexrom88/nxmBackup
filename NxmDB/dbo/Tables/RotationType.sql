@@ -1,5 +1,0 @@
-﻿CREATE TABLE [dbo].[RotationType]
-(
-	[Id] INT NOT NULL PRIMARY KEY IDENTITY, 
-    [Name] NCHAR(20) NOT NULL
-)

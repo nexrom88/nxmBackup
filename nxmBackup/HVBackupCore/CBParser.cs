@@ -48,8 +48,31 @@ namespace HyperVBackupRCT
             blockStream.Read(rawBatTable.rawData, 0, (Int32)batLength);
             parsedCBFile.batTable = rawBatTable;
 
+            //read log section header
+            blockStream.Read(buffer, 0, 16);
+            RawLog rawLog = new RawLog();
+            rawLog.vhdxOffset = BitConverter.ToUInt64(buffer, 0);
+            rawLog.logLength = BitConverter.ToUInt64(buffer, 8);
+            rawLog.rawData = new byte[rawLog.logLength];
 
-            buffer = new byte[16];
+            //read log payload
+            blockStream.Read(rawLog.rawData, 0, (Int32)rawLog.logLength);
+            parsedCBFile.logSection = rawLog;
+
+            //read metaDataTable header
+            blockStream.Read(buffer, 0, 16);
+            RawMetadataTable rawMeta = new RawMetadataTable();
+            rawMeta.vhdxOffset = BitConverter.ToUInt64(buffer, 0);
+            rawMeta.length = BitConverter.ToUInt64(buffer, 8);
+            rawMeta.rawData = new byte[rawMeta.length];
+
+            //read metaDataTable payload
+            blockStream.Read(rawMeta.rawData, 0, (Int32)rawMeta.length);
+            parsedCBFile.metaDataTable = rawMeta;
+
+
+
+            buffer = new byte[17];
             //iterate through each block
             for (int i = 0; i < blockCount; i++)
             {
@@ -72,11 +95,14 @@ namespace HyperVBackupRCT
                 {
                     VhdxBlockLocation location = new VhdxBlockLocation();
                     //offset
-                    blockStream.Read(buffer, 0, 16);
+                    blockStream.Read(buffer, 0, 17);
                     location.vhdxOffset = BitConverter.ToUInt64(buffer, 0);
 
                     //corresponding length
                     location.vhdxLength = BitConverter.ToUInt64(buffer, 8);
+
+                    //state
+                    location.vhdxState = buffer[16];
 
                     oneBlock.vhdxBlockLocations.Add(location);
                 }
@@ -102,12 +128,7 @@ namespace HyperVBackupRCT
             return parsedCBFile;
         }
 
-        //parses a given cb file compressed by using LZ4 BC by a given filepath
-        public static CbStructure parseCBFile(string path, bool closeAfterFinish)
-        {
-            FileStream inputStream = new FileStream(path, FileMode.Open, FileAccess.Read);
-            return parseCBFile(new BlockCompression.LZ4BlockStream(inputStream, BlockCompression.AccessMode.read), closeAfterFinish);
-        }
+        
     }
 
     public struct CbStructure
@@ -119,6 +140,10 @@ namespace HyperVBackupRCT
         public RawHeader rawHeader;
 
         public RawBatTable batTable;
+
+        public RawLog logSection;
+
+        public RawMetadataTable metaDataTable;
 
         public List<CbBlock> blocks;
     }
@@ -137,34 +162,10 @@ namespace HyperVBackupRCT
     {
         public UInt64 vhdxOffset;
         public UInt64 vhdxLength;
-
+        public byte vhdxState;
     }
 }
 
 //cb file type
 //
-//uint32 = 4 bytes = changed block count
-//uint32 = 4 bytes = vhdx block size
-//uint64 = 8 bytes = vhdx size
-//
-//1048576 bytes = vhdx header
-//
-//bat table:
-//ulong = 8 bytes = bat vhdx offset
-//ulong = 8 bytes = bat length in bytes
-//bat table data (size = bat length)
-//
-//one block:
-//ulong = 8 bytes = changed block offset
-//ulong = 8 bytes = changed block length
-
-//uint32 = 4 bytes = vhdx block offsets count
-
-//ulong = 8 bytes = vhdx block offset 1
-//ulong = 8 bytes = vhdx block length 1
-
-//ulong = 8 bytes = vhdx block offset 2
-//ulong = 8 bytes = vhdx block length 2
-//...
-
-//block data (size = changed block length)
+// see spec file

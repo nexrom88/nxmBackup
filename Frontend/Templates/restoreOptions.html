@@ -1,0 +1,33 @@
+﻿<form>
+    <div class="restoreElement center_div">
+        <label class="enter_div" for="sbRestoreType">Restore-Typ:</label>
+        <select id="sbRestoreType" class="form-control">
+            <option data-type="full" selected>Komplette VM-Wiederherstellung</option>
+            <option data-type="fullImport">Komplette VM-Wiederherstellung nach HyperV</option>
+            <option data-type="flr">Gast-Dateien Wiederherstellung</option>
+            <option data-type="lr">LiveRestore</option>
+        </select>
+    </div>
+
+    <hr class="restoreElement" />
+
+    <div class="restoreElement center_div">
+        <label class="enter_div" for="sbSourceVM">Quell-VM:</label>
+        <select id="sbSourceVM" class="form-control">
+            {{#vms}}
+            <option data-vmid="{{vmid}}" selected>{{name}}</option>
+            {{/vms}}
+        </select>
+    </div>
+
+    <hr class="restoreElement" />
+
+    <label class="enter_div" for="restorePointTable">Wiederherstellungspunkt auswählen:</label>
+
+    <table class="table table-hover" id="restorePointTable">
+    </table>
+
+    <div class="text-center">
+        <button id="startRestoreButton" type="button" class="btn btn-primary" disabled>Wiederherstellung starten</button>
+    </div>
+</form>
