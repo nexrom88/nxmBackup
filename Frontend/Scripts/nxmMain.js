@@ -323,6 +323,9 @@ function showNewJobPage(pageNumber, selectedEditJob) {
                                 $("#checkCredentialsButton").css("display", "inline");
                                 buildSMBForm();
                                 break;
+                            case "smbstorage":
+
+                                break;
                         }
                     });
 
