@@ -562,6 +562,12 @@ namespace nxmBackup.HVBackupCore
             //now export the hdds
             foreach (ManagementObject hdd in hdds)
             {
+                //stop processing when last hdd was not successfully transfered
+                if (!transferDetailsSummary.successful)
+                {
+                    break;
+                }
+
                 string[] hddPath = (string[])hdd["HostResource"];
                 if (!hddPath[0].EndsWith(".vhdx"))
                 {
@@ -581,6 +587,7 @@ namespace nxmBackup.HVBackupCore
                     TransferDetails transferDetails = archive.addFile(hddPath[0], "Virtual Hard Disks");
                     transferDetailsSummary.bytesProcessed += transferDetails.bytesProcessed;
                     transferDetailsSummary.bytesTransfered += transferDetails.bytesTransfered;
+                    transferDetailsSummary.successful = transferDetails.successful;
 
                     backupType = "full";
                 }
@@ -596,6 +603,7 @@ namespace nxmBackup.HVBackupCore
                     TransferDetails transferDetails = performrctbackup(hddPath[0], ((string[])rctBase["ResilientChangeTrackingIdentifiers"])[hddCounter], archive);
                     transferDetailsSummary.bytesProcessed += transferDetails.bytesProcessed;
                     transferDetailsSummary.bytesTransfered += transferDetails.bytesTransfered;
+                    transferDetailsSummary.successful = transferDetails.successful;
 
                     backupType = "rct";
                 }
@@ -608,15 +616,19 @@ namespace nxmBackup.HVBackupCore
             //get config files
             string[] configFiles = System.IO.Directory.GetFiles(currentSnapshot["ConfigurationDataRoot"].ToString() + "\\Snapshots", currentSnapshot["ConfigurationID"].ToString() + "*");
 
-            //copy config files
-            foreach (string file in configFiles)
+            //copy config files when no error occured
+            if (transferDetailsSummary.successful)
             {
-                TransferDetails transferDetails = archive.addFile(file, "Virtual Machines");
+                foreach (string file in configFiles)
+                {
+                    TransferDetails transferDetails = archive.addFile(file, "Virtual Machines");
 
-                transferDetailsSummary.bytesProcessed += transferDetails.bytesProcessed;
-                transferDetailsSummary.bytesTransfered += transferDetails.bytesTransfered;
+                    transferDetailsSummary.bytesProcessed += transferDetails.bytesProcessed;
+                    transferDetailsSummary.bytesTransfered += transferDetails.bytesTransfered;
 
+                }
             }
+
             archive.close();
 
             //hdds changed? write the new hdd config to job
@@ -662,9 +674,9 @@ namespace nxmBackup.HVBackupCore
             }
 
 
-            //if LB activated for job, start it before converting to reference point
+            //if LB activated for job and no error occured, start it before converting to reference point
             LiveBackupWorker lbWorker = null;
-            if (job.LiveBackup)
+            if (job.LiveBackup && transferDetailsSummary.successful)
             {
                 //another lb job already running? cancel!
                 if (LiveBackupWorker.ActiveWorkers.Count > 0)
@@ -691,24 +703,27 @@ namespace nxmBackup.HVBackupCore
                 }                    
             }
 
-            //convert the snapshot to a reference point
-            ManagementObject refP = this.convertToReferencePoint(currentSnapshot, true);
-
-            //write backup xml
-            string parentiid = "";
-            if (rctBase != null)
+            //convert the snapshot to a reference point when no error occured
+            if (transferDetailsSummary.successful)
             {
-                parentiid = (string)rctBase["InstanceId"];
+                ManagementObject refP = this.convertToReferencePoint(currentSnapshot, true);
+
+
+                //write backup xml
+                string parentiid = "";
+                if (rctBase != null)
+                {
+                    parentiid = (string)rctBase["InstanceId"];
+                }
+
+                ConfigHandler.BackupConfigHandler.addBackup(basePath, this.useEncryption, guidFolder, backupType, (string)refP["InstanceId"], parentiid, false, this.executionId.ToString());
+
+                //now add lb backup to config.xml
+                if (job.LiveBackup && lbWorker != null)
+                {
+                    lbWorker.addToBackupConfig();
+                }
             }
-
-            ConfigHandler.BackupConfigHandler.addBackup(basePath, this.useEncryption, guidFolder, backupType, (string)refP["InstanceId"], parentiid, false, this.executionId.ToString());
-
-            //now add lb backup to config.xml
-            if (job.LiveBackup && lbWorker != null)
-            {
-                lbWorker.addToBackupConfig();
-            }
-
             
 
             return transferDetailsSummary;
