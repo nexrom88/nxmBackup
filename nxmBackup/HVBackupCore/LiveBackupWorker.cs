@@ -205,7 +205,7 @@ namespace nxmBackup.HVBackupCore
         }
 
         //adds the vm-LB backup to destination config.xml file for the given vm
-        public void addToBackupConfig()
+        public bool addToBackupConfig()
         {
             //load job object
             ConfigHandler.OneJob jobObject = getJobObject();
@@ -213,7 +213,7 @@ namespace nxmBackup.HVBackupCore
             if (jobObject == null)
             {
                 Common.DBQueries.addLog("job object not found", Environment.StackTrace, null);
-                return;
+                return false;
             }
 
             //iterate through all vms
@@ -225,9 +225,14 @@ namespace nxmBackup.HVBackupCore
                 //get parent backup
                 string parentInstanceID = currentChain[currentChain.Count - 1].instanceID;
 
-                ConfigHandler.BackupConfigHandler.addBackup(System.IO.Path.Combine(jobObject.TargetPath, jobObject.Name + "\\" + vm.vmID), jobObject.UseEncryption, this.backupuuid, "lb", "nxm:" + this.backupuuid, parentInstanceID, false, this.eventHandler.ExecutionId.ToString());
+                if (!ConfigHandler.BackupConfigHandler.addBackup(System.IO.Path.Combine(jobObject.TargetPath, jobObject.Name + "\\" + vm.vmID), jobObject.UseEncryption, this.backupuuid, "lb", "nxm:" + this.backupuuid, parentInstanceID, false, this.eventHandler.ExecutionId.ToString()))
+                {
+                    return false;
+                }
 
             }
+
+            return true;
 
         }
 

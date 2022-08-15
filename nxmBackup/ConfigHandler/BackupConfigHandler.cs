@@ -8,10 +8,65 @@ namespace ConfigHandler
     public class BackupConfigHandler
     {
         //adds a newly created backup to the config file
-        public static void addBackup(string basePath, bool encryption, string uuid, string type, string newInstanceID, string parentInstanceID, bool prepend, string jobExecutionId)
+        public static bool addBackup(string basePath, bool encryption, string uuid, string type, string newInstanceID, string parentInstanceID, bool prepend, string jobExecutionId)
         {
             //check whether config file already exists
             if (!File.Exists(Path.Combine(basePath, "config.xml")))
+            {
+                if (!initConfigFile(basePath, encryption))
+                {
+                    return false;
+                }
+            }
+
+            try
+            {
+                //file exists, open it
+                FileStream baseStream = new FileStream(Path.Combine(basePath, "config.xml"), FileMode.Open, FileAccess.ReadWrite);
+                XmlDocument xml = new XmlDocument();
+                xml.Load(baseStream);
+                baseStream.Close();
+
+                //add a "backup" node
+                string timeStamp = DateTime.Now.ToString("yyyyMMddHHmmssfff"); //gets the current timestamp
+                XmlElement rootElement = (XmlElement)xml.SelectSingleNode("VMBackup");
+                XmlElement backupsElement = (XmlElement)rootElement.SelectSingleNode("BackupChain");
+                XmlElement newElement = xml.CreateElement(String.Empty, "Backup", String.Empty);
+                newElement.SetAttribute("uuid", uuid);
+                newElement.SetAttribute("timestamp", timeStamp);
+                newElement.SetAttribute("type", type);
+                newElement.SetAttribute("InstanceId", newInstanceID);
+                newElement.SetAttribute("ParentInstanceId", parentInstanceID);
+                newElement.SetAttribute("JobExecutionId", jobExecutionId);
+
+                //prepend new node?
+                if (prepend)
+                {
+                    backupsElement.PrependChild(newElement);
+                }
+                else
+                {
+                    backupsElement.AppendChild(newElement);
+                }
+
+                //close xml file
+                baseStream = new FileStream(Path.Combine(basePath, "config.xml"), FileMode.Create, FileAccess.ReadWrite);
+                xml.Save(baseStream);
+                baseStream.Close();
+            }catch(Exception ex)
+            {
+                Common.DBQueries.addLog("error on writing config file", Environment.StackTrace, ex);
+                return false;
+            }
+
+            return true;
+
+        }
+
+        //creates a new xml config file
+        private static bool initConfigFile(string basePath, bool encryption)
+        {
+            try
             {
                 XmlDocument doc = new XmlDocument();
 
@@ -36,40 +91,12 @@ namespace ConfigHandler
 
                 doc.Save(Path.Combine(basePath, "config.xml"));
             }
-
-            //file exists, open it
-            FileStream baseStream = new FileStream(Path.Combine(basePath, "config.xml"), FileMode.Open, FileAccess.ReadWrite);
-            XmlDocument xml = new XmlDocument();
-            xml.Load(baseStream);
-            baseStream.Close();
-
-            //add a "backup" node
-            string timeStamp = DateTime.Now.ToString("yyyyMMddHHmmssfff"); //gets the current timestamp
-            XmlElement rootElement = (XmlElement)xml.SelectSingleNode("VMBackup");
-            XmlElement backupsElement = (XmlElement)rootElement.SelectSingleNode("BackupChain");
-            XmlElement newElement = xml.CreateElement(String.Empty, "Backup", String.Empty);
-            newElement.SetAttribute("uuid", uuid);
-            newElement.SetAttribute("timestamp", timeStamp);
-            newElement.SetAttribute("type", type);
-            newElement.SetAttribute("InstanceId", newInstanceID);
-            newElement.SetAttribute("ParentInstanceId", parentInstanceID);
-            newElement.SetAttribute("JobExecutionId", jobExecutionId);
-
-            //prepend new node?
-            if (prepend)
+            catch (Exception ex)
             {
-                backupsElement.PrependChild(newElement);
+                Common.DBQueries.addLog("error on creating config file", Environment.StackTrace, ex);
+                return false;
             }
-            else
-            {
-                backupsElement.AppendChild(newElement);
-            }
-
-            //close xml file
-            baseStream = new FileStream(Path.Combine(basePath, "config.xml"), FileMode.Create, FileAccess.ReadWrite);
-            xml.Save(baseStream);
-            baseStream.Close();
-
+            return true;
         }
 
         //sets to lb end time for a given backup uuid
@@ -145,7 +172,7 @@ namespace ConfigHandler
             List<BackupInfo> backupChain = new List<BackupInfo>();
 
             //check whether config file exists
-            if (!File.Exists(Path.Combine(basePath, "config.xml"))) { return null; }
+            if (!File.Exists(Path.Combine(basePath, "config.xml"))) { return backupChain; }
 
             try
             {
@@ -190,8 +217,8 @@ namespace ConfigHandler
             }
             catch
             {
-                //config.xml is not accesible
-                return null;
+                //config.xml is not accesible, return empty list
+                return new List<BackupInfo>();
             }
         }
 

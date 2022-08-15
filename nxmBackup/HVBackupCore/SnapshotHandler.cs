@@ -309,9 +309,16 @@ namespace nxmBackup.HVBackupCore
                 eventId = this.eventHandler.raiseNewEvent("Rotiere Backups (Schritt 4 von 5)...", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
 
                 //create entry to backup chain
-                ConfigHandler.BackupConfigHandler.addBackup(path,this.useEncryption, guidFolder, "full", chain[1].instanceID, "", true, this.executionId.ToString());
+                bool configWritten = ConfigHandler.BackupConfigHandler.addBackup(path,this.useEncryption, guidFolder, "full", chain[1].instanceID, "", true, this.executionId.ToString());
 
-                this.eventHandler.raiseNewEvent("erfolgreich", true, false, eventId, EventStatus.successful);
+                if (configWritten)
+                {
+                    this.eventHandler.raiseNewEvent("erfolgreich", true, false, eventId, EventStatus.successful);
+                }
+                else
+                {
+                    this.eventHandler.raiseNewEvent("fehlgeschlagen", true, false, eventId, EventStatus.error);
+                }
                 eventId = this.eventHandler.raiseNewEvent("Rotiere Backups (Schritt 5 von 5)...", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
 
                 //remove reference point
@@ -716,12 +723,25 @@ namespace nxmBackup.HVBackupCore
                     parentiid = (string)rctBase["InstanceId"];
                 }
 
-                ConfigHandler.BackupConfigHandler.addBackup(basePath, this.useEncryption, guidFolder, backupType, (string)refP["InstanceId"], parentiid, false, this.executionId.ToString());
+                bool configWritten = ConfigHandler.BackupConfigHandler.addBackup(basePath, this.useEncryption, guidFolder, backupType, (string)refP["InstanceId"], parentiid, false, this.executionId.ToString());
+
+                if (!configWritten)
+                {
+                    this.eventHandler.raiseNewEvent("Die Konfigurationsdatei konnte nicht geschrieben werden", false, false, NO_RELATED_EVENT, EventStatus.error);
+                    transferDetailsSummary.successful = false;
+                }
 
                 //now add lb backup to config.xml
                 if (job.LiveBackup && lbWorker != null)
                 {
-                    lbWorker.addToBackupConfig();
+                    if (!lbWorker.addToBackupConfig())
+                    {
+                        //stop lb immediately when config cannot be written
+                        this.eventHandler.raiseNewEvent("Die LiveBackup Konfiguration konnte nicht geschrieben werden", false, false, NO_RELATED_EVENT, EventStatus.error);
+                        System.Threading.Thread.Sleep(2000);
+                        lbWorker.stopLB();
+                    }
+  
                 }
             }
             
