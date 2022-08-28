@@ -106,7 +106,7 @@ namespace nxmBackup.HVBackupCore
             chain = ConfigHandler.BackupConfigHandler.readChain(destination);
 
             //if full backup, delete unnecessary reference points
-            if (refP == null)
+            if (refP == null && chain != null && chain.Count > 0)
             {
                 int eventId = this.eventHandler.raiseNewEvent("Entferne alte Referenzpunkte...", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
                 
@@ -144,28 +144,43 @@ namespace nxmBackup.HVBackupCore
             //read current backup chain for further processing
             chain = ConfigHandler.BackupConfigHandler.readChain(destination);
 
-            //check whether max snapshot count is reached, then merge
-            if (job.Rotation.type == RotationType.merge) //RotationType = "merge"
+            if (chain != null && chain.Count > 0)
             {
-                if (job.Rotation.maxElementCount > 0 && chain.Count > job.Rotation.maxElementCount)
+                //check whether max snapshot count is reached, then merge
+                if (job.Rotation.type == RotationType.merge) //RotationType = "merge"
                 {
-                    mergeOldest(destination, chain);
+                    if (job.Rotation.maxElementCount > 0 && chain.Count > job.Rotation.maxElementCount)
+                    {
+                        mergeOldest(destination, chain);
+                    }
+                }
+                else if (job.Rotation.type == RotationType.blockRotation) //RotationType = "blockRotation"
+                {
+                    if (job.Rotation.maxElementCount > 0 && getBlockCount(chain) > job.Rotation.maxElementCount + 1)
+                    {
+                        blockRotate(destination, chain);
+                    }
                 }
             }
-            else if (job.Rotation.type == RotationType.blockRotation) //RotationType = "blockRotation"
+            else
             {
-                if (job.Rotation.maxElementCount > 0 && getBlockCount(chain) > job.Rotation.maxElementCount +1)
-                {
-                    blockRotate(destination, chain);
-                }
+                //chain is broken, not readable
+                this.eventHandler.raiseNewEvent("Backup-Rotation kann nicht durchgeführt werden", false, false, NO_RELATED_EVENT, EventStatus.error);
             }
 
-            this.eventHandler.raiseNewEvent("Backupvorgang erfolgreich", false, false, NO_RELATED_EVENT, EventStatus.successful);
+            if (transferDetails.successful)
+            {
+                //backup successful
+                this.eventHandler.raiseNewEvent("Backupvorgang erfolgreich", false, false, NO_RELATED_EVENT, EventStatus.successful);
+            }
+            else
+            {
+                //backup failed
+                this.eventHandler.raiseNewEvent("Backupvorgang fehlgeschlagen", false, false, NO_RELATED_EVENT, EventStatus.error);
+            }
 
-            retVal.bytesProcessed = transferDetails.bytesProcessed;
-            retVal.bytesTransfered = transferDetails.bytesTransfered;
-            retVal.successful = true;
-            return retVal;
+
+            return transferDetails;
         }
 
         //gets the block count for the given chain
@@ -944,6 +959,7 @@ namespace nxmBackup.HVBackupCore
 
             }
 
+            transferDetails.successful = true;
             return transferDetails;
         }
 
