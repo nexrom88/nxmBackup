@@ -372,6 +372,14 @@ namespace nxmBackup.HVBackupCore
 
             //check for already existing snapshots (user created ones)
             List<ManagementObject> snapshots = getSnapshots(USER_SNAPSHOT_TYPE);
+            
+            if (snapshots == null)
+            {
+                this.eventHandler.raiseNewEvent("fehlgeschlagen", true, false, eventId, EventStatus.error);
+                this.eventHandler.raiseNewEvent("Virtuelle Maschine ist nicht erreichbar", false, false, NO_RELATED_EVENT, EventStatus.error);
+                return null;
+            }
+            
             if (snapshots.Count > 0)
             {
                 this.eventHandler.raiseNewEvent("fehlgeschlagen", true, false, eventId, EventStatus.error);
@@ -973,6 +981,12 @@ namespace nxmBackup.HVBackupCore
             // Get the necessary wmi objects
             using (ManagementObject vm = WmiUtilities.GetVirtualMachine(this.vm.vmID, scope))
             {
+                //cancel when vm not found
+                if (vm == null)
+                {
+                    return null;
+                }
+
                 //get all snapshots
                 var iterator = vm.GetRelationships("Msvm_SnapshotOfVirtualSystem").GetEnumerator();
 
