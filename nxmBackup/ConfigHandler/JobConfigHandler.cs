@@ -351,10 +351,14 @@ namespace ConfigHandler
 
             Dictionary<string, object>  parameters = new Dictionary<string, object>();
             parameters.Add("targetjobid", jobID);
+
+            //first delete any existing storage target, necessary for update
+            connection.doReadQuery("DELETE FROM storagetarget WHERE targetjobid=@targetjobid", parameters, transaction);
+
             parameters.Add("targettype", type);
             parameters.Add("targetpath", path);
             parameters.Add("targetuser", username);
-            parameters.Add("targetpassword", password);
+            parameters.Add("targetpassword", password);            
 
             connection.doReadQuery("INSERT INTO storagetarget (targetjobid, targettype, targetpath, targetuser, targetpassword) VALUES (@targetjobid, @targettype, @targetpath, @targetuser, @targetpassword);", parameters, transaction);
         }
