@@ -324,7 +324,9 @@ function showNewJobPage(pageNumber, selectedEditJob) {
                                 buildSMBForm();
                                 break;
                             case "nxmstorage":
-
+                                $('#folderBrowser').jstree("destroy");
+                                $("#checkCredentialsButton").css("display", "none");
+                                buildnxmStorageForm();
                                 break;
                         }
                     });
@@ -377,6 +379,16 @@ function checkSMBCredentials() {
                 'error'
             );
 
+        });
+}
+
+//builds the form for nxmStorage credentials
+function buildnxmStorageForm() {
+    $.ajax({
+        url: "Templates/nxmStorageCredentials"
+    })
+        .done(function (data) {
+            $("#folderBrowser").html(data);
         });
 }
 
