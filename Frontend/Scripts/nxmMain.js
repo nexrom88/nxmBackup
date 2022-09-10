@@ -670,6 +670,14 @@ function registerNextPageClickHandler(currentPage, selectedEditJob) {
 
                     //get and set selected node
                     newJobObj["targetPath"] = selectedDirectory;
+
+                } else if (targetType == "nxmstorage") {
+
+                    //read user and password for nxmstorage
+                    var username = $("#inputUsername").val();
+                    var password = $("#inputPassword").val();
+                    newJobObj["targetUsername"] = username;
+                    newJobObj["targetPassword"] = password;
                 }
 
 
