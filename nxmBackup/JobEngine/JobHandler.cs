@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Net;
+using System.Security.Cryptography;
 
 namespace JobEngine
 {
@@ -50,8 +51,11 @@ namespace JobEngine
                     //get smb credentials via api call
                     using (var client = new WebClient())
                     {
-                        byte[] buffer = client.DownloadData("https://nxmBackup.com/nxmBackup/currentversion.txt");
-                         =  System.Text.Encoding.UTF8.GetString(buffer);
+                        string userData = "user=" + job.TargetUsername + "&password=" + job.TargetPassword;
+                        client.Headers[HttpRequestHeader.ContentType] = "application/x-www-form-urlencoded";
+                        string rawDownloadedData = client.UploadString("https://nxmBackup.com/nxmstorageproxy/getshare.php", userData);
+
+                        rawDownloadedData = "";
                     }
                 }
 
