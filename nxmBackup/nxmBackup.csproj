@@ -380,9 +380,6 @@
   <ItemGroup>
     <None Include="Resources\mailNotification.txt" />
   </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\nxmNotification.txt.txt" />
-  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>

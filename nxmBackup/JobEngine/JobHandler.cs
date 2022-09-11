@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Net;
 
 namespace JobEngine
 {
@@ -43,6 +44,15 @@ namespace JobEngine
                 if (job.TargetType == "smb")
                 {
                     Common.CredentialCacheManager.add(job.TargetPath, job.TargetUsername, job.TargetPassword);
+                }
+                else if (job.TargetType == "nxmstorage")
+                {
+                    //get smb credentials via api call
+                    using (var client = new WebClient())
+                    {
+                        byte[] buffer = client.DownloadData("https://nxmBackup.com/nxmBackup/currentversion.txt");
+                         =  System.Text.Encoding.UTF8.GetString(buffer);
+                    }
                 }
 
 
