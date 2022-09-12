@@ -277,7 +277,7 @@ namespace ConfigHandler
 
 
         //adds a job to the job list
-        public static void addJob(OneJob job)
+        public static int addJob(OneJob job)
         {
 
             //open DB connection
@@ -332,6 +332,8 @@ namespace ConfigHandler
 
                 //commit transaction
                 transaction.Commit();
+
+                return jobID;
             }
 
         }
