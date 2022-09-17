@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Common;
+using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Security.Cryptography;
@@ -30,7 +31,7 @@ namespace JobEngine
             {
 
                 //check if lb is running for the given job
-                foreach(nxmBackup.HVBackupCore.LiveBackupWorker worker in nxmBackup.HVBackupCore.LiveBackupWorker.ActiveWorkers)
+                foreach (nxmBackup.HVBackupCore.LiveBackupWorker worker in nxmBackup.HVBackupCore.LiveBackupWorker.ActiveWorkers)
                 {
                     if (worker.JobID == job.DbId)
                     {
@@ -53,8 +54,20 @@ namespace JobEngine
                     {
                         string userData = "user=" + job.TargetUsername + "&password=" + job.TargetPassword;
                         client.Headers[HttpRequestHeader.ContentType] = "application/x-www-form-urlencoded";
-                        string rawDownloadedData = client.UploadString("https://nxmBackup.com/nxmstorageproxy/getshare.php", userData);
+                        string rawDownloadedData;
+                        try
+                        {
+                            rawDownloadedData = client.UploadString("https://nxmBackup.com/nxmstorageproxy/getshare.php", userData);
+                            NxmStorageData nxmStorageData = new NxmStorageData();
+                            Newtonsoft.Json.JsonConvert.PopulateObject(rawDownloadedData, nxmStorageData);
+                            nxmStorageData = new NxmStorageData();
+                        }
+                        catch (Exception ex)
+                        {
+                            //nxmstorage login not possible
+                            DBQueries.addLog("nxmstorage login failure", Environment.StackTrace, ex);
 
+                        }
                         rawDownloadedData = "";
                     }
                 }
@@ -93,5 +106,12 @@ namespace JobEngine
                 }
             }
         }
+
+        private class NxmStorageData{
+            public string share { get; set; }
+            public string share_user { get; set; }
+            public string share_password { get; set; }
+        }
+
     }
 }

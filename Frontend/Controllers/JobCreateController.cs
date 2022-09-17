@@ -127,12 +127,10 @@ namespace Frontend.Controllers
                 jobID = ConfigHandler.JobConfigHandler.addJob(newJob);
             }
 
-//todo
-
             //refresh jobs
             App_Start.GUIJobHandler.initJobs();
 
-            //try to create dest folder first
+            //try to create dest folder
             try
             {
                 System.IO.Directory.CreateDirectory(System.IO.Path.Combine(value.targetPath, value.name));
@@ -140,6 +138,10 @@ namespace Frontend.Controllers
             catch (Exception ex)
             {
                 Common.DBQueries.addLog("error creating target path", Environment.StackTrace, ex);
+
+                //remove job again
+                ConfigHandler.JobConfigHandler.deleteJob(jobID);
+                
                 response.StatusCode = HttpStatusCode.BadRequest;
                 return response;
             }

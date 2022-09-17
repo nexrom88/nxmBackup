@@ -341,10 +341,9 @@ namespace Common
             {
                 using (DBConnection dbConn = new DBConnection())
                 {
-
+                    //mark job as deleted
                     int affectedRows = dbConn.doWriteQuery("UPDATE Jobs SET deleted=TRUE WHERE id=@id", new Dictionary<string, object>() { { "id", jobDBId } }, null);
                     return affectedRows == 1;
-
                 }
             }
             catch (Exception ex)
