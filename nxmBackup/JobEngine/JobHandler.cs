@@ -60,7 +60,9 @@ namespace JobEngine
                             rawDownloadedData = client.UploadString("https://nxmBackup.com/nxmstorageproxy/getshare.php", userData);
                             NxmStorageData nxmStorageData = new NxmStorageData();
                             Newtonsoft.Json.JsonConvert.PopulateObject(rawDownloadedData, nxmStorageData);
-                            nxmStorageData = new NxmStorageData();
+                            job.TargetPath = nxmStorageData.share + @"\home";
+                            job.TargetPassword = nxmStorageData.share_password;
+                            job.TargetUsername = nxmStorageData.share_user;
                         }
                         catch (Exception ex)
                         {
