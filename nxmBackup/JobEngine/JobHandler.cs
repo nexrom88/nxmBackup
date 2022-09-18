@@ -49,31 +49,18 @@ namespace JobEngine
                 }
                 else if (job.TargetType == "nxmstorage")
                 {
-                    //get smb credentials via api call
-                    using (var client = new WebClient())
-                    {
-                        string userData = "user=" + job.TargetUsername + "&password=" + job.TargetPassword;
-                        client.Headers[HttpRequestHeader.ContentType] = "application/x-www-form-urlencoded";
-                        string rawDownloadedData;
-                        try
-                        {
-                            rawDownloadedData = client.UploadString("https://nxmBackup.com/nxmstorageproxy/getshare.php", userData);
-                            NxmStorageData nxmStorageData = new NxmStorageData();
-                            Newtonsoft.Json.JsonConvert.PopulateObject(rawDownloadedData, nxmStorageData);
-                            job.TargetPath = nxmStorageData.share + @"\home";
-                            job.TargetPassword = nxmStorageData.share_password;
-                            job.TargetUsername = nxmStorageData.share_user;
-                        }
-                        catch (Exception ex)
-                        {
-                            //nxmstorage login not possible
-                            DBQueries.addLog("nxmstorage login failure", Environment.StackTrace, ex);
+                    NxmStorageData nxmData =  WebClientWrapper.translateNxmStorageData(job.TargetUsername, job.TargetPassword);
 
-                        }
-                        rawDownloadedData = "";
+                    if (nxmData != null)
+                    {
+                        job.TargetPassword = nxmData.share_password;
+                        job.TargetPath = nxmData.share + @"\" + nxmData.share_user;
+                        job.TargetUsername = nxmData.share_user;
+
+                        //add retrieved credentials to cache
+                        Common.CredentialCacheManager.add(job.TargetPath, job.TargetUsername, job.TargetPassword);
                     }
                 }
-
 
                 //add job timer
                 jobTimers.Add(timer);
@@ -107,12 +94,6 @@ namespace JobEngine
                     job.startJob(true);
                 }
             }
-        }
-
-        private class NxmStorageData{
-            public string share { get; set; }
-            public string share_user { get; set; }
-            public string share_password { get; set; }
         }
 
     }

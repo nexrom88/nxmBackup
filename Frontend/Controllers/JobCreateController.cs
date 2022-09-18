@@ -133,6 +133,17 @@ namespace Frontend.Controllers
             //try to create dest folder
             try
             {
+                //translate data when using nxmStorage
+                if (value.targetType == "nxmstorage")
+                {
+                    Common.NxmStorageData nxmData =  Common.WebClientWrapper.translateNxmStorageData(value.targetUsername, value.targetPassword);
+                    if (nxmData != null)
+                    {
+                        value.targetPath = nxmData.share + @"\" + nxmData.share_user;
+                    }
+                }
+
+                //try to create dest folder
                 System.IO.Directory.CreateDirectory(System.IO.Path.Combine(value.targetPath, value.name));
             }
             catch (Exception ex)
