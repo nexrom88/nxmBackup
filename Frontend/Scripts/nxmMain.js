@@ -306,8 +306,11 @@ function showNewJobPage(pageNumber, selectedEditJob) {
                     registerNextPageClickHandler(pageNumber, selectedEditJob);
                     buildFolderBrowser();
 
-                    //register checkCredentialsButton click handler
-                    $("#checkCredentialsButton").click(checkSMBCredentials);
+                    
+
+                    //register checkCredentialsButton click handler   
+                    $("#checkCredentialsButton").click(checkCredentials);
+      
 
                     //register change on target type selection
                     $("#sbTargetType").on("change", function (event) {
@@ -325,7 +328,7 @@ function showNewJobPage(pageNumber, selectedEditJob) {
                                 break;
                             case "nxmstorage":
                                 $('#folderBrowser').jstree("destroy");
-                                $("#checkCredentialsButton").css("display", "none");
+                                $("#checkCredentialsButton").css("display", "inline");
                                 buildnxmStorageForm();
                                 break;
                         }
@@ -344,6 +347,46 @@ function showNewJobPage(pageNumber, selectedEditJob) {
         });
 
 }
+
+//generic funktion for checking credentials
+function checkCredentials() {
+    var targetType = $("#sbTargetType").children("option:selected").data("targettype");
+
+    if (targetType == "smb") {
+        checkSMBCredentials();
+    } else if (targetType == "nxmstorage") {
+        checkNxmStorageCredentials();
+    }
+}
+
+//checks given nxmStorage credentials
+function checkNxmStorageCredentials() {
+    var username = $("#inputUsername").val();
+    var password = $("#inputPassword").val();
+
+    $.ajax({
+        url: "api/ChecknxmStorageCredentials",
+        type: "post",
+        contentType: "application/json; charset=utf-8",
+        data: JSON.stringify({Username: username, Password: password })
+    })
+        .done(function (data) {
+            Swal.fire(
+                'Erfolgreich',
+                'Die angegebenen Daten wurden erfolgreich geprüft',
+                'success'
+            );
+
+        }).fail(function (data) {
+            Swal.fire(
+                'Fehler',
+                'Die angegebenen Daten sind fehlerhaft',
+                'error'
+            );
+
+    });
+}
+
 
 //checks given smb credentials
 function checkSMBCredentials() {

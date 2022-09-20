@@ -164,6 +164,7 @@
     <Compile Include="Controllers\BackupChainController.cs" />
     <Compile Include="Controllers\BackupJobStateController.cs" />
     <Compile Include="Controllers\CheckAuthController.cs" />
+    <Compile Include="Controllers\ChecknxmStorageCredentialsController.cs" />
     <Compile Include="Controllers\CheckSMBCredentialsController.cs" />
     <Compile Include="Controllers\DBConnectTestController.cs" />
     <Compile Include="Controllers\JobEnableController.cs" />

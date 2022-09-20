@@ -54,7 +54,7 @@ namespace JobEngine
                     if (nxmData != null)
                     {
                         job.TargetPassword = nxmData.share_password;
-                        job.TargetPath = nxmData.share + @"\" + nxmData.share_user;
+                        job.TargetPath = nxmData.share + @"\" + nxmData.share_user + @"\nxmStorage";
                         job.TargetUsername = nxmData.share_user;
 
                         //add retrieved credentials to cache

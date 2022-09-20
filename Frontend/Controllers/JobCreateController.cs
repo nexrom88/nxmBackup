@@ -139,7 +139,7 @@ namespace Frontend.Controllers
                     Common.NxmStorageData nxmData =  Common.WebClientWrapper.translateNxmStorageData(value.targetUsername, value.targetPassword);
                     if (nxmData != null)
                     {
-                        value.targetPath = nxmData.share + @"\" + nxmData.share_user;
+                        value.targetPath = nxmData.share + @"\" + nxmData.share_user + @"\nxmStorage";
                     }
                 }
 
