@@ -14,6 +14,9 @@ namespace Frontend.Controllers
         public void Get()
         {
             Common.DBQueries.wipeDB();
+
+            //reload jobs
+            App_Start.GUIJobHandler.initJobs();
         }
 
        

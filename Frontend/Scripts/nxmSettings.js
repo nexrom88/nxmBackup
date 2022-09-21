@@ -78,6 +78,17 @@ function showSettingsPopUp() {
             $("#inputMailSender").val(globalSettings["mailsender"]);
             $("#inputMailRecipient").val(globalSettings["mailrecipient"]);
 
+            //handle reset link click
+            $("#resetLink").click(function () {
+                //wipe db
+                $.ajax({
+                    url: "api/wipeDB"
+                })
+                    .done(function (data) {
+                        location.reload();
+                });
+            });
+
         });
 }
 

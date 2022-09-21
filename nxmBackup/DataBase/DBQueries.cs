@@ -392,8 +392,20 @@ namespace Common
                 dbConn.doWriteQuery("DELETE FROM jobexecutions;", null, transaction);
                 dbConn.doWriteQuery("DELETE FROM rates;", null, transaction);
                 dbConn.doWriteQuery("DELETE FROM jobs;", null, transaction);
+                wipeSettings(dbConn, transaction);
                 transaction.Commit();
             }
+        }
+
+        //clears the settings table
+        private static void wipeSettings(DBConnection dbConn, SQLiteTransaction transaction)
+        {
+            dbConn.doWriteQuery("UPDATE settings SET value = \"\" WHERE name=\"mailserver\"", null, transaction);
+            dbConn.doWriteQuery("UPDATE settings SET value = \"false\" WHERE name=\"mailssl\"", null, transaction);
+            dbConn.doWriteQuery("UPDATE settings SET value = \"\" WHERE name=\"mailuser\"", null, transaction);
+            dbConn.doWriteQuery("UPDATE settings SET value = \"\" WHERE name=\"mailpassword\"", null, transaction);
+            dbConn.doWriteQuery("UPDATE settings SET value = \"\" WHERE name=\"mailsender\"", null, transaction);
+            dbConn.doWriteQuery("UPDATE settings SET value = \"\" WHERE name=\"mailrecipient\"", null, transaction);
         }
     }
 
