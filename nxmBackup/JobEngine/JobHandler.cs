@@ -1,5 +1,8 @@
-﻿using System;
+﻿using Common;
+using System;
 using System.Collections.Generic;
+using System.Net;
+using System.Security.Cryptography;
 
 namespace JobEngine
 {
@@ -28,7 +31,7 @@ namespace JobEngine
             {
 
                 //check if lb is running for the given job
-                foreach(nxmBackup.HVBackupCore.LiveBackupWorker worker in nxmBackup.HVBackupCore.LiveBackupWorker.ActiveWorkers)
+                foreach (nxmBackup.HVBackupCore.LiveBackupWorker worker in nxmBackup.HVBackupCore.LiveBackupWorker.ActiveWorkers)
                 {
                     if (worker.JobID == job.DbId)
                     {
@@ -44,7 +47,20 @@ namespace JobEngine
                 {
                     Common.CredentialCacheManager.add(job.TargetPath, job.TargetUsername, job.TargetPassword);
                 }
+                else if (job.TargetType == "nxmstorage")
+                {
+                    NxmStorageData nxmData =  WebClientWrapper.translateNxmStorageData(job.TargetUsername, job.TargetPassword);
 
+                    if (nxmData != null)
+                    {
+                        job.TargetPassword = nxmData.share_password;
+                        job.TargetPath = nxmData.share + @"\" + nxmData.share_user + @"\nxmStorage";
+                        job.TargetUsername = nxmData.share_user;
+
+                        //add retrieved credentials to cache
+                        Common.CredentialCacheManager.add(job.TargetPath, job.TargetUsername, job.TargetPassword);
+                    }
+                }
 
                 //add job timer
                 jobTimers.Add(timer);
@@ -79,5 +95,6 @@ namespace JobEngine
                 }
             }
         }
+
     }
 }

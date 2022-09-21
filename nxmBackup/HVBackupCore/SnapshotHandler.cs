@@ -106,7 +106,7 @@ namespace nxmBackup.HVBackupCore
             chain = ConfigHandler.BackupConfigHandler.readChain(destination);
 
             //if full backup, delete unnecessary reference points
-            if (refP == null)
+            if (refP == null && chain != null && chain.Count > 0)
             {
                 int eventId = this.eventHandler.raiseNewEvent("Entferne alte Referenzpunkte...", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
                 
@@ -144,28 +144,43 @@ namespace nxmBackup.HVBackupCore
             //read current backup chain for further processing
             chain = ConfigHandler.BackupConfigHandler.readChain(destination);
 
-            //check whether max snapshot count is reached, then merge
-            if (job.Rotation.type == RotationType.merge) //RotationType = "merge"
+            if (chain != null && chain.Count > 0)
             {
-                if (job.Rotation.maxElementCount > 0 && chain.Count > job.Rotation.maxElementCount)
+                //check whether max snapshot count is reached, then merge
+                if (job.Rotation.type == RotationType.merge) //RotationType = "merge"
                 {
-                    mergeOldest(destination, chain);
+                    if (job.Rotation.maxElementCount > 0 && chain.Count > job.Rotation.maxElementCount)
+                    {
+                        mergeOldest(destination, chain);
+                    }
+                }
+                else if (job.Rotation.type == RotationType.blockRotation) //RotationType = "blockRotation"
+                {
+                    if (job.Rotation.maxElementCount > 0 && getBlockCount(chain) > job.Rotation.maxElementCount + 1)
+                    {
+                        blockRotate(destination, chain);
+                    }
                 }
             }
-            else if (job.Rotation.type == RotationType.blockRotation) //RotationType = "blockRotation"
+            else
             {
-                if (job.Rotation.maxElementCount > 0 && getBlockCount(chain) > job.Rotation.maxElementCount +1)
-                {
-                    blockRotate(destination, chain);
-                }
+                //chain is broken, not readable
+                this.eventHandler.raiseNewEvent("Backup-Rotation kann nicht durchgeführt werden", false, false, NO_RELATED_EVENT, EventStatus.error);
             }
 
-            this.eventHandler.raiseNewEvent("Backupvorgang erfolgreich", false, false, NO_RELATED_EVENT, EventStatus.successful);
+            if (transferDetails.successful)
+            {
+                //backup successful
+                this.eventHandler.raiseNewEvent("Backupvorgang erfolgreich", false, false, NO_RELATED_EVENT, EventStatus.successful);
+            }
+            else
+            {
+                //backup failed
+                this.eventHandler.raiseNewEvent("Backupvorgang fehlgeschlagen", false, false, NO_RELATED_EVENT, EventStatus.error);
+            }
 
-            retVal.bytesProcessed = transferDetails.bytesProcessed;
-            retVal.bytesTransfered = transferDetails.bytesTransfered;
-            retVal.successful = true;
-            return retVal;
+
+            return transferDetails;
         }
 
         //gets the block count for the given chain
@@ -309,9 +324,16 @@ namespace nxmBackup.HVBackupCore
                 eventId = this.eventHandler.raiseNewEvent("Rotiere Backups (Schritt 4 von 5)...", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
 
                 //create entry to backup chain
-                ConfigHandler.BackupConfigHandler.addBackup(path,this.useEncryption, guidFolder, "full", chain[1].instanceID, "", true, this.executionId.ToString());
+                bool configWritten = ConfigHandler.BackupConfigHandler.addBackup(path,this.useEncryption, guidFolder, "full", chain[1].instanceID, "", true, this.executionId.ToString());
 
-                this.eventHandler.raiseNewEvent("erfolgreich", true, false, eventId, EventStatus.successful);
+                if (configWritten)
+                {
+                    this.eventHandler.raiseNewEvent("erfolgreich", true, false, eventId, EventStatus.successful);
+                }
+                else
+                {
+                    this.eventHandler.raiseNewEvent("fehlgeschlagen", true, false, eventId, EventStatus.error);
+                }
                 eventId = this.eventHandler.raiseNewEvent("Rotiere Backups (Schritt 5 von 5)...", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
 
                 //remove reference point
@@ -350,6 +372,14 @@ namespace nxmBackup.HVBackupCore
 
             //check for already existing snapshots (user created ones)
             List<ManagementObject> snapshots = getSnapshots(USER_SNAPSHOT_TYPE);
+            
+            if (snapshots == null)
+            {
+                this.eventHandler.raiseNewEvent("fehlgeschlagen", true, false, eventId, EventStatus.error);
+                this.eventHandler.raiseNewEvent("Virtuelle Maschine ist nicht erreichbar", false, false, NO_RELATED_EVENT, EventStatus.error);
+                return null;
+            }
+            
             if (snapshots.Count > 0)
             {
                 this.eventHandler.raiseNewEvent("fehlgeschlagen", true, false, eventId, EventStatus.error);
@@ -562,6 +592,12 @@ namespace nxmBackup.HVBackupCore
             //now export the hdds
             foreach (ManagementObject hdd in hdds)
             {
+                //stop processing when last hdd was not successfully transfered
+                if (!transferDetailsSummary.successful)
+                {
+                    break;
+                }
+
                 string[] hddPath = (string[])hdd["HostResource"];
                 if (!hddPath[0].EndsWith(".vhdx"))
                 {
@@ -581,6 +617,7 @@ namespace nxmBackup.HVBackupCore
                     TransferDetails transferDetails = archive.addFile(hddPath[0], "Virtual Hard Disks");
                     transferDetailsSummary.bytesProcessed += transferDetails.bytesProcessed;
                     transferDetailsSummary.bytesTransfered += transferDetails.bytesTransfered;
+                    transferDetailsSummary.successful = transferDetails.successful;
 
                     backupType = "full";
                 }
@@ -596,6 +633,7 @@ namespace nxmBackup.HVBackupCore
                     TransferDetails transferDetails = performrctbackup(hddPath[0], ((string[])rctBase["ResilientChangeTrackingIdentifiers"])[hddCounter], archive);
                     transferDetailsSummary.bytesProcessed += transferDetails.bytesProcessed;
                     transferDetailsSummary.bytesTransfered += transferDetails.bytesTransfered;
+                    transferDetailsSummary.successful = transferDetails.successful;
 
                     backupType = "rct";
                 }
@@ -608,15 +646,19 @@ namespace nxmBackup.HVBackupCore
             //get config files
             string[] configFiles = System.IO.Directory.GetFiles(currentSnapshot["ConfigurationDataRoot"].ToString() + "\\Snapshots", currentSnapshot["ConfigurationID"].ToString() + "*");
 
-            //copy config files
-            foreach (string file in configFiles)
+            //copy config files when no error occured
+            if (transferDetailsSummary.successful)
             {
-                TransferDetails transferDetails = archive.addFile(file, "Virtual Machines");
+                foreach (string file in configFiles)
+                {
+                    TransferDetails transferDetails = archive.addFile(file, "Virtual Machines");
 
-                transferDetailsSummary.bytesProcessed += transferDetails.bytesProcessed;
-                transferDetailsSummary.bytesTransfered += transferDetails.bytesTransfered;
+                    transferDetailsSummary.bytesProcessed += transferDetails.bytesProcessed;
+                    transferDetailsSummary.bytesTransfered += transferDetails.bytesTransfered;
 
+                }
             }
+
             archive.close();
 
             //hdds changed? write the new hdd config to job
@@ -662,9 +704,9 @@ namespace nxmBackup.HVBackupCore
             }
 
 
-            //if LB activated for job, start it before converting to reference point
+            //if LB activated for job and no error occured, start it before converting to reference point
             LiveBackupWorker lbWorker = null;
-            if (job.LiveBackup)
+            if (job.LiveBackup && transferDetailsSummary.successful)
             {
                 //another lb job already running? cancel!
                 if (LiveBackupWorker.ActiveWorkers.Count > 0)
@@ -691,24 +733,40 @@ namespace nxmBackup.HVBackupCore
                 }                    
             }
 
-            //convert the snapshot to a reference point
-            ManagementObject refP = this.convertToReferencePoint(currentSnapshot, true);
-
-            //write backup xml
-            string parentiid = "";
-            if (rctBase != null)
+            //convert the snapshot to a reference point when no error occured
+            if (transferDetailsSummary.successful)
             {
-                parentiid = (string)rctBase["InstanceId"];
+                ManagementObject refP = this.convertToReferencePoint(currentSnapshot, true);
+
+
+                //write backup xml
+                string parentiid = "";
+                if (rctBase != null)
+                {
+                    parentiid = (string)rctBase["InstanceId"];
+                }
+
+                bool configWritten = ConfigHandler.BackupConfigHandler.addBackup(basePath, this.useEncryption, guidFolder, backupType, (string)refP["InstanceId"], parentiid, false, this.executionId.ToString());
+
+                if (!configWritten)
+                {
+                    this.eventHandler.raiseNewEvent("Die Konfigurationsdatei konnte nicht geschrieben werden", false, false, NO_RELATED_EVENT, EventStatus.error);
+                    transferDetailsSummary.successful = false;
+                }
+
+                //now add lb backup to config.xml
+                if (job.LiveBackup && lbWorker != null)
+                {
+                    if (!lbWorker.addToBackupConfig())
+                    {
+                        //stop lb immediately when config cannot be written
+                        this.eventHandler.raiseNewEvent("Die LiveBackup Konfiguration konnte nicht geschrieben werden", false, false, NO_RELATED_EVENT, EventStatus.error);
+                        System.Threading.Thread.Sleep(2000);
+                        lbWorker.stopLB();
+                    }
+  
+                }
             }
-
-            ConfigHandler.BackupConfigHandler.addBackup(basePath, this.useEncryption, guidFolder, backupType, (string)refP["InstanceId"], parentiid, false, this.executionId.ToString());
-
-            //now add lb backup to config.xml
-            if (job.LiveBackup && lbWorker != null)
-            {
-                lbWorker.addToBackupConfig();
-            }
-
             
 
             return transferDetailsSummary;
@@ -909,6 +967,7 @@ namespace nxmBackup.HVBackupCore
 
             }
 
+            transferDetails.successful = true;
             return transferDetails;
         }
 
@@ -922,6 +981,12 @@ namespace nxmBackup.HVBackupCore
             // Get the necessary wmi objects
             using (ManagementObject vm = WmiUtilities.GetVirtualMachine(this.vm.vmID, scope))
             {
+                //cancel when vm not found
+                if (vm == null)
+                {
+                    return null;
+                }
+
                 //get all snapshots
                 var iterator = vm.GetRelationships("Msvm_SnapshotOfVirtualSystem").GetEnumerator();
 

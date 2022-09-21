@@ -332,10 +332,8 @@ namespace Common
             {
                 if (vmCollection.Count == 0)
                 {
-                    throw new ManagementException(string.Format(CultureInfo.CurrentCulture,
-                        "No {0} could be found with name \"{1}\"",
-                        className,
-                        name));
+                    Common.DBQueries.addLog("vm not found by id", Environment.StackTrace, null);
+                    return null;
                 }
 
                 //

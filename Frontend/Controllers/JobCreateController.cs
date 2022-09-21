@@ -17,17 +17,7 @@ namespace Frontend.Controllers
         {
             HttpResponseMessage response = new HttpResponseMessage();
 
-            //try to create dest folder first
-            try
-            {
-                System.IO.Directory.CreateDirectory(System.IO.Path.Combine(value.targetPath, value.name));
-            }
-            catch (Exception ex)
-            {
-                Common.DBQueries.addLog("error creating target path", Environment.StackTrace, ex);
-                response.StatusCode = HttpStatusCode.BadRequest;
-                return response;
-            }
+
 
             ConfigHandler.OneJob newJob = new ConfigHandler.OneJob();
 
@@ -124,21 +114,48 @@ namespace Frontend.Controllers
 
             //update or new job
             int updatedJobID;
+            int jobID;
             if (value.updatedJob != null && int.TryParse(value.updatedJob, out updatedJobID))
             {
                 //update job within DB
                 ConfigHandler.JobConfigHandler.updateJob(newJob, updatedJobID);
+                jobID = updatedJobID;
             }
             else
             {
                 //add new job to DB
-                ConfigHandler.JobConfigHandler.addJob(newJob);
+                jobID = ConfigHandler.JobConfigHandler.addJob(newJob);
             }
-
-            
 
             //refresh jobs
             App_Start.GUIJobHandler.initJobs();
+
+            //try to create dest folder
+            try
+            {
+                //translate data when using nxmStorage
+                if (value.targetType == "nxmstorage")
+                {
+                    Common.NxmStorageData nxmData =  Common.WebClientWrapper.translateNxmStorageData(value.targetUsername, value.targetPassword);
+                    if (nxmData != null)
+                    {
+                        value.targetPath = nxmData.share + @"\" + nxmData.share_user + @"\nxmStorage";
+                    }
+                }
+
+                //try to create dest folder
+                System.IO.Directory.CreateDirectory(System.IO.Path.Combine(value.targetPath, value.name));
+            }
+            catch (Exception ex)
+            {
+                Common.DBQueries.addLog("error creating target path", Environment.StackTrace, ex);
+
+                //remove job again
+                ConfigHandler.JobConfigHandler.deleteJob(jobID);
+                
+                response.StatusCode = HttpStatusCode.BadRequest;
+                return response;
+            }
 
             response.StatusCode = HttpStatusCode.OK;
             return response;

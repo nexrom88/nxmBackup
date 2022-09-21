@@ -164,6 +164,7 @@
     <Compile Include="Controllers\BackupChainController.cs" />
     <Compile Include="Controllers\BackupJobStateController.cs" />
     <Compile Include="Controllers\CheckAuthController.cs" />
+    <Compile Include="Controllers\ChecknxmStorageCredentialsController.cs" />
     <Compile Include="Controllers\CheckSMBCredentialsController.cs" />
     <Compile Include="Controllers\DBConnectTestController.cs" />
     <Compile Include="Controllers\JobEnableController.cs" />
@@ -284,6 +285,7 @@
     <Content Include="Templates\newJobPage4.html" />
     <Content Include="Templates\newJobPage5.html" />
     <Content Include="Templates\notificationMail.html" />
+    <Content Include="Templates\nxmStorageCredentials.html" />
     <Content Include="Templates\restoreOptions.html" />
     <Content Include="Templates\restorePointsTable.html" />
     <Content Include="Templates\settingsForm.html" />
