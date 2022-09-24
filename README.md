@@ -15,6 +15,8 @@ nxmBackup wird von Privatpersonen entwickelt und kontinuierlich weiterentwickelt
 - Backups können auf jedem gängigen NAS Speicher mittels SMB oder auch auf einem lokalen Laufwerk abgelegt werden
 - Agentless: Auf den zu sichernden VMs muss keine zusätzliche Software installiert werden. Die Backups werden lediglich durch Kommunikation mit dem HyperV Host erstellt
 
+Der kompilierte und zu einem Setup gepackte Code ist unter der "Releases"-Sektion zu finden: [Releases](https://nxmbackup.com/wiki/doku.php?id=releases)
+
 Für weitere Informationen, besuche uns auf: [nxmbackup.com](https://nxmbackup.com/)
 
 Unser Wiki mit zahlreichen Hilfe-Themen ist hier zu finden: [https://nxmbackup.com/wiki/doku.php](https://nxmbackup.com/wiki/doku.php)
