@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Common;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -110,6 +111,9 @@ namespace Frontend.Controllers
             //error on connecting?
             if (result != NO_ERROR)
             {
+                //write to log
+                DBQueries.addLog("smb connect failed with error code" + result, Environment.StackTrace, null);
+
                 response.StatusCode = HttpStatusCode.NotFound;
                 return response;
             }
