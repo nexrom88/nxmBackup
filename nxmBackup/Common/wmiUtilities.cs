@@ -120,7 +120,8 @@ namespace Common
 
                         if (throwIfFailed)
                         {
-                            throw new ManagementException(errorMessage);
+                            DBQueries.addLog("wmi error: " + errorMessage, Environment.StackTrace, null);
+                            throw new ManagementException(errorMessage);                            
                         }
                     }
                 }
