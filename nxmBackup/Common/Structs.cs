@@ -62,5 +62,6 @@ namespace Common
         public UInt64 bytesProcessed;
         public UInt64 bytesTransfered;
         public bool successful;
+        public bool retryFullBackupOnFail;
     }
 }

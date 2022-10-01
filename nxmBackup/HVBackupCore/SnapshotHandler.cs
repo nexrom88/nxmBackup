@@ -34,12 +34,18 @@ namespace nxmBackup.HVBackupCore
         }
 
         //performs a full backup chain
-        public TransferDetails performFullBackupProcess(ConsistencyLevel cLevel, Boolean allowSnapshotFallback, bool incremental, ConfigHandler.OneJob job)
+        public TransferDetails performFullBackupProcess(ConsistencyLevel cLevel, Boolean allowSnapshotFallback, bool incremental, ConfigHandler.OneJob job, ManagementObject snapshot = null)
         {
             TransferDetails retVal = new TransferDetails();
 
             string destination = job.TargetPath;
-            ManagementObject snapshot = createSnapshot(cLevel, allowSnapshotFallback);
+            
+            //when no snapshot obj is given then take one
+            if (snapshot == null)
+            {
+                snapshot = createSnapshot(cLevel, allowSnapshotFallback);
+            }
+
             ManagementObject refP = null;
             //error occured while taking snapshot?
             if (snapshot == null)
@@ -101,6 +107,13 @@ namespace nxmBackup.HVBackupCore
 
             //export the snapshot
             TransferDetails transferDetails = export(destination, snapshot, refP, job);
+
+            if (!transferDetails.successful && transferDetails.retryFullBackupOnFail)
+            {
+                //backup failed, but retry by using full backup
+                this.eventHandler.raiseNewEvent("Beginne erneut: Vollsicherung", false, false, NO_RELATED_EVENT, EventStatus.info);
+                return performFullBackupProcess(cLevel, allowSnapshotFallback, false, job, snapshot);
+            }
 
             //read current backup chain for further processing
             chain = ConfigHandler.BackupConfigHandler.readChain(destination);
@@ -634,6 +647,7 @@ namespace nxmBackup.HVBackupCore
                     transferDetailsSummary.bytesProcessed += transferDetails.bytesProcessed;
                     transferDetailsSummary.bytesTransfered += transferDetails.bytesTransfered;
                     transferDetailsSummary.successful = transferDetails.successful;
+                    transferDetailsSummary.retryFullBackupOnFail = transferDetails.retryFullBackupOnFail;
 
                     backupType = "rct";
                 }
@@ -885,7 +899,17 @@ namespace nxmBackup.HVBackupCore
                     null))
                 {
                     //wait for the snapshot to be exported
-                    WmiUtilities.ValidateOutput(outParams, scope);
+                    try
+                    {
+                        WmiUtilities.ValidateOutput(outParams, scope);
+                    }catch (Exception ex)
+                    {
+                        DBQueries.addLog("GetVirtualDiskChanges call failed", Environment.StackTrace, ex);
+                        this.eventHandler.raiseNewEvent("Vorgänger-Backup konnte nicht gefunden werden", false, false, NO_RELATED_EVENT, EventStatus.error);
+                        transferDetails.successful = false;
+                        transferDetails.retryFullBackupOnFail = true; //force retry by using full backup
+                        return transferDetails;
+                    }
 
                     //get vhdx size
                     UInt64 vhdxSize;
