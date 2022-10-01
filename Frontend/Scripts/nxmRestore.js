@@ -1,5 +1,6 @@
 ﻿var selectedRestoreJob = {}; //the job selected for restore
 var selectedRestoreHDD = ""; //the selected hdd for restore
+var selectedRestoreVM = {}; //the vm selected for restore
 var fullRestoreLogContainerTemplate = ""; // the template for the full restore log container
 var loadedBackupChain = {} //the currently loaded backup chain for restore
 
@@ -80,8 +81,8 @@ function loadRestorePoints() {
     restoreDetails["basePath"] = selectedRestoreJob["TargetPath"];
 
     //get selected vm
-    var selectedVM = $("#sbSourceVM option:selected").data("vmid");
-    restoreDetails["vmName"] = selectedVM;
+    selectedRestoreVM = $("#sbSourceVM option:selected").data("vmid");
+    restoreDetails["vmName"] = selectedRestoreVM;
 
     //send ajax request
     $.ajax({
@@ -606,7 +607,7 @@ function refreshFullRestoreLog() {
             var eventsList = [];
             for (var i = 0; i < data.length; i++) {
                 //ignore events if wrong vmid
-                if (data[i]["vmid"] != selectedVM) {
+                if (data[i]["vmid"] != selectedRestoreVM) {
                     continue;
                 }
 
