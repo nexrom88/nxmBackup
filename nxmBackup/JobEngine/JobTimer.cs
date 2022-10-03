@@ -20,6 +20,12 @@ namespace JobEngine
         public JobTimer(ConfigHandler.OneJob job) 
         {
             this.Job = job;
+
+            //check if job is already running
+            if (this.Job.IsRunning)
+            {
+                this.inProgress = true;
+            }
         }
 
         public OneJob Job { get => job; set => job = value; }
@@ -167,6 +173,8 @@ namespace JobEngine
                     {
                         return now.DayOfWeek.ToString().ToLower() == this.Job.Interval.day;
                     }
+                    return false;
+                case IntervalBase.never:
                     return false;
             }
 

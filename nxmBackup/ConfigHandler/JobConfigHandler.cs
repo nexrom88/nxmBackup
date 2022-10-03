@@ -105,6 +105,9 @@ namespace ConfigHandler
                         case "weekly":
                             interval.intervalBase = IntervalBase.weekly;
                             break;
+                        case "never":
+                            interval.intervalBase = IntervalBase.never;
+                            break;
                     }
                     interval.day = jobDB["day"].ToString();
                     interval.minute = Convert.ToInt32(jobDB["minute"]);

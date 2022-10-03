@@ -29,7 +29,7 @@ namespace Common
     //defines when to start a backup
     public enum IntervalBase
     {
-        hourly, daily, weekly
+        hourly, daily, weekly, never
     }
 
     //defines the interval details

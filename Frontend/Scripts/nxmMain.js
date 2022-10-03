@@ -248,16 +248,24 @@ function showNewJobPage(pageNumber, selectedEditJob) {
                         //disable/enable controls
                         switch (interval) {
                             case "hourly":
+                                $("#spJobIntervalMinute").removeAttr("disabled");
                                 $("#spJobIntervalHour").prop("disabled", true);
                                 $("#sbJobDay").prop("disabled", true);
                                 break;
                             case "daily":
+                                $("#spJobIntervalMinute").removeAttr("disabled");
                                 $("#spJobIntervalHour").removeAttr("disabled");
                                 $("#sbJobDay").prop("disabled", true);
                                 break;
                             case "weekly":
+                                $("#spJobIntervalMinute").removeAttr("disabled");
                                 $("#spJobIntervalHour").removeAttr("disabled");
                                 $("#sbJobDay").removeAttr("disabled");
+                                break;
+                            case "never":
+                                $("#spJobIntervalHour").prop("disabled", true);
+                                $("#sbJobDay").prop("disabled", true);
+                                $("#spJobIntervalMinute").prop("disabled", true);
                                 break;
                         }
                     });
@@ -526,6 +534,10 @@ function showCurrentSettings(pageNumber, selectedEditJob) {
                     $("#spJobIntervalMinute").val(selectedEditJob["Interval"]["minute"]);
                     $("#spJobIntervalHour").val(selectedEditJob["Interval"]["hour"]);
                     $('option[data-day="' + selectedEditJob["Interval"]["day"] + '"]').prop("selected", true);
+                    break;
+                case 3: //never
+                    $('option[data-interval="never"]').prop("selected", true);
+                    $("#sbJobInterval").change(); //trigger change-event manually
                     break;
             }
             break;
@@ -1216,6 +1228,10 @@ function renderJobStateTable() {
                         }
 
                         intervalString = dayForGui + "s " + " um " + buildTwoDigitsInt(data["Interval"]["hour"]) + ":" + buildTwoDigitsInt(data["Interval"]["minute"]);
+                        break;
+                    case 3: //nie
+                        intervalString = "Nur manuell";
+                        $("#enableJobButton").attr("disabled", "disabled");
                         break;
                 }
             } else {

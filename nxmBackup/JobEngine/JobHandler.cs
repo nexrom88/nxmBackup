@@ -78,7 +78,7 @@ namespace JobEngine
         public void stopAllTimers()
         {
             foreach (JobTimer timer in jobTimers)
-            {
+            {                
                 timer.underlyingTimer.Stop();
             }
         }
