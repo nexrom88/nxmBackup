@@ -32,7 +32,7 @@ namespace Frontend.Controllers
                 using (var client = new WebClient())
                 {
                     
-                    byte[] buffer = client.DownloadData("https://nxmBackup.com/nxmstorageproxy/getshare.php");
+                    byte[] buffer = client.DownloadData("https://nxmBackup.com/nxmBackup/currentversion.txt");
                     string rawHttpData = System.Text.Encoding.UTF8.GetString(buffer);
                 }
             }catch(Exception ex)
