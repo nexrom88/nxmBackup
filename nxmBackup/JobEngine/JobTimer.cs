@@ -15,6 +15,8 @@ namespace JobEngine
     {
         private ConfigHandler.OneJob job;
         public System.Timers.Timer underlyingTimer;
+        private bool stopRequest;
+        private const int NO_RELATED_EVENT = -1;
 
         public JobTimer(ConfigHandler.OneJob job) 
         {
@@ -31,6 +33,12 @@ namespace JobEngine
             {
                 startJob(false);
             }
+        }
+
+        //stops the job
+        public void stopJob()
+        {
+            this.stopRequest = true;
         }
 
         //starts the job
@@ -78,19 +86,29 @@ namespace JobEngine
             UInt64 totalBytesProcessed = 0;
             foreach (JobVM vm in this.Job.JobVMs)
             {
-                SnapshotHandler ssHandler = new SnapshotHandler(vm, executionId, this.Job.UseEncryption, this.Job.AesKey, this.job.UsingDedupe);
+                if (!stopRequest)
+                {
+                    SnapshotHandler ssHandler = new SnapshotHandler(vm, executionId, this.Job.UseEncryption, this.Job.AesKey, this.job.UsingDedupe);
 
-                //incremental allowed?
-                bool incremental = this.Job.Incremental;
+                    //incremental allowed?
+                    bool incremental = this.Job.Incremental;
 
 
-                TransferDetails transferDetails = ssHandler.performFullBackupProcess(ConsistencyLevel.ApplicationAware, true, incremental, this.job);
+                    TransferDetails transferDetails = ssHandler.performFullBackupProcess(ConsistencyLevel.ApplicationAware, true, incremental, this.job);
 
-                //update bytes counter
-                totalBytesTransfered += transferDetails.bytesTransfered;
-                totalBytesProcessed += transferDetails.bytesProcessed;
+                    //update bytes counter
+                    totalBytesTransfered += transferDetails.bytesTransfered;
+                    totalBytesProcessed += transferDetails.bytesProcessed;
 
-                if (!transferDetails.successful) executionSuccessful = false;
+                    if (!transferDetails.successful) executionSuccessful = false;
+                }
+                else //stop requested
+                {
+                    //write notification
+                    Common.EventHandler eventHandler = new Common.EventHandler(vm, executionId);
+                    eventHandler.raiseNewEvent("Vorgang vom Benutzer abgebrochen", false, false, NO_RELATED_EVENT, EventStatus.error);
+                    executionSuccessful = false;
+                }
             }
 
             // set job execution state
@@ -117,7 +135,7 @@ namespace JobEngine
                 sendNotificationMail(executionProps);
             }
 
-
+            this.stopRequest = false;
             this.job.IsRunning = false;
         }
 

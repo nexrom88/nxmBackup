@@ -17,7 +17,7 @@ namespace Frontend.Controllers
             int jobID = int.Parse(value);
 
             //check if job is running
-            if (App_Start.GUIJobHandler.isJobRunning(jobID))
+            if (App_Start.GUIJobHandler.jobHandler.isJobRunning(jobID))
             {
                 response.StatusCode = HttpStatusCode.BadRequest;
                 return response;

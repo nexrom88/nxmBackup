@@ -133,5 +133,19 @@ namespace JobEngine
             }
         }
 
+        //stops a given job
+        public void stopJob(int jobID)
+        {
+            //search for job object
+            foreach (JobTimer job in jobTimers)
+            {
+                if (job.Job.DbId == jobID)
+                {
+                    job.stopJob();
+                    return;
+                }
+            }
+        }
+
     }
 }

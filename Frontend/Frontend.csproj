@@ -182,7 +182,7 @@
     <Compile Include="Controllers\SupportPackageController.cs" />
     <Compile Include="Controllers\TemplatesController.cs" />
     <Compile Include="Controllers\BackupJobEventController.cs" />
-    <Compile Include="Controllers\JobStartController.cs" />
+    <Compile Include="Controllers\JobStartStopController.cs" />
     <Compile Include="Controllers\JobDeleteController.cs" />
     <Compile Include="Controllers\LogoutController.cs" />
     <Compile Include="Controllers\UpdateController.cs" />
