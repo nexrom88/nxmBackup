@@ -19,11 +19,12 @@ namespace nxmBackup.HVBackupCore
         private bool useEncryption;
         private byte[] aesKey;
         private bool usingDedupe;
+        public StopRequestWrapper StopRequestWrapper { get; set; }
 
         public const string USER_SNAPSHOT_TYPE = "Microsoft:Hyper-V:Snapshot:Realized";
         public const string RECOVERY_SNAPSHOT_TYPE = "Microsoft:Hyper-V:Snapshot:Recovery";
 
-        public SnapshotHandler(JobVM vm, int executionId, bool useEncryption, byte[] aesKey, bool usingDedupe)
+        public SnapshotHandler(JobVM vm, int executionId, bool useEncryption, byte[] aesKey, bool usingDedupe, StopRequestWrapper stopRequestWrapper)
         {
             this.useEncryption = useEncryption;
             this.aesKey = aesKey;
@@ -31,6 +32,11 @@ namespace nxmBackup.HVBackupCore
             this.executionId = executionId;
             this.eventHandler = new Common.EventHandler(vm, executionId);
             this.usingDedupe = usingDedupe;
+            this.StopRequestWrapper = stopRequestWrapper;
+            if (this.StopRequestWrapper == null)
+            {
+                this.StopRequestWrapper = new StopRequestWrapper();
+            }
         }
 
         //performs a full backup chain
@@ -563,9 +569,9 @@ namespace nxmBackup.HVBackupCore
 
             //create and open archive
             Common.IArchive archive;
-            
-           
-            archive = new Common.LZ4Archive(System.IO.Path.Combine(path, guidFolder + ".nxm"), this.eventHandler, this.useEncryption, this.aesKey, this.usingDedupe, null);
+
+
+            archive = new Common.LZ4Archive(System.IO.Path.Combine(path, guidFolder + ".nxm"), this.eventHandler, this.useEncryption, this.aesKey, this.usingDedupe, StopRequestWrapper);
             
             
             archive.create();

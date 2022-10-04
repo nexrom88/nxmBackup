@@ -17,6 +17,9 @@ namespace JobEngine
         public System.Timers.Timer underlyingTimer;
         private bool stopRequest;
         private const int NO_RELATED_EVENT = -1;
+        public SnapshotHandler CurrentSnapshotHandler { get; set; }
+
+        private Object currentSnapshotHandlerSyncObj = new object();
 
         public JobTimer(ConfigHandler.OneJob job) 
         {
@@ -39,6 +42,16 @@ namespace JobEngine
         public void stopJob()
         {
             this.stopRequest = true;
+
+            //read current snapshotHandler sync locked, then set stop request
+            lock (currentSnapshotHandlerSyncObj)
+            {
+                if (CurrentSnapshotHandler != null)
+                {
+                    SnapshotHandler ssHandler = CurrentSnapshotHandler;
+                    ssHandler.StopRequestWrapper.value = true;
+                }
+            }
         }
 
         //starts the job
@@ -88,19 +101,23 @@ namespace JobEngine
             {
                 if (!stopRequest)
                 {
-                    SnapshotHandler ssHandler = new SnapshotHandler(vm, executionId, this.Job.UseEncryption, this.Job.AesKey, this.job.UsingDedupe);
+                    CurrentSnapshotHandler = new SnapshotHandler(vm, executionId, this.Job.UseEncryption, this.Job.AesKey, this.job.UsingDedupe, new StopRequestWrapper());
 
                     //incremental allowed?
                     bool incremental = this.Job.Incremental;
 
-
-                    TransferDetails transferDetails = ssHandler.performFullBackupProcess(ConsistencyLevel.ApplicationAware, true, incremental, this.job);
+                    TransferDetails transferDetails = CurrentSnapshotHandler.performFullBackupProcess(ConsistencyLevel.ApplicationAware, true, incremental, this.job);
 
                     //update bytes counter
                     totalBytesTransfered += transferDetails.bytesTransfered;
                     totalBytesProcessed += transferDetails.bytesProcessed;
 
                     if (!transferDetails.successful) executionSuccessful = false;
+
+                    lock (this.currentSnapshotHandlerSyncObj)
+                    {
+                        CurrentSnapshotHandler = null;
+                    }
                 }
                 else //stop requested
                 {
