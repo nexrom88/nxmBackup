@@ -11,9 +11,17 @@ namespace Frontend.Controllers
     public class JobDeleteController : ApiController
     {
         // POST api/<controller>
-        public void Post([FromBody] string value)
+        public HttpResponseMessage Post([FromBody] string value)
         {
+            HttpResponseMessage response = new HttpResponseMessage();
             int jobID = int.Parse(value);
+
+            //check if job is running
+            if (App_Start.GUIJobHandler.isJobRunning(jobID))
+            {
+                response.StatusCode = HttpStatusCode.BadRequest;
+                return response;
+            }
 
             //stop lb if running
             foreach (nxmBackup.HVBackupCore.LiveBackupWorker worker in nxmBackup.HVBackupCore.LiveBackupWorker.ActiveWorkers)
@@ -29,6 +37,9 @@ namespace Frontend.Controllers
 
             //reload jobs
             App_Start.GUIJobHandler.initJobs();
+
+            response.StatusCode = HttpStatusCode.OK;
+            return response;
         }
     }
 }

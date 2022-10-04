@@ -14,18 +14,11 @@ namespace JobEngine
     public class JobTimer
     {
         private ConfigHandler.OneJob job;
-        private bool inProgress = false;
         public System.Timers.Timer underlyingTimer;
 
         public JobTimer(ConfigHandler.OneJob job) 
         {
             this.Job = job;
-
-            //check if job is already running
-            if (this.Job.IsRunning)
-            {
-                this.inProgress = true;
-            }
         }
 
         public OneJob Job { get => job; set => job = value; }
@@ -55,7 +48,7 @@ namespace JobEngine
             }
 
             //check whether job is still in progress
-            if (this.inProgress)
+            if (this.Job.IsRunning)
             {
                 return;
             }
@@ -71,7 +64,7 @@ namespace JobEngine
                 }
             }
 
-            this.inProgress = true;
+            this.job.IsRunning = true;
 
             //get new execution ID
             int executionId = Common.DBQueries.addJobExecution(job.DbId, "backup");
@@ -124,7 +117,8 @@ namespace JobEngine
                 sendNotificationMail(executionProps);
             }
 
-            this.inProgress = false;
+
+            this.job.IsRunning = false;
         }
 
         //sends the notification mail after job execution finished

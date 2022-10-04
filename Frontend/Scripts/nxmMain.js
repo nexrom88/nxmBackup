@@ -1000,13 +1000,21 @@ function deleteJobHandler(event) {
                 data: String(selectedJob),
                 type: 'POST',
                 cache: false,
-                success: function (result) {
-                    Swal.fire(
-                        'Job gelöscht',
-                        'Der ausgewählte Job wurde gelöscht',
-                        'success'
-                    );
-                    location.reload();
+                complete: function (data) {
+                    if (data.status == 200) { //success
+                        Swal.fire(
+                            'Job gelöscht',
+                            'Der ausgewählte Job wurde gelöscht',
+                            'success'
+                        );
+                        location.reload();
+                    } else if (data.status == 400) { //job currently running
+                        Swal.fire(
+                            'Nicht möglich',
+                            'Der ausgewählte Job kann nicht gelöscht werden solange dieser ausgeführt wird',
+                            'error'
+                        );
+                    }
                 }
             });
 

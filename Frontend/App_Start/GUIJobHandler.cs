@@ -21,5 +21,18 @@ namespace Frontend.App_Start
                 return;
             }
         }
+
+        //checks if a given job is currently running
+        public static bool isJobRunning(int jobID)
+        {
+            if (jobHandler != null)
+            {
+                return jobHandler.isJobRunning(jobID);
+            }
+            else
+            {
+                return false;
+            }
+        }
     }
 }
