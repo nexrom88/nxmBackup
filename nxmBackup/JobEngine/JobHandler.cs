@@ -145,6 +145,9 @@ namespace JobEngine
                     return;
                 }
             }
+
+            //no job found, set db value to "stopped"
+            DBQueries.forceStopExecution(jobID);
         }
 
     }

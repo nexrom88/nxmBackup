@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Security.Cryptography;
 
 namespace Common
 {
@@ -372,6 +373,28 @@ namespace Common
             catch (Exception ex)
             {
                 Common.DBQueries.addLog("error on closing job execution within DB", Environment.StackTrace, ex);
+            }
+        }
+
+        //forces to set a given job to "stopped
+        public static void forceStopExecution(int jobID)
+        {
+            using (DBConnection dbConn = new DBConnection())
+            {
+                //get jobExecutions first
+                List<Dictionary<string, object>> jobExecutions = dbConn.doReadQuery("SELECT max(id) id FROM JobExecutions WHERE jobId = @jobId AND type = @type;",
+                    new Dictionary<string, object>() { { "jobId", jobID }, { "type", "backup" } }, null);
+
+                //check if executionId is available
+                if (jobExecutions == null || jobExecutions.Count == 0)
+                {
+                    return;
+                }
+                int jobExecutionId = int.Parse(jobExecutions[0]["id"].ToString());
+
+                //now close the read job execution
+                dbConn.doWriteQuery("UPDATE jobexecutions SET stoptime=(datetime('now','localtime')), isrunning=false, bytesProcessed=@bytesProcessed, bytesTransfered=@bytesTransfered, successful=@successful, warnings=@warnings, errors=@errors WHERE id=@id;",
+                    new Dictionary<string, object>() { { "bytesprocessed", 0 }, { "bytestransfered", 0 }, { "successful", 0 }, { "warnings", 0 }, { "errors", 1 }, { "id", jobExecutionId } }, null);
             }
         }
 
