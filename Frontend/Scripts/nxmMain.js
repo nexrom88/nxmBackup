@@ -248,16 +248,24 @@ function showNewJobPage(pageNumber, selectedEditJob) {
                         //disable/enable controls
                         switch (interval) {
                             case "hourly":
+                                $("#spJobIntervalMinute").removeAttr("disabled");
                                 $("#spJobIntervalHour").prop("disabled", true);
                                 $("#sbJobDay").prop("disabled", true);
                                 break;
                             case "daily":
+                                $("#spJobIntervalMinute").removeAttr("disabled");
                                 $("#spJobIntervalHour").removeAttr("disabled");
                                 $("#sbJobDay").prop("disabled", true);
                                 break;
                             case "weekly":
+                                $("#spJobIntervalMinute").removeAttr("disabled");
                                 $("#spJobIntervalHour").removeAttr("disabled");
                                 $("#sbJobDay").removeAttr("disabled");
+                                break;
+                            case "never":
+                                $("#spJobIntervalHour").prop("disabled", true);
+                                $("#sbJobDay").prop("disabled", true);
+                                $("#spJobIntervalMinute").prop("disabled", true);
                                 break;
                         }
                     });
@@ -526,6 +534,10 @@ function showCurrentSettings(pageNumber, selectedEditJob) {
                     $("#spJobIntervalMinute").val(selectedEditJob["Interval"]["minute"]);
                     $("#spJobIntervalHour").val(selectedEditJob["Interval"]["hour"]);
                     $('option[data-day="' + selectedEditJob["Interval"]["day"] + '"]').prop("selected", true);
+                    break;
+                case 3: //never
+                    $('option[data-interval="never"]').prop("selected", true);
+                    $("#sbJobInterval").change(); //trigger change-event manually
                     break;
             }
             break;
@@ -869,8 +881,8 @@ function buildJobDetailsPanel() {
             //set vm click handler
             $(".vm").click(vmClickHandler);
 
-            //set start job button click handler
-            $("#startJobButton").click(startJobHandler);
+            //set start/stop job button click handler
+            $("#startStopJobButton").click(startStopJobHandler);
 
             //set delete job button click handler
             $("#deleteJobButton").click(deleteJobHandler);
@@ -988,13 +1000,21 @@ function deleteJobHandler(event) {
                 data: String(selectedJob),
                 type: 'POST',
                 cache: false,
-                success: function (result) {
-                    Swal.fire(
-                        'Job gelöscht',
-                        'Der ausgewählte Job wurde gelöscht',
-                        'success'
-                    );
-                    location.reload();
+                complete: function (data) {
+                    if (data.status == 200) { //success
+                        Swal.fire(
+                            'Job gelöscht',
+                            'Der ausgewählte Job wurde gelöscht',
+                            'success'
+                        );
+                        location.reload();
+                    } else if (data.status == 400) { //job currently running
+                        Swal.fire(
+                            'Nicht möglich',
+                            'Der ausgewählte Job kann nicht gelöscht werden solange dieser ausgeführt wird',
+                            'error'
+                        );
+                    }
                 }
             });
 
@@ -1003,11 +1023,11 @@ function deleteJobHandler(event) {
     });
 }
 
-//click handler for starting job manually
-function startJobHandler(event) {
+//click handler for starting/stopping job manually
+function startStopJobHandler(event) {
     //api call
     $.ajax({
-        url: "api/JobStart/" + selectedJob
+        url: "api/JobStartStop/" + selectedJob
     })
         .done(function (data) {
 
@@ -1217,6 +1237,10 @@ function renderJobStateTable() {
 
                         intervalString = dayForGui + "s " + " um " + buildTwoDigitsInt(data["Interval"]["hour"]) + ":" + buildTwoDigitsInt(data["Interval"]["minute"]);
                         break;
+                    case 3: //nie
+                        intervalString = "Nur manuell";
+                        $("#enableJobButton").attr("disabled", "disabled");
+                        break;
                 }
             } else {
                 //job is disabled
@@ -1261,21 +1285,41 @@ function renderJobStateTable() {
             //register click handler for clicking link to show last execution details
             $("#lastExecutionDetailsLink").click(showLastExecutionDetails);
 
-            //set state color
+            //set state color and set start/stop button caption
             if (data["LastRun"] == "" && !data["IsRunning"]) {
                 $("#jobDetailsRow").css("background-color", "#e6e6e6");
                 $("#jobDetailsRow").removeClass("detailsRowRunning");
+
+                //change start/stop button caption
+                $("#startStopButtonCaption").html("Job jetzt starten");
+                $("#startStoJobpButton").addClass("btn-primary");
+                $("#startStopJobButton").removeClass("btn-danger");
             } else {
                 if (data["Successful"] == "erfolgreich") {
                     $("#jobDetailsRow").css("background-color", "#ccffcc");
                     $("#jobDetailsRow").removeClass("detailsRowRunning");
+
+                    //change start/stop button caption
+                    $("#startStopButtonCaption").html("Job jetzt starten");
+                    $("#startStopJobButton").addClass("btn-primary");
+                    $("#startStopJobButton").removeClass("btn-danger");
                 } else {
                     $("#jobDetailsRow").css("background-color", "#ffb3b3");
                     $("#jobDetailsRow").removeClass("detailsRowRunning");
+
+                    //change start/stop button caption
+                    $("#startStopButtonCaption").html("Job jetzt starten");
+                    $("#startStopJobButton").addClass("btn-primary");
+                    $("#startStopJobButton").removeClass("btn-danger");
                 }
 
                 if (data.IsRunning) {
                     $("#jobDetailsRow").addClass("detailsRowRunning");
+
+                    //change start/stop button caption
+                    $("#startStopButtonCaption").html("Job stoppen");
+                    $("#startStopJobButton").addClass("btn-danger");
+                    $("#startStopJobButton").removeClass("btn-primary");
                 }
             }
 

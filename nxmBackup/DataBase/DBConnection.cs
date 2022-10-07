@@ -63,7 +63,7 @@ namespace Common
                 }
                 else
                 {
-                    if ((string)dbResult[0]["value"] != "101")
+                    if ((string)dbResult[0]["value"] != "102")
                     {
                         //wrong db version
                         ConnectionEstablished = false;

@@ -55,6 +55,9 @@ namespace Frontend.Controllers
                 case "weekly":
                     interval.intervalBase = Common.IntervalBase.weekly;
                     break;
+                case "never":
+                    interval.intervalBase = Common.IntervalBase.never;
+                    break;
             }
             interval.day = value.day;
             interval.hour =  int.Parse(value.hour);

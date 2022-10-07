@@ -19,11 +19,12 @@ namespace nxmBackup.HVBackupCore
         private bool useEncryption;
         private byte[] aesKey;
         private bool usingDedupe;
+        public StopRequestWrapper StopRequestWrapper { get; set; }
 
         public const string USER_SNAPSHOT_TYPE = "Microsoft:Hyper-V:Snapshot:Realized";
         public const string RECOVERY_SNAPSHOT_TYPE = "Microsoft:Hyper-V:Snapshot:Recovery";
 
-        public SnapshotHandler(JobVM vm, int executionId, bool useEncryption, byte[] aesKey, bool usingDedupe)
+        public SnapshotHandler(JobVM vm, int executionId, bool useEncryption, byte[] aesKey, bool usingDedupe, StopRequestWrapper stopRequestWrapper)
         {
             this.useEncryption = useEncryption;
             this.aesKey = aesKey;
@@ -31,6 +32,11 @@ namespace nxmBackup.HVBackupCore
             this.executionId = executionId;
             this.eventHandler = new Common.EventHandler(vm, executionId);
             this.usingDedupe = usingDedupe;
+            this.StopRequestWrapper = stopRequestWrapper;
+            if (this.StopRequestWrapper == null)
+            {
+                this.StopRequestWrapper = new StopRequestWrapper();
+            }
         }
 
         //performs a full backup chain
@@ -157,28 +163,33 @@ namespace nxmBackup.HVBackupCore
             //read current backup chain for further processing
             chain = ConfigHandler.BackupConfigHandler.readChain(destination);
 
-            if (chain != null && chain.Count > 0)
+            //just rotate when stop request is not set
+            if (!StopRequestWrapper.value)
             {
-                //check whether max snapshot count is reached, then merge
-                if (job.Rotation.type == RotationType.merge) //RotationType = "merge"
+
+                if (chain != null && chain.Count > 0)
                 {
-                    if (job.Rotation.maxElementCount > 0 && chain.Count > job.Rotation.maxElementCount)
+                    //check whether max snapshot count is reached, then merge
+                    if (job.Rotation.type == RotationType.merge) //RotationType = "merge"
                     {
-                        mergeOldest(destination, chain);
+                        if (job.Rotation.maxElementCount > 0 && chain.Count > job.Rotation.maxElementCount)
+                        {
+                            mergeOldest(destination, chain);
+                        }
+                    }
+                    else if (job.Rotation.type == RotationType.blockRotation) //RotationType = "blockRotation"
+                    {
+                        if (job.Rotation.maxElementCount > 0 && getBlockCount(chain) > job.Rotation.maxElementCount + 1)
+                        {
+                            blockRotate(destination, chain);
+                        }
                     }
                 }
-                else if (job.Rotation.type == RotationType.blockRotation) //RotationType = "blockRotation"
+                else
                 {
-                    if (job.Rotation.maxElementCount > 0 && getBlockCount(chain) > job.Rotation.maxElementCount + 1)
-                    {
-                        blockRotate(destination, chain);
-                    }
+                    //chain is broken, not readable
+                    this.eventHandler.raiseNewEvent("Backup-Rotation kann nicht durchgeführt werden", false, false, NO_RELATED_EVENT, EventStatus.error);
                 }
-            }
-            else
-            {
-                //chain is broken, not readable
-                this.eventHandler.raiseNewEvent("Backup-Rotation kann nicht durchgeführt werden", false, false, NO_RELATED_EVENT, EventStatus.error);
             }
 
             if (transferDetails.successful)
@@ -563,9 +574,9 @@ namespace nxmBackup.HVBackupCore
 
             //create and open archive
             Common.IArchive archive;
-            
-           
-            archive = new Common.LZ4Archive(System.IO.Path.Combine(path, guidFolder + ".nxm"), this.eventHandler, this.useEncryption, this.aesKey, this.usingDedupe, null);
+
+
+            archive = new Common.LZ4Archive(System.IO.Path.Combine(path, guidFolder + ".nxm"), this.eventHandler, this.useEncryption, this.aesKey, this.usingDedupe, StopRequestWrapper);
             
             
             archive.create();

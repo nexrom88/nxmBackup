@@ -14,8 +14,12 @@ namespace JobEngine
     public class JobTimer
     {
         private ConfigHandler.OneJob job;
-        private bool inProgress = false;
         public System.Timers.Timer underlyingTimer;
+        private bool stopRequest;
+        private const int NO_RELATED_EVENT = -1;
+        public SnapshotHandler CurrentSnapshotHandler { get; set; }
+
+        private Object currentSnapshotHandlerSyncObj = new object();
 
         public JobTimer(ConfigHandler.OneJob job) 
         {
@@ -34,6 +38,22 @@ namespace JobEngine
             }
         }
 
+        //stops the job
+        public void stopJob()
+        {
+            this.stopRequest = true;
+
+            //read current snapshotHandler sync locked, then set stop request
+            lock (currentSnapshotHandlerSyncObj)
+            {
+                if (CurrentSnapshotHandler != null)
+                {
+                    SnapshotHandler ssHandler = CurrentSnapshotHandler;
+                    ssHandler.StopRequestWrapper.value = true;
+                }
+            }
+        }
+
         //starts the job
         public void startJob(bool force)
         {
@@ -48,8 +68,10 @@ namespace JobEngine
                 }
             }
 
+            JobHandler.addRunningJobThread(this.Job.DbId, System.Threading.Thread.CurrentThread);
+
             //check whether job is still in progress
-            if (this.inProgress)
+            if (this.Job.IsRunning)
             {
                 return;
             }
@@ -65,7 +87,7 @@ namespace JobEngine
                 }
             }
 
-            this.inProgress = true;
+            this.job.IsRunning = true;
 
             //get new execution ID
             int executionId = Common.DBQueries.addJobExecution(job.DbId, "backup");
@@ -79,19 +101,33 @@ namespace JobEngine
             UInt64 totalBytesProcessed = 0;
             foreach (JobVM vm in this.Job.JobVMs)
             {
-                SnapshotHandler ssHandler = new SnapshotHandler(vm, executionId, this.Job.UseEncryption, this.Job.AesKey, this.job.UsingDedupe);
+                if (!stopRequest)
+                {
+                    CurrentSnapshotHandler = new SnapshotHandler(vm, executionId, this.Job.UseEncryption, this.Job.AesKey, this.job.UsingDedupe, new StopRequestWrapper());
 
-                //incremental allowed?
-                bool incremental = this.Job.Incremental;
+                    //incremental allowed?
+                    bool incremental = this.Job.Incremental;
 
+                    TransferDetails transferDetails = CurrentSnapshotHandler.performFullBackupProcess(ConsistencyLevel.ApplicationAware, true, incremental, this.job);
 
-                TransferDetails transferDetails = ssHandler.performFullBackupProcess(ConsistencyLevel.ApplicationAware, true, incremental, this.job);
+                    //update bytes counter
+                    totalBytesTransfered += transferDetails.bytesTransfered;
+                    totalBytesProcessed += transferDetails.bytesProcessed;
 
-                //update bytes counter
-                totalBytesTransfered += transferDetails.bytesTransfered;
-                totalBytesProcessed += transferDetails.bytesProcessed;
+                    if (!transferDetails.successful) executionSuccessful = false;
 
-                if (!transferDetails.successful) executionSuccessful = false;
+                    lock (this.currentSnapshotHandlerSyncObj)
+                    {
+                        CurrentSnapshotHandler = null;
+                    }
+                }
+                else //stop requested
+                {
+                    //write notification
+                    Common.EventHandler eventHandler = new Common.EventHandler(vm, executionId);
+                    eventHandler.raiseNewEvent("Vorgang vom Benutzer abgebrochen", false, false, NO_RELATED_EVENT, EventStatus.error);
+                    executionSuccessful = false;
+                }
             }
 
             // set job execution state
@@ -118,7 +154,9 @@ namespace JobEngine
                 sendNotificationMail(executionProps);
             }
 
-            this.inProgress = false;
+            this.stopRequest = false;
+            this.job.IsRunning = false;
+            JobHandler.removeRunningJobThread(this.job.DbId);
         }
 
         //sends the notification mail after job execution finished
@@ -167,6 +205,8 @@ namespace JobEngine
                     {
                         return now.DayOfWeek.ToString().ToLower() == this.Job.Interval.day;
                     }
+                    return false;
+                case IntervalBase.never:
                     return false;
             }
 

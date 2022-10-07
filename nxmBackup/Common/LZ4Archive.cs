@@ -62,6 +62,7 @@ namespace Common
         //adds a given file to the archive
         public TransferDetails addFile(string file, string path)
         {
+            bool errorOccured = false;
             TransferDetails transferDetails = new TransferDetails();
 
             path = path.Replace("/", "\\");
@@ -116,7 +117,7 @@ namespace Common
             Int64 byteProcessCounter = 0;
             Int64 processRate = 0;
 
-            while (bytesRemaining > 0)//still bytes to read?
+            while (bytesRemaining > 0 && !this.stopRequest.value)//still bytes to read?
             {
                 if (bytesRemaining >= buffer.Length) //still a whole block to read?
                 {
@@ -175,11 +176,20 @@ namespace Common
             //transfer completed
             if (this.eventHandler != null)
             {
-                this.eventHandler.raiseNewEvent("Lese " + fileName + " - 100%", false, true, relatedEventId, EventStatus.successful);
+                if (this.stopRequest.value)
+                {
+                    this.eventHandler.raiseNewEvent("Lese " + fileName + " - abgebrochen", false, true, relatedEventId, EventStatus.error);
+                    errorOccured = true;
+                }
+                else
+                {
+                    this.eventHandler.raiseNewEvent("Lese " + fileName + " - 100%", false, true, relatedEventId, EventStatus.successful);
+                }
+                
             }
             compressionStream.Dispose();
             baseSourceStream.Close();
-            transferDetails.successful = true;
+            transferDetails.successful = !errorOccured;
             return transferDetails;
 
         }
