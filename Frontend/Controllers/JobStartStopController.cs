@@ -5,6 +5,7 @@ using System.Net;
 using System.Net.Http;
 using System.Web.Http;
 using System.Threading;
+using JobEngine;
 
 namespace Frontend.Controllers
 {
@@ -12,9 +13,6 @@ namespace Frontend.Controllers
     public class JobStartStopController : ApiController
     {
         // GET api/<controller>
-       
-
-        // GET api/<controller>/5
         public void Get(int id)
         {
             //is job running => stop it

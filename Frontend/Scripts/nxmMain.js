@@ -1293,7 +1293,7 @@ function renderJobStateTable() {
                 //change start/stop button caption
                 $("#startStopButtonCaption").html("Job jetzt starten");
                 $("#startStoJobpButton").addClass("btn-primary");
-                $("#startStopJobButton").addClass("btn-danger");
+                $("#startStopJobButton").removeClass("btn-danger");
             } else {
                 if (data["Successful"] == "erfolgreich") {
                     $("#jobDetailsRow").css("background-color", "#ccffcc");
@@ -1302,7 +1302,7 @@ function renderJobStateTable() {
                     //change start/stop button caption
                     $("#startStopButtonCaption").html("Job jetzt starten");
                     $("#startStopJobButton").addClass("btn-primary");
-                    $("#startStopJobButton").addClass("btn-danger");
+                    $("#startStopJobButton").removeClass("btn-danger");
                 } else {
                     $("#jobDetailsRow").css("background-color", "#ffb3b3");
                     $("#jobDetailsRow").removeClass("detailsRowRunning");
@@ -1310,7 +1310,7 @@ function renderJobStateTable() {
                     //change start/stop button caption
                     $("#startStopButtonCaption").html("Job jetzt starten");
                     $("#startStopJobButton").addClass("btn-primary");
-                    $("#startStopJobButton").addClass("btn-danger");
+                    $("#startStopJobButton").removeClass("btn-danger");
                 }
 
                 if (data.IsRunning) {
@@ -1319,7 +1319,7 @@ function renderJobStateTable() {
                     //change start/stop button caption
                     $("#startStopButtonCaption").html("Job stoppen");
                     $("#startStopJobButton").addClass("btn-danger");
-                    $("#startStopJobButton").addClass("btn-primary");
+                    $("#startStopJobButton").removeClass("btn-primary");
                 }
             }
 

@@ -68,6 +68,8 @@ namespace JobEngine
                 }
             }
 
+            JobHandler.addRunningJobThread(this.Job.DbId, System.Threading.Thread.CurrentThread);
+
             //check whether job is still in progress
             if (this.Job.IsRunning)
             {
@@ -154,6 +156,7 @@ namespace JobEngine
 
             this.stopRequest = false;
             this.job.IsRunning = false;
+            JobHandler.removeRunningJobThread(this.job.DbId);
         }
 
         //sends the notification mail after job execution finished

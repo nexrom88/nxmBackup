@@ -3,12 +3,60 @@ using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Security.Cryptography;
+using System.Threading;
 
 namespace JobEngine
 {
     public class JobHandler
     {
         private static List<JobTimer> jobTimers = new List<JobTimer>();
+        private static List<RunningJobThread> jobThreads = new List<RunningJobThread>();
+        private static object lockObj = new object();
+
+        //adds a running job thread to list
+        public static void addRunningJobThread(int jobID, Thread thread)
+        {
+            lock (lockObj)
+            {
+                RunningJobThread runningJob = new RunningJobThread();
+                runningJob.Thread = thread;
+                runningJob.jobID = jobID;
+                jobThreads.Add(runningJob);
+            }
+        }
+
+        //checks whether a given job id has a running thread
+        public static bool checkRunningJobThread(int jobID)
+        {
+            lock (lockObj)
+            {
+                foreach (RunningJobThread th in jobThreads)
+                {
+                    if (th.jobID == jobID && th.Thread != null && th.Thread.ThreadState == ThreadState.Running)
+                    {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+        }
+
+        //removes a running job thread from list
+        public static void removeRunningJobThread(int jobID)
+        {
+            lock (lockObj)
+            {
+                for (int i = 0; i < jobThreads.Count; i++)
+                {
+                    if (jobThreads[i].jobID == jobID)
+                    {
+                        jobThreads.RemoveAt(i);
+                        i--;
+                    }
+                }
+            }
+        }
 
         //starts the job engine
         public bool startJobEngine()
@@ -141,8 +189,18 @@ namespace JobEngine
             {
                 if (job.Job.DbId == jobID)
                 {
-                    job.stopJob();
-                    return;
+                    if (JobHandler.checkRunningJobThread(jobID))
+                    {
+                        job.stopJob();
+                        return;
+                    }
+                    else
+                    {
+                        //job found but thread does not exist => force stop
+                        DBQueries.forceStopExecution(jobID);
+                        job.Job.IsRunning = false;
+                    }
+                    
                 }
             }
 
@@ -150,5 +208,11 @@ namespace JobEngine
             DBQueries.forceStopExecution(jobID);
         }
 
+    }
+
+    public class RunningJobThread
+    {
+        public Thread Thread { get; set; }
+        public int jobID { get; set; }
     }
 }
