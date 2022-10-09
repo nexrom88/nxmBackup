@@ -797,7 +797,7 @@ function logOut() {
         url: "api/Logout"
     })
         .done(function (data) {
-            $.removeCookie("session_id");
+            Cookies.remove("session_id");
             location.reload();
         });
 }

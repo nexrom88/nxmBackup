@@ -11,8 +11,8 @@ namespace Frontend
             bundles.Add(new ScriptBundle("~/bundles/jquery").Include(
                         "~/Scripts/jquery-{version}.js"));
 
-            bundles.Add(new ScriptBundle("~/bundles/jquery.cookie").Include(
-                        "~/Scripts/jquery.cookie.js"));
+            bundles.Add(new ScriptBundle("~/bundles/jscookie").Include(
+                        "~/Scripts/js-cookie/js.cookie.js"));
 
             bundles.Add(new ScriptBundle("~/bundles/jstree").Include(
                         "~/Scripts/jstree.js"));
