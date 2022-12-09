@@ -27,7 +27,7 @@ $password += Get-RandomCharacters -length 1 -characters '!"§$%&/()=?}][{@#*+'
 $password = Randomize-String $password
 $PasswordEnc = $password | ConvertTo-SecureString -AsPlainText -Force
 if(!(Get-LocalUser 'nxmUser').Enabled){
-    New-LocalUser "nxmUser" -Password $PasswordEnc -Description "nxm service account"
+    New-LocalUser "nxmUser" -Password $PasswordEnc -Description "nxm service account" -PasswordNeverExpires
 }else{
     #user already exists, change password
     $UserAccount = Get-LocalUser -Name "nxmUser"
