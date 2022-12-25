@@ -5,11 +5,29 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Runtime.InteropServices;
 using System.IO;
+using System.ComponentModel;
+using Microsoft.Win32.SafeHandles;
+using System.Security.Cryptography;
+using System.Security.Permissions;
+using System.Xml.Schema;
+
 
 namespace Common
 {
     public class VirtualDiskHandler
     {
+        [DllImportAttribute("kernel32.dll", EntryPoint = "FindFirstVolumeW", SetLastError = true)]
+        public static extern SearchSafeHandle FindFirstVolume([OutAttribute()][MarshalAsAttribute(UnmanagedType.LPWStr)] StringBuilder lpszVolumeName, Int32 cchBufferLength);
+
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA5122:PInvokesShouldNotBeSafeCriticalFxCopRule", Justification = "Warning is bogus.")]
+        [DllImport("virtdisk.dll", CharSet = CharSet.Unicode)]
+        public static extern Int32 GetVirtualDiskPhysicalPath(VirtualDiskSafeHandle VirtualDiskHandle, ref Int32 DiskPathSizeInBytes, StringBuilder DiskPath);
+
+        [DllImportAttribute("kernel32.dll", EntryPoint = "FindNextVolumeW", SetLastError = true)]
+        [return: MarshalAsAttribute(UnmanagedType.Bool)]
+        public static extern Boolean FindNextVolume(SearchSafeHandle hFindVolume, [OutAttribute()][MarshalAsAttribute(UnmanagedType.LPWStr)] StringBuilder lpszVolumeName, Int32 cchBufferLength);
+
+
         [DllImport("kernel32.dll", SetLastError = true)]
         static unsafe extern bool WriteFile(VirtualDiskSafeHandle virtualDiskHandle, ref byte lpBuffer, uint nNumberOfBytesToWrite, out uint lpNumberOfBytesWritten, System.Threading.NativeOverlapped* lpOverlapped);
 
@@ -18,7 +36,7 @@ namespace Common
 
         [DllImport("virtdisk.dll", CharSet = CharSet.Unicode, SetLastError = true)]
         public static extern Int32 AttachVirtualDisk(VirtualDiskSafeHandle VirtualDiskHandle, IntPtr SecurityDescriptor, ATTACH_VIRTUAL_DISK_FLAG Flags, Int32 ProviderSpecificFlags, ref ATTACH_VIRTUAL_DISK_PARAMETERS Parameters, IntPtr Overlapped);
-        
+
         [DllImport("virtdisk.dll", CharSet = CharSet.Unicode)]
         public static extern Int32 DetachVirtualDisk(VirtualDiskSafeHandle VirtualDiskHandle, DETACH_VIRTUAL_DISK_FLAG flags, uint ProviderSpecificFlags);
 
@@ -30,8 +48,87 @@ namespace Common
         ref OPEN_VIRTUAL_DISK_PARAMETERS Parameters,
         ref VirtualDiskSafeHandle Handle);
 
+        [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode, EntryPoint = "GetVolumeNameForVolumeMountPointW")]
+        static extern bool GetVolumeNameForVolumeMountPoint(string
+            lpszVolumeMountPoint, [Out] StringBuilder lpszVolumeName,
+            uint cchBufferLength);
+
         [DllImport("virtdisk.dll", CharSet = CharSet.Unicode)]
         public static extern Int32 GetVirtualDiskInformation(VirtualDiskSafeHandle VirtualDiskHandle, ref uint virtualDiskInfoSize, ref GetVirtualDiskInfo virtualDiskInfo, ref uint sizeUsed);
+
+        [SecurityPermission(SecurityAction.Demand)]
+        public class VirtualDiskSafeHandle : SafeHandle
+        {
+            [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA5122:PInvokesShouldNotBeSafeCriticalFxCopRule", Justification = "Warning is bogus.")]
+            [DllImportAttribute("kernel32.dll", SetLastError = true)]
+            [return: MarshalAsAttribute(UnmanagedType.Bool)]
+            public static extern Boolean CloseHandle(IntPtr hObject);
+
+            public VirtualDiskSafeHandle()
+                : base(IntPtr.Zero, true) { }
+
+
+            public override bool IsInvalid
+            {
+                get { return (this.IsClosed) || (base.handle == IntPtr.Zero); }
+            }
+
+            protected override bool ReleaseHandle()
+            {
+                return CloseHandle(this.handle);
+            }
+
+            public override string ToString()
+            {
+                return this.handle.ToString();
+            }
+
+            public IntPtr Handle
+            {
+                get { return handle; }
+            }
+
+        }
+
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct VOLUME_DISK_EXTENTS
+        {
+            public Int32 NumberOfDiskExtents;
+            public DISK_EXTENT Extents;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct DISK_EXTENT
+        {
+            public Int32 DiskNumber;
+            public Int64 StartingOffset;
+            public Int64 ExtentLength;
+        }
+
+        [SecurityPermission(SecurityAction.Demand)]
+        public class SearchSafeHandle : SafeHandleMinusOneIsInvalid
+        {
+
+            public SearchSafeHandle()
+                : base(true) { }
+
+
+            protected override bool ReleaseHandle()
+            {
+                return FindVolumeClose(this.handle);
+            }
+
+            public override string ToString()
+            {
+                return this.handle.ToString();
+            }
+
+            [DllImportAttribute("kernel32.dll", EntryPoint = "FindVolumeClose")]
+            [return: MarshalAsAttribute(UnmanagedType.Bool)]
+            public static extern bool FindVolumeClose([InAttribute()] IntPtr hFindVolume);
+
+        }
 
         //read state
         private bool readInProgress;
@@ -45,11 +142,12 @@ namespace Common
         private string path;
         private VirtualDiskSafeHandle diskHandle;
 
-        public VirtualDiskHandler (string path)
+        public VirtualDiskHandler(string path)
         {
             this.path = path;
 
         }
+
 
         //opens the virtual disk
         public bool open(VirtualDiskAccessMask accessMask)
@@ -130,7 +228,7 @@ namespace Common
         //gets the virtual hard disk size
         public GetVirtualDiskInfoSize getSize()
         {
-            var info = new GetVirtualDiskInfo { Version = GetVirtualDiskInfoVersion.Size};
+            var info = new GetVirtualDiskInfo { Version = GetVirtualDiskInfoVersion.Size };
             uint infoSize = (uint)Marshal.SizeOf(info);
             uint sizeUsed = 0;
             var result = GetVirtualDiskInformation(this.diskHandle, ref infoSize, ref info, ref sizeUsed);
@@ -138,8 +236,136 @@ namespace Common
             return info.Union.Size;
         }
 
+        //initilaizes a raw vhdx and returns path to newly created volume
+        public WriteableRawVolume initDisk(string diskPath)
+        {
+            var signature = new byte[4];
+            RandomNumberGenerator.Create().GetBytes(signature); //lazy way to generate "unique" signature
+
+            using (SafeFileHandle handle = DeviceIO.CreateFile(diskPath, DeviceIO.GENERIC_READ | DeviceIO.GENERIC_WRITE, 0, IntPtr.Zero, DeviceIO.OPEN_EXISTING, 0, IntPtr.Zero))
+            {
+                if (handle.IsInvalid) { throw new Win32Exception(); }
+
+                var cd = new DeviceIO.CREATE_DISK();
+                cd.PartitionStyle = DeviceIO.PARTITION_STYLE.PARTITION_STYLE_MBR;
+                cd.MbrGpt.Mbr.Signature = BitConverter.ToInt32(signature, 0);
+                Int32 bytesOut = 0;
+                if (DeviceIO.DeviceIoControl(handle, DeviceIO.IOCTL_DISK_CREATE_DISK, ref cd, Marshal.SizeOf(cd), IntPtr.Zero, 0, ref bytesOut, IntPtr.Zero) == false) { throw new Win32Exception(); }
+
+                //update cache
+                if (DeviceIO.DeviceIoControl(handle, DeviceIO.IOCTL_DISK_UPDATE_PROPERTIES, IntPtr.Zero, 0, IntPtr.Zero, 0, ref bytesOut, IntPtr.Zero) == false) { throw new Win32Exception(); } //just update cache
+
+                var pi = new DeviceIO.PARTITION_INFORMATION();
+                if (DeviceIO.DeviceIoControl(handle, DeviceIO.IOCTL_DISK_GET_PARTITION_INFO, IntPtr.Zero, 0, ref pi, Marshal.SizeOf(pi), ref bytesOut, IntPtr.Zero) == false) { throw new Win32Exception(); }
+
+                var dli = new DeviceIO.DRIVE_LAYOUT_INFORMATION_EX();
+                dli.PartitionStyle = DeviceIO.PARTITION_STYLE.PARTITION_STYLE_MBR;
+                dli.PartitionCount = 1;
+                dli.Partition1.PartitionStyle = DeviceIO.PARTITION_STYLE.PARTITION_STYLE_MBR;
+                dli.Partition1.StartingOffset = 65536;
+                dli.Partition1.PartitionLength = pi.PartitionLength - dli.Partition1.StartingOffset;
+                dli.Partition1.PartitionNumber = 1;
+                dli.Partition1.RewritePartition = true;
+                dli.Partition1.Mbr.PartitionType = DeviceIO.PARTITION_IFS;
+                dli.Partition1.Mbr.BootIndicator = true;
+                dli.Partition1.Mbr.RecognizedPartition = true;
+                dli.Partition1.Mbr.HiddenSectors = 0;
+                dli.Mbr.Signature = BitConverter.ToInt32(signature, 0);
+
+                if (DeviceIO.DeviceIoControl(handle, DeviceIO.IOCTL_DISK_SET_DRIVE_LAYOUT_EX, ref dli, Marshal.SizeOf(dli), IntPtr.Zero, 0, ref bytesOut, IntPtr.Zero) == false) { throw new Win32Exception(); }
+
+                if (DeviceIO.DeviceIoControl(handle, DeviceIO.IOCTL_DISK_UPDATE_PROPERTIES, IntPtr.Zero, 0, IntPtr.Zero, 0, ref bytesOut, IntPtr.Zero) == false) { throw new Win32Exception(); } //just update cache
+
+                System.Threading.Thread.Sleep(5000);
+
+
+
+                //now look for newly created volume
+                string volumePath = string.Empty;
+                var sb = new StringBuilder(50);
+
+                var volumeSearchHandle = FindFirstVolume(sb, sb.Capacity);
+                OpenedVolume newVolume = new OpenedVolume();
+                if (volumeSearchHandle.IsInvalid == false)
+                {
+                    do
+                    {
+                        string currentVolume = sb.ToString();
+                        newVolume = getDiskNumberFromVolumePath(currentVolume.Remove(currentVolume.Length - 1));
+
+
+                        if (newVolume.diskNumber == int.Parse(diskPath.Substring(diskPath.Length - 1)))
+                        {
+                            volumePath = currentVolume;
+                            break;
+                        }
+                    } while (FindNextVolume(volumeSearchHandle, sb, sb.Capacity));
+                }
+                volumeSearchHandle.Close();
+
+                if (newVolume.volumeHandle != null)
+                {
+                    //dismount volume
+                    bool dismounted = DeviceIO.DeviceIoControl(newVolume.volumeHandle, DeviceIO.FSCTL_LOCK_VOLUME, IntPtr.Zero, 0, IntPtr.Zero, 0, ref bytesOut, IntPtr.Zero);
+                    if (!dismounted)
+                    {
+                        int error = Marshal.GetLastWin32Error();
+                        return new WriteableRawVolume();
+                    }
+                }
+
+                WriteableRawVolume retVal = new WriteableRawVolume();
+                retVal.isValid = true;
+                retVal.handle = newVolume.volumeHandle;
+                retVal.volumePath = volumePath;
+
+                return retVal;
+            }
+        }
+
+        private OpenedVolume getDiskNumberFromVolumePath(string volumeName)
+        {
+            OpenedVolume volume = new OpenedVolume();
+            var volumeHandle = DeviceIO.CreateVolumeFile(volumeName, DeviceIO.GENERIC_READ | DeviceIO.GENERIC_WRITE, DeviceIO.FILE_SHARE_READ | DeviceIO.FILE_SHARE_WRITE, IntPtr.Zero, DeviceIO.OPEN_EXISTING, 0, IntPtr.Zero);
+            if (volumeHandle.IsInvalid == false)
+            {
+                var de = new VOLUME_DISK_EXTENTS();
+                volume.volumeHandle = volumeHandle;
+                de.NumberOfDiskExtents = 1;
+                int bytesReturned = 0;
+                if (DeviceIO.DeviceIoControl(volumeHandle, DeviceIO.IOCTL_VOLUME_GET_VOLUME_DISK_EXTENTS, IntPtr.Zero, 0, ref de, Marshal.SizeOf(de), ref bytesReturned, IntPtr.Zero))
+                {
+                    if (bytesReturned > 0)
+                    {
+                        volume.diskNumber = de.Extents.DiskNumber;
+                        return volume;
+                    }
+                }
+            }
+            return volume;
+        }
+
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1024:UsePropertiesWhereAppropriate", Justification = "This method may not return immediately when called.")]
+        public string getAttachedPath()
+        {
+            int res = 0;
+            int pathSize = 200; //size in bytes (200) - not in chars (100)
+            var path = new StringBuilder(pathSize / 2); //unicode
+
+            res = GetVirtualDiskPhysicalPath(this.diskHandle, ref pathSize, path);
+
+            if (res != ERROR_SUCCESS)
+            {
+                throw new Win32Exception(res);
+            }
+            else
+            {
+                return path.ToString();
+            }
+        }
+
         //returns the file handle
-        public IntPtr getHandle ()
+        public IntPtr getHandle()
         {
             return this.diskHandle.Handle;
         }
@@ -189,7 +415,7 @@ namespace Common
             int errCode = Marshal.GetLastWin32Error();
 
 
-            
+
             //wait for completion of read process
             while (this.readInProgress)
             {
@@ -210,7 +436,7 @@ namespace Common
         }
 
         //read completed event handler
-        private unsafe void readCompleted (uint errorCode, uint numBytes, System.Threading.NativeOverlapped* pOVERLAP)
+        private unsafe void readCompleted(uint errorCode, uint numBytes, System.Threading.NativeOverlapped* pOVERLAP)
         {
             this.readErrorCode = errorCode;
             this.readInProgress = false;
@@ -233,6 +459,18 @@ namespace Common
             return new int[] { a1, a2 };
         }
 
+        public struct WriteableRawVolume
+        {
+            public bool isValid;
+            public string volumePath;
+            public DeviceIO.VolumeSafeHandle handle;
+        }
+
+        public struct OpenedVolume
+        {
+            public int diskNumber;
+            public DeviceIO.VolumeSafeHandle volumeHandle;
+        }
 
         public enum DETACH_VIRTUAL_DISK_FLAG
         {
@@ -393,7 +631,7 @@ namespace Common
         /// </summary>
         public const int VIRTUAL_STORAGE_TYPE_DEVICE_VHDX = 3;
 
-        
+
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
         public struct VIRTUAL_STORAGE_TYPE
         {
@@ -568,36 +806,5 @@ namespace Common
     }
 
 
-    public class VirtualDiskSafeHandle : SafeHandle
-    {
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA5122:PInvokesShouldNotBeSafeCriticalFxCopRule", Justification = "Warning is bogus.")]
-        [DllImportAttribute("kernel32.dll", SetLastError = true)]
-        [return: MarshalAsAttribute(UnmanagedType.Bool)]
-        public static extern Boolean CloseHandle(IntPtr hObject);
 
-        public VirtualDiskSafeHandle()
-            : base(IntPtr.Zero, true)
-        {
-        }
-
-        public override bool IsInvalid
-        {
-            get { return (this.IsClosed) || (base.handle == IntPtr.Zero); }
-        }
-
-        public override string ToString()
-        {
-            return this.handle.ToString();
-        }
-
-        protected override bool ReleaseHandle()
-        {
-            return CloseHandle(handle);
-        }
-
-        public IntPtr Handle
-        {
-            get { return handle; }
-        }
-    }
 }

@@ -89,6 +89,43 @@ function showSettingsPopUp() {
                 });
             });
 
+            //handle testmail link click
+            $("#testmailLink").click(function () {
+                //read given values
+                var mailSettings = {};
+                mailSettings["mailssl"] = $("#inputMailSSL").prop("checked");
+                mailSettings["mailserver"] = $("#inputMailServer").val();
+                mailSettings["mailuser"] = $("#inputMailUser").val();
+                mailSettings["mailpassword"] = $("#inputMailPassword").val();
+                mailSettings["mailsender"] = $("#inputMailSender").val();
+                mailSettings["mailrecipient"] = $("#inputMailRecipient").val();
+
+                //clear result div
+                $("#testMailResult").html("");
+                $("#testMailResult").css("color", "black");
+
+                //send data to backend
+                $.ajax({
+                    url: "api/TestMail",
+                    contentType: "application/json; charset=utf-8",
+                    data: JSON.stringify(mailSettings),
+                    type: 'POST'
+                })
+                    .done(function () {
+
+                        //mail successfully sent
+                        $("#testMailResult").css("color", "green");
+                        $("#testMailResult").html("Die Test-Mail wurde erfolgreich verschickt. Prüfen Sie Ihren Posteingang.");                       
+
+                    })
+                    .fail(function (){
+                        //error on sending mail
+                        $("#testMailResult").css("color", "red");
+                        $("#testMailResult").html("Die Test-Mail konnte nicht versendet werden.");
+                    });
+                    
+            });
+
         });
 }
 

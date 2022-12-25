@@ -288,6 +288,12 @@
 #resetLink{
     text-align:center;
 }
+#testmailLink {
+    text-align: center;
+}
+#testMailResult{
+    color: red;
+}
 
 @keyframes color {
     0% {

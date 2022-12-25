@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Net.Mail;
 using System.Threading.Tasks;
+using System.Net;
 
 namespace Common
 {
@@ -23,17 +24,17 @@ namespace Common
         //sends a given mail by using smtp
         public bool sendMail(string subject, string body, bool html, string recipient)
         {
-            MailMessage message = new MailMessage(this.sender, recipient);
-            message.Subject = subject;
-            message.Body = body;
-            message.IsBodyHtml = html;
-            SmtpClient client = new SmtpClient(this.server);
-            client.UseDefaultCredentials = true;
-            client.EnableSsl = this.ssl;
-            client.Credentials = new System.Net.NetworkCredential(this.user, this.password);
-
             try
             {
+                MailMessage message = new MailMessage(this.sender, recipient);
+                message.Subject = subject;
+                message.Body = body;
+                message.IsBodyHtml = html;
+                SmtpClient client = new SmtpClient(this.server);
+                client.UseDefaultCredentials = true;
+                client.EnableSsl = this.ssl;
+                client.Credentials = new System.Net.NetworkCredential(this.user, this.password);
+                ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
                 client.Send(message);
             }catch(Exception ex)
             {
