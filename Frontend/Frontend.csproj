@@ -185,6 +185,7 @@
     <Compile Include="Controllers\JobStartStopController.cs" />
     <Compile Include="Controllers\JobDeleteController.cs" />
     <Compile Include="Controllers\LogoutController.cs" />
+    <Compile Include="Controllers\TestMailController.cs" />
     <Compile Include="Controllers\UpdateController.cs" />
     <Compile Include="Controllers\vmsController.cs" />
     <Compile Include="Controllers\wipeDBController.cs" />
