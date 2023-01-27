@@ -68,7 +68,12 @@ namespace JobEngine
                 }
             }
 
-            JobHandler.addRunningJobThread(this.Job.DbId, System.Threading.Thread.CurrentThread);
+            //do not start when job is disabled
+            if (!this.Job.Enabled && !force)
+            {
+                return;
+            }
+
 
             //check whether job is still in progress
             if (this.Job.IsRunning)
@@ -76,8 +81,11 @@ namespace JobEngine
                 return;
             }
 
+            JobHandler.addRunningJobThread(this.Job.DbId, System.Threading.Thread.CurrentThread);
+
+
             //stop LB if in progress
-            foreach(LiveBackupWorker worker in LiveBackupWorker.ActiveWorkers)
+            foreach (LiveBackupWorker worker in LiveBackupWorker.ActiveWorkers)
             {
                 if (worker.JobID == this.Job.DbId)
                 {
