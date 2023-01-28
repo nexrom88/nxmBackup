@@ -26,6 +26,12 @@ namespace JobEngine
             this.Job = job;
         }
 
+        //binds a given job object to this job timer
+        public void updateJobObject(ConfigHandler.OneJob newJob)
+        {
+            this.job= newJob;
+        }
+
         public OneJob Job { get => job; set => job = value; }
 
         //gets raised frequently
@@ -67,13 +73,6 @@ namespace JobEngine
                     return;
                 }
             }
-
-            //do not start when job is disabled
-            if (!this.Job.Enabled && !force)
-            {
-                return;
-            }
-
 
             //check whether job is still in progress
             if (this.Job.IsRunning)
