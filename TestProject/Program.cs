@@ -15,18 +15,9 @@ namespace TestProject
 {
     class Program
     {
-        [DllImport("virtdisk.dll", CharSet = CharSet.Unicode)]
-        public static extern Int32 OpenVirtualDisk(ref Common.VirtualDiskHandler.VIRTUAL_STORAGE_TYPE type,
-        string Path,
-        Common.VirtualDiskHandler.VIRTUAL_DISK_ACCESS_MASK VirtualDiskAccessMask,
-        Common.VirtualDiskHandler.OPEN_VIRTUAL_DISK_FLAG Flags,
-        ref Common.VirtualDiskHandler.OPEN_VIRTUAL_DISK_PARAMETERS Parameters,
-        ref Common.VirtualDiskSafeHandle Handle);
-
         static void Main(string[] args)
         {
-            string to = "m.rohrmueller@gmail.com";
-            string from = "system@nexrom.de";
+
             
 
             //var parameters = new Common.VirtualDiskHandler.OPEN_VIRTUAL_DISK_PARAMETERS();

@@ -26,6 +26,12 @@ namespace JobEngine
             this.Job = job;
         }
 
+        //binds a given job object to this job timer
+        public void updateJobObject(ConfigHandler.OneJob newJob)
+        {
+            this.job= newJob;
+        }
+
         public OneJob Job { get => job; set => job = value; }
 
         //gets raised frequently
@@ -68,16 +74,17 @@ namespace JobEngine
                 }
             }
 
-            JobHandler.addRunningJobThread(this.Job.DbId, System.Threading.Thread.CurrentThread);
-
             //check whether job is still in progress
             if (this.Job.IsRunning)
             {
                 return;
             }
 
+            JobHandler.addRunningJobThread(this.Job.DbId, System.Threading.Thread.CurrentThread);
+
+
             //stop LB if in progress
-            foreach(LiveBackupWorker worker in LiveBackupWorker.ActiveWorkers)
+            foreach (LiveBackupWorker worker in LiveBackupWorker.ActiveWorkers)
             {
                 if (worker.JobID == this.Job.DbId)
                 {

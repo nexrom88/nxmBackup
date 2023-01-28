@@ -86,6 +86,9 @@ namespace JobEngine
                     if (timer.Job.DbId == job.DbId)
                     {
                         oldTimer = timer;
+
+                        //set the newly loaded job object to the old timer
+                        oldTimer.updateJobObject(job);
                         break;
                     }
                 }
@@ -127,7 +130,7 @@ namespace JobEngine
                         }
                     }
                 }
-                else //timer qlready exists
+                else //timer already exists
                 {
                     newTimer = oldTimer;
                 }
