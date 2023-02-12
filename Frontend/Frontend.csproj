@@ -321,12 +321,6 @@
     <Service Include="{4A0DDDB5-7A95-4FBF-97CC-616D07737A77}" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\nxmBackup\nxmBackup.csproj">
-      <Project>{4a052b73-9ebb-4202-a093-57c414fbd6a9}</Project>
-      <Name>nxmBackup</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <Content Include="Scripts\popper.min.js" />
   </ItemGroup>
   <ItemGroup>
