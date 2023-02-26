@@ -43,6 +43,8 @@ Add-LocalGroupMember -Group "Administrators" -Member "nxmUser"
 Install-WindowsFeature -Name Web-Server
 Install-WindowsFeature -Name Web-Mgmt-Tools
 Install-WindowsFeature Web-Asp-Net45
+Install-WindowsFeature Web-AppInit
+
 $appPool = New-WebAppPool -Name "nxm"
 $appPool.processModel.userName = "nxmUser"
 $appPool.processModel.password = $password
@@ -59,5 +61,8 @@ New-WebSite -Name "nxmbackup" -PhysicalPath $installPath -ApplicationPool "nxm" 
 Set-WebConfigurationProperty -filter /system.WebServer/security/authentication/AnonymousAuthentication -name enabled -value "True" -PSPath IIS:\ -location nxmbackup
 Set-WebConfigurationProperty -filter /system.webServer/security/authentication/AnonymousAuthentication -name username -value "nxmUser" -PSPath IIS:\ -location nxmbackup
 Set-WebConfigurationProperty -filter /system.WebServer/security/authentication/AnonymousAuthentication -name password -value $password -PSPath IIS:\ -location nxmbackup
+
+Import-Module WebAdministration
+Set-ItemProperty "IIS:\Sites\nxmBackup" -Name applicationDefaults.preloadEnabled -Value True
 
 Start-WebSite -Name "nxmbackup"
