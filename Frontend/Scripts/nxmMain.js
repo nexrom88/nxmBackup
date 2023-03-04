@@ -507,7 +507,7 @@ function showCurrentSettings(pageNumber, selectedEditJob) {
 
         case 2:
             for (var i = 0; i < selectedEditJob["JobVMs"].length; i++) {
-                $(".availablevmvm").each(function () {
+                $(".availablevm").each(function () {
                     if ($(this).data("vmid") == selectedEditJob["JobVMs"][i]["vmID"]) {
                         $(this).addClass("active");
                     }
