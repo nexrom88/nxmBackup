@@ -233,6 +233,7 @@
     <Compile Include="HVBackupCore\SnapshotHandler.cs" />
     <Compile Include="JobEngine\JobHandler.cs" />
     <Compile Include="JobEngine\JobTimer.cs" />
+    <Compile Include="Language\LanguageHandler.cs" />
     <Compile Include="MFUserMode\MFUserMode.cs" />
     <Compile Include="MFUserMode\MountHandler.cs" />
     <Compile Include="MFUserMode\SharedMemory.cs" />

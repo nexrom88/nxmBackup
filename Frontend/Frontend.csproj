@@ -171,6 +171,7 @@
     <Compile Include="Controllers\FileIconController.cs" />
     <Compile Include="Controllers\FLRBrowserController.cs" />
     <Compile Include="Controllers\FolderDownloader.cs" />
+    <Compile Include="Controllers\LoadTextController.cs" />
     <Compile Include="Controllers\RestoreController.cs" />
     <Compile Include="Controllers\DirectoryController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
@@ -247,6 +248,7 @@
     <Content Include="MiniFilter\nxmmf.cat" />
     <Content Include="MiniFilter\nxmMF.sys" />
     <Content Include="install.ps1" />
+    <Content Include="lang.db" />
     <None Include="Properties\PublishProfiles\IISProfile.pubxml" />
     <None Include="Scripts\jquery-3.6.0.intellisense.js" />
     <Content Include="Scripts\jquery-3.6.0.js" />

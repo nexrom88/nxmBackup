@@ -21,7 +21,18 @@ namespace Common
 
         private static string DBPath{ get; set;}
 
+        public DBConnection (string filename)
+        {
+            loadDBFile(filename);
+        }
+
         public DBConnection()
+        {
+            loadDBFile("nxm.db");
+        }
+
+        //loads a given sqlite db file
+        private void loadDBFile(string filename)
         {
             //start SQLite Server connection
 
@@ -29,13 +40,14 @@ namespace Common
             if (DBPath == null)
             {
                 string basePath = (string)Microsoft.Win32.Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\nxmBackup", "BasePath", "");
-                if (basePath == null){
+                if (basePath == null)
+                {
                     ConnectionEstablished = false;
                     return;
                 }
-                DBPath = System.IO.Path.Combine(basePath, "nxm.db");
+                DBPath = System.IO.Path.Combine(basePath, filename);
             }
-            
+
 
             if (!System.IO.File.Exists(DBPath))
             {
@@ -71,7 +83,7 @@ namespace Common
                     }
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 ConnectionEstablished = false;
                 return;
@@ -79,6 +91,7 @@ namespace Common
 
             ConnectionEstablished = true;
         }
+
 
         //opens a transaction
         public SQLiteTransaction beginTransaction()

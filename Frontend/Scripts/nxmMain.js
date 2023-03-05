@@ -31,6 +31,24 @@ $.ajaxSetup({
     }
 });
 
+//loads a given string from language db
+function loadString(name) {
+    $.ajax({
+        url: "api/LoadText",
+        type: "post",
+        contentType: "application/json; charset=utf-8",
+        data: JSON.stringify({ name: name })
+    })
+        .done(function (data) {
+            Swal.fire(
+                'Erfolgreich',
+                data,
+                'success'
+            );
+
+        });
+}
+
 
 //init jobs post-login
 function init() {
