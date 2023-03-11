@@ -227,6 +227,7 @@ namespace Common
             if (this.connection != null) {
                 this.connection.Close();
                 this.connection.Dispose();
+                this.ConnectionEstablished = false;
             }
         }
     }

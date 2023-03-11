@@ -171,7 +171,7 @@
     <Compile Include="Controllers\FileIconController.cs" />
     <Compile Include="Controllers\FLRBrowserController.cs" />
     <Compile Include="Controllers\FolderDownloader.cs" />
-    <Compile Include="Controllers\LoadTextController.cs" />
+    <Compile Include="Controllers\LoadLanguageController.cs" />
     <Compile Include="Controllers\RestoreController.cs" />
     <Compile Include="Controllers\DirectoryController.cs" />
     <Compile Include="Controllers\HomeController.cs" />

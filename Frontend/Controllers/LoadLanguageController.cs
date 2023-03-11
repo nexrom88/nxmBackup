@@ -8,27 +8,23 @@ using System.Web.Http;
 
 namespace Frontend.Controllers
 {
-    public class LoadTextController : ApiController
+    public class LoadLanguageController : ApiController
     {     
         // gets the text for a given language
-        public HttpResponseMessage Post([FromBody] TextDescriptor descriptor)
+        public HttpResponseMessage Get()
         {
             HttpResponseMessage response = new HttpResponseMessage();
 
             //read currently set language
             string currentLanguage = DBQueries.readGlobalSetting("language");
 
-            //get text
-            string text = nxmBackup.Language.LanguageHandler.getString(descriptor.name, currentLanguage);
+            //get language
+            Dictionary<string, string> language = nxmBackup.Language.LanguageHandler.getLanguage(currentLanguage);
 
             //build retval
-            response.Content = new StringContent(text);
+            string jsonLangObject = Newtonsoft.Json.JsonConvert.SerializeObject(language);
+            response.Content = new StringContent(jsonLangObject);
             return response;
-        }
-
-       public class TextDescriptor
-        {
-            public string name { get; set; }
         }
     }
 }

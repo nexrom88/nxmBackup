@@ -32,20 +32,14 @@ $.ajaxSetup({
 });
 
 //loads a given string from language db
-function loadString(name) {
+function loadLanguage() {
     $.ajax({
-        url: "api/LoadText",
-        type: "post",
-        contentType: "application/json; charset=utf-8",
-        data: JSON.stringify({ name: name })
+        url: "api/LoadLanguage"
     })
         .done(function (data) {
-            Swal.fire(
-                'Erfolgreich',
-                data,
-                'success'
-            );
 
+            //language loaded successfully, now init everything else
+            init();
         });
 }
 
@@ -133,8 +127,8 @@ $(window).on('load', function () {
     $.ajax({
         url: "api/CheckAuth",
         success: function () {
-            //user is authenticated, init everything
-            init();
+            //user is authenticated, init language
+            loadLanguage();
         }
     })
     
