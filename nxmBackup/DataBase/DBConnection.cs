@@ -19,10 +19,11 @@ namespace Common
 
         private SQLiteConnection connection;
 
-        private static string DBPath{ get; set;}
+        private static string DBPathBase{ get; set;}
 
         public DBConnection (string filename)
         {
+
             loadDBFile(filename);
         }
 
@@ -37,7 +38,7 @@ namespace Common
             //start SQLite Server connection
 
             //read base path from registry if necessary
-            if (DBPath == null)
+            if (DBPathBase == null)
             {
                 string basePath = (string)Microsoft.Win32.Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\nxmBackup", "BasePath", "");
                 if (basePath == null)
@@ -45,17 +46,19 @@ namespace Common
                     ConnectionEstablished = false;
                     return;
                 }
-                DBPath = System.IO.Path.Combine(basePath, filename);
+                DBPathBase = basePath;
             }
 
+            //build complete db file path
+            string dbPath = System.IO.Path.Combine(DBPathBase, filename);
 
-            if (!System.IO.File.Exists(DBPath))
+            if (!System.IO.File.Exists(dbPath))
             {
                 ConnectionEstablished = false;
                 return;
             }
 
-            string connectionString = "Data Source=" + DBPath;
+            string connectionString = "Data Source=" + dbPath;
             this.connection = new SQLiteConnection(connectionString);
 
 
@@ -65,22 +68,31 @@ namespace Common
                 //open DB connection
                 connection.Open();
 
-                //read db version
-                List<Dictionary<string, object>> dbResult = doReadQuery("SELECT value FROM settings WHERE name='dbversion'", null, null);
-                if (dbResult.Count != 1)
+                //read db version but just if main database file
+                if (filename == "nxm.db")
                 {
-                    //wrong number of results
-                    ConnectionEstablished = false;
-                    return;
-                }
-                else
-                {
-                    if ((string)dbResult[0]["value"] != "102")
+                    List<Dictionary<string, object>> dbResult = doReadQuery("SELECT value FROM settings WHERE name='dbversion'", null, null);
+                    if (dbResult.Count != 1)
                     {
-                        //wrong db version
+                        //wrong number of results
                         ConnectionEstablished = false;
                         return;
                     }
+                    else
+                    {
+                        if ((string)dbResult[0]["value"] != "102")
+                        {
+                            //wrong db version
+                            ConnectionEstablished = false;
+                            return;
+                        }
+                    }
+                }
+                else
+                {
+                    //not main database file
+                    ConnectionEstablished = true;
+                    return;
                 }
             }
             catch (Exception ex)

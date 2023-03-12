@@ -15,6 +15,7 @@ var ratesChart; //var to hold the chart for displaying transferrates
 var transferrates = []; //var to hold the current transfer rates
 var processrates = []; //var to hold the current process rates
 var versionControl = {} //object to hold version and update information
+var languageStrings = {}; //object to hold all language strings
 
 //global handler for http status 401 (login required)
 $.ajaxSetup({
@@ -37,6 +38,8 @@ function loadLanguage() {
         url: "api/LoadLanguage"
     })
         .done(function (data) {
+            //parse language object
+            languageStrings = JSON.parse(data);
 
             //language loaded successfully, now init everything else
             init();

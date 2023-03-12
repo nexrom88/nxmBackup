@@ -33,7 +33,7 @@ namespace Frontend.Controllers
                 {
                     
                     byte[] buffer = client.DownloadData("https://nxmBackup.com/nxmBackup/currentversion.txt");
-                    string rawHttpData = System.Text.Encoding.UTF8.GetString(buffer);
+                    availableVersion = System.Text.Encoding.UTF8.GetString(buffer);
                 }
             }catch(Exception ex)
             {
