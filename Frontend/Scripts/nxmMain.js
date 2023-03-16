@@ -43,7 +43,16 @@ function loadLanguage() {
 
             //language loaded successfully, now init everything else
             init();
+
+            replaceLanguageMarkups("fref$$a$$gergerger$$b$$verg");
         });
+}
+
+//replaces language markups with strings from loaded language strings
+function replaceLanguageMarkups(text) {
+    var markups = text.match(/\$\$[\w]+\$\$/g);
+
+    markups = 0;
 }
 
 
