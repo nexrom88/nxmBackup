@@ -41,10 +41,25 @@ function loadLanguage() {
             //parse language object
             languageStrings = JSON.parse(data);
 
-            //language loaded successfully, now init everything else
-            init();
+            //language loaded successfully, now load main window template
+            loadMainWindowTemplate();
+        });
+}
 
-            replaceLanguageMarkups("fref$$a$$gergerger$$b$$verg");
+//loads and initializes the main window template
+function loadMainWindowTemplate() {
+    $.ajax({
+        url: "Templates/mainWindow"
+    })
+        .done(function (data) {
+            //replace lang markups
+            data = replaceLanguageMarkups(data);
+
+            //set main window to viewport
+            $("#mainWindow").html(data);
+
+            //init everything else
+            init();
         });
 }
 
@@ -52,7 +67,24 @@ function loadLanguage() {
 function replaceLanguageMarkups(text) {
     var markups = text.match(/\$\$[\w]+\$\$/g);
 
-    markups = 0;
+    //iterate through all found markups
+    for (var i = 0; i < markups.length; i++) {
+        //remove $$ $$
+        var currentMarkup = markups[i].substring(2, markups[i].length - 2);
+
+        //look for lang string
+        var currentText = languageStrings[currentMarkup];
+
+        //set default value when text cannot be found
+        if (!currentText) {
+            currentText = currentMarkup;
+        }
+
+        //replace original markup
+        text = text.replace(markups[i], currentText);
+    }
+
+    return text;
 }
 
 

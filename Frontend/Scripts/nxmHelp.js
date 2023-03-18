@@ -2,7 +2,7 @@
 function showHelpForm() {
     //show dialog box
     Swal.fire({
-        title: 'Hilfe',
+        title: languageStrings["help"],
         html: "<div id='helpForm'></div>",
         confirmButtonColor: '#3085d6',
         allowOutsideClick: true,
@@ -16,6 +16,10 @@ function showHelpForm() {
         url: "Templates/helpForm"
     })
         .done(function (settingsForm) {
+
+            //replace language markups
+            settingsForm = replaceLanguageMarkups(settingsForm);
+
             $("#helpForm").html(settingsForm);
             
             $("#createSupportPackage").click(function () {
