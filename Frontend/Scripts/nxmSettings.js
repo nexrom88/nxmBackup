@@ -16,14 +16,14 @@ function showSettings() {
 function showSettingsPopUp() {
     //show dialog box
     Swal.fire({
-        title: 'System-Einstellungen',
+        title: languageStrings["system_settings_header"],
         html: "<div id='settingsPopUp'></div>",
         confirmButtonColor: '#3085d6',
         showCancelButton: true,
         allowOutsideClick: true,
         allowEscapeKey: true,
-        confirmButtonText: 'Änderungen übernehmen',
-        cancelButtonText: 'Abbrechen',
+        confirmButtonText: languageStrings["apply_changes"],
+        cancelButtonText: languageStrings["cancel"],
         preConfirm: (result) => {
             //check if given mount path is valid
             if (!checkForValidPath($("#inputMountPath").val())) {
@@ -68,6 +68,10 @@ function showSettingsPopUp() {
         url: "Templates/settingsForm"
     })
         .done(function (settingsForm) {
+
+            //set language strings
+            settingsForm = replaceLanguageMarkups(settingsForm);
+
             $("#settingsPopUp").html(settingsForm);
 
             //show settings
@@ -115,13 +119,13 @@ function showSettingsPopUp() {
 
                         //mail successfully sent
                         $("#testMailResult").css("color", "green");
-                        $("#testMailResult").html("Die Test-Mail wurde erfolgreich verschickt. Prüfen Sie Ihren Posteingang.");                       
+                        $("#testMailResult").html(languageStrings["test_mail_success"]);                       
 
                     })
                     .fail(function (){
                         //error on sending mail
                         $("#testMailResult").css("color", "red");
-                        $("#testMailResult").html("Die Test-Mail konnte nicht versendet werden.");
+                        $("#testMailResult").html(languageStrings["test_mail_error"]);
                     });
                     
             });

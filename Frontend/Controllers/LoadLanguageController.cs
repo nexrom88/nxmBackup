@@ -16,10 +16,10 @@ namespace Frontend.Controllers
             HttpResponseMessage response = new HttpResponseMessage();
 
             //read currently set language
-            string currentLanguage = DBQueries.readGlobalSetting("language");
+            //string currentLanguage = DBQueries.readGlobalSetting("language");
 
             //get language
-            Dictionary<string, string> language = nxmBackup.Language.LanguageHandler.getLanguage(currentLanguage);
+            Dictionary<string, string> language = nxmBackup.Language.LanguageHandler.getLanguage();
 
             //build retval
             string jsonLangObject = Newtonsoft.Json.JsonConvert.SerializeObject(language);

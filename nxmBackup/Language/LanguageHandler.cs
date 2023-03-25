@@ -1,4 +1,5 @@
-﻿using nxmBackup.Properties;
+﻿using Common;
+using nxmBackup.Properties;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,60 +11,79 @@ namespace nxmBackup.Language
 {
     public class LanguageHandler
     {
-        //gets a text string in the given language 
-        public static string getString (string name, string language)
+        //stores the currently loaded language strings
+        private static Dictionary<string, string> currentLanguage;
+        private static string currentLanguageName = String.Empty;
+        private static object lockObj = new object();
+
+
+        //gets a text string in the given language
+        public static string getString (string name)
         {
-            Common.DBConnection connection = new Common.DBConnection("lang.db");
-
-            Dictionary<string, object> parameters = new Dictionary<string, object>
+            lock (lockObj)
             {
-                { "language", language },
-                { "name", name }
-            };
-
-            List<Dictionary<string, object>> retVal = connection.doReadQuery("SELECT text FROM LangStrings WHERE language=@language AND name=@name", parameters, null);
-            connection.Dispose();
-
-            if (retVal == null || retVal.Count == 0) //text value not found
-            {
-                return "text not found (" + name + ")";
-            }
-            else
-            {
-                return (string)retVal[0]["text"];
+                //return nothing when language didn't get loaded yet
+                if (currentLanguage == null)
+                {
+                    return String.Empty;
+                }
+                else
+                {
+                    string langString = currentLanguage[name];
+                    return langString;
+                }
             }
 
         }
 
-        //gets all text strings for a given language
-        public static Dictionary<string, string> getLanguage(string language)
+
+        //inits the given language
+        public static void initLanguage()
         {
-            Dictionary<string, string> languageStrings = new Dictionary<string, string>();
+            lock (lockObj)
+            {
+                //read language setting
+                string language = DBQueries.readGlobalSetting("language");
 
-            Common.DBConnection connection = new Common.DBConnection("lang.db");
+                Dictionary<string, string> languageStrings = new Dictionary<string, string>();
 
-            Dictionary<string, object> parameters = new Dictionary<string, object>
+                Common.DBConnection connection = new Common.DBConnection("lang.db");
+
+                Dictionary<string, object> parameters = new Dictionary<string, object>
             {
                 { "language", language }
             };
 
-            List<Dictionary<string, object>> retVal = connection.doReadQuery("SELECT text, name FROM LangStrings WHERE language=@language", parameters, null);
-            connection.Dispose();
+                List<Dictionary<string, object>> retVal = connection.doReadQuery("SELECT text, name FROM LangStrings WHERE language=@language", parameters, null);
+                connection.Dispose();
 
-            if (retVal == null || retVal.Count == 0)
-            {
-                return languageStrings;
-            }
-            else
-            {
-                //iterate through each kvp
-                foreach (Dictionary<string, object> kvp in retVal)
+                if (retVal == null || retVal.Count == 0)
                 {
-                    //build new language kvp
-                    languageStrings.Add((string)kvp["name"], (string)kvp["text"]);
+                    currentLanguage = null;
                 }
-                return languageStrings;
+                else
+                {
+                    //iterate through each kvp
+                    foreach (Dictionary<string, object> kvp in retVal)
+                    {
+                        //build new language kvp
+                        languageStrings.Add((string)kvp["name"], (string)kvp["text"]);
+                    }
+                    currentLanguage = languageStrings;
+                    currentLanguageName = language;
+
+                }
             }
+        }
+
+        //gets all text strings for a given language
+        public static Dictionary<string, string> getLanguage()
+        {
+            lock(lockObj)
+            {
+                return currentLanguage;
+            }                
+            
         }
     }
 }
