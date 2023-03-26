@@ -29,7 +29,14 @@ namespace nxmBackup.Language
                 }
                 else
                 {
-                    string langString = currentLanguage[name];
+                    string langString;
+                    try
+                    {
+                        langString = currentLanguage[name];
+                    }catch(Exception ex){
+                        DBQueries.addLog("language string not found: " + name, Environment.StackTrace, ex);
+                        langString = name;
+                    }
                     return langString;
                 }
             }

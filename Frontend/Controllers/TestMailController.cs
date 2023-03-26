@@ -31,7 +31,7 @@ namespace Frontend.Controllers
             MailClient mailClient = new MailClient(mailSettings.mailserver, mailSettings.mailuser, mailSettings.mailpassword, mailSettings.mailsender, useSSL);
 
             //send mail
-            if (!mailClient.sendMail("nxmBackup Test-Mail", "Die nxmBackup-Mailkonfguration ist in Ordnung, wenn Sie diese Test-Mail empfangen haben.", false, mailSettings.mailrecipient))
+            if (!mailClient.sendMail(nxmBackup.Language.LanguageHandler.getString("test_mail_subject"), nxmBackup.Language.LanguageHandler.getString("test_mail_content"), false, mailSettings.mailrecipient))
             {
                 message.StatusCode = HttpStatusCode.InternalServerError;
             }

@@ -68,7 +68,7 @@ function replaceLanguageMarkups(text) {
     var markups = text.match(/\$\$[\w]+\$\$/g);
 
     //iterate through all found markups
-    for (var i = 0; i < markups.length; i++) {
+    for (var i = 0; markups != null && i < markups.length; i++) {
         //remove $$ $$
         var currentMarkup = markups[i].substring(2, markups[i].length - 2);
 
@@ -914,8 +914,12 @@ function buildJobDetailsPanel() {
         url: "Templates/jobDetailsPanel"
     })
         .done(function (tableData) {
+
+            //remove language markups
+            tableData = replaceLanguageMarkups(tableData);
+
             var jobHeaderString;
-            jobHeaderString = "Jobdetails (" + selectedJobObj.Name + ")";
+            jobHeaderString = languageStrings["job_details_caption"] + " (" + selectedJobObj.Name + ")";
             if (!selectedJobObj.Enabled) {
                 jobHeaderString += " - deaktiviert";
             }
@@ -956,7 +960,7 @@ function buildJobDetailsPanel() {
             $("#stopLBButton").click(stopLBHandler);
 
             //edit enableJobButton caption
-            $("#enableJobButtonCaption").html(selectedJobObj["Enabled"] ? "Job deaktivieren" : "Job aktivieren");
+            $("#enableJobButtonCaption").html(selectedJobObj["Enabled"] ? languageStrings["disable_job_button"] : languageStrings["enable_job_button"]);
 
             //select first vm
             $(".vm").first().click();
@@ -1017,13 +1021,13 @@ function enableJobHandler(event) {
             selectedJobObj["Enabled"] = !selectedJobObj["Enabled"];
 
             //edit enableJobButton caption
-            $("#enableJobButtonCaption").html(selectedJobObj["Enabled"] ? "Job deaktivieren" : "Job aktivieren");
+            $("#enableJobButtonCaption").html(selectedJobObj["Enabled"] ? languageStrings["disable_job_button"] : languageStrings["enable_job_button"]);
 
             //refresh the details panel header
             var jobHeaderString;
-            jobHeaderString = "Jobdetails (" + selectedJobObj.Name + ")";
+            jobHeaderString = languageStrings["job_details_caption"] + " (" + selectedJobObj.Name + ")";
             if (!selectedJobObj.Enabled) {
-                jobHeaderString += " - deaktiviert";
+                jobHeaderString += " - " + languageStrings["job_disabled"];
             }
             $("#mainPanelHeader").html(jobHeaderString);
 
@@ -1040,14 +1044,14 @@ function enableJobHandler(event) {
 function deleteJobHandler(event) {
     //api call
     Swal.fire({
-        title: 'Job löschen?',
-        text: "Soll der aktuelle Job wirklich gelöscht werden?",
+        title: languageStrings["delete_job_caption"],
+        text: languageStrings["delete_job_question"],
         icon: 'question',
         showCancelButton: true,
         confirmButtonColor: '#3085d6',
         cancelButtonColor: '#d33',
-        confirmButtonText: 'Löschen',
-        cancelButtonText: 'Abbrechen'
+        confirmButtonText: languageStrings["delete_confirm_button"],
+        cancelButtonText: languageStrings["cancel"]
     }).then((result) => {
         if (result.isConfirmed) {
             $.ajax({
@@ -1059,15 +1063,15 @@ function deleteJobHandler(event) {
                 complete: function (data) {
                     if (data.status == 200) { //success
                         Swal.fire(
-                            'Job gelöscht',
-                            'Der ausgewählte Job wurde gelöscht',
+                            languageStrings["job_deleted_caption"],
+                            languageStrings["job_deleted_text"],
                             'success'
                         );
                         location.reload();
                     } else if (data.status == 400) { //job currently running
                         Swal.fire(
-                            'Nicht möglich',
-                            'Der ausgewählte Job kann nicht gelöscht werden solange dieser ausgeführt wird',
+                            languageStrings["not_possible"],
+                            languageStrings["job_delete_error"],
                             'error'
                         );
                     }
@@ -1125,6 +1129,10 @@ function loadJobTemplates() {
         url: "Templates/jobStateTable"
     })
         .done(function (data) {
+
+            //remove language markups
+            data = replaceLanguageMarkups(data);
+
             jobStateTableTemplate = data;
         });
 
@@ -1347,7 +1355,7 @@ function renderJobStateTable() {
                 $("#jobDetailsRow").removeClass("detailsRowRunning");
 
                 //change start/stop button caption
-                $("#startStopButtonCaption").html("Job jetzt starten");
+                $("#startStopButtonCaption").html(languageStrings["start_job_button"]);
                 $("#startStoJobpButton").addClass("btn-primary");
                 $("#startStopJobButton").removeClass("btn-danger");
             } else {
@@ -1356,7 +1364,7 @@ function renderJobStateTable() {
                     $("#jobDetailsRow").removeClass("detailsRowRunning");
 
                     //change start/stop button caption
-                    $("#startStopButtonCaption").html("Job jetzt starten");
+                    $("#startStopButtonCaption").html(languageStrings["start_job_button"]);
                     $("#startStopJobButton").addClass("btn-primary");
                     $("#startStopJobButton").removeClass("btn-danger");
                 } else {
@@ -1364,7 +1372,7 @@ function renderJobStateTable() {
                     $("#jobDetailsRow").removeClass("detailsRowRunning");
 
                     //change start/stop button caption
-                    $("#startStopButtonCaption").html("Job jetzt starten");
+                    $("#startStopButtonCaption").html(languageStrings["start_job_button"]);
                     $("#startStopJobButton").addClass("btn-primary");
                     $("#startStopJobButton").removeClass("btn-danger");
                 }
@@ -1373,7 +1381,7 @@ function renderJobStateTable() {
                     $("#jobDetailsRow").addClass("detailsRowRunning");
 
                     //change start/stop button caption
-                    $("#startStopButtonCaption").html("Job stoppen");
+                    $("#startStopButtonCaption").html(languageStrings["stop_job_button"]);
                     $("#startStopJobButton").addClass("btn-danger");
                     $("#startStopJobButton").removeClass("btn-primary");
                 }
