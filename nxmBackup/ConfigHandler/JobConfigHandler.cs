@@ -585,9 +585,9 @@ namespace ConfigHandler
                 switch(successful)
                 {
                     case true:
-                        return "erfolgreich";
+                        return "successful";
                     case false:
-                        return "fehlgeschlagen";
+                        return "failed";
                     default:
                         return "default";                        
                 }

@@ -1267,39 +1267,16 @@ function renderJobStateTable() {
 
             if (selectedJobObj["Enabled"]) {
                 switch (data["Interval"]["intervalBase"]) {
-                    case 0: //stündlich
-                        intervalString = "Stündlich bei Minute " + buildTwoDigitsInt(data["Interval"]["minute"]);
+                    case 0: //hourly
+                        intervalString = languageStrings["hourly_at"] + " " + buildTwoDigitsInt(data["Interval"]["minute"]);
                         break;
-                    case 1: //täglich
-                        intervalString = "Täglich um " + buildTwoDigitsInt(data["Interval"]["hour"]) + ":" + buildTwoDigitsInt(data["Interval"]["minute"]);
+                    case 1: //daily
+                        intervalString = languageStrings["daily_at"] + " " + buildTwoDigitsInt(data["Interval"]["hour"]) + ":" + buildTwoDigitsInt(data["Interval"]["minute"]);
                         break;
-                    case 2: //wöchentlich
-                        var dayForGui;
-                        switch (data["Interval"]["day"]) {
-                            case "monday":
-                                dayForGui = "Montag";
-                                break;
-                            case "tuesday":
-                                dayForGui = "Dienstag";
-                                break;
-                            case "wednesday":
-                                dayForGui = "Mittwoch";
-                                break;
-                            case "thursday":
-                                dayForGui = "Donnerstag";
-                                break;
-                            case "friday":
-                                dayForGui = "Freitag";
-                                break;
-                            case "saturday":
-                                dayForGui = "Samstag";
-                                break;
-                            case "sunday":
-                                dayForGui = "Sonntag";
-                                break;
-                        }
+                    case 2: //weekly
+                        var dayForGui = languageStrings[data["Interval"]["day"]];
 
-                        intervalString = dayForGui + "s " + " um " + buildTwoDigitsInt(data["Interval"]["hour"]) + ":" + buildTwoDigitsInt(data["Interval"]["minute"]);
+                        intervalString = dayForGui + "s " + languageStrings["at_time"] + " " + buildTwoDigitsInt(data["Interval"]["hour"]) + ":" + buildTwoDigitsInt(data["Interval"]["minute"]);
                         break;
                     case 3: //nie
                         intervalString = "Nur manuell";
@@ -1321,11 +1298,19 @@ function renderJobStateTable() {
             var lastRunString = data["LastRun"];
             if (data["IsRunning"]) {
                 lastRunString = "Job wird gerade ausgeführt...";
+            } else if (lastRunString != "") {
+                //check if last last run date has to be translated
+                //date gets stored at german format. Have to translate it?
+                if (languageStrings["language_name"] == "en") {
+                    var lastRunDate = moment(data["LastRun"], "DD.MM.YYYY HH:mm:ss");
+                    lastRunString = lastRunDate.format("MM/DD/YYYY HH:mm:ss");
+                }
+
             }
 
-            var successString = data["Successful"];
+            var successString = languageStrings[data["Successful"]];
             if (data["LastRun"] == "") {
-                successString = "Nicht zutreffend";
+                successString = languageStrings["not_applicable"];
             }
 
             processrates = [];
@@ -1347,7 +1332,7 @@ function renderJobStateTable() {
 
 
             //register click handler for clicking link to show last execution details
-            $("#lastExecutionDetailsLink").click(showLastExecutionDetails);
+            $("#lastExecutionDetailsLink").click(showLastRunDetails);
 
             //set state color and set start/stop button caption
             if (data["LastRun"] == "" && !data["IsRunning"]) {
@@ -1394,15 +1379,15 @@ function renderJobStateTable() {
 }
 
 //click handler for showing stats for last execution
-function showLastExecutionDetails() {
+function showLastRunDetails() {
     //show dialog box
     Swal.fire({
-        title: 'Details der letzten Ausführung',
+        title: languageStrings["last_run_caption"],
         html: "<div id='executionDetailsPopUp'></div>",
         confirmButtonColor: '#3085d6',
         allowOutsideClick: true,
         allowEscapeKey: true,
-        confirmButtonText: 'Schließen',
+        confirmButtonText: languageStrings["close"],
     });
 
     //load form
@@ -1410,6 +1395,10 @@ function showLastExecutionDetails() {
         url: "Templates/JobExecutionDetailsForm"
     })
         .done(function (detailsForm) {
+
+            //replace language markups
+            detailsForm = replaceLanguageMarkups(detailsForm);
+
             //parse job data
             var jobData = JSON.parse(lastJobStateData);
 
@@ -1448,10 +1437,10 @@ function prettyPrintDuration(ms) {
     let minutes = (ms / (1000 * 60)).toFixed(1);
     let hours = (ms / (1000 * 60 * 60)).toFixed(1);
     let days = (ms / (1000 * 60 * 60 * 24)).toFixed(1);
-    if (seconds < 60) return seconds + " Sekunden";
-    else if (minutes < 60) return minutes + " Minuten";
-    else if (hours < 24) return hours + " Stunden";
-    else return days + " Tage"
+    if (seconds < 60) return seconds + " " + languageStrings["seconds"];
+    else if (minutes < 60) return minutes + " " + languageStrings["minutes"];
+    else if (hours < 24) return hours + " " + languageStrings["hours"];
+    else return days + " " + languageStrings["days"];
 }
 
 //pretty prints file size
