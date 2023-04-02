@@ -38,6 +38,9 @@ function startRestoreHandler() {
         url: "Templates/restoreOptions"
     }).done(function (data) {
 
+        //replace language markups
+        data = replaceLanguageMarkups(data);
+
         //load job vms
         var vms = [];
         for (var i = 0; i < jobObj.JobVMs.length; i++) {
@@ -103,6 +106,10 @@ function loadRestorePoints() {
                 url: "Templates/restorePointsTable"
             })
                 .done(function (data) {
+
+                    //replace language markups
+                    data = replaceLanguageMarkups(data);
+
                     var renderedData = Mustache.render(data, { restorePoints: result });
                     $("#restorePointTable").html(renderedData);
 
@@ -129,13 +136,13 @@ function convertBackupProperties(properties) {
         //convert backup type
         switch (properties[i].type) {
             case "full":
-                properties[i].type = "Vollsicherung";
+                properties[i].type = languageStrings["backup_full"];
                 break;
             case "rct":
-                properties[i].type = "Inkrement";
+                properties[i].type = languageStrings["backup_incremental"];
                 break;
             case "lb":
-                properties[i].type = "LiveBackup";
+                properties[i].type = languageStrings["backup_live"];
                 break;
         }
 
@@ -260,8 +267,8 @@ function prepareRestore() {
 function startRestore(restoreStartDetails) {
     //show loading screen
     Swal.fire({
-        title: 'Initialisierung',
-        html: 'Wiederherstellung wird gestartet...',
+        title: languageStrings["initializing"],
+        html: languageStrings["starting_restore"],
         allowEscapeKey: false,
         allowOutsideClick: false,
         didOpen: () => {
@@ -658,13 +665,13 @@ function handleRunningLiveRestore() {
 
     //show dialog box
     Swal.fire({
-        title: 'LiveRestore läuft',
-        text: "Der LiveRestore läuft. Schließen Sie dieses Hinweisfenster um den LiveRestore wieder zu beenden",
+        title: languageStrings["liverestore_running"],
+        text: languageStrings["liverestore_running_text"],
         icon: 'warning',
         confirmButtonColor: '#3085d6',
         allowOutsideClick: false,
         allowEscapeKey: false,
-        confirmButtonText: 'LiveRestore beenden'
+        confirmButtonText: languageStrings["stop_liverestore"]
     }).then((result) => {
         //send delete request to stop job
         $.ajax({

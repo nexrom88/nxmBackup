@@ -1344,7 +1344,7 @@ function renderJobStateTable() {
                 $("#startStoJobpButton").addClass("btn-primary");
                 $("#startStopJobButton").removeClass("btn-danger");
             } else {
-                if (data["Successful"] == "erfolgreich") {
+                if (data["Successful"] == "successful") {
                     $("#jobDetailsRow").css("background-color", "#ccffcc");
                     $("#jobDetailsRow").removeClass("detailsRowRunning");
 
