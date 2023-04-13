@@ -324,8 +324,8 @@ function startRestore(restoreStartDetails) {
             if (data["status"] == 400) {
                 Swal.fire({
                     icon: 'error',
-                    title: 'Fehler',
-                    text: 'Die Wiederherstellung kann nicht gestartet werden, da ein anderer Job bereits läuft',
+                    title: languageStrings["error"],
+                    text: languageStrings["job_already_running"],
                 })
             };
 
@@ -334,7 +334,7 @@ function startRestore(restoreStartDetails) {
                 Swal.fire({
                     icon: 'error',
                     title: 'Fehler',
-                    text: 'Die Wiederherstellung kann aufgrund eines Serverfehlers nicht gestartet werden',
+                    text: languageStrings["restore_server_error"],
                 })
             };
 
@@ -352,8 +352,8 @@ function startRestore(restoreStartDetails) {
                 Swal.fire({
                     input: 'select',
                     inputOptions: hddOptionsMinified,
-                    title: 'Festplatte auswählen',
-                    text: 'Bitte wählen Sie hier eine virtuelle Festplatte aus, auf die die Wiederherstellung gestartet wird',
+                    title: languageStrings["select_hdd_caption"],
+                    text: languageStrings["select_hdd_text"],
                 }).then(function (value) {
                     selectedRestoreHDD = hddOptions[value["value"]];
                     restoreStartDetails["selectedHDD"] = selectedRestoreHDD;
