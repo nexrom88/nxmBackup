@@ -372,13 +372,13 @@ function handleRunningFLR(volumes) {
 
     //show dialog box
     Swal.fire({
-        title: 'Einzeldatei-Wiederherstellung',
+        title: languageStrings["guest_files_restore"],
         html: "<div id='flrBrowserContainer'></div>",
         confirmButtonColor: '#3085d6',
         allowOutsideClick: false,
         customClass: "flrSwalStyles",
         allowEscapeKey: false,
-        confirmButtonText: 'Wiederherstellung beenden'
+        confirmButtonText: languageStrings["flr_stop"]
     }).then((result) => { //gets called when done
 
         //send delete request to stop job
@@ -396,6 +396,10 @@ function handleRunningFLR(volumes) {
         url: "Templates/flrBrowser"
     })
         .done(function (data) {
+
+            //replace language markups
+            data = replaceLanguageMarkups(data);
+
             $("#flrBrowserContainer").html(Mustache.render(data, { volumes: volumes }));
 
             //get selected volume
@@ -443,7 +447,7 @@ function buildContextMenu(node) {
     if (node["type"] == "file") {
         menu = {
             "Download": {
-                "label": "Datei holen",
+                "label": languageStrings["get_file"],
                 "action": function (obj) {
                     var filePath = $(obj["reference"][0]).parent().attr("id");
 
@@ -454,7 +458,7 @@ function buildContextMenu(node) {
     } else if (node["type"] == "directory") {
         menu = {
             "Download": {
-                "label": "Ordner holen",
+                "label": languageStrings["get_folder"],
                 "action": function (obj) {
                     var filePath = $(obj["reference"][0]).parent().attr("id");
 
@@ -504,14 +508,14 @@ function flrDoNavigate(path, parentNode, rawNode) {
 //shows a folder browser dialog for selecting a directory
 function showFolderBrowserDialog() {
     Swal.fire({
-        title: 'Ziel wählen',
+        title: languageStrings["select_target"],
         html: "<div id='folderBrowser' class='folderBrowserOnRestore'></div>",
         confirmButtonColor: '#3085d6',
         allowOutsideClick: false,
         allowEscapeKey: false,
         showCancelButton: true,
-        cancelButtonText: "Abbrechen",
-        confirmButtonText: 'Wiederherstellung starten',
+        cancelButtonText: languageStrings["cancel"],
+        confirmButtonText: languageStrings["start_restore"],
     }).then(function (state) {
         //start restore on confirm-click
         if (state.isConfirmed) {
@@ -521,8 +525,8 @@ function showFolderBrowserDialog() {
                 prepareRestore();
             } else {
                 Swal.fire({
-                    title: 'Fehler',
-                    text: 'Es wurde kein Wiederherstellungspfad ausgewählt',
+                    title: languageStrings["error"],
+                    text: languageStrings["error_no_path"],
                     icon: 'error'
                 });
             }
@@ -565,13 +569,13 @@ function showFolderBrowserDialog() {
 function handleRunningFullRestore() {
     //show dialog box for seeing restore logs
     Swal.fire({
-        title: 'Komplette VM Wiederherstellung',
+        title: languageStrings["full_restore"],
         html: "<div id='fullRestoreLogContainer'></div>",
         confirmButtonColor: '#3085d6',
         allowOutsideClick: false,
         customClass: "fullRestoreSwalStyles",
         allowEscapeKey: false,
-        confirmButtonText: 'Wiederherstellung abbrechen',
+        confirmButtonText: languageStrings["cancel_restore"],
     }).then((result) => { //gets called when done
 
         //send delete request to stop job
@@ -645,7 +649,7 @@ function refreshFullRestoreLog() {
                     //clear refresh timer
                     clearInterval(refreshFullRestoreLog);
 
-                    $(".swal2-confirm").html("Schließen");
+                    $(".swal2-confirm").html(languageStrings["close"]);
                 } else {
                     //add event to eventsList
                     eventsList.unshift(oneEvent);
