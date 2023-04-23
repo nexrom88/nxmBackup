@@ -122,14 +122,34 @@ namespace Common
                 if (bytesRemaining >= buffer.Length) //still a whole block to read?
                 {
                     baseSourceStream.Read(buffer, 0, buffer.Length);
-                    compressionStream.Write(buffer, 0, buffer.Length);
+                    
+                    try
+                    {
+                        compressionStream.Write(buffer, 0, buffer.Length);
+                    }catch(Exception ex)
+                    {
+                        this.eventHandler.raiseNewEvent("Fehler beim Schreiben auf das Backupziel", false, false, NO_RELATED_EVENT, EventStatus.error);
+                        errorOccured = true;
+                        break;
+                    }
+
                     bytesRemaining -= buffer.Length;
                 }
                 else //eof -> read the last smaller block
                 {
                     buffer = new byte[bytesRemaining];
                     baseSourceStream.Read(buffer, 0, buffer.Length);
-                    compressionStream.Write(buffer, 0, buffer.Length);
+
+                    try
+                    {
+                        compressionStream.Write(buffer, 0, buffer.Length);
+                    }catch(Exception ex)
+                    {
+                        this.eventHandler.raiseNewEvent("Fehler beim Schreiben auf das Backupziel", false, false, NO_RELATED_EVENT, EventStatus.error);
+                        errorOccured = true;
+                        break;
+                    }
+
                     bytesRemaining -= buffer.Length;
                 }
 

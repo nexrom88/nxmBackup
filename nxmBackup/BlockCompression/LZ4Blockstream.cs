@@ -6,6 +6,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+using Common;
 using K4os.Compression.LZ4.Streams;
 
 namespace BlockCompression
@@ -304,10 +305,13 @@ namespace BlockCompression
 
         }
 
-        //starts new block and closes the old one
-        private void startNewBlock()
+        //starts new block and closes the old one. Returns false on error
+        private bool startNewBlock()
         {
-            closeBlock();
+            if (!closeBlock())
+            {
+                return false;
+            }
 
             //write "decompressed file byte offset" for the new block
             byte[] buffer = BitConverter.GetBytes(this.totalDecompressedByteCount);
@@ -324,16 +328,18 @@ namespace BlockCompression
             this.mStream.Close();
             this.mStream.Dispose();
             this.mStream = new MemoryStream((int)this.decompressedBlockSize);
+
+            return true;
         }
 
-        //closes the current block
-        private void closeBlock()
+        //closes the current block. Returns false on error
+        private bool closeBlock()
         {
 
             //is this block empty? Do nothing
             if (this.decompressedByteCountWithinBlock == 0)
             {
-                return;
+                return true;
             }
 
 
@@ -366,6 +372,7 @@ namespace BlockCompression
 
                         //write payload data offset
                         this.structBuffer.Write(structBlockBuffer, 16, 8);
+                        return true;
 
                     }
                     else //dedupe entry not found, write bytes to current stream
@@ -375,7 +382,7 @@ namespace BlockCompression
                         this.structBuffer.Write(offsetBuffer, 0, 8);
 
                         //write payload data:
-                        writeToStorage(this.mStream, this.fileStream, this.useEncryption);
+                        return writeToStorage(this.mStream, this.fileStream, this.useEncryption);
 
                     }
 
@@ -387,7 +394,7 @@ namespace BlockCompression
                     this.structBuffer.Write(offsetBuffer, 0, 8);
 
                     //write payload data:
-                    writeToStorage(this.mStream, this.fileStream, this.useEncryption);
+                    return writeToStorage(this.mStream, this.fileStream, this.useEncryption);
                 }
 
             }
@@ -414,6 +421,7 @@ namespace BlockCompression
 
                         //write payload data offset
                         this.structBuffer.Write(structBlockBuffer, 16, 8);
+                        return true;
                     }
                     else //dedupe entry not found, write bytes to current stream
                     {
@@ -422,7 +430,7 @@ namespace BlockCompression
                         this.structBuffer.Write(offsetBuffer, 0, 8);
 
                         //write payload data
-                        writeToStorage(this.mStream, this.fileStream, this.useEncryption);
+                        return writeToStorage(this.mStream, this.fileStream, this.useEncryption);
                     }
 
                 }
@@ -433,13 +441,13 @@ namespace BlockCompression
                     this.structBuffer.Write(offsetBuffer, 0, 8);
 
                     //write payload data
-                    writeToStorage(this.mStream, this.fileStream, this.useEncryption);
+                   return  writeToStorage(this.mStream, this.fileStream, this.useEncryption);
                 }
             }
         }
 
-        //writes the given payload data to storage
-        private void writeToStorage(MemoryStream source, FileStream target, bool useEncryption)
+        //writes the given payload data to storage. Returns false on error
+        private bool writeToStorage(MemoryStream source, FileStream target, bool useEncryption)
         {
             using (MemoryStream compMemStream = new MemoryStream())
             using (LZ4EncoderStream compressionStream = LZ4Stream.Encode(compMemStream, this.encoderSettings, true))
@@ -475,24 +483,34 @@ namespace BlockCompression
                 this.structBuffer.Write(buffer, 0, 8);
                 this.structBuffer.Seek(8, SeekOrigin.Current); //jump forward to point to end again
 
-                if (useEncryption)
+                try
                 {
-                    //encryption
-                    compMemStream.WriteTo(cryptoStream);
-                    cryptoStream.FlushFinalBlock();
+                    if (useEncryption)
+                    {
+                        //encryption
+                        compMemStream.WriteTo(cryptoStream);
+                        cryptoStream.FlushFinalBlock();
 
-                    //write to storage
-                    cryptoMemStream.WriteTo(target);
+                        //write to storage
+                        cryptoMemStream.WriteTo(target);
 
-                    //close encryptor module
-                    cryptoStream.Dispose();
-                    cryptoMemStream.Dispose();
-                }
-                else
+                        //close encryptor module
+                        cryptoStream.Dispose();
+                        cryptoMemStream.Dispose();
+                    }
+                    else
+                    {
+                        //write to storage without encryption
+                        compMemStream.WriteTo(target);
+                    }
+                }catch (Exception ex)
                 {
-                    //write to storage without encryption
-                    compMemStream.WriteTo(target);
+                    DBQueries.addLog("failed to write to storage", Environment.StackTrace, ex);
+                    return false;
                 }
+
+                //write successful
+                return true;
             }
         }
 
@@ -836,7 +854,7 @@ namespace BlockCompression
             throw new NotImplementedException();
         }
 
-        //writes the given buffer (uncompressed) to the destination file (compressed)
+        //writes the given buffer (uncompressed) to the destination file (compressed). Returns false if error occured
         public override void Write(byte[] buffer, int offset, int count)
         {
 
@@ -872,7 +890,10 @@ namespace BlockCompression
                     this.totalDecompressedByteCount += bytesRemainingWithinBlock;
 
                     //close block and start a new one
-                    startNewBlock();
+                    if (!startNewBlock())
+                    {
+                        throw new IOException("failed to write to storage");
+                    }
                 }
             }
 
