@@ -217,6 +217,9 @@ function showNewJobPage(pageNumber, selectedEditJob) {
         url: "Templates/newJobPage" + pageNumber
     })
         .done(function (data) {
+            //replace language markups
+            data = replaceLanguageMarkups(data)
+
             switch (pageNumber) {
                 case 1:
                     $("#newJobPage").html(data);
@@ -1297,7 +1300,7 @@ function renderJobStateTable() {
 
             var lastRunString = data["LastRun"];
             if (data["IsRunning"]) {
-                lastRunString = "Job wird gerade ausgeführt...";
+                lastRunString = languageStrings["currently_running"];
             } else if (lastRunString != "") {
                 //check if last last run date has to be translated
                 //date gets stored at german format. Have to translate it?
