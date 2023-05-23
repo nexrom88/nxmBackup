@@ -1,12 +1,12 @@
 ﻿<form id="page5Form">
-    <h5 class="center_div subHeadline">Sicherungsziel auswählen</h5>
+    <h5 class="center_div subHeadline">$$select_backup_target$$</h5>
 
     <div class="newJobElement center_div">
         <span class="centeredElementSpan">
-            <label class="enter_div" for="sbTargetType">Zieltyp</label>
+            <label class="enter_div" for="sbTargetType">$$target_type$$</label>
             <select id="sbTargetType" class="form-control">
-                <option data-targettype="local" selected>Lokales Laufwerk</option>
-                <option data-targettype="smb">Netzlaufwerk</option>
+                <option data-targettype="local" selected>$$local_drive$$</option>
+                <option data-targettype="smb">$$network_drive$$</option>
                 <option data-targettype="nxmstorage">nxmStorage</option>
             </select>
         </span>
@@ -19,7 +19,7 @@
   
 
         <div class="text-center">
-            <button id="checkCredentialsButton" type="button" class="btn btn-primary">Daten prüfen</button>
-            <button id="newJobNextButton" type="button" class="btn btn-primary">Weiter</button>
+            <button id="checkCredentialsButton" type="button" class="btn btn-primary">$$check_credentials$$</button>
+            <button id="newJobNextButton" type="button" class="btn btn-primary">$$next$$</button>
         </div>
 </form>

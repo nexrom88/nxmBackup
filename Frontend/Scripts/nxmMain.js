@@ -353,10 +353,10 @@ function showNewJobPage(pageNumber, selectedEditJob) {
 
                         switch (rotationType) {
                             case "merge":
-                                $("#lblMaxElements").html("Anzahl aufzubewahrender Backups");
+                                $("#lblMaxElements").html(languageStrings["backups_number"]);
                                 break;
                             case "blockrotation":
-                                $("#lblMaxElements").html("Anzahl aufzubewahrender Blöcke");
+                                $("#lblMaxElements").html(languageStrings["blocks_number"]);
                                 break;
                         }
 
@@ -439,15 +439,15 @@ function checkNxmStorageCredentials() {
     })
         .done(function (data) {
             Swal.fire(
-                'Erfolgreich',
-                'Die angegebenen Daten wurden erfolgreich geprüft',
+                languageStrings["successful_capital"],
+                languageStrings["check_success"],
                 'success'
             );
 
         }).fail(function (data) {
             Swal.fire(
-                'Fehler',
-                'Die angegebenen Daten sind fehlerhaft',
+                languageStrings["error"],
+                languageStrings["check_error"],
                 'error'
             );
 
@@ -477,15 +477,15 @@ function checkSMBCredentials() {
     })
         .done(function (data) {
             Swal.fire(
-                'Erfolgreich',
-                'Die angegebenen Daten wurden erfolgreich geprüft',
+                languageStrings["successful_capital"],
+                languageStrings["check_success"],
                 'success'
             );
 
         }).fail(function (data) {
             Swal.fire(
-                'Fehler',
-                'Die angegebenen Daten sind fehlerhaft',
+                languageStrings["error"],
+                languageStrings["check_error"],
                 'error'
             );
 
@@ -498,7 +498,7 @@ function buildnxmStorageForm() {
         url: "Templates/nxmStorageCredentials"
     })
         .done(function (data) {
-            $("#folderBrowser").html(data);
+            $("#folderBrowser").html(replaceLanguageMarkups(data));
         });
 }
 
@@ -508,7 +508,7 @@ function buildSMBForm() {
         url: "Templates/smbCredentials"
     })
         .done(function (data) {
-            $("#folderBrowser").html(data);
+            $("#folderBrowser").html(replaceLanguageMarkups(data));
         });
 }
 
@@ -607,10 +607,10 @@ function showCurrentSettings(pageNumber, selectedEditJob) {
             //set rotation type
             if (selectedEditJob["Rotation"]["type"] == 0) { //merge
                 $('option[data-rotationtype="merge"]').prop("selected", true);
-                $("#lblMaxElements").html("Anzahl aufzubewahrender Backups");
+                $("#lblMaxElements").html(languageStrings["backups_number"]);
             } else if (selectedEditJob["Rotation"]["type"] == 1) { //blockrotation
                 $('option[data-rotationtype="blockrotation"]').prop("selected", true);
-                $("#lblMaxElements").html("Anzahl aufzubewahrender Blöcke");
+                $("#lblMaxElements").html(languageStrings["blocks_number"]);
             }
 
             $("#spMaxElements").val(selectedEditJob["Rotation"]["maxElementCount"]);
@@ -713,8 +713,8 @@ function registerNextPageClickHandler(currentPage, selectedEditJob) {
                 //multiple VMs just possible when lb is disabled
                 if (selectedVMs.length > 1 && newJobObj["livebackup"]) {
                     Swal.fire(
-                        'Eingabefehler',
-                        'Wenn LiveBackup aktiviert ist, darf der Job nur aus einer virtuellen Maschine bestehen',
+                        languageStrings["error"],
+                        languageStrings["error_one_vm"],
                         'error'
                     );
                     return;
@@ -758,8 +758,8 @@ function registerNextPageClickHandler(currentPage, selectedEditJob) {
                 //valid input?
                 if (newJobObj["rotationtype"] == "merge" && newJobObj["blocksize"] > newJobObj["maxelements"]) {
                     Swal.fire(
-                        'Eingabefehler',
-                        'Ein Vollbackup würde nie durchgeführt werden, da die "Anzahl aufzubewahrender Backups" zu klein ist',
+                        languageStrings["invalid_input"],
+                        languageStrings["error_retention"],
                         'error'
                     );
                     return;
@@ -873,7 +873,7 @@ function buildJobsList() {
         url: "Templates/navJobItem"
     })
         .done(function (data) {
-            jobTemplate = data;
+            jobTemplate = replaceLanguageMarkups(data);
 
             //iterate through all jobs
             for (var i = 0; i < configuredJobs.length; i++) {
@@ -924,7 +924,7 @@ function buildJobDetailsPanel() {
             var jobHeaderString;
             jobHeaderString = languageStrings["job_details_caption"] + " (" + selectedJobObj.Name + ")";
             if (!selectedJobObj.Enabled) {
-                jobHeaderString += " - deaktiviert";
+                jobHeaderString += " - " + languageStrings["job_disabled"];
             }
 
             $("#mainPanelHeader").html(jobHeaderString);
@@ -1282,13 +1282,13 @@ function renderJobStateTable() {
                         intervalString = dayForGui + "s " + languageStrings["at_time"] + " " + buildTwoDigitsInt(data["Interval"]["hour"]) + ":" + buildTwoDigitsInt(data["Interval"]["minute"]);
                         break;
                     case 3: //nie
-                        intervalString = "Nur manuell";
+                        intervalString = languageStrings["only_manually"];
                         $("#enableJobButton").attr("disabled", "disabled");
                         break;
                 }
             } else {
                 //job is disabled
-                intervalString = "Job ist deaktiviert";
+                intervalString = languageStrings["job_disabled_text"];
             }
 
             //livebackup working
