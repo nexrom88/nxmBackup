@@ -48,6 +48,7 @@ namespace Frontend.Controllers
             public string mailpassword { get; set; }
             public string mailsender { get; set; }
             public string mailrecipient { get; set; }
+            public string language { get; set; }
         }
 
     }

@@ -45,6 +45,7 @@ function showSettingsPopUp() {
         globalSettings["mailpassword"] = $("#inputMailPassword").val();
         globalSettings["mailsender"] = $("#inputMailSender").val();
         globalSettings["mailrecipient"] = $("#inputMailRecipient").val();
+        globalSettings["language"] = $("#inputLanguage").val();
 
         //remove last backslash from mountpath
         if (globalSettings["mountpath"].endsWith("\\")) {
@@ -81,6 +82,7 @@ function showSettingsPopUp() {
             $("#inputMailUser").val(globalSettings["mailuser"]);
             $("#inputMailSender").val(globalSettings["mailsender"]);
             $("#inputMailRecipient").val(globalSettings["mailrecipient"]);
+            $("#inputLanguage").val(globalSettings["language"]);
 
             //handle reset link click
             $("#resetLink").click(function () {

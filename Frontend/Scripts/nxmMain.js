@@ -16,6 +16,7 @@ var transferrates = []; //var to hold the current transfer rates
 var processrates = []; //var to hold the current process rates
 var versionControl = {} //object to hold version and update information
 var languageStrings = {}; //object to hold all language strings
+var currentLanguage; //string object to hold current selected language
 
 //global handler for http status 401 (login required)
 $.ajaxSetup({
