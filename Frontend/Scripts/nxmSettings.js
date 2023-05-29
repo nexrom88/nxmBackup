@@ -1,5 +1,6 @@
 ﻿//shows the settings form
 var globalSettings = {};
+var currentSettingsLanguage;
 function showSettings() {
 
     //get settings from BD
@@ -60,6 +61,14 @@ function showSettingsPopUp() {
             contentType: "application/json; charset=utf-8",
             data: JSON.stringify(globalSettings),
             type: 'POST'
+        }).done(function () {
+            //reinit language if necessary
+            if (globalSettings["language"] != currentSettingsLanguage) {
+                loadLanguage(false);
+
+                //reload page
+                location.reload();
+            }
         });
 
     });
@@ -83,6 +92,7 @@ function showSettingsPopUp() {
             $("#inputMailSender").val(globalSettings["mailsender"]);
             $("#inputMailRecipient").val(globalSettings["mailrecipient"]);
             $("#inputLanguage").val(globalSettings["language"]);
+            currentSettingsLanguage = globalSettings["language"];
 
             //handle reset link click
             $("#resetLink").click(function () {

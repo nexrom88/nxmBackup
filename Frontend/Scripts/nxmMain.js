@@ -33,8 +33,8 @@ $.ajaxSetup({
     }
 });
 
-//loads a given string from language db
-function loadLanguage() {
+//loads a given string from language db. When furtherInit is set, MainWindow template gets loaded afterwards
+function loadLanguage(furtherInit) {
     $.ajax({
         url: "api/LoadLanguage"
     })
@@ -42,8 +42,10 @@ function loadLanguage() {
             //parse language object
             languageStrings = JSON.parse(data);
 
-            //language loaded successfully, now load main window template
-            loadMainWindowTemplate();
+            if (furtherInit) {
+                //language loaded successfully, now load main window template
+                loadMainWindowTemplate();
+            }
         });
 }
 
@@ -173,7 +175,7 @@ $(window).on('load', function () {
         url: "api/CheckAuth",
         success: function () {
             //user is authenticated, init language
-            loadLanguage();
+            loadLanguage(true);
         }
     })
     
@@ -1473,52 +1475,59 @@ function prettyPrintBytes(bytes, si = true, dp = 2) {
 
 //show login form
 function showLoginForm(showError) {
-    Swal.fire({
-        title: 'Login',
-        html: `<input type="text" id="loginText" class="swal2-input" placeholder="Benutzername">
-  <input type="password" id="passwordText" class="swal2-input" placeholder="Passwort">`,
-        showLoaderOnConfirm: true,
-        confirmButtonText: "Anmelden",
-        allowEnterKey: true,
-        didOpen: () => {
-            $("#loginText").focus();
-        },
-        preConfirm: () => {
-            const login = Swal.getPopup().querySelector('#loginText').value;
-            const password = Swal.getPopup().querySelector('#passwordText').value;
+    //load login form
+    $.ajax({
+        url: "Templates/loginForm"
+    }).done(function (loginForm) {
+        //replace language markups
+        loginForm = replaceLanguageMarkups(loginForm);
 
-            if (!login || !password) {
-                Swal.showValidationMessage(`Anmeldung ist fehlgeschlagen`);
-            }
-            var encodedLogin = String(btoa(login + ":" + password));
-
-
-            return encodedLogin;
-        }
-    }).then((result) => {
         Swal.fire({
-            title: 'Anmeldung',
-            text: 'Anmeldung wird ausgeführt...',
-            allowOutsideClick: false,
-            allowEscapeKey: false,
-            allowEnterKey: false,
-            onOpen: () => {
-                swal.showLoading()
-            }
-        })
-        ajaxLogin(result.value);
-    });
+            title: 'Login',
+            html: loginForm,
+            showLoaderOnConfirm: true,
+            confirmButtonText: languageStrings["login"],
+            allowEnterKey: true,
+            didOpen: () => {
+                $("#loginText").focus();
+            },
+            preConfirm: () => {
+                const login = Swal.getPopup().querySelector('#loginText').value;
+                const password = Swal.getPopup().querySelector('#passwordText').value;
 
-    //register enter handler
-    $(".swal2-popup").on("keypress", function (event) {
-        if (event.which == 13) {
-            $(".swal2-confirm").click();
+                if (!login || !password) {
+                    Swal.showValidationMessage(languageStrings["login_failed"]);
+                }
+                var encodedLogin = String(btoa(login + ":" + password));
+
+
+                return encodedLogin;
+            }
+        }).then((result) => {
+            Swal.fire({
+                title: 'Anmeldung',
+                text: 'Anmeldung wird ausgeführt...',
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                allowEnterKey: false,
+                onOpen: () => {
+                    swal.showLoading()
+                }
+            })
+            ajaxLogin(result.value);
+        });
+
+        //register enter handler
+        $(".swal2-popup").on("keypress", function (event) {
+            if (event.which == 13) {
+                $(".swal2-confirm").click();
+            }
+        });
+
+        if (showError) {
+            Swal.showValidationMessage(`Anmeldung ist fehlgeschlagen`);
         }
     });
-
-    if (showError) {
-        Swal.showValidationMessage(`Anmeldung ist fehlgeschlagen`);
-    }
 
 }
 

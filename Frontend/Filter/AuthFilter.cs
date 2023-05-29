@@ -13,9 +13,17 @@ namespace Frontend.Filter
     {
         public override void OnActionExecuting(HttpActionContext actionContext)
         {
-            #if DEBUG
+
+//#if DEBUG
+//            return;
+//#endif
+
+            //when requesting login form, no authentication is required
+            if (actionContext.Request.RequestUri.LocalPath == "/Templates/loginForm")
+            {
                 return;
-            #endif
+            }
+
             //read session cookie
             var accessToken = actionContext.Request.Headers.GetCookies("session_id");
 

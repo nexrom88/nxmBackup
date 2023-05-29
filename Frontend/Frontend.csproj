@@ -280,6 +280,7 @@
     <Content Include="Templates\JobExecutionDetailsForm.html" />
     <Content Include="Templates\jobStateTable.html" />
     <Content Include="Templates\lbTimeSelection.html" />
+    <Content Include="Templates\loginForm.html" />
     <Content Include="Templates\mainWindow.html" />
     <Content Include="Templates\navJobItem.html" />
     <Content Include="Templates\jobDetailsPanel.html" />

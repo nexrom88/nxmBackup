@@ -92,5 +92,14 @@ namespace nxmBackup.Language
             }                
             
         }
+
+        //gets the currently loaded language name
+        public static string getLanguageName()
+        {
+            lock (lockObj)
+            {
+                return currentLanguageName;
+            }
+        }
     }
 }
