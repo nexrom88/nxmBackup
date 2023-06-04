@@ -14,9 +14,9 @@ namespace Frontend.Filter
         public override void OnActionExecuting(HttpActionContext actionContext)
         {
 
-//#if DEBUG
-//            return;
-//#endif
+#if DEBUG
+            return;
+#endif
 
             //when requesting login form, no authentication is required
             if (actionContext.Request.RequestUri.LocalPath == "/Templates/loginForm")

@@ -64,7 +64,7 @@ function showSettingsPopUp() {
         }).done(function () {
             //reinit language if necessary
             if (globalSettings["language"] != currentSettingsLanguage) {
-                loadLanguage(false);
+                loadLanguage();
 
                 //reload page
                 location.reload();

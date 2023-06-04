@@ -34,18 +34,14 @@ $.ajaxSetup({
 });
 
 //loads a given string from language db. When furtherInit is set, MainWindow template gets loaded afterwards
-function loadLanguage(furtherInit) {
+function loadLanguage() {
     $.ajax({
-        url: "api/LoadLanguage"
+        url: "api/LoadLanguage",
+        async:false
     })
         .done(function (data) {
             //parse language object
             languageStrings = JSON.parse(data);
-
-            if (furtherInit) {
-                //language loaded successfully, now load main window template
-                loadMainWindowTemplate();
-            }
         });
 }
 
@@ -170,12 +166,18 @@ function init() {
 $(window).on('load', function () {
     dbState = "init";
 
+    //load language
+    loadLanguage();
+
     //check if user is authenticated
     $.ajax({
         url: "api/CheckAuth",
         success: function () {
-            //user is authenticated, init language
-            loadLanguage(true);
+            //user is authenticated
+
+            //now load main window template
+            loadMainWindowTemplate();
+       
         }
     })
     
