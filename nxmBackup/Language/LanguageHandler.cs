@@ -74,6 +74,7 @@ namespace nxmBackup.Language
                     foreach (Dictionary<string, object> kvp in retVal)
                     {
                         //build new language kvp
+                        string name = (string)kvp["name"];
                         languageStrings.Add((string)kvp["name"], (string)kvp["text"]);
                     }
                     currentLanguage = languageStrings;

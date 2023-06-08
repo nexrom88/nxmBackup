@@ -5,6 +5,7 @@ using ConfigHandler;
 using HyperVBackupRCT;
 using Common;
 using nxmBackup.HVBackupCore;
+using nxmBackup.Language;
 using System.Reflection;
 using System.Linq;
 using System.IO;
@@ -132,7 +133,8 @@ namespace JobEngine
                 {
                     //write notification
                     Common.EventHandler eventHandler = new Common.EventHandler(vm, executionId);
-                    eventHandler.raiseNewEvent("Vorgang vom Benutzer abgebrochen", false, false, NO_RELATED_EVENT, EventStatus.error);
+                    
+                    eventHandler.raiseNewEvent(LanguageHandler.getString("operation_canceled"), false, false, NO_RELATED_EVENT, EventStatus.error);
                     executionSuccessful = false;
                 }
             }

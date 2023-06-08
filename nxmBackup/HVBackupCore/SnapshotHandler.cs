@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Management;
 using System.Runtime.InteropServices;
 using Common;
+using nxmBackup.Language;
 
 
 namespace nxmBackup.HVBackupCore
@@ -56,7 +57,7 @@ namespace nxmBackup.HVBackupCore
             //error occured while taking snapshot?
             if (snapshot == null)
             {
-                this.eventHandler.raiseNewEvent("Backupvorgang fehlgeschlagen", false, false, NO_RELATED_EVENT, EventStatus.error);
+                this.eventHandler.raiseNewEvent(LanguageHandler.getString("backup_failed") , false, false, NO_RELATED_EVENT, EventStatus.error);
                 retVal.successful = false;
                 return retVal;
             }
@@ -70,8 +71,8 @@ namespace nxmBackup.HVBackupCore
                 System.IO.Directory.CreateDirectory(destination);
             }catch(Exception ex)
             {
-                this.eventHandler.raiseNewEvent("Der Sicherungspfad steht im aktuellen Kontext nicht zur Verfügung", false, false, NO_RELATED_EVENT, EventStatus.error);
-                this.eventHandler.raiseNewEvent("Backupvorgang fehlgeschlagen", false, false, NO_RELATED_EVENT, EventStatus.error);
+                this.eventHandler.raiseNewEvent(LanguageHandler.getString("destination_failed"), false, false, NO_RELATED_EVENT, EventStatus.error);
+                this.eventHandler.raiseNewEvent(LanguageHandler.getString("backup_failed"), false, false, NO_RELATED_EVENT, EventStatus.error);
                 DBQueries.addLog("error on creating folder", Environment.StackTrace, ex);
 
                 //delete previously created snapshot
@@ -87,7 +88,7 @@ namespace nxmBackup.HVBackupCore
             {
                 if (chain == null || chain.Count == 0) //first backup must be full backup
                 {
-                    this.eventHandler.raiseNewEvent("Inkrementelles Backup nicht möglich", false, false, NO_RELATED_EVENT, EventStatus.info);
+                    this.eventHandler.raiseNewEvent(LanguageHandler.getString("incremental_failed"), false, false, NO_RELATED_EVENT, EventStatus.info);
                     refP = null; //incremental backup not possible
                 }
                 else if (getBlockSize(chain) >= job.BlockSize) //block size reached?
@@ -122,7 +123,7 @@ namespace nxmBackup.HVBackupCore
             if (!transferDetails.successful && transferDetails.retryFullBackupOnFail)
             {
                 //backup failed, but retry by using full backup
-                this.eventHandler.raiseNewEvent("Beginne erneut: Vollsicherung", false, false, NO_RELATED_EVENT, EventStatus.info);
+                this.eventHandler.raiseNewEvent(LanguageHandler.getString("retry_full"), false, false, NO_RELATED_EVENT, EventStatus.info);
                 return performFullBackupProcess(cLevel, allowSnapshotFallback, false, job, snapshot);
             }
 
@@ -132,7 +133,7 @@ namespace nxmBackup.HVBackupCore
             //if full backup, delete unnecessary reference points
             if (refP == null && chain != null && chain.Count > 0)
             {
-                int eventId = this.eventHandler.raiseNewEvent("Entferne alte Referenzpunkte...", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
+                int eventId = this.eventHandler.raiseNewEvent(LanguageHandler.getString("remove_old_rps"), false, false, NO_RELATED_EVENT, EventStatus.inProgress);
                 
                 //remove current (last) full backup
 
@@ -162,7 +163,7 @@ namespace nxmBackup.HVBackupCore
                         }
                     }
                 }
-                this.eventHandler.raiseNewEvent("erfolgreich", true, false, eventId, EventStatus.successful);
+                this.eventHandler.raiseNewEvent(LanguageHandler.getString("successful"), true, false, eventId, EventStatus.successful);
             }
 
             //read current backup chain for further processing
@@ -193,19 +194,19 @@ namespace nxmBackup.HVBackupCore
                 else
                 {
                     //chain is broken, not readable
-                    this.eventHandler.raiseNewEvent("Backup-Rotation kann nicht durchgeführt werden", false, false, NO_RELATED_EVENT, EventStatus.error);
+                    this.eventHandler.raiseNewEvent(LanguageHandler.getString("rotation_failed"), false, false, NO_RELATED_EVENT, EventStatus.error);
                 }
             }
 
             if (transferDetails.successful)
             {
                 //backup successful
-                this.eventHandler.raiseNewEvent("Backupvorgang erfolgreich", false, false, NO_RELATED_EVENT, EventStatus.successful);
+                this.eventHandler.raiseNewEvent(LanguageHandler.getString("backup_successful"), false, false, NO_RELATED_EVENT, EventStatus.successful);
             }
             else
             {
                 //backup failed
-                this.eventHandler.raiseNewEvent("Backupvorgang fehlgeschlagen", false, false, NO_RELATED_EVENT, EventStatus.error);
+                this.eventHandler.raiseNewEvent(LanguageHandler.getString("backup_failed"), false, false, NO_RELATED_EVENT, EventStatus.error);
             }
 
 
@@ -260,7 +261,7 @@ namespace nxmBackup.HVBackupCore
         //performs a block rotation
         private void blockRotate(string path, List<ConfigHandler.BackupConfigHandler.BackupInfo> chain)
         {
-            int eventID = this.eventHandler.raiseNewEvent("Rotiere Backups (Block Rotation)...", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
+            int eventID = this.eventHandler.raiseNewEvent(LanguageHandler.getString("rotating_block"), false, false, NO_RELATED_EVENT, EventStatus.inProgress);
 
             //remove first full backup
             ConfigHandler.BackupConfigHandler.removeBackup(path, chain[0].uuid); //remove from config
@@ -282,7 +283,7 @@ namespace nxmBackup.HVBackupCore
                 }
             }
 
-            this.eventHandler.raiseNewEvent("erfolgreich", true, false, eventID, EventStatus.successful);
+            this.eventHandler.raiseNewEvent(LanguageHandler.getString("successful"), true, false, eventID, EventStatus.successful);
         }
 
         //merge two backups to keep max snapshot count
@@ -319,15 +320,15 @@ namespace nxmBackup.HVBackupCore
                 System.IO.Directory.CreateDirectory(System.IO.Path.Combine(path, "staging"));
 
                 int eventId;
-                eventId = this.eventHandler.raiseNewEvent("Rotiere Backups (Schritt 1 von 5)...", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
+                eventId = this.eventHandler.raiseNewEvent(LanguageHandler.getString("rotating_1"), false, false, NO_RELATED_EVENT, EventStatus.inProgress);
 
                 HVRestoreCore.FullRestoreHandler restHandler = new HVRestoreCore.FullRestoreHandler(null, this.useEncryption, this.aesKey, this.usingDedupe);
 
                 //perform restore to staging directory (including merge with second backup)
                 restHandler.performFullRestoreProcess(path, System.IO.Path.Combine(path, "staging"), "", chain[1].instanceID, false, 0);
 
-                this.eventHandler.raiseNewEvent("erfolgreich", true, false, eventId, EventStatus.successful);
-                eventId = this.eventHandler.raiseNewEvent("Rotiere Backups (Schritt 2 von 5)...", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
+                this.eventHandler.raiseNewEvent(LanguageHandler.getString("successful"), true, false, eventId, EventStatus.successful);
+                eventId = this.eventHandler.raiseNewEvent(LanguageHandler.getString("rotating_2"), false, false, NO_RELATED_EVENT, EventStatus.inProgress);
 
                 //remove first and second backup from backup chain
                 ConfigHandler.BackupConfigHandler.removeBackup(path, chain[0].uuid); //remove from config
@@ -342,28 +343,28 @@ namespace nxmBackup.HVBackupCore
                 backupArchive.create();
                 backupArchive.open(System.IO.Compression.ZipArchiveMode.Create);
 
-                this.eventHandler.raiseNewEvent("erfolgreich", true, false, eventId, EventStatus.successful);
-                eventId = this.eventHandler.raiseNewEvent("Rotiere Backups (Schritt 3 von 5)...", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
+                this.eventHandler.raiseNewEvent(LanguageHandler.getString("successful"), true, false, eventId, EventStatus.successful);
+                eventId = this.eventHandler.raiseNewEvent(LanguageHandler.getString("rotating_3"), false, false, NO_RELATED_EVENT, EventStatus.inProgress);
 
                 //add whole staging directory to the container archive
                 backupArchive.addDirectory(System.IO.Path.Combine(path, "staging"));
                 backupArchive.close();
 
-                this.eventHandler.raiseNewEvent("erfolgreich", true, false, eventId, EventStatus.successful);
-                eventId = this.eventHandler.raiseNewEvent("Rotiere Backups (Schritt 4 von 5)...", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
+                this.eventHandler.raiseNewEvent(LanguageHandler.getString("successful"), true, false, eventId, EventStatus.successful);
+                eventId = this.eventHandler.raiseNewEvent(LanguageHandler.getString("rotating_4"), false, false, NO_RELATED_EVENT, EventStatus.inProgress);
 
                 //create entry to backup chain
                 bool configWritten = ConfigHandler.BackupConfigHandler.addBackup(path,this.useEncryption, guidFolder, "full", chain[1].instanceID, "", true, this.executionId.ToString());
 
                 if (configWritten)
                 {
-                    this.eventHandler.raiseNewEvent("erfolgreich", true, false, eventId, EventStatus.successful);
+                    this.eventHandler.raiseNewEvent(LanguageHandler.getString("successful"), true, false, eventId, EventStatus.successful);
                 }
                 else
                 {
-                    this.eventHandler.raiseNewEvent("fehlgeschlagen", true, false, eventId, EventStatus.error);
+                    this.eventHandler.raiseNewEvent(LanguageHandler.getString("failed"), true, false, eventId, EventStatus.error);
                 }
-                eventId = this.eventHandler.raiseNewEvent("Rotiere Backups (Schritt 5 von 5)...", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
+                eventId = this.eventHandler.raiseNewEvent(LanguageHandler.getString("rotating_5"), false, false, NO_RELATED_EVENT, EventStatus.inProgress);
 
                 //remove reference point
                 List<ManagementObject> refPs = getReferencePoints();
@@ -380,13 +381,13 @@ namespace nxmBackup.HVBackupCore
                 //remove staging folder
                 System.IO.Directory.Delete(System.IO.Path.Combine(path, "staging"), true);
 
-                this.eventHandler.raiseNewEvent("erfolgreich", true, false, eventId, EventStatus.successful);
+                this.eventHandler.raiseNewEvent(LanguageHandler.getString("successful"), true, false, eventId, EventStatus.successful);
 
             }
             catch(Exception ex)
             {
                 //old backups could not be deleted, write error message
-                this.eventHandler.raiseNewEvent("Fehler beim Rotieren alter Backups", false, false, NO_RELATED_EVENT, EventStatus.warning);
+                this.eventHandler.raiseNewEvent(LanguageHandler.getString("rotation_failed_old"), false, false, NO_RELATED_EVENT, EventStatus.warning);
                 Common.DBQueries.addLog("merge failed", Environment.StackTrace, ex);
             }
 
@@ -397,22 +398,22 @@ namespace nxmBackup.HVBackupCore
         public ManagementObject createSnapshot(ConsistencyLevel cLevel, Boolean allowSnapshotFallback)
         {
             ManagementScope scope = new ManagementScope("\\\\localhost\\root\\virtualization\\v2", null);
-            int eventId = this.eventHandler.raiseNewEvent("Initialisiere Umgebung...", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
+            int eventId = this.eventHandler.raiseNewEvent(LanguageHandler.getString("initializing_env"), false, false, NO_RELATED_EVENT, EventStatus.inProgress);
 
             //check for already existing snapshots (user created ones)
             List<ManagementObject> snapshots = getSnapshots(USER_SNAPSHOT_TYPE);
             
             if (snapshots == null)
             {
-                this.eventHandler.raiseNewEvent("fehlgeschlagen", true, false, eventId, EventStatus.error);
-                this.eventHandler.raiseNewEvent("Virtuelle Maschine ist nicht erreichbar", false, false, NO_RELATED_EVENT, EventStatus.error);
+                this.eventHandler.raiseNewEvent(LanguageHandler.getString("failed"), true, false, eventId, EventStatus.error);
+                this.eventHandler.raiseNewEvent(LanguageHandler.getString("vm_unreachable"), false, false, NO_RELATED_EVENT, EventStatus.error);
                 return null;
             }
             
             if (snapshots.Count > 0)
             {
-                this.eventHandler.raiseNewEvent("fehlgeschlagen", true, false, eventId, EventStatus.error);
-                this.eventHandler.raiseNewEvent("Es sind bereits Prüfpunkte vorhanden", false, false, NO_RELATED_EVENT, EventStatus.error);
+                this.eventHandler.raiseNewEvent(LanguageHandler.getString("failed"), true, false, eventId, EventStatus.error);
+                this.eventHandler.raiseNewEvent(LanguageHandler.getString("checkpoints_exist"), false, false, NO_RELATED_EVENT, EventStatus.error);
                 return null;
             }
 
@@ -440,8 +441,8 @@ namespace nxmBackup.HVBackupCore
                     if (vmStateArray.Length == 2 && vmStateArray[1] != 0) //32772
                     {
                         //vm in wrong state, do not create snapshot
-                        this.eventHandler.raiseNewEvent("fehlgeschlagen", true, false, eventId, EventStatus.error);
-                        this.eventHandler.raiseNewEvent("Der virtuelle Computer ist nicht bereit", false, false, NO_RELATED_EVENT, EventStatus.error);
+                        this.eventHandler.raiseNewEvent(LanguageHandler.getString("failed"), true, false, eventId, EventStatus.error);
+                        this.eventHandler.raiseNewEvent(LanguageHandler.getString("vm_not_ready"), false, false, NO_RELATED_EVENT, EventStatus.error);
                         return null;
                     }
 
@@ -454,18 +455,18 @@ namespace nxmBackup.HVBackupCore
                     inParams["SnapshotSettings"] = settings.GetText(TextFormat.WmiDtd20);
                     inParams["SnapshotType"] = SnapshotTypeRecovery;
 
-                    this.eventHandler.raiseNewEvent("erfolgreich", true, false, eventId, EventStatus.successful);
+                    this.eventHandler.raiseNewEvent(LanguageHandler.getString("successful"), true, false, eventId, EventStatus.successful);
 
                     if (this.usingDedupe)
                     {
-                        this.eventHandler.raiseNewEvent("Daten-Deduplizierung wird verwendet", false, false, NO_RELATED_EVENT, EventStatus.info);
+                        this.eventHandler.raiseNewEvent(LanguageHandler.getString("dedupe_used"), false, false, NO_RELATED_EVENT, EventStatus.info);
                     }
                     if (this.useEncryption)
                     {
-                        this.eventHandler.raiseNewEvent("Verschlüsselung wird verwendet", false, false, NO_RELATED_EVENT, EventStatus.info);
+                        this.eventHandler.raiseNewEvent(LanguageHandler.getString("encryption_used"), false, false, NO_RELATED_EVENT, EventStatus.info);
                     }
 
-                    eventId = this.eventHandler.raiseNewEvent("Erzeuge Recovery Snapshot...", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
+                    eventId = this.eventHandler.raiseNewEvent(LanguageHandler.getString("creating_snapshot"), false, false, NO_RELATED_EVENT, EventStatus.inProgress);
 
                     using (ManagementBaseObject outParams = service.InvokeMethod(
                         "CreateSnapshot",
@@ -484,8 +485,8 @@ namespace nxmBackup.HVBackupCore
                             //snapshot fallback possible and allowed?
                             if (cLevel == ConsistencyLevel.ApplicationAware && allowSnapshotFallback)
                             {
-                                this.eventHandler.raiseNewEvent("fehlgeschlagen", true, false, eventId, EventStatus.error);
-                                this.eventHandler.raiseNewEvent("'Application Aware Processing' steht nicht zur Verfügung. Versuche Fallback.", false, false, NO_RELATED_EVENT, EventStatus.successful);
+                                this.eventHandler.raiseNewEvent(LanguageHandler.getString("failed"), true, false, eventId, EventStatus.error);
+                                this.eventHandler.raiseNewEvent(LanguageHandler.getString("aap_failed"), false, false, NO_RELATED_EVENT, EventStatus.successful);
                                 return createSnapshot(ConsistencyLevel.CrashConsistent, false);
                             }
                             else
@@ -495,7 +496,7 @@ namespace nxmBackup.HVBackupCore
                             }
                         }
 
-                        this.eventHandler.raiseNewEvent("erfolgreich", true, false, eventId, EventStatus.successful);
+                        this.eventHandler.raiseNewEvent(LanguageHandler.getString("successful"), true, false, eventId, EventStatus.successful);
 
                         //get the job and the snapshot object
                         ManagementObject job = new ManagementObject((string)outParams["job"]);
@@ -515,7 +516,7 @@ namespace nxmBackup.HVBackupCore
             {
                 //error while taking snapshot
                 Common.DBQueries.addLog(ex.Message, Environment.StackTrace, ex);
-                this.eventHandler.raiseNewEvent("fehlgeschlagen", true, false, eventId, EventStatus.error);
+                this.eventHandler.raiseNewEvent(LanguageHandler.getString("failed"), true, false, eventId, EventStatus.error);
                 return null;
             }
         }
@@ -527,7 +528,7 @@ namespace nxmBackup.HVBackupCore
             ManagementScope scope = new ManagementScope("\\\\localhost\\root\\virtualization\\v2", null);
             int eventId = 0;
             if (raiseEvents) {
-               eventId = this.eventHandler.raiseNewEvent("Referenzpunkt wird erzeugt...", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
+               eventId = this.eventHandler.raiseNewEvent(LanguageHandler.getString("creating_refp"), false, false, NO_RELATED_EVENT, EventStatus.inProgress);
             }
 
             using (ManagementObject settings = WmiUtilities.GetVirtualMachineSnapshotService(scope))
@@ -557,7 +558,7 @@ namespace nxmBackup.HVBackupCore
                     }
                     if (raiseEvents)
                     {
-                        this.eventHandler.raiseNewEvent("erfolgreich", true, false, eventId, EventStatus.successful);
+                        this.eventHandler.raiseNewEvent(LanguageHandler.getString("successful"), true, false, eventId, EventStatus.successful);
                     }
                     return refSnapshot;
                 }
@@ -571,7 +572,7 @@ namespace nxmBackup.HVBackupCore
             string basePath = path;
             string backupType = "";
 
-            int eventId = this.eventHandler.raiseNewEvent("Erzeuge Einträge...", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
+            int eventId = this.eventHandler.raiseNewEvent(LanguageHandler.getString("creating_entries"), false, false, NO_RELATED_EVENT, EventStatus.inProgress);
 
             //generate random guid path and append it to the path var
             Guid g = Guid.NewGuid();
@@ -588,7 +589,7 @@ namespace nxmBackup.HVBackupCore
             archive.open(System.IO.Compression.ZipArchiveMode.Create);
 
 
-            this.eventHandler.raiseNewEvent("erfolgreich", true, false, eventId, EventStatus.successful);
+            this.eventHandler.raiseNewEvent(LanguageHandler.getString("successful"), true, false, eventId, EventStatus.successful);
 
             //iterate hdds
             var iterator = currentSnapshot.GetRelated("Msvm_StorageAllocationSettingData").GetEnumerator();
@@ -611,7 +612,7 @@ namespace nxmBackup.HVBackupCore
             if (hddsChangedResponse.hddsChanged)
             {
                 rctBase = null;
-                this.eventHandler.raiseNewEvent("Veränderter Datenspeicher erkannt", false, false, NO_RELATED_EVENT, EventStatus.warning);
+                this.eventHandler.raiseNewEvent(LanguageHandler.getString("storage_changed"), false, false, NO_RELATED_EVENT, EventStatus.warning);
             }
 
             //transfer statistics
@@ -639,7 +640,7 @@ namespace nxmBackup.HVBackupCore
                     //just raise event by first iteration
                     if(hddCounter == 0)
                     {
-                        this.eventHandler.raiseNewEvent("Beginne Vollbackup", false, false, NO_RELATED_EVENT, EventStatus.successful);
+                        this.eventHandler.raiseNewEvent(LanguageHandler.getString("beginning_full"), false, false, NO_RELATED_EVENT, EventStatus.successful);
                     }
 
                     //write to the archive
@@ -655,7 +656,7 @@ namespace nxmBackup.HVBackupCore
                     //just raise event by first iteration
                     if (hddCounter == 0)
                     {
-                        this.eventHandler.raiseNewEvent("Beginne inkrementelles Backup", false, false, NO_RELATED_EVENT, EventStatus.successful);
+                        this.eventHandler.raiseNewEvent(LanguageHandler.getString("beginning_incremental"), false, false, NO_RELATED_EVENT, EventStatus.successful);
                     }
                     
                     //do a rct backup copy
@@ -701,7 +702,7 @@ namespace nxmBackup.HVBackupCore
                     hddStrings.Add((string)hdd["InstanceID"]);
                 }
                 DBQueries.refreshHDDs(hddsChangedResponse.newHDDs, this.vm.vmID);
-                this.eventHandler.raiseNewEvent("Veränderter Datenspeicher inventarisiert", false, false, NO_RELATED_EVENT, EventStatus.info);
+                this.eventHandler.raiseNewEvent(LanguageHandler.getString("storage_inventoried"), false, false, NO_RELATED_EVENT, EventStatus.info);
 
                 //update job object
                 JobVM currentVM = null;
@@ -741,7 +742,7 @@ namespace nxmBackup.HVBackupCore
                 //another lb job already running? cancel!
                 if (LiveBackupWorker.ActiveWorkers.Count > 0)
                 {
-                    this.eventHandler.raiseNewEvent("LiveBackup kann nicht gestartet werden, da ein anderer Live-Backup Job bereits läuft", false, false, NO_RELATED_EVENT, EventStatus.warning);
+                    this.eventHandler.raiseNewEvent(LanguageHandler.getString("lb_already_running"), false, false, NO_RELATED_EVENT, EventStatus.warning);
                 }
                 else
                 {
@@ -780,7 +781,7 @@ namespace nxmBackup.HVBackupCore
 
                 if (!configWritten)
                 {
-                    this.eventHandler.raiseNewEvent("Die Konfigurationsdatei konnte nicht geschrieben werden", false, false, NO_RELATED_EVENT, EventStatus.error);
+                    this.eventHandler.raiseNewEvent(LanguageHandler.getString("config_writing_error"), false, false, NO_RELATED_EVENT, EventStatus.error);
                     transferDetailsSummary.successful = false;
                 }
 
@@ -790,7 +791,7 @@ namespace nxmBackup.HVBackupCore
                     if (!lbWorker.addToBackupConfig())
                     {
                         //stop lb immediately when config cannot be written
-                        this.eventHandler.raiseNewEvent("Die LiveBackup Konfiguration konnte nicht geschrieben werden", false, false, NO_RELATED_EVENT, EventStatus.error);
+                        this.eventHandler.raiseNewEvent(LanguageHandler.getString("lb_config_writing_error"), false, false, NO_RELATED_EVENT, EventStatus.error);
                         System.Threading.Thread.Sleep(2000);
                         lbWorker.stopLB();
                     }
@@ -921,7 +922,7 @@ namespace nxmBackup.HVBackupCore
                     }catch (Exception ex)
                     {
                         DBQueries.addLog("GetVirtualDiskChanges call failed", Environment.StackTrace, ex);
-                        this.eventHandler.raiseNewEvent("Vorgänger-Backup konnte nicht gefunden werden", false, false, NO_RELATED_EVENT, EventStatus.error);
+                        this.eventHandler.raiseNewEvent(LanguageHandler.getString("previous_backup_not_found"), false, false, NO_RELATED_EVENT, EventStatus.error);
                         transferDetails.successful = false;
                         transferDetails.retryFullBackupOnFail = true; //force retry by using full backup
                         return transferDetails;
@@ -976,7 +977,7 @@ namespace nxmBackup.HVBackupCore
 
 
                     //output ok, build block structure
-                    int eventId = this.eventHandler.raiseNewEvent("Verarbeite Blöcke...", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
+                    int eventId = this.eventHandler.raiseNewEvent(LanguageHandler.getString("processing_blocks"), false, false, NO_RELATED_EVENT, EventStatus.inProgress);
                     int blockCount = ((ulong[])outParams["ChangedByteOffsets"]).Length;
                     ChangedBlock[] changedBlocks = new ChangedBlock[blockCount];
  
@@ -990,7 +991,7 @@ namespace nxmBackup.HVBackupCore
                         transferDetails.bytesProcessed += lengths[i];
                     }
 
-                    this.eventHandler.raiseNewEvent("erfolgreich", true, false, eventId, EventStatus.successful);
+                    this.eventHandler.raiseNewEvent(LanguageHandler.getString("successful"), true, false, eventId, EventStatus.successful);
 
                     //write backup output
                     DiffHandler diffWriter = new DiffHandler(this.eventHandler, null);

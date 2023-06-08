@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using K4os.Compression.LZ4.Streams;
+using nxmBackup.Language;
 
 namespace Common
 {
@@ -108,7 +109,7 @@ namespace Common
             int relatedEventId = -1;
             if (this.eventHandler != null)
             {
-                relatedEventId = this.eventHandler.raiseNewEvent("Lese " + fileName + " - 0%", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
+                relatedEventId = this.eventHandler.raiseNewEvent(LanguageHandler.getString("reading") + " " + fileName + " - 0%", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
             }
 
             Int64 lastTotalByteTransferCounter = 0;
@@ -128,7 +129,7 @@ namespace Common
                         compressionStream.Write(buffer, 0, buffer.Length);
                     }catch(Exception ex)
                     {
-                        this.eventHandler.raiseNewEvent("Fehler beim Schreiben auf das Backupziel", false, false, NO_RELATED_EVENT, EventStatus.error);
+                        this.eventHandler.raiseNewEvent(LanguageHandler.getString("destination_writing_failed"), false, false, NO_RELATED_EVENT, EventStatus.error);
                         errorOccured = true;
                         break;
                     }
@@ -145,7 +146,7 @@ namespace Common
                         compressionStream.Write(buffer, 0, buffer.Length);
                     }catch(Exception ex)
                     {
-                        this.eventHandler.raiseNewEvent("Fehler beim Schreiben auf das Backupziel", false, false, NO_RELATED_EVENT, EventStatus.error);
+                        this.eventHandler.raiseNewEvent(LanguageHandler.getString("destination_writing_failed"), false, false, NO_RELATED_EVENT, EventStatus.error);
                         errorOccured = true;
                         break;
                     }
@@ -184,7 +185,7 @@ namespace Common
                 //progress changed?
                 if (lastPercentage != (int)percentage && this.eventHandler != null)
                 {
-                    this.eventHandler.raiseNewEvent("Lese " + fileName + " - " + (int)percentage + "%", transferRate, processRate, false, true, relatedEventId, EventStatus.inProgress);
+                    this.eventHandler.raiseNewEvent(LanguageHandler.getString("reading") + " " + fileName + " - " + (int)percentage + "%", transferRate, processRate, false, true, relatedEventId, EventStatus.inProgress);
                     lastPercentage = (int)percentage;
                 }
 
@@ -198,7 +199,7 @@ namespace Common
             {
                 if (this.stopRequest.value)
                 {
-                    this.eventHandler.raiseNewEvent("Lese " + fileName + " - abgebrochen", false, true, relatedEventId, EventStatus.error);
+                    this.eventHandler.raiseNewEvent(LanguageHandler.getString("reading") + " " + fileName + " - " + LanguageHandler.getString("canceled"), false, true, relatedEventId, EventStatus.error);
                     errorOccured = true;
                 }
                 else
@@ -272,7 +273,7 @@ namespace Common
             int relatedEventId = -1;
             if (this.eventHandler != null)
             {
-                relatedEventId = this.eventHandler.raiseNewEvent("Verarbeite: " + fileName + "... ", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
+                relatedEventId = this.eventHandler.raiseNewEvent(LanguageHandler.getString("processing") + ": " + fileName + "... ", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
             }
 
             //open source file
@@ -303,7 +304,7 @@ namespace Common
                 System.IO.File.Delete(destinationPath);
                 blockCompressionStream.Close();
                 sourceStream.Close();
-                this.eventHandler.raiseNewEvent("Verarbeite: " + fileName + "... fehlgeschlagen", false, true, relatedEventId, EventStatus.error);
+                this.eventHandler.raiseNewEvent(LanguageHandler.getString("processing") + ": " + fileName + "... " + LanguageHandler.getString("failed"), false, true, relatedEventId, EventStatus.error);
                 return false;
             }
 
@@ -325,7 +326,7 @@ namespace Common
                 string progress = Common.PrettyPrinter.prettyPrintBytes(totalReadBytes);
                 if (progress != lastProgress && this.eventHandler != null)
                 {
-                    this.eventHandler.raiseNewEvent("Verarbeite: " + fileName + "... " + progress, false, true, relatedEventId, EventStatus.inProgress);
+                    this.eventHandler.raiseNewEvent(LanguageHandler.getString("processing") + ": " + fileName + "... " + progress, false, true, relatedEventId, EventStatus.inProgress);
                     lastProgress = progress;
                 }
 
@@ -336,12 +337,12 @@ namespace Common
                 if (!this.stopRequest.value)
                 {
                     //finished "normally"
-                    this.eventHandler.raiseNewEvent("Verarbeite: " + fileName + "... erfolgreich", false, true, relatedEventId, EventStatus.successful);
+                    this.eventHandler.raiseNewEvent(LanguageHandler.getString("processing") + ": " + fileName + "... " + LanguageHandler.getString("successful"), false, true, relatedEventId, EventStatus.successful);
                 }
                 else
                 {
                     //stopped by user
-                    this.eventHandler.raiseNewEvent("Verarbeite: " + fileName + "... fehlgeschlagen", false, true, relatedEventId, EventStatus.error);
+                    this.eventHandler.raiseNewEvent(LanguageHandler.getString("processing")+ ": " + fileName + "... " + LanguageHandler.getString("failed"), false, true, relatedEventId, EventStatus.error);
                 }
             }
             destStream.Close();
