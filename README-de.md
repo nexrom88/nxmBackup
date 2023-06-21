@@ -17,6 +17,6 @@ nxmBackup wird von Privatpersonen entwickelt und kontinuierlich weiterentwickelt
 
 Der kompilierte und zu einem Setup gepackte Code ist unter der "Releases"-Sektion zu finden: [Releases](https://github.com/nexrom88/nxmBackup/releases)
 
-Für weitere Informationen, besuche uns auf: [nxmbackup.com](https://nxmbackup.com/)
+Für weitere Informationen, besuche uns auf: [nxmbackup.com](https://nxmbackup.com/?page_id=30&lang=de)
 
 Unser Wiki mit zahlreichen Hilfe-Themen ist hier zu finden: [https://nxmbackup.com/wiki/doku.php](https://nxmbackup.com/wiki/doku.php)
