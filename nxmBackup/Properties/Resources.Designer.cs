@@ -82,5 +82,28 @@ namespace nxmBackup.Properties {
                 return ResourceManager.GetString("mailNotification", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Sucht eine lokalisierte Zeichenfolge, die &lt;html lang=&quot;de&quot;&gt;
+        ///&lt;head&gt;
+        ///    &lt;title&gt;nxmBackup Job-Notification&lt;/title&gt;
+        ///    &lt;style&gt;
+        ///               @charset &quot;UTF-8&quot;; /*!
+        ///        * Bootstrap  v5.2.0 (https://getbootstrap.com/)
+        ///        * Copyright 2011-2022 The Bootstrap Authors
+        ///        * Copyright 2011-2022 Twitter, Inc.
+        ///        * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
+        ///        */
+        ///
+        ///               :root {
+        ///                   --bs-blue: #0d6efd;
+        ///                   --bs-indigo: #6610f2;
+        ///                   --bs-purpl [Rest der Zeichenfolge wurde abgeschnitten]&quot;; ähnelt.
+        /// </summary>
+        public static string mailNotificationEN {
+            get {
+                return ResourceManager.GetString("mailNotificationEN", resourceCulture);
+            }
+        }
     }
 }

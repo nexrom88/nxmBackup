@@ -171,8 +171,20 @@ namespace JobEngine
         //sends the notification mail after job execution finished
         private bool sendNotificationMail(JobExecutionProperties properties)
         {
+            //get currently set language
+            string language = LanguageHandler.getLanguageName();
+
             //read html file from ressources
-            string mailHTML = nxmBackup.Properties.Resources.mailNotification;
+            string mailHTML;
+
+            switch (language) {
+                case "de":
+                    mailHTML = nxmBackup.Properties.Resources.mailNotification;
+                    break;
+                case "en":
+                    mailHTML = nxmBackup.Properties.Resources.mailNotification;
+                    break;
+            }
 
             Dictionary<string,string> settings = DBQueries.readGlobalSettings(true);
 
@@ -193,7 +205,7 @@ namespace JobEngine
             mailHTML = mailHTML.Replace("{{endtime}}", properties.endStamp.ToString("dd.MM.yyyy HH:mm"));
             mailHTML = mailHTML.Replace("{{transfered}}", Common.PrettyPrinter.prettyPrintBytes((long)properties.bytesTransfered));
 
-            return mailClient.sendMail("nxmBackup - Jobbericht", mailHTML, true, settings["mailrecipient"]);
+            return mailClient.sendMail(LanguageHandler.getString("jobreport"), mailHTML, true, settings["mailrecipient"]);
         }
 
         //checks whether the job has to start now or not
