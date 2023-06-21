@@ -1507,8 +1507,8 @@ function showLoginForm(showError) {
             }
         }).then((result) => {
             Swal.fire({
-                title: 'Anmeldung',
-                text: 'Anmeldung wird ausgeführt...',
+                title: languageStrings["login_title"],
+                text: languageStrings["login_text"],
                 allowOutsideClick: false,
                 allowEscapeKey: false,
                 allowEnterKey: false,
@@ -1527,7 +1527,7 @@ function showLoginForm(showError) {
         });
 
         if (showError) {
-            Swal.showValidationMessage(`Anmeldung ist fehlgeschlagen`);
+            Swal.showValidationMessage(languageStrings["login_failed"]);
         }
     });
 
