@@ -182,7 +182,10 @@ namespace JobEngine
                     mailHTML = nxmBackup.Properties.Resources.mailNotification;
                     break;
                 case "en":
-                    mailHTML = nxmBackup.Properties.Resources.mailNotification;
+                    mailHTML = nxmBackup.Properties.Resources.mailNotificationEN;
+                    break;
+                default:
+                    mailHTML = nxmBackup.Properties.Resources.mailNotificationEN;
                     break;
             }
 
