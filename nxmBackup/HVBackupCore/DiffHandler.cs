@@ -395,7 +395,7 @@ namespace nxmBackup.HVBackupCore
                         string progress = Common.PrettyPrinter.prettyPrintBytes(bytesRestored);
                         if (progress != lastProgress && this.eventHandler != null)
                         {
-                            this.eventHandler.raiseNewEvent("Verarbeite Inkrement... " + progress, false, true, relatedEventId, EventStatus.inProgress);
+                            this.eventHandler.raiseNewEvent(LanguageHandler.getString("merge_increment") + progress, false, true, relatedEventId, EventStatus.inProgress);
                             lastProgress = progress;
                         }
 
@@ -408,18 +408,18 @@ namespace nxmBackup.HVBackupCore
                     //finished "normally"?
                     if (!this.stopRequest.value)
                     {
-                        this.eventHandler.raiseNewEvent("Verarbeite Inkrement... erfolgreich", true, true, relatedEventId, EventStatus.successful);
+                        this.eventHandler.raiseNewEvent(LanguageHandler.getString("merge_increment") + " " + LanguageHandler.getString("successful"), true, true, relatedEventId, EventStatus.successful);
                     }
                     else
                     {
-                        this.eventHandler.raiseNewEvent("Verarbeite Inkrement... abgebrochen", true, true, relatedEventId, EventStatus.error);
+                        this.eventHandler.raiseNewEvent(LanguageHandler.getString("merge_increment") + " " + LanguageHandler.getString("canceled"), true, true, relatedEventId, EventStatus.error);
                     }
                 }
 
             }catch(Exception ex)
             {
                 //error while merging
-                this.eventHandler.raiseNewEvent("Verarbeite Inkrement... fehlgeschlagen", true, true, NO_RELATED_EVENT, EventStatus.error);
+                this.eventHandler.raiseNewEvent(LanguageHandler.getString("merge_increment") + " " + LanguageHandler.getString("failed"), true, true, NO_RELATED_EVENT, EventStatus.error);
                 diskHandler.detach();
                 diskHandler.close();
                 diffStream.Close();
