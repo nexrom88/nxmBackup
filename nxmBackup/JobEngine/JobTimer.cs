@@ -173,6 +173,7 @@ namespace JobEngine
         {
             //get currently set language
             string language = LanguageHandler.getLanguageName();
+            string dateFormat;
 
             //read html file from ressources
             string mailHTML;
@@ -180,12 +181,15 @@ namespace JobEngine
             switch (language) {
                 case "de":
                     mailHTML = nxmBackup.Properties.Resources.mailNotification;
+                    dateFormat = "dd.MM.yyyy HH:mm";
                     break;
                 case "en":
                     mailHTML = nxmBackup.Properties.Resources.mailNotificationEN;
+                    dateFormat = "MM/dd/yyyy HH:mm";
                     break;
                 default:
                     mailHTML = nxmBackup.Properties.Resources.mailNotificationEN;
+                    dateFormat = "MM/dd/yyyy HH:mm";
                     break;
             }
 
@@ -203,9 +207,9 @@ namespace JobEngine
 
             //fill in placeholders within html form
             mailHTML = mailHTML.Replace("{{jobname}}", this.Job.Name);
-            mailHTML = mailHTML.Replace("{{state}}", properties.successful? "Erfolgreich":"Fehler");
-            mailHTML = mailHTML.Replace("{{starttime}}", properties.startStamp.ToString("dd.MM.yyyy HH:mm"));
-            mailHTML = mailHTML.Replace("{{endtime}}", properties.endStamp.ToString("dd.MM.yyyy HH:mm"));
+            mailHTML = mailHTML.Replace("{{state}}", properties.successful? LanguageHandler.getString("successful_capital") : LanguageHandler.getString("error"));
+            mailHTML = mailHTML.Replace("{{starttime}}", properties.startStamp.ToString(dateFormat));
+            mailHTML = mailHTML.Replace("{{endtime}}", properties.endStamp.ToString(dateFormat));
             mailHTML = mailHTML.Replace("{{transfered}}", Common.PrettyPrinter.prettyPrintBytes((long)properties.bytesTransfered));
 
             return mailClient.sendMail(LanguageHandler.getString("jobreport"), mailHTML, true, settings["mailrecipient"]);
