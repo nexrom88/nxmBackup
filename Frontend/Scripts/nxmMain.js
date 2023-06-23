@@ -846,8 +846,8 @@ function saveNewJob() {
         },
         error: function (result) {
             Swal.fire(
-                'Fehlgeschlagen',
-                'Der neue Job konnte nicht erstellt werden',
+                languageStrings["failed"],
+                languageStrings["job_create_failed"],
                 'error'
             );
             $("#newJobOverlay").css("display", "none");
@@ -1215,13 +1215,13 @@ function buildTransferrateChart() {
     const data = {
         labels: labels,
         datasets: [{
-            label: 'Übertragungsrate in MB/s',
+            label: languageStrings["transferrate"],
             fill: true,
             backgroundColor: 'rgb(0, 123, 255)',
             borderColor: 'rgb(0, 123, 255)',
             data: transferrates,
         }, {
-            label: 'Verarbeitungsrate in MB/s',
+                label: languageStrings["processingrate"],
             fill: true,
             backgroundColor: 'rgb(255, 26, 26)',
             borderColor: 'rgb(255, 26, 26)',

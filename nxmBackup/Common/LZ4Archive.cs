@@ -204,7 +204,7 @@ namespace Common
                 }
                 else
                 {
-                    this.eventHandler.raiseNewEvent("Lese " + fileName + " - 100%", false, true, relatedEventId, EventStatus.successful);
+                    this.eventHandler.raiseNewEvent(LanguageHandler.getString("reading") + " " + fileName + " - 100%", false, true, relatedEventId, EventStatus.successful);
                 }
                 
             }

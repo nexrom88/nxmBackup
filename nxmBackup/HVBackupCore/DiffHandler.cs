@@ -44,7 +44,7 @@ namespace nxmBackup.HVBackupCore
             {
                 vhdxBlock currentBlock = new vhdxBlock();
                 currentBlock.state = vhdxBATTable.entries[(int)i].state;
-                currentBlock.offset = vhdxBATTable.entries[(int)i].FileOffsetMB * 1048576; // multiple with 1024^2 to get byte offset
+                currentBlock.offset = vhdxBATTable.entries[(int)i].FileOffsetMB * 1048576; // multiply with 1024^2 to get byte offset
 
                 uint offsetIndex = i - startEntry;
                 vhdxOffsets[offsetIndex] = currentBlock;
