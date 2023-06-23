@@ -186,11 +186,11 @@ namespace JobEngine
                     break;
                 case "en":
                     mailHTML = nxmBackup.Properties.Resources.mailNotificationEN;
-                    dateFormat = "MM/dd/yyyy HH:mm";
+                    dateFormat = "MM/dd/yyyy h:mm tt";
                     break;
                 default:
                     mailHTML = nxmBackup.Properties.Resources.mailNotificationEN;
-                    dateFormat = "MM/dd/yyyy HH:mm";
+                    dateFormat = "MM/dd/yyyy h:mm tt";
                     break;
             }
 
