@@ -9,6 +9,7 @@ using nxmBackup.Language;
 using System.Reflection;
 using System.Linq;
 using System.IO;
+using System.Globalization;
 
 namespace JobEngine
 {
@@ -208,8 +209,8 @@ namespace JobEngine
             //fill in placeholders within html form
             mailHTML = mailHTML.Replace("{{jobname}}", this.Job.Name);
             mailHTML = mailHTML.Replace("{{state}}", properties.successful? LanguageHandler.getString("successful_capital") : LanguageHandler.getString("error"));
-            mailHTML = mailHTML.Replace("{{starttime}}", properties.startStamp.ToString(dateFormat));
-            mailHTML = mailHTML.Replace("{{endtime}}", properties.endStamp.ToString(dateFormat));
+            mailHTML = mailHTML.Replace("{{starttime}}", properties.startStamp.ToString(dateFormat, CultureInfo.InvariantCulture));
+            mailHTML = mailHTML.Replace("{{endtime}}", properties.endStamp.ToString(dateFormat, CultureInfo.InvariantCulture));
             mailHTML = mailHTML.Replace("{{transfered}}", Common.PrettyPrinter.prettyPrintBytes((long)properties.bytesTransfered));
 
             return mailClient.sendMail(LanguageHandler.getString("jobreport"), mailHTML, true, settings["mailrecipient"]);
