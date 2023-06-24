@@ -38,6 +38,9 @@ function startRestoreHandler() {
         url: "Templates/restoreOptions"
     }).done(function (data) {
 
+        //replace language markups
+        data = replaceLanguageMarkups(data);
+
         //load job vms
         var vms = [];
         for (var i = 0; i < jobObj.JobVMs.length; i++) {
@@ -103,6 +106,10 @@ function loadRestorePoints() {
                 url: "Templates/restorePointsTable"
             })
                 .done(function (data) {
+
+                    //replace language markups
+                    data = replaceLanguageMarkups(data);
+
                     var renderedData = Mustache.render(data, { restorePoints: result });
                     $("#restorePointTable").html(renderedData);
 
@@ -129,13 +136,13 @@ function convertBackupProperties(properties) {
         //convert backup type
         switch (properties[i].type) {
             case "full":
-                properties[i].type = "Vollsicherung";
+                properties[i].type = languageStrings["backup_full"];
                 break;
             case "rct":
-                properties[i].type = "Inkrement";
+                properties[i].type = languageStrings["backup_incremental"];
                 break;
             case "lb":
-                properties[i].type = "LiveBackup";
+                properties[i].type = languageStrings["backup_live"];
                 break;
         }
 
@@ -260,8 +267,8 @@ function prepareRestore() {
 function startRestore(restoreStartDetails) {
     //show loading screen
     Swal.fire({
-        title: 'Initialisierung',
-        html: 'Wiederherstellung wird gestartet...',
+        title: languageStrings["initializing"],
+        html: languageStrings["starting_restore"],
         allowEscapeKey: false,
         allowOutsideClick: false,
         didOpen: () => {
@@ -317,8 +324,8 @@ function startRestore(restoreStartDetails) {
             if (data["status"] == 400) {
                 Swal.fire({
                     icon: 'error',
-                    title: 'Fehler',
-                    text: 'Die Wiederherstellung kann nicht gestartet werden, da ein anderer Job bereits läuft',
+                    title: languageStrings["error"],
+                    text: languageStrings["job_already_running"],
                 })
             };
 
@@ -327,7 +334,7 @@ function startRestore(restoreStartDetails) {
                 Swal.fire({
                     icon: 'error',
                     title: 'Fehler',
-                    text: 'Die Wiederherstellung kann aufgrund eines Serverfehlers nicht gestartet werden',
+                    text: languageStrings["restore_server_error"],
                 })
             };
 
@@ -345,8 +352,8 @@ function startRestore(restoreStartDetails) {
                 Swal.fire({
                     input: 'select',
                     inputOptions: hddOptionsMinified,
-                    title: 'Festplatte auswählen',
-                    text: 'Bitte wählen Sie hier eine virtuelle Festplatte aus, auf die die Wiederherstellung gestartet wird',
+                    title: languageStrings["select_hdd_caption"],
+                    text: languageStrings["select_hdd_text"],
                 }).then(function (value) {
                     selectedRestoreHDD = hddOptions[value["value"]];
                     restoreStartDetails["selectedHDD"] = selectedRestoreHDD;
@@ -365,13 +372,13 @@ function handleRunningFLR(volumes) {
 
     //show dialog box
     Swal.fire({
-        title: 'Einzeldatei-Wiederherstellung',
+        title: languageStrings["guest_files_restore"],
         html: "<div id='flrBrowserContainer'></div>",
         confirmButtonColor: '#3085d6',
         allowOutsideClick: false,
         customClass: "flrSwalStyles",
         allowEscapeKey: false,
-        confirmButtonText: 'Wiederherstellung beenden'
+        confirmButtonText: languageStrings["flr_stop"]
     }).then((result) => { //gets called when done
 
         //send delete request to stop job
@@ -389,6 +396,10 @@ function handleRunningFLR(volumes) {
         url: "Templates/flrBrowser"
     })
         .done(function (data) {
+
+            //replace language markups
+            data = replaceLanguageMarkups(data);
+
             $("#flrBrowserContainer").html(Mustache.render(data, { volumes: volumes }));
 
             //get selected volume
@@ -436,7 +447,7 @@ function buildContextMenu(node) {
     if (node["type"] == "file") {
         menu = {
             "Download": {
-                "label": "Datei holen",
+                "label": languageStrings["get_file"],
                 "action": function (obj) {
                     var filePath = $(obj["reference"][0]).parent().attr("id");
 
@@ -447,7 +458,7 @@ function buildContextMenu(node) {
     } else if (node["type"] == "directory") {
         menu = {
             "Download": {
-                "label": "Ordner holen",
+                "label": languageStrings["get_folder"],
                 "action": function (obj) {
                     var filePath = $(obj["reference"][0]).parent().attr("id");
 
@@ -497,14 +508,14 @@ function flrDoNavigate(path, parentNode, rawNode) {
 //shows a folder browser dialog for selecting a directory
 function showFolderBrowserDialog() {
     Swal.fire({
-        title: 'Ziel wählen',
+        title: languageStrings["select_target"],
         html: "<div id='folderBrowser' class='folderBrowserOnRestore'></div>",
         confirmButtonColor: '#3085d6',
         allowOutsideClick: false,
         allowEscapeKey: false,
         showCancelButton: true,
-        cancelButtonText: "Abbrechen",
-        confirmButtonText: 'Wiederherstellung starten',
+        cancelButtonText: languageStrings["cancel"],
+        confirmButtonText: languageStrings["start_restore"],
     }).then(function (state) {
         //start restore on confirm-click
         if (state.isConfirmed) {
@@ -514,8 +525,8 @@ function showFolderBrowserDialog() {
                 prepareRestore();
             } else {
                 Swal.fire({
-                    title: 'Fehler',
-                    text: 'Es wurde kein Wiederherstellungspfad ausgewählt',
+                    title: languageStrings["error"],
+                    text: languageStrings["error_no_path"],
                     icon: 'error'
                 });
             }
@@ -558,13 +569,13 @@ function showFolderBrowserDialog() {
 function handleRunningFullRestore() {
     //show dialog box for seeing restore logs
     Swal.fire({
-        title: 'Komplette VM Wiederherstellung',
+        title: languageStrings["full_restore"],
         html: "<div id='fullRestoreLogContainer'></div>",
         confirmButtonColor: '#3085d6',
         allowOutsideClick: false,
         customClass: "fullRestoreSwalStyles",
         allowEscapeKey: false,
-        confirmButtonText: 'Wiederherstellung abbrechen',
+        confirmButtonText: languageStrings["cancel_restore"],
     }).then((result) => { //gets called when done
 
         //send delete request to stop job
@@ -638,7 +649,7 @@ function refreshFullRestoreLog() {
                     //clear refresh timer
                     clearInterval(refreshFullRestoreLog);
 
-                    $(".swal2-confirm").html("Schließen");
+                    $(".swal2-confirm").html(languageStrings["close"]);
                 } else {
                     //add event to eventsList
                     eventsList.unshift(oneEvent);
@@ -658,13 +669,13 @@ function handleRunningLiveRestore() {
 
     //show dialog box
     Swal.fire({
-        title: 'LiveRestore läuft',
-        text: "Der LiveRestore läuft. Schließen Sie dieses Hinweisfenster um den LiveRestore wieder zu beenden",
+        title: languageStrings["liverestore_running"],
+        text: languageStrings["liverestore_running_text"],
         icon: 'warning',
         confirmButtonColor: '#3085d6',
         allowOutsideClick: false,
         allowEscapeKey: false,
-        confirmButtonText: 'LiveRestore beenden'
+        confirmButtonText: languageStrings["stop_liverestore"]
     }).then((result) => {
         //send delete request to stop job
         $.ajax({

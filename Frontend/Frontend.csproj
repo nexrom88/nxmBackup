@@ -45,6 +45,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.CodeDom.Providers.DotNetCompilerPlatform, Version=3.6.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
@@ -171,6 +172,7 @@
     <Compile Include="Controllers\FileIconController.cs" />
     <Compile Include="Controllers\FLRBrowserController.cs" />
     <Compile Include="Controllers\FolderDownloader.cs" />
+    <Compile Include="Controllers\LoadLanguageController.cs" />
     <Compile Include="Controllers\RestoreController.cs" />
     <Compile Include="Controllers\DirectoryController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
@@ -247,6 +249,7 @@
     <Content Include="MiniFilter\nxmmf.cat" />
     <Content Include="MiniFilter\nxmMF.sys" />
     <Content Include="install.ps1" />
+    <Content Include="lang.db" />
     <None Include="Properties\PublishProfiles\IISProfile.pubxml" />
     <None Include="Scripts\jquery-3.6.0.intellisense.js" />
     <Content Include="Scripts\jquery-3.6.0.js" />
@@ -278,6 +281,8 @@
     <Content Include="Templates\JobExecutionDetailsForm.html" />
     <Content Include="Templates\jobStateTable.html" />
     <Content Include="Templates\lbTimeSelection.html" />
+    <Content Include="Templates\loginForm.html" />
+    <Content Include="Templates\mainWindow.html" />
     <Content Include="Templates\navJobItem.html" />
     <Content Include="Templates\jobDetailsPanel.html" />
     <Content Include="Templates\newJobPage1.html" />

@@ -1,20 +1,20 @@
 ﻿<form>
-    <h5 class="center_div subHeadline">Aufbewahrung festlegen</h5>
+    <h5 class="center_div subHeadline">$$retention_caption$$</h5>
 
     <div id="incrementalOptions">
         <div class="newJobElement center_div">
             <span class="centeredElementSpan">
-                <label class="enter_div" for="spBlockSize">Vollbackup nach Anzahl Backups</label>
+                <label class="enter_div" for="spBlockSize">$$fullbackup_by$$</label>
                 <input id="spBlockSize" type="number" value="7" min="2" max="20" step="1" />
             </span>
         </div>
 
         <div class="newJobElement center_div">
             <span class="centeredElementSpan">
-                <label class="enter_div" for="sbRotationType">Rotationstyp</label>
+                <label class="enter_div" for="sbRotationType">$$rotation_type$$</label>
                 <select id="sbRotationType" class="form-control">
-                    <option data-rotationtype="blockrotation" selected>Blockrotation</option>
-                    <option data-rotationtype="merge">Zusammenführen</option>
+                    <option data-rotationtype="blockrotation" selected>$$blockrotation$$</option>
+                    <option data-rotationtype="merge">$$merge$$</option>
                 </select>
             </span>
         </div>
@@ -22,12 +22,12 @@
 
     <div class="newJobElement center_div">
         <span class="centeredElementSpan">
-            <label id="lblMaxElements" class="enter_div" for="spMaxElements">Anzahl aufzubewahrender Blöcke</label>
+            <label id="lblMaxElements" class="enter_div" for="spMaxElements">$$blocks_number$$</label>
             <input id="spMaxElements" type="number" value="2" min="1" max="50" step="1" />
         </span>
     </div>
 
     <div class="text-center">
-        <button id="newJobNextButton" type="button" class="btn btn-primary">Weiter</button>
+        <button id="newJobNextButton" type="button" class="btn btn-primary">$$next$$</button>
     </div>
 </form>

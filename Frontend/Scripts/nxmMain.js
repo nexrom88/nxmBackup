@@ -15,6 +15,8 @@ var ratesChart; //var to hold the chart for displaying transferrates
 var transferrates = []; //var to hold the current transfer rates
 var processrates = []; //var to hold the current process rates
 var versionControl = {} //object to hold version and update information
+var languageStrings = {}; //object to hold all language strings
+var currentLanguage; //string object to hold current selected language
 
 //global handler for http status 401 (login required)
 $.ajaxSetup({
@@ -30,6 +32,59 @@ $.ajaxSetup({
         }
     }
 });
+
+//loads a given string from language db. When furtherInit is set, MainWindow template gets loaded afterwards
+function loadLanguage() {
+    $.ajax({
+        url: "api/LoadLanguage",
+        async:false
+    })
+        .done(function (data) {
+            //parse language object
+            languageStrings = JSON.parse(data);
+        });
+}
+
+//loads and initializes the main window template
+function loadMainWindowTemplate() {
+    $.ajax({
+        url: "Templates/mainWindow"
+    })
+        .done(function (data) {
+            //replace lang markups
+            data = replaceLanguageMarkups(data);
+
+            //set main window to viewport
+            $("#mainWindow").html(data);
+
+            //init everything else
+            init();
+        });
+}
+
+//replaces language markups with strings from loaded language strings
+function replaceLanguageMarkups(text) {
+    var markups = text.match(/\$\$[\w]+\$\$/g);
+
+    //iterate through all found markups
+    for (var i = 0; markups != null && i < markups.length; i++) {
+        //remove $$ $$
+        var currentMarkup = markups[i].substring(2, markups[i].length - 2);
+
+        //look for lang string
+        var currentText = languageStrings[currentMarkup];
+
+        //set default value when text cannot be found
+        if (!currentText) {
+            currentText = currentMarkup;
+        }
+
+        //replace original markup
+        text = text.replace(markups[i], currentText);
+    }
+
+    return text;
+}
 
 
 //init jobs post-login
@@ -111,12 +166,18 @@ function init() {
 $(window).on('load', function () {
     dbState = "init";
 
+    //load language
+    loadLanguage();
+
     //check if user is authenticated
     $.ajax({
         url: "api/CheckAuth",
         success: function () {
-            //user is authenticated, init everything
-            init();
+            //user is authenticated
+
+            //now load main window template
+            loadMainWindowTemplate();
+       
         }
     })
     
@@ -161,6 +222,9 @@ function showNewJobPage(pageNumber, selectedEditJob) {
         url: "Templates/newJobPage" + pageNumber
     })
         .done(function (data) {
+            //replace language markups
+            data = replaceLanguageMarkups(data)
+
             switch (pageNumber) {
                 case 1:
                     $("#newJobPage").html(data);
@@ -294,10 +358,10 @@ function showNewJobPage(pageNumber, selectedEditJob) {
 
                         switch (rotationType) {
                             case "merge":
-                                $("#lblMaxElements").html("Anzahl aufzubewahrender Backups");
+                                $("#lblMaxElements").html(languageStrings["backups_number"]);
                                 break;
                             case "blockrotation":
-                                $("#lblMaxElements").html("Anzahl aufzubewahrender Blöcke");
+                                $("#lblMaxElements").html(languageStrings["blocks_number"]);
                                 break;
                         }
 
@@ -380,15 +444,15 @@ function checkNxmStorageCredentials() {
     })
         .done(function (data) {
             Swal.fire(
-                'Erfolgreich',
-                'Die angegebenen Daten wurden erfolgreich geprüft',
+                languageStrings["successful_capital"],
+                languageStrings["check_success"],
                 'success'
             );
 
         }).fail(function (data) {
             Swal.fire(
-                'Fehler',
-                'Die angegebenen Daten sind fehlerhaft',
+                languageStrings["error"],
+                languageStrings["check_error"],
                 'error'
             );
 
@@ -418,15 +482,15 @@ function checkSMBCredentials() {
     })
         .done(function (data) {
             Swal.fire(
-                'Erfolgreich',
-                'Die angegebenen Daten wurden erfolgreich geprüft',
+                languageStrings["successful_capital"],
+                languageStrings["check_success"],
                 'success'
             );
 
         }).fail(function (data) {
             Swal.fire(
-                'Fehler',
-                'Die angegebenen Daten sind fehlerhaft',
+                languageStrings["error"],
+                languageStrings["check_error"],
                 'error'
             );
 
@@ -439,7 +503,7 @@ function buildnxmStorageForm() {
         url: "Templates/nxmStorageCredentials"
     })
         .done(function (data) {
-            $("#folderBrowser").html(data);
+            $("#folderBrowser").html(replaceLanguageMarkups(data));
         });
 }
 
@@ -449,7 +513,7 @@ function buildSMBForm() {
         url: "Templates/smbCredentials"
     })
         .done(function (data) {
-            $("#folderBrowser").html(data);
+            $("#folderBrowser").html(replaceLanguageMarkups(data));
         });
 }
 
@@ -548,10 +612,10 @@ function showCurrentSettings(pageNumber, selectedEditJob) {
             //set rotation type
             if (selectedEditJob["Rotation"]["type"] == 0) { //merge
                 $('option[data-rotationtype="merge"]').prop("selected", true);
-                $("#lblMaxElements").html("Anzahl aufzubewahrender Backups");
+                $("#lblMaxElements").html(languageStrings["backups_number"]);
             } else if (selectedEditJob["Rotation"]["type"] == 1) { //blockrotation
                 $('option[data-rotationtype="blockrotation"]').prop("selected", true);
-                $("#lblMaxElements").html("Anzahl aufzubewahrender Blöcke");
+                $("#lblMaxElements").html(languageStrings["blocks_number"]);
             }
 
             $("#spMaxElements").val(selectedEditJob["Rotation"]["maxElementCount"]);
@@ -654,8 +718,8 @@ function registerNextPageClickHandler(currentPage, selectedEditJob) {
                 //multiple VMs just possible when lb is disabled
                 if (selectedVMs.length > 1 && newJobObj["livebackup"]) {
                     Swal.fire(
-                        'Eingabefehler',
-                        'Wenn LiveBackup aktiviert ist, darf der Job nur aus einer virtuellen Maschine bestehen',
+                        languageStrings["error"],
+                        languageStrings["error_one_vm"],
                         'error'
                     );
                     return;
@@ -699,8 +763,8 @@ function registerNextPageClickHandler(currentPage, selectedEditJob) {
                 //valid input?
                 if (newJobObj["rotationtype"] == "merge" && newJobObj["blocksize"] > newJobObj["maxelements"]) {
                     Swal.fire(
-                        'Eingabefehler',
-                        'Ein Vollbackup würde nie durchgeführt werden, da die "Anzahl aufzubewahrender Backups" zu klein ist',
+                        languageStrings["invalid_input"],
+                        languageStrings["error_retention"],
                         'error'
                     );
                     return;
@@ -782,8 +846,8 @@ function saveNewJob() {
         },
         error: function (result) {
             Swal.fire(
-                'Fehlgeschlagen',
-                'Der neue Job konnte nicht erstellt werden',
+                languageStrings["failed"],
+                languageStrings["job_create_failed"],
                 'error'
             );
             $("#newJobOverlay").css("display", "none");
@@ -814,7 +878,7 @@ function buildJobsList() {
         url: "Templates/navJobItem"
     })
         .done(function (data) {
-            jobTemplate = data;
+            jobTemplate = replaceLanguageMarkups(data);
 
             //iterate through all jobs
             for (var i = 0; i < configuredJobs.length; i++) {
@@ -858,10 +922,14 @@ function buildJobDetailsPanel() {
         url: "Templates/jobDetailsPanel"
     })
         .done(function (tableData) {
+
+            //remove language markups
+            tableData = replaceLanguageMarkups(tableData);
+
             var jobHeaderString;
-            jobHeaderString = "Jobdetails (" + selectedJobObj.Name + ")";
+            jobHeaderString = languageStrings["job_details_caption"] + " (" + selectedJobObj.Name + ")";
             if (!selectedJobObj.Enabled) {
-                jobHeaderString += " - deaktiviert";
+                jobHeaderString += " - " + languageStrings["job_disabled"];
             }
 
             $("#mainPanelHeader").html(jobHeaderString);
@@ -900,7 +968,7 @@ function buildJobDetailsPanel() {
             $("#stopLBButton").click(stopLBHandler);
 
             //edit enableJobButton caption
-            $("#enableJobButtonCaption").html(selectedJobObj["Enabled"] ? "Job deaktivieren" : "Job aktivieren");
+            $("#enableJobButtonCaption").html(selectedJobObj["Enabled"] ? languageStrings["disable_job_button"] : languageStrings["enable_job_button"]);
 
             //select first vm
             $(".vm").first().click();
@@ -961,13 +1029,13 @@ function enableJobHandler(event) {
             selectedJobObj["Enabled"] = !selectedJobObj["Enabled"];
 
             //edit enableJobButton caption
-            $("#enableJobButtonCaption").html(selectedJobObj["Enabled"] ? "Job deaktivieren" : "Job aktivieren");
+            $("#enableJobButtonCaption").html(selectedJobObj["Enabled"] ? languageStrings["disable_job_button"] : languageStrings["enable_job_button"]);
 
             //refresh the details panel header
             var jobHeaderString;
-            jobHeaderString = "Jobdetails (" + selectedJobObj.Name + ")";
+            jobHeaderString = languageStrings["job_details_caption"] + " (" + selectedJobObj.Name + ")";
             if (!selectedJobObj.Enabled) {
-                jobHeaderString += " - deaktiviert";
+                jobHeaderString += " - " + languageStrings["job_disabled"];
             }
             $("#mainPanelHeader").html(jobHeaderString);
 
@@ -984,14 +1052,14 @@ function enableJobHandler(event) {
 function deleteJobHandler(event) {
     //api call
     Swal.fire({
-        title: 'Job löschen?',
-        text: "Soll der aktuelle Job wirklich gelöscht werden?",
+        title: languageStrings["delete_job_caption"],
+        text: languageStrings["delete_job_question"],
         icon: 'question',
         showCancelButton: true,
         confirmButtonColor: '#3085d6',
         cancelButtonColor: '#d33',
-        confirmButtonText: 'Löschen',
-        cancelButtonText: 'Abbrechen'
+        confirmButtonText: languageStrings["delete_confirm_button"],
+        cancelButtonText: languageStrings["cancel"]
     }).then((result) => {
         if (result.isConfirmed) {
             $.ajax({
@@ -1003,15 +1071,15 @@ function deleteJobHandler(event) {
                 complete: function (data) {
                     if (data.status == 200) { //success
                         Swal.fire(
-                            'Job gelöscht',
-                            'Der ausgewählte Job wurde gelöscht',
+                            languageStrings["job_deleted_caption"],
+                            languageStrings["job_deleted_text"],
                             'success'
                         );
                         location.reload();
                     } else if (data.status == 400) { //job currently running
                         Swal.fire(
-                            'Nicht möglich',
-                            'Der ausgewählte Job kann nicht gelöscht werden solange dieser ausgeführt wird',
+                            languageStrings["not_possible"],
+                            languageStrings["job_delete_error"],
                             'error'
                         );
                     }
@@ -1069,6 +1137,10 @@ function loadJobTemplates() {
         url: "Templates/jobStateTable"
     })
         .done(function (data) {
+
+            //remove language markups
+            data = replaceLanguageMarkups(data);
+
             jobStateTableTemplate = data;
         });
 
@@ -1143,13 +1215,13 @@ function buildTransferrateChart() {
     const data = {
         labels: labels,
         datasets: [{
-            label: 'Übertragungsrate in MB/s',
+            label: languageStrings["transferrate"],
             fill: true,
             backgroundColor: 'rgb(0, 123, 255)',
             borderColor: 'rgb(0, 123, 255)',
             data: transferrates,
         }, {
-            label: 'Verarbeitungsrate in MB/s',
+                label: languageStrings["processingrate"],
             fill: true,
             backgroundColor: 'rgb(255, 26, 26)',
             borderColor: 'rgb(255, 26, 26)',
@@ -1203,48 +1275,25 @@ function renderJobStateTable() {
 
             if (selectedJobObj["Enabled"]) {
                 switch (data["Interval"]["intervalBase"]) {
-                    case 0: //stündlich
-                        intervalString = "Stündlich bei Minute " + buildTwoDigitsInt(data["Interval"]["minute"]);
+                    case 0: //hourly
+                        intervalString = languageStrings["hourly_at"] + " " + buildTwoDigitsInt(data["Interval"]["minute"]);
                         break;
-                    case 1: //täglich
-                        intervalString = "Täglich um " + buildTwoDigitsInt(data["Interval"]["hour"]) + ":" + buildTwoDigitsInt(data["Interval"]["minute"]);
+                    case 1: //daily
+                        intervalString = languageStrings["daily_at"] + " " + buildTwoDigitsInt(data["Interval"]["hour"]) + ":" + buildTwoDigitsInt(data["Interval"]["minute"]);
                         break;
-                    case 2: //wöchentlich
-                        var dayForGui;
-                        switch (data["Interval"]["day"]) {
-                            case "monday":
-                                dayForGui = "Montag";
-                                break;
-                            case "tuesday":
-                                dayForGui = "Dienstag";
-                                break;
-                            case "wednesday":
-                                dayForGui = "Mittwoch";
-                                break;
-                            case "thursday":
-                                dayForGui = "Donnerstag";
-                                break;
-                            case "friday":
-                                dayForGui = "Freitag";
-                                break;
-                            case "saturday":
-                                dayForGui = "Samstag";
-                                break;
-                            case "sunday":
-                                dayForGui = "Sonntag";
-                                break;
-                        }
+                    case 2: //weekly
+                        var dayForGui = languageStrings[data["Interval"]["day"]];
 
-                        intervalString = dayForGui + "s " + " um " + buildTwoDigitsInt(data["Interval"]["hour"]) + ":" + buildTwoDigitsInt(data["Interval"]["minute"]);
+                        intervalString = dayForGui + "s " + languageStrings["at_time"] + " " + buildTwoDigitsInt(data["Interval"]["hour"]) + ":" + buildTwoDigitsInt(data["Interval"]["minute"]);
                         break;
                     case 3: //nie
-                        intervalString = "Nur manuell";
+                        intervalString = languageStrings["only_manually"];
                         $("#enableJobButton").attr("disabled", "disabled");
                         break;
                 }
             } else {
                 //job is disabled
-                intervalString = "Job ist deaktiviert";
+                intervalString = languageStrings["job_disabled_text"];
             }
 
             //livebackup working
@@ -1256,12 +1305,20 @@ function renderJobStateTable() {
 
             var lastRunString = data["LastRun"];
             if (data["IsRunning"]) {
-                lastRunString = "Job wird gerade ausgeführt...";
+                lastRunString = languageStrings["currently_running"];
+            } else if (lastRunString != "") {
+                //check if last last run date has to be translated
+                //date gets stored at german format. Have to translate it?
+                if (languageStrings["language_name"] == "en") {
+                    var lastRunDate = moment(data["LastRun"], "DD.MM.YYYY HH:mm:ss");
+                    lastRunString = lastRunDate.format("MM/DD/YYYY HH:mm:ss");
+                }
+
             }
 
-            var successString = data["Successful"];
+            var successString = languageStrings[data["Successful"]];
             if (data["LastRun"] == "") {
-                successString = "Nicht zutreffend";
+                successString = languageStrings["not_applicable"];
             }
 
             processrates = [];
@@ -1283,7 +1340,7 @@ function renderJobStateTable() {
 
 
             //register click handler for clicking link to show last execution details
-            $("#lastExecutionDetailsLink").click(showLastExecutionDetails);
+            $("#lastExecutionDetailsLink").click(showLastRunDetails);
 
             //set state color and set start/stop button caption
             if (data["LastRun"] == "" && !data["IsRunning"]) {
@@ -1291,16 +1348,16 @@ function renderJobStateTable() {
                 $("#jobDetailsRow").removeClass("detailsRowRunning");
 
                 //change start/stop button caption
-                $("#startStopButtonCaption").html("Job jetzt starten");
+                $("#startStopButtonCaption").html(languageStrings["start_job_button"]);
                 $("#startStoJobpButton").addClass("btn-primary");
                 $("#startStopJobButton").removeClass("btn-danger");
             } else {
-                if (data["Successful"] == "erfolgreich") {
+                if (data["Successful"] == "successful") {
                     $("#jobDetailsRow").css("background-color", "#ccffcc");
                     $("#jobDetailsRow").removeClass("detailsRowRunning");
 
                     //change start/stop button caption
-                    $("#startStopButtonCaption").html("Job jetzt starten");
+                    $("#startStopButtonCaption").html(languageStrings["start_job_button"]);
                     $("#startStopJobButton").addClass("btn-primary");
                     $("#startStopJobButton").removeClass("btn-danger");
                 } else {
@@ -1308,7 +1365,7 @@ function renderJobStateTable() {
                     $("#jobDetailsRow").removeClass("detailsRowRunning");
 
                     //change start/stop button caption
-                    $("#startStopButtonCaption").html("Job jetzt starten");
+                    $("#startStopButtonCaption").html(languageStrings["start_job_button"]);
                     $("#startStopJobButton").addClass("btn-primary");
                     $("#startStopJobButton").removeClass("btn-danger");
                 }
@@ -1317,7 +1374,7 @@ function renderJobStateTable() {
                     $("#jobDetailsRow").addClass("detailsRowRunning");
 
                     //change start/stop button caption
-                    $("#startStopButtonCaption").html("Job stoppen");
+                    $("#startStopButtonCaption").html(languageStrings["stop_job_button"]);
                     $("#startStopJobButton").addClass("btn-danger");
                     $("#startStopJobButton").removeClass("btn-primary");
                 }
@@ -1330,15 +1387,15 @@ function renderJobStateTable() {
 }
 
 //click handler for showing stats for last execution
-function showLastExecutionDetails() {
+function showLastRunDetails() {
     //show dialog box
     Swal.fire({
-        title: 'Details der letzten Ausführung',
+        title: languageStrings["last_run_caption"],
         html: "<div id='executionDetailsPopUp'></div>",
         confirmButtonColor: '#3085d6',
         allowOutsideClick: true,
         allowEscapeKey: true,
-        confirmButtonText: 'Schließen',
+        confirmButtonText: languageStrings["close"],
     });
 
     //load form
@@ -1346,6 +1403,10 @@ function showLastExecutionDetails() {
         url: "Templates/JobExecutionDetailsForm"
     })
         .done(function (detailsForm) {
+
+            //replace language markups
+            detailsForm = replaceLanguageMarkups(detailsForm);
+
             //parse job data
             var jobData = JSON.parse(lastJobStateData);
 
@@ -1384,10 +1445,10 @@ function prettyPrintDuration(ms) {
     let minutes = (ms / (1000 * 60)).toFixed(1);
     let hours = (ms / (1000 * 60 * 60)).toFixed(1);
     let days = (ms / (1000 * 60 * 60 * 24)).toFixed(1);
-    if (seconds < 60) return seconds + " Sekunden";
-    else if (minutes < 60) return minutes + " Minuten";
-    else if (hours < 24) return hours + " Stunden";
-    else return days + " Tage"
+    if (seconds < 60) return seconds + " " + languageStrings["seconds"];
+    else if (minutes < 60) return minutes + " " + languageStrings["minutes"];
+    else if (hours < 24) return hours + " " + languageStrings["hours"];
+    else return days + " " + languageStrings["days"];
 }
 
 //pretty prints file size
@@ -1416,52 +1477,59 @@ function prettyPrintBytes(bytes, si = true, dp = 2) {
 
 //show login form
 function showLoginForm(showError) {
-    Swal.fire({
-        title: 'Login',
-        html: `<input type="text" id="loginText" class="swal2-input" placeholder="Benutzername">
-  <input type="password" id="passwordText" class="swal2-input" placeholder="Passwort">`,
-        showLoaderOnConfirm: true,
-        confirmButtonText: "Anmelden",
-        allowEnterKey: true,
-        didOpen: () => {
-            $("#loginText").focus();
-        },
-        preConfirm: () => {
-            const login = Swal.getPopup().querySelector('#loginText').value;
-            const password = Swal.getPopup().querySelector('#passwordText').value;
+    //load login form
+    $.ajax({
+        url: "Templates/loginForm"
+    }).done(function (loginForm) {
+        //replace language markups
+        loginForm = replaceLanguageMarkups(loginForm);
 
-            if (!login || !password) {
-                Swal.showValidationMessage(`Anmeldung ist fehlgeschlagen`);
-            }
-            var encodedLogin = String(btoa(login + ":" + password));
-
-
-            return encodedLogin;
-        }
-    }).then((result) => {
         Swal.fire({
-            title: 'Anmeldung',
-            text: 'Anmeldung wird ausgeführt...',
-            allowOutsideClick: false,
-            allowEscapeKey: false,
-            allowEnterKey: false,
-            onOpen: () => {
-                swal.showLoading()
-            }
-        })
-        ajaxLogin(result.value);
-    });
+            title: 'Login',
+            html: loginForm,
+            showLoaderOnConfirm: true,
+            confirmButtonText: languageStrings["login"],
+            allowEnterKey: true,
+            didOpen: () => {
+                $("#loginText").focus();
+            },
+            preConfirm: () => {
+                const login = Swal.getPopup().querySelector('#loginText').value;
+                const password = Swal.getPopup().querySelector('#passwordText').value;
 
-    //register enter handler
-    $(".swal2-popup").on("keypress", function (event) {
-        if (event.which == 13) {
-            $(".swal2-confirm").click();
+                if (!login || !password) {
+                    Swal.showValidationMessage(languageStrings["login_failed"]);
+                }
+                var encodedLogin = String(btoa(login + ":" + password));
+
+
+                return encodedLogin;
+            }
+        }).then((result) => {
+            Swal.fire({
+                title: languageStrings["login_title"],
+                text: languageStrings["login_text"],
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                allowEnterKey: false,
+                onOpen: () => {
+                    swal.showLoading()
+                }
+            })
+            ajaxLogin(result.value);
+        });
+
+        //register enter handler
+        $(".swal2-popup").on("keypress", function (event) {
+            if (event.which == 13) {
+                $(".swal2-confirm").click();
+            }
+        });
+
+        if (showError) {
+            Swal.showValidationMessage(languageStrings["login_failed"]);
         }
     });
-
-    if (showError) {
-        Swal.showValidationMessage(`Anmeldung ist fehlgeschlagen`);
-    }
 
 }
 

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using nxmBackup.Language;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -37,6 +38,12 @@ namespace Frontend.Controllers
 
             //write settings to db
             Common.DBQueries.writeGlobalSettings(settingsDictionary);
+
+            //langauge changed? reload it
+            if (LanguageHandler.getLanguageName() != settings.language)
+            {
+                LanguageHandler.initLanguage();
+            }
         }
 
         public class SettingsObject
@@ -48,6 +55,7 @@ namespace Frontend.Controllers
             public string mailpassword { get; set; }
             public string mailsender { get; set; }
             public string mailrecipient { get; set; }
+            public string language { get; set; }
         }
 
     }

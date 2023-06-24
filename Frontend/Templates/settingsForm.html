@@ -1,29 +1,36 @@
 ﻿<ul class="nav nav-tabs" id="myTab" role="tablist">
     <li class="nav-item">
-        <a class="nav-link active" id="general-tab" data-toggle="tab" href="#general" role="tab" aria-controls="Allgemein" aria-selected="true">Allgemein</a>
+        <a class="nav-link active" id="general-tab" data-toggle="tab" href="#general" role="tab" aria-controls="$$general_word_settings$$" aria-selected="true">$$general_word_settings$$</a>
     </li>
     <li class="nav-item">
-        <a class="nav-link" id="mail-tab" data-toggle="tab" href="#mail" role="tab" aria-controls="E-Mail" aria-selected="false">E-Mail</a>
+        <a class="nav-link" id="mail-tab" data-toggle="tab" href="#mail" role="tab" aria-controls="EMail" aria-selected="false">EMail</a>
     </li>
 </ul>
 <div class="tab-content" id="settingsTabContent">
     <div class="tab-pane fade show active" id="general" role="tabpanel" aria-labelledby="general-tab">
         <div class="settingWrapper">
             <div class="settingInput">
-                <label for="inputMountPath" class="settingsInputLabel">Einhängepfad bei Wiederherstellung:</label>
+                <label for="inputMountPath" class="settingsInputLabel">$$mountpath_caption$$</label>
                 <input type="text" class="form-control settingInputControl" id="inputMountPath">
             </div>
         </div>
 
         <div class="settingWrapper">
+            <div class="settingInput">
+                <label for="inputMountPath" class="settingsInputLabel">$$language_caption$$</label>
+                <select class="form-control settingInputControl" id="inputLanguage">
+                    <option value="en">English</option>
+                    <option value="de">Deutsch</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="settingWrapper">
             <div class="settingInput" id="resetLink">
-                <a href="#">System zurücksetzen</a>
+                <a href="#">$$reset_system$$</a>
             </div>
         </div>
     </div>
-
-
-
 
 
     <div class="tab-pane fade" id="mail" role="tabpanel" aria-labelledby="mail-tab">
@@ -36,36 +43,36 @@
         <div class="settingWrapper">
             <div class="settingInput">
                 <input type="checkbox" class="" id="inputMailSSL">
-                <label for="inputMailSSL" class="settingsInputLabel">SSL bei Mailversand verwenden</label>
+                <label for="inputMailSSL" class="settingsInputLabel">$$using_ssl$$</label>
             </div>
         </div>
         <div class="settingWrapper">
             <div class="settingInput">
-                <label for="inputMailUser" class="settingsInputLabel">Mailserver Benutzername:</label>
+                <label for="inputMailUser" class="settingsInputLabel">$$mailserver_user$$:</label>
                 <input type="text" class="form-control settingInputControl" id="inputMailUser">
             </div>
         </div>
         <div class="settingWrapper">
             <div class="settingInput">
-                <label for="inputMailPassword" class="settingsInputLabel">Mailserver Passwort:</label>
-                <input type="password" placeholder="Zum Ändern neues Passwort hier eingeben" class="form-control settingInputControl" id="inputMailPassword">
+                <label for="inputMailPassword" class="settingsInputLabel">$$mailserver_pass$$:</label>
+                <input type="password" placeholder="$$change_pw_ph$$" class="form-control settingInputControl" id="inputMailPassword">
             </div>
         </div>
         <div class="settingWrapper">
             <div class="settingInput">
-                <label for="inputMailSender" class="settingsInputLabel">Mail-Absender:</label>
+                <label for="inputMailSender" class="settingsInputLabel">$$mail_sender$$:</label>
                 <input type="text" class="form-control settingInputControl" id="inputMailSender">
             </div>
         </div>
         <div class="settingWrapper">
             <div class="settingInput">
-                <label for="inputMailRecipient" class="settingsInputLabel">Mail-Empfänger:</label>
+                <label for="inputMailRecipient" class="settingsInputLabel">$$mail_recipient$$:</label>
                 <input type="text" class="form-control settingInputControl" id="inputMailRecipient">
             </div>
         </div>
         <div class="settingWrapper">
             <div class="settingInput" id="testmailLink">
-                <a href="#">Testmail versenden</a>
+                <a href="#">$$send_testmail$$</a>
             </div>
         </div>
         <div id="testMailResult" class="settingWrapper">

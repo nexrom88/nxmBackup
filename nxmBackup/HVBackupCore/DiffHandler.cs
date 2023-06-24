@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.IO;
 using Common;
 using K4os.Compression.LZ4.Streams;
+using nxmBackup.Language;
 
 namespace nxmBackup.HVBackupCore
 {
@@ -43,7 +44,7 @@ namespace nxmBackup.HVBackupCore
             {
                 vhdxBlock currentBlock = new vhdxBlock();
                 currentBlock.state = vhdxBATTable.entries[(int)i].state;
-                currentBlock.offset = vhdxBATTable.entries[(int)i].FileOffsetMB * 1048576; // multiple with 1024^2 to get byte offset
+                currentBlock.offset = vhdxBATTable.entries[(int)i].FileOffsetMB * 1048576; // multiply with 1024^2 to get byte offset
 
                 uint offsetIndex = i - startEntry;
                 vhdxOffsets[offsetIndex] = currentBlock;
@@ -66,7 +67,7 @@ namespace nxmBackup.HVBackupCore
             {
                 totalBytesCount += bl.length;
             }
-            int relatedEventId = this.eventHandler.raiseNewEvent("Erstelle Inkrement - 0%", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
+            int relatedEventId = this.eventHandler.raiseNewEvent(LanguageHandler.getString("creating_incremental") + " - 0%", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
 
             //fetch disk file handle
             IntPtr diskHandle = diskHandler.getHandle();
@@ -195,7 +196,7 @@ namespace nxmBackup.HVBackupCore
                     {
                         outStream.Close();
                         inputStream.Close();
-                        this.eventHandler.raiseNewEvent("Erstelle Inkrement - Fehler", false, true, relatedEventId, EventStatus.error);
+                        this.eventHandler.raiseNewEvent(LanguageHandler.getString("creating_incremental") + " - " + LanguageHandler.getString("error"), false, true, relatedEventId, EventStatus.error);
                         return 0;
                     }
 
@@ -220,13 +221,13 @@ namespace nxmBackup.HVBackupCore
                     //new progress?
                     if (lastPercentage != percentage)
                     {
-                        this.eventHandler.raiseNewEvent("Erstelle Inkrement - " + percentage + "%", transferRate, processRate, false, true, relatedEventId, EventStatus.inProgress);
+                        this.eventHandler.raiseNewEvent(LanguageHandler.getString("creating_incremental") + " - " + percentage + "%", transferRate, processRate, false, true, relatedEventId, EventStatus.inProgress);
                         lastPercentage = percentage;
                     }
                 }
             }
 
-            this.eventHandler.raiseNewEvent("Erstelle Inkrement - 100%", false, true, relatedEventId, EventStatus.successful);
+            this.eventHandler.raiseNewEvent(LanguageHandler.getString("creating_incremental") + " - 100%", false, true, relatedEventId, EventStatus.successful);
 
 
             //close destination stream
@@ -243,7 +244,7 @@ namespace nxmBackup.HVBackupCore
             int relatedEventId = -1;
             if (this.eventHandler != null)
             {
-                relatedEventId = this.eventHandler.raiseNewEvent("Verarbeite LiveBackup...", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
+                relatedEventId = this.eventHandler.raiseNewEvent(LanguageHandler.getString("merge_lb"), false, false, NO_RELATED_EVENT, EventStatus.inProgress);
             }
 
             //parse lb file
@@ -295,17 +296,17 @@ namespace nxmBackup.HVBackupCore
                 if (progress != lastProgress)
                 {
                     lastProgress = progress;
-                    this.eventHandler.raiseNewEvent("Verarbeite LiveBackup... " + progress + "%", false, true, relatedEventId, EventStatus.inProgress);
+                    this.eventHandler.raiseNewEvent(LanguageHandler.getString("merging_lb") + " " + progress + "%", false, true, relatedEventId, EventStatus.inProgress);
                 }
             }
 
             if (this.stopRequest.value)
             {
-                this.eventHandler.raiseNewEvent("Verarbeite LiveBackup... abgebrochen", true, true, relatedEventId, EventStatus.error);
+                this.eventHandler.raiseNewEvent(LanguageHandler.getString("merging_lb") + " " + LanguageHandler.getString("canceled"), true, true, relatedEventId, EventStatus.error);
             }
             else
             {
-                this.eventHandler.raiseNewEvent("Verarbeite LiveBackup... erfolgreich", true, true, relatedEventId, EventStatus.successful);
+                this.eventHandler.raiseNewEvent(LanguageHandler.getString("merging_lb") + " " + LanguageHandler.getString("successful"), true, true, relatedEventId, EventStatus.successful);
             }
 
             //close dest stream
@@ -319,7 +320,7 @@ namespace nxmBackup.HVBackupCore
             int relatedEventId = -1;
             if (this.eventHandler != null)
             {
-                relatedEventId = this.eventHandler.raiseNewEvent("Verarbeite Inkrement...", false, false, NO_RELATED_EVENT, EventStatus.inProgress);
+                relatedEventId = this.eventHandler.raiseNewEvent(LanguageHandler.getString("merge_increment"), false, false, NO_RELATED_EVENT, EventStatus.inProgress);
             }
 
             //open file streams
@@ -331,7 +332,7 @@ namespace nxmBackup.HVBackupCore
                 diskHandler.attach(VirtualDiskHandler.ATTACH_VIRTUAL_DISK_FLAG.ATTACH_VIRTUAL_DISK_FLAG_NO_LOCAL_HOST);
             }catch(Exception ex)
             {
-                this.eventHandler.raiseNewEvent("Verarbeite Inkrement... fehlgeschlagen", true, true, NO_RELATED_EVENT, EventStatus.error);
+                this.eventHandler.raiseNewEvent(LanguageHandler.getString("merge_increment") + " " + LanguageHandler.getString("failed"), true, true, NO_RELATED_EVENT, EventStatus.error);
                 return false;
             }
 
@@ -394,7 +395,7 @@ namespace nxmBackup.HVBackupCore
                         string progress = Common.PrettyPrinter.prettyPrintBytes(bytesRestored);
                         if (progress != lastProgress && this.eventHandler != null)
                         {
-                            this.eventHandler.raiseNewEvent("Verarbeite Inkrement... " + progress, false, true, relatedEventId, EventStatus.inProgress);
+                            this.eventHandler.raiseNewEvent(LanguageHandler.getString("merge_increment") + progress, false, true, relatedEventId, EventStatus.inProgress);
                             lastProgress = progress;
                         }
 
@@ -407,18 +408,18 @@ namespace nxmBackup.HVBackupCore
                     //finished "normally"?
                     if (!this.stopRequest.value)
                     {
-                        this.eventHandler.raiseNewEvent("Verarbeite Inkrement... erfolgreich", true, true, relatedEventId, EventStatus.successful);
+                        this.eventHandler.raiseNewEvent(LanguageHandler.getString("merge_increment") + " " + LanguageHandler.getString("successful"), true, true, relatedEventId, EventStatus.successful);
                     }
                     else
                     {
-                        this.eventHandler.raiseNewEvent("Verarbeite Inkrement... abgebrochen", true, true, relatedEventId, EventStatus.error);
+                        this.eventHandler.raiseNewEvent(LanguageHandler.getString("merge_increment") + " " + LanguageHandler.getString("canceled"), true, true, relatedEventId, EventStatus.error);
                     }
                 }
 
             }catch(Exception ex)
             {
                 //error while merging
-                this.eventHandler.raiseNewEvent("Verarbeite Inkrement... fehlgeschlagen", true, true, NO_RELATED_EVENT, EventStatus.error);
+                this.eventHandler.raiseNewEvent(LanguageHandler.getString("merge_increment") + " " + LanguageHandler.getString("failed"), true, true, NO_RELATED_EVENT, EventStatus.error);
                 diskHandler.detach();
                 diskHandler.close();
                 diffStream.Close();

@@ -233,6 +233,7 @@
     <Compile Include="HVBackupCore\SnapshotHandler.cs" />
     <Compile Include="JobEngine\JobHandler.cs" />
     <Compile Include="JobEngine\JobTimer.cs" />
+    <Compile Include="Language\LanguageHandler.cs" />
     <Compile Include="MFUserMode\MFUserMode.cs" />
     <Compile Include="MFUserMode\MountHandler.cs" />
     <Compile Include="MFUserMode\SharedMemory.cs" />
@@ -381,6 +382,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\mailNotification.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\mailNotificationEN.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

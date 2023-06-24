@@ -5,9 +5,11 @@ using ConfigHandler;
 using HyperVBackupRCT;
 using Common;
 using nxmBackup.HVBackupCore;
+using nxmBackup.Language;
 using System.Reflection;
 using System.Linq;
 using System.IO;
+using System.Globalization;
 
 namespace JobEngine
 {
@@ -132,7 +134,8 @@ namespace JobEngine
                 {
                     //write notification
                     Common.EventHandler eventHandler = new Common.EventHandler(vm, executionId);
-                    eventHandler.raiseNewEvent("Vorgang vom Benutzer abgebrochen", false, false, NO_RELATED_EVENT, EventStatus.error);
+                    
+                    eventHandler.raiseNewEvent(LanguageHandler.getString("operation_canceled"), false, false, NO_RELATED_EVENT, EventStatus.error);
                     executionSuccessful = false;
                 }
             }
@@ -169,8 +172,27 @@ namespace JobEngine
         //sends the notification mail after job execution finished
         private bool sendNotificationMail(JobExecutionProperties properties)
         {
+            //get currently set language
+            string language = LanguageHandler.getLanguageName();
+            string dateFormat;
+
             //read html file from ressources
-            string mailHTML = nxmBackup.Properties.Resources.mailNotification;
+            string mailHTML;
+
+            switch (language) {
+                case "de":
+                    mailHTML = nxmBackup.Properties.Resources.mailNotification;
+                    dateFormat = "dd.MM.yyyy HH:mm";
+                    break;
+                case "en":
+                    mailHTML = nxmBackup.Properties.Resources.mailNotificationEN;
+                    dateFormat = "MM/dd/yyyy h:mm tt";
+                    break;
+                default:
+                    mailHTML = nxmBackup.Properties.Resources.mailNotificationEN;
+                    dateFormat = "MM/dd/yyyy h:mm tt";
+                    break;
+            }
 
             Dictionary<string,string> settings = DBQueries.readGlobalSettings(true);
 
@@ -186,12 +208,12 @@ namespace JobEngine
 
             //fill in placeholders within html form
             mailHTML = mailHTML.Replace("{{jobname}}", this.Job.Name);
-            mailHTML = mailHTML.Replace("{{state}}", properties.successful? "Erfolgreich":"Fehler");
-            mailHTML = mailHTML.Replace("{{starttime}}", properties.startStamp.ToString("dd.MM.yyyy HH:mm"));
-            mailHTML = mailHTML.Replace("{{endtime}}", properties.endStamp.ToString("dd.MM.yyyy HH:mm"));
+            mailHTML = mailHTML.Replace("{{state}}", properties.successful? LanguageHandler.getString("successful_capital") : LanguageHandler.getString("error"));
+            mailHTML = mailHTML.Replace("{{starttime}}", properties.startStamp.ToString(dateFormat, CultureInfo.InvariantCulture));
+            mailHTML = mailHTML.Replace("{{endtime}}", properties.endStamp.ToString(dateFormat, CultureInfo.InvariantCulture));
             mailHTML = mailHTML.Replace("{{transfered}}", Common.PrettyPrinter.prettyPrintBytes((long)properties.bytesTransfered));
 
-            return mailClient.sendMail("nxmBackup - Jobbericht", mailHTML, true, settings["mailrecipient"]);
+            return mailClient.sendMail(LanguageHandler.getString("jobreport"), mailHTML, true, settings["mailrecipient"]);
         }
 
         //checks whether the job has to start now or not

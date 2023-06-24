@@ -21,6 +21,10 @@ namespace Frontend
             BundleConfig.RegisterBundles(BundleTable.Bundles);
 
             //startup nxmBackup
+
+            //init language
+            nxmBackup.Language.LanguageHandler.initLanguage();
+            
             //start job engine
             App_Start.GUIJobHandler.initJobs();
 

@@ -11,6 +11,7 @@ using Microsoft.Extensions.Logging;
 using System.IO;
 using K4os.Compression.LZ4.Streams;
 using System.Security.Cryptography;
+using nxmBackup.Language;
 
 
 namespace nxmBackup.HVBackupCore
@@ -75,7 +76,7 @@ namespace nxmBackup.HVBackupCore
             isRunning = true;
 
             //raise event
-            this.eventID = this.eventHandler.raiseNewEvent("LiveBackup läuft...", false, false, NO_RELATED_EVENT, Common.EventStatus.info);
+            this.eventID = this.eventHandler.raiseNewEvent(Language.LanguageHandler.getString("lb_working"), false, false, NO_RELATED_EVENT, Common.EventStatus.info);
 
             //load job object. It gets loaded dynamically because the object can change while lb is running
             ConfigHandler.OneJob jobObject = getJobObject();
@@ -90,7 +91,7 @@ namespace nxmBackup.HVBackupCore
             if (!status || jobObject == null)
             {
                 isRunning = false;
-                this.eventHandler.raiseNewEvent("Livebackup konnte nicht gestartet werden", false, true, this.eventID, Common.EventStatus.error);
+                this.eventHandler.raiseNewEvent(LanguageHandler.getString("lb_start_failed"), false, true, this.eventID, Common.EventStatus.error);
                 this.eventHandler.raiseNewEvent("", true, false, this.eventID, Common.EventStatus.error);
                 return false;
             }
@@ -292,7 +293,7 @@ namespace nxmBackup.HVBackupCore
                         if (prettyPrintedBytes != this.lastPrettyPrintedBytes)
                         {
                             this.lastPrettyPrintedBytes = prettyPrintedBytes;
-                            this.eventHandler.raiseNewEvent("LiveBackup läuft... " + prettyPrintedBytes + " verarbeitet", false, true, this.eventID, Common.EventStatus.info);
+                            this.eventHandler.raiseNewEvent(LanguageHandler.getString("lb_working") + " " + prettyPrintedBytes + " " + LanguageHandler.getString("processed"), false, true, this.eventID, Common.EventStatus.info);
                         }
                     }
 
@@ -467,7 +468,7 @@ namespace nxmBackup.HVBackupCore
                 
 
                 //write stop to DB
-                this.eventHandler.raiseNewEvent("LiveBackup beendet. " + this.lastPrettyPrintedBytes + " verarbeitet", false, true, this.eventID, Common.EventStatus.info);
+                this.eventHandler.raiseNewEvent(LanguageHandler.getString("lb_finished") + ". " + this.lastPrettyPrintedBytes + " " + LanguageHandler.getString("processed"), false, true, this.eventID, Common.EventStatus.info);
                 this.eventHandler.raiseNewEvent("", true, false, this.eventID, Common.EventStatus.info);
             }
         }

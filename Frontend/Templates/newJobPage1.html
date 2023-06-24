@@ -1,48 +1,48 @@
 ﻿<form>
-    <h5 class="center_div subHeadline">Allgemeine Jobeinstellungen</h5>
+    <h5 class="center_div subHeadline">$$general_settings$$</h5>
     <div class="form-group center_div newJobElement">
-        <input type="text" class="form-control centeredElement newJobInput" id="txtJobName" placeholder="Name des neuen Jobs">
+        <input type="text" class="form-control centeredElement newJobInput" id="txtJobName" placeholder=$$new_job_name$$>
     </div>
     <div class="form-group center_div newJobElement">
         <div class="form-check center_div newJobElement">
             <span class="centeredElementSpan">
                 <input type="checkbox" id="cbMail">
-                <label class="form-check-label" for="cbMail">Mailbenachrichtigungen erhalten</label>
+                <label class="form-check-label" for="cbMail">$$getting_mails$$</label>
             </span>
         </div>
         <div class="form-check center_div newJobElement">
             <span class="centeredElementSpan">
                 <input type="checkbox" id="cbIncremental" checked>
-                <label class="form-check-label" for="cbIncremental">Inkrementelle Backups erstellen</label>
+                <label class="form-check-label" for="cbIncremental">$$using_incremental$$</label>
             </span>
         </div>
         <div class="form-check center_div newJobElement">
             <span class="centeredElementSpan">
                 <input type="checkbox" id="cbDedupe" disabled>
-                <label class="form-check-label" for="cbDedupe">Daten-Deduplizierung verwenden</label>
+                <label class="form-check-label" for="cbDedupe">$$using_dedupe$$</label>
             </span>
         </div>
         <div class="form-check center_div newJobElement">
             <span class="centeredElementSpan">
                 <input type="checkbox" id="cbLiveBackup">
-                <label class="form-check-label" for="cbLiveBackup">LiveBackup verwenden</label>
+                <label class="form-check-label" for="cbLiveBackup">$$using_lb$$</label>
             </span>
         </div>
         <div class="form-check center_div newJobElement">
             <span class="centeredElementSpan">
                 <input type="checkbox" id="cbEncryption">
-                <label class="form-check-label" for="cbEncryption">Backups verschlüsseln</label>
+                <label class="form-check-label" for="cbEncryption">$$using_encryption$$</label>
             </span>
         </div>
         <div class="form-group center_div newJobElement">
-            <input type="password" class="form-control centeredElement" id="txtEncryptionPassword" placeholder="Passwort für die Verschlüsselung">
+            <input type="password" class="form-control centeredElement" id="txtEncryptionPassword" placeholder="$$encryption_key$$">
         </div>
         <div id="lbSize" class="form-group center_div newJobElement">
-            <label id="lbllbSize" class="enter_div" for="spLiveBackupSize">Maximale LiveBackup Größe in Gigabyte</label>
+            <label id="lbllbSize" class="enter_div" for="spLiveBackupSize">$$lb_limit$$</label>
             <input id="spLiveBackupSize" type="number" value="2" min="1" max="50" step="1" />
         </div>
         <div class="text-center">
-            <button id="newJobNextButton" type="button" class="btn btn-primary centeredElement">Weiter</button>
+            <button id="newJobNextButton" type="button" class="btn btn-primary centeredElement">$$next$$</button>
         </div>
     </div>
 </form>

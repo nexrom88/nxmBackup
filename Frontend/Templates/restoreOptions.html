@@ -1,18 +1,18 @@
 ﻿<form>
     <div class="restoreElement center_div">
-        <label class="enter_div" for="sbRestoreType">Restore-Typ:</label>
+        <label class="enter_div" for="sbRestoreType">$$restore_type$$:</label>
         <select id="sbRestoreType" class="form-control">
-            <option data-type="full" selected>Komplette VM-Wiederherstellung</option>
-            <option data-type="fullImport">Komplette VM-Wiederherstellung nach HyperV</option>
-            <option data-type="flr">Gast-Dateien Wiederherstellung</option>
-            <option data-type="lr">LiveRestore</option>
+            <option data-type="full" selected>$$full_restore$$</option>
+            <option data-type="fullImport">$$full_restore_hyperv$$</option>
+            <option data-type="flr">$$guest_files_restore$$</option>
+            <option data-type="lr">$$live_restore$$</option>
         </select>
     </div>
 
     <hr class="restoreElement" />
 
     <div class="restoreElement center_div">
-        <label class="enter_div" for="sbSourceVM">Quell-VM:</label>
+        <label class="enter_div" for="sbSourceVM">$$source_vm$$:</label>
         <select id="sbSourceVM" class="form-control">
             {{#vms}}
             <option data-vmid="{{vmid}}" selected>{{name}}</option>
@@ -22,12 +22,12 @@
 
     <hr class="restoreElement" />
 
-    <label class="enter_div" for="restorePointTable">Wiederherstellungspunkt auswählen:</label>
+    <label class="enter_div" for="restorePointTable">$$select_restore_point$$:</label>
 
     <table class="table table-hover" id="restorePointTable">
     </table>
 
     <div class="text-center">
-        <button id="startRestoreButton" type="button" class="btn btn-primary" disabled>Wiederherstellung starten</button>
+        <button id="startRestoreButton" type="button" class="btn btn-primary" disabled>$$start_restore$$</button>
     </div>
 </form>
