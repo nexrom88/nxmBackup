@@ -19,4 +19,4 @@ The code compiled and packaged into a setup can be found under the "Releases" se
 
 For more information, visit us at: [nxmbackup.com](https://nxmbackup.com)
 
-Our wiki with numerous help topics can be found here: [https://nxmbackup.com/wiki/doku.php](https://nxmbackup.com/wiki/doku.php)
+Our wiki with numerous help topics can be found here: [https://nxmbackup.com/wiki/doku.php](https://nxmbackup.com/wiki_de/doku.php)
