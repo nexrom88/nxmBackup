@@ -64,23 +64,27 @@ function loadMainWindowTemplate() {
 
 //replaces language markups with strings from loaded language strings
 function replaceLanguageMarkups(text) {
-    var markups = text.match(/\$\$[\w]+\$\$/g);
 
-    //iterate through all found markups
-    for (var i = 0; markups != null && i < markups.length; i++) {
-        //remove $$ $$
-        var currentMarkup = markups[i].substring(2, markups[i].length - 2);
+    //just replace markups when language strings are available
+    if (languageStrings) {
+        var markups = text.match(/\$\$[\w]+\$\$/g);
 
-        //look for lang string
-        var currentText = languageStrings[currentMarkup];
+        //iterate through all found markups
+        for (var i = 0; markups != null && i < markups.length; i++) {
+            //remove $$ $$
+            var currentMarkup = markups[i].substring(2, markups[i].length - 2);
 
-        //set default value when text cannot be found
-        if (!currentText) {
-            currentText = currentMarkup;
+            //look for lang string
+            var currentText = languageStrings[currentMarkup];
+
+            //set default value when text cannot be found
+            if (!currentText) {
+                currentText = currentMarkup;
+            }
+
+            //replace original markup
+            text = text.replace(markups[i], currentText);
         }
-
-        //replace original markup
-        text = text.replace(markups[i], currentText);
     }
 
     return text;
@@ -94,7 +98,7 @@ function init() {
     $.ajax({
         url: "api/DBConnectTest",
         error: function (jqXHR, exception) {
-            $("#welcomeText").html("Es besteht ein Problem mit der Datenbank!");
+            $("#welcomeText").html(languageStrings["db_error"]);
             $("#welcomeText").addClass("welcomeTextError");
             dbState = "error";
         },
