@@ -17,7 +17,13 @@ namespace TestProject
     {
         static void Main(string[] args)
         {
+            string key = Common.MFAHandler.GenerateNewKey();
+            
 
+
+
+
+            Console.Read();
             
 
             //var parameters = new Common.VirtualDiskHandler.OPEN_VIRTUAL_DISK_PARAMETERS();
