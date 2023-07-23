@@ -87,12 +87,19 @@ function showSettingsPopUp() {
             //show settings
             $("#inputMountPath").val(globalSettings["mountpath"]);
             $("#inputMailServer").val(globalSettings["mailserver"]);
-            $("#inputMailSSL").prop("checked",globalSettings["mailssl"] == "true" ? true:false);
+            $("#inputMailSSL").prop("checked", globalSettings["mailssl"] == "true" ? true : false);
             $("#inputMailUser").val(globalSettings["mailuser"]);
             $("#inputMailSender").val(globalSettings["mailsender"]);
             $("#inputMailRecipient").val(globalSettings["mailrecipient"]);
             $("#inputLanguage").val(globalSettings["language"]);
             currentSettingsLanguage = globalSettings["language"];
+
+            //set toggle otp link
+            if (!globalSettings["otpkey"]) {
+                $("#toggleOTPLink a").text(languageStrings["activate_otp"]);
+            } else {
+                $("#toggleOTPLink a").text(languageStrings["disable_otp"]);
+            }
 
             //handle reset link click
             $("#resetLink").click(function () {

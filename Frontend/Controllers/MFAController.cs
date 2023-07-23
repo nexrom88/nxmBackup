@@ -7,6 +7,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Web.Http;
 using System.Web.Http.Results;
+using Common;
 using QRCoder;
 
 namespace Frontend.Controllers
@@ -39,15 +40,45 @@ namespace Frontend.Controllers
         }
 
         // verify otp
-        public void Post([FromBody] OTPLoginParams otpParams)
+        public HttpResponseMessage Post([FromBody] OTPLoginParams otpParams)
         {
+            HttpResponseMessage message = new HttpResponseMessage();
 
+            //check otp
+            if (MFAHandler.verifyOTP(otpParams.otp))
+            {
+                message.StatusCode = HttpStatusCode.OK;
+            }
+            else
+            {
+                message.StatusCode= HttpStatusCode.BadRequest;
+            }
+
+            return message;
         }
 
         //write temp key to db
-        public void Put([FromBody] OTPLoginParams otpParams)
+        public HttpResponseMessage Put([FromBody] OTPLoginParams otpParams)
         {
+            HttpResponseMessage message = new HttpResponseMessage();
 
+            //verify otp first
+            if (!MFAHandler.verifyOTP(otpParams.otp))
+            {
+                message.StatusCode = HttpStatusCode.BadRequest;
+                return message;
+            }
+
+            //write key to db
+            if (!MFAHandler.writeKeyToDB())
+            {
+                message.StatusCode = HttpStatusCode.NotFound;
+                return message;
+            }
+
+            //everything successful
+            message.StatusCode = HttpStatusCode.OK;
+            return message;
         }
 
 
