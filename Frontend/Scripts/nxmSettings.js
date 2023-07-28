@@ -101,6 +101,19 @@ function showSettingsPopUp() {
                 $("#toggleOTPLink a").text(languageStrings["disable_otp"]);
             }
 
+            //handle otp toggle link click
+            $("#toggleOTPLink a").click(function () {
+                //show dialog box
+                Swal.fire({
+                    title: languageStrings["otp_header"],
+                    html: languageStrings["otp_text"] + "<div id='otpqr'></div>",
+                    confirmButtonColor: '#3085d6',
+                    allowOutsideClick: true,
+                    allowEscapeKey: true,
+                    confirmButtonText: languageStrings["close"],
+                });
+            });
+
             //handle reset link click
             $("#resetLink").click(function () {
                 //wipe db
