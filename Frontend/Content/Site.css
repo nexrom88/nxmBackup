@@ -26,6 +26,11 @@
     padding-left: 15px;
 }
 
+#otpimg{
+    width:100%;
+    height:100%;
+}
+
 
 .overlayPopUp {
     position: fixed; /* Sit on top of the page content */

@@ -34,8 +34,8 @@ namespace Frontend.Controllers
 
             //return image
             response.StatusCode = HttpStatusCode.OK;
+            response.Content = new ByteArrayContent(imageBuffer);
             response.Content.Headers.ContentType = new MediaTypeHeaderValue("image/png");
-            response.Content = new ByteArrayContent (imageBuffer);
             return response;
         }
 

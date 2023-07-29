@@ -103,15 +103,23 @@ function showSettingsPopUp() {
 
             //handle otp toggle link click
             $("#toggleOTPLink a").click(function () {
-                //show dialog box
-                Swal.fire({
-                    title: languageStrings["otp_header"],
-                    html: languageStrings["otp_text"] + "<div id='otpqr'></div>",
-                    confirmButtonColor: '#3085d6',
-                    allowOutsideClick: true,
-                    allowEscapeKey: true,
-                    confirmButtonText: languageStrings["close"],
-                });
+
+                //show qr code
+                if (!globalSettings["otpkey"]) {
+                    //show dialog box
+                    Swal.fire({
+                        title: languageStrings["otp_header"],
+                        html: languageStrings["otp_text"] + "<div id='otpqr'><img id='otpimg'></img></div>",
+                        confirmButtonColor: '#3085d6',
+                        allowOutsideClick: true,
+                        allowEscapeKey: true,
+                        confirmButtonText: languageStrings["close"],
+                    });
+
+                    //load qr image
+                    $("#otpimg").attr("src", "api/MFA");
+
+                }
             });
 
             //handle reset link click
