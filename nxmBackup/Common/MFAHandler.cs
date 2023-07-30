@@ -45,7 +45,15 @@ namespace Common
         //verifies a given otp
         public static bool verifyOTP(string otp)
         {
-            return true;
+            //read otp key from settings db
+            string otpKey = DBQueries.readGlobalSetting("otpkey");
+            if (otpKey == null || otpKey == "")
+            {
+                return false;
+            }
+
+
+            Totp otpHandler = new Totp(Base32Encoding.ToBytes(otpKey));
         }
     }
 }
