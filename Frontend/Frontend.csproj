@@ -299,6 +299,7 @@
     <Content Include="Templates\newJobPage5.html" />
     <Content Include="Templates\notificationMail.html" />
     <Content Include="Templates\nxmStorageCredentials.html" />
+    <Content Include="Templates\otpRegisterForm.html" />
     <Content Include="Templates\restoreOptions.html" />
     <Content Include="Templates\restorePointsTable.html" />
     <Content Include="Templates\settingsForm.html" />

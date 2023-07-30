@@ -106,22 +106,40 @@ function showSettingsPopUp() {
 
                 //show qr code
                 if (!globalSettings["otpkey"]) {
-                    //show dialog box
-                    Swal.fire({
-                        title: languageStrings["otp_header"],
-                        html: languageStrings["otp_text"] + "<div id='otpqr'><img id='otpimg'></img></div>",
-                        confirmButtonColor: '#3085d6',
-                        allowOutsideClick: true,
-                        allowEscapeKey: true,
-                        confirmButtonText: languageStrings["close"],
-                    });
 
-                    //load qr image
-                    $("#otpimg").attr("src", "api/MFA");
+                    //load otr register template
+                    $.ajax({
+                        url: "Templates/otpRegisterForm"
+                    })
+                        .done(function (otpForm) {
+                            //translate language markups
+                            otpForm = replaceLanguageMarkups(otpForm);
 
+                            //show dialog box
+                            Swal.fire({
+                                title: languageStrings["otp_header"],
+                                html: otpForm,
+                                confirmButtonColor: '#3085d6',
+                                showCancelButton: true,
+                                allowOutsideClick: true,
+                                allowEscapeKey: true,
+                                confirmButtonText: languageStrings["apply"],
+                                cancelButtonText: languageStrings["cancel"]
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    //register otp
+                                    registerOTP();
+                                }
+                            });
+
+                            //load qr image
+                            $("#otpimg").attr("src", "api/MFA");
+
+
+                        });
                 }
-            });
 
+            });
             //handle reset link click
             $("#resetLink").click(function () {
                 //wipe db
@@ -171,6 +189,29 @@ function showSettingsPopUp() {
             });
 
         });
+}
+
+//registers the otp
+function registerOTP() {
+    var currentOTP = $("#otpConfirmInput").val();
+
+    //build object to send to server
+    var otpObj = {};
+    otpObj["otp"] = currentOTP;
+
+    //send otp to server
+    $.ajax({
+        url: 'api/MFA',
+        contentType: "application/json; charset=utf-8",
+        data: JSON.stringify(otpObj),
+        type: 'PUT',
+        success: function (result) {
+            location.reload();
+        },
+        error: function (jqXHR, exception) {
+            alert("fehler");
+        }
+    });
 }
 
 //checks if a given path is valid
