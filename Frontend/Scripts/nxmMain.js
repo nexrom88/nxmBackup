@@ -28,7 +28,7 @@ $.ajaxSetup({
             document.body.innerHTML = "";
 
             //show login form
-            showLoginForm();
+            initLoginForm();
         }
     }
 });
@@ -1479,8 +1479,25 @@ function prettyPrintBytes(bytes, si = true, dp = 2) {
 }
 
 
-//show login form
-function showLoginForm(showError) {
+//init login form
+function initLoginForm(showError) {
+    //chech whether 2fa is activated or not
+    $.ajax({
+        url: "api/MFAActivated",
+        success: function (result) {
+            //2fa activated
+            showLoginForm(true, showError);
+        },
+        error: function (jqXHR, exception) {
+            //2fa not activated
+            showLoginForm(false, showError);
+        }
+    });    
+
+}
+
+//shows the login form with or without mfa
+function showLoginForm(mfa, showError) {
     //load login form
     $.ajax({
         url: "Templates/loginForm"
@@ -1496,15 +1513,34 @@ function showLoginForm(showError) {
             allowEnterKey: true,
             didOpen: () => {
                 $("#loginText").focus();
+
+                //show otp input field?
+                if (mfa) {
+                    $("#otpText").css("display", "block");
+                }
             },
             preConfirm: () => {
                 const login = Swal.getPopup().querySelector('#loginText').value;
                 const password = Swal.getPopup().querySelector('#passwordText').value;
+                const otp = Swal.getPopup().querySelector('#otpText').value;
 
                 if (!login || !password) {
                     Swal.showValidationMessage(languageStrings["login_failed"]);
+                    return;
                 }
-                var encodedLogin = String(btoa(login + ":" + password));
+
+                if (mfa && !otp) {
+                    Swal.showValidationMessage(languageStrings["login_failed"]);
+                    return;
+                }
+                var encodedLogin;
+
+                //mfa activated? build login string
+                if (mfa) {
+                    encodedLogin = btoa(login) + ":" + btoa(password) + ":" + btoa(otp);
+                } else {
+                    encodedLogin = btoa(login) + ":" + btoa(password);
+                }               
 
 
                 return encodedLogin;
@@ -1534,7 +1570,6 @@ function showLoginForm(showError) {
             Swal.showValidationMessage(languageStrings["login_failed"]);
         }
     });
-
 }
 
 //async function for login ajax call
@@ -1550,7 +1585,7 @@ function ajaxLogin(encodedLogin) {
                 location.reload();
             },
             error: function (jqXHR, exception) {
-                showLoginForm(true);
+                initLoginForm(true);
             }
         });
     } catch (error) {

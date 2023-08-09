@@ -179,6 +179,7 @@
     <Compile Include="Controllers\FLRBrowserController.cs" />
     <Compile Include="Controllers\FolderDownloader.cs" />
     <Compile Include="Controllers\LoadLanguageController.cs" />
+    <Compile Include="Controllers\MFAActivatedController.cs" />
     <Compile Include="Controllers\MFAController.cs" />
     <Compile Include="Controllers\RestoreController.cs" />
     <Compile Include="Controllers\DirectoryController.cs" />

@@ -303,6 +303,10 @@
     color: red;
 }
 
+#otpText{
+    display:none;
+}
+
 @keyframes color {
     0% {
         background-color: #ffffb3;

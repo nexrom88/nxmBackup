@@ -9,7 +9,7 @@ namespace Common
 {
     public class MFAHandler
     {
-        private static string tempNewKey;
+        private static string tempNewKey = "";
 
         //generates a new secret key
         public static string GenerateNewKey()
@@ -21,6 +21,15 @@ namespace Common
             tempNewKey = base32Secret;
 
             return base32Secret;
+        }
+
+
+        //deletes the current otp key from db
+        public static void deleteKey()
+        {
+            Dictionary<string, string> setting = new Dictionary<string, string>();
+            setting.Add("otpkey", "");
+            DBQueries.writeGlobalSettings(setting);
         }
 
 
@@ -38,8 +47,17 @@ namespace Common
             else
             {
                 //no key to write -> error
+                tempNewKey = "";
                 return false;
             }
+        }
+
+        //returns whether 2fa is activated or not
+        public static bool isActivated()
+        {
+            string dbValue = DBQueries.readGlobalSetting("otpkey");
+
+            return dbValue != null && dbValue != "";
         }
 
         //verifies a given otp
@@ -50,10 +68,19 @@ namespace Common
 
             if (otpKey == null || otpKey == "")
             {
-                return false;
+                //use tempkey when set
+                if (tempNewKey != "")
+                {
+                    otpKey = tempNewKey;
+                }
+                else
+                {
+                    return false;
+                }
+
             }
 
-            Totp totpHandler = new Totp(Base32Encoding.ToBytes(otpKey), 300);
+            Totp totpHandler = new Totp(Base32Encoding.ToBytes(otpKey), 30);
             long timeStepMatched;
 
             return totpHandler.VerifyTotp(otp, out timeStepMatched);

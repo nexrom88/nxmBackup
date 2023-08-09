@@ -137,6 +137,18 @@ function showSettingsPopUp() {
 
 
                         });
+                } else {
+                    //disable otp
+                    $.ajax({
+                        url: 'api/MFA',
+                        type: 'DELETE'
+                    }).done(function () {
+                        Swal.fire(
+                            '2-FA',
+                            languageStrings["2fa_disabled"],
+                            'info'
+                        );
+                    });
                 }
 
             });
@@ -209,7 +221,11 @@ function registerOTP() {
             location.reload();
         },
         error: function (jqXHR, exception) {
-            alert("fehler");
+            Swal.fire(
+                languageStrings["error"],
+                languageStrings["2fa_activate_error"],
+                'error'
+            );
         }
     });
 }

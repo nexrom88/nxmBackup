@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Common;
+using System;
 using System.Collections.Generic;
 using System.DirectoryServices.AccountManagement;
 using System.Linq;
@@ -26,12 +27,21 @@ namespace Frontend.Controllers
                 return response;
             }
 
-            //auth data is user:pass base64 decoded
-            byte[] authBytes = Convert.FromBase64String(value);
-            string authString = System.Text.Encoding.UTF8.GetString(authBytes);
-            string[] splitter = authString.Split(":".ToCharArray());
+            //auth data is user:pass::otp base64 decoded
+
+            string[] splitter = value.Split(":".ToCharArray());
             string username = splitter[0];
+            username = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(username));
             string password = splitter[1];
+            password = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(password));
+            string otp = "";
+
+            //otp available?
+            if (splitter.Length == 3)
+            {
+                otp = splitter[2];
+                otp = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(otp));
+            }
 
             //check credentials local
             bool authorized = checkCredentials(username, password, ContextType.Machine);
@@ -46,6 +56,18 @@ namespace Frontend.Controllers
             //check user data
             if (authorized)
             {
+                //check otp if necessary
+                if (MFAHandler.isActivated())
+                {
+                    if (!checkOTP(otp))
+                    {
+                        //given otp is wrong
+                        response = new HttpResponseMessage();
+                        response.StatusCode = HttpStatusCode.Forbidden;
+                        return response;
+                    }
+                }
+
                 //create guid session string
                 string guid = Guid.NewGuid().ToString();
 
@@ -67,6 +89,12 @@ namespace Frontend.Controllers
                 response.StatusCode = HttpStatusCode.Forbidden;
                 return response;
             }
+        }
+
+        //checks whether the given otp is valid
+        private bool checkOTP(string otp)
+        {
+            return MFAHandler.verifyOTP(otp);
         }
 
         //checks the given credentials

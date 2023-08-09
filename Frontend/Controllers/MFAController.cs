@@ -12,6 +12,7 @@ using QRCoder;
 
 namespace Frontend.Controllers
 {
+    [Frontend.Filter.AuthFilter]
     public class MFAController : ApiController
     {
         //inits a new key and returns qr image
@@ -54,6 +55,17 @@ namespace Frontend.Controllers
                 message.StatusCode= HttpStatusCode.BadRequest;
             }
 
+            return message;
+        }
+
+        // delete otp
+        public HttpResponseMessage Delete()
+        {
+            HttpResponseMessage message = new HttpResponseMessage();
+
+            MFAHandler.deleteKey();
+
+            message.StatusCode = HttpStatusCode.OK;
             return message;
         }
 

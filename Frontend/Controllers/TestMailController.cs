@@ -8,6 +8,7 @@ using System.Web.Http;
 
 namespace Frontend.Controllers
 {
+    [Frontend.Filter.AuthFilter]
     public class TestMailController : ApiController
     {
         // GET api/<controller>/
