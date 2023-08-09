@@ -218,7 +218,13 @@ function registerOTP() {
         data: JSON.stringify(otpObj),
         type: 'PUT',
         success: function (result) {
-            location.reload();
+            Swal.fire(
+                languageStrings["success"],
+                languageStrings["2fa_activate"],
+                'success'
+            ).then((result) => {
+                location.reload();
+            });
         },
         error: function (jqXHR, exception) {
             Swal.fire(
