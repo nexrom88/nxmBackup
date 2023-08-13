@@ -148,7 +148,7 @@ function init() {
     $("#versionInfo").click(function () {
         Swal.fire(
             'Update',
-            'Ein neues Update ' + versionControl.AvailableVersion + ' steht zur Verfügung. Besuchen Sie <a href = "https://nxmbackup.com" target="_blank">nxmBackup.com</a> für weitere Infos!',
+            languageStrings["update_available"],
             'info'
         );
     });
