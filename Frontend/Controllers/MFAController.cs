@@ -21,9 +21,12 @@ namespace Frontend.Controllers
             HttpResponseMessage response = new HttpResponseMessage();
             string newKey = Common.MFAHandler.GenerateNewKey();
 
+            //get server name for otp caption
+            string machineName = Environment.MachineName;
+
             //generate qr image
             QRCodeGenerator qrGenerator = new QRCodeGenerator();
-            QRCodeData qrCodeData = qrGenerator.CreateQrCode(@"otpauth://totp/nxmBackup?secret=" + newKey, QRCodeGenerator.ECCLevel.Q);
+            QRCodeData qrCodeData = qrGenerator.CreateQrCode(@"otpauth://totp/nxmBackup@" + machineName + "?secret=" + newKey, QRCodeGenerator.ECCLevel.Q);
             QRCode qrCode = new QRCode(qrCodeData);
             Bitmap qrCodeImage = qrCode.GetGraphic(20);
 
