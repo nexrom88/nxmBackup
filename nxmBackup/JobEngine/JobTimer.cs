@@ -194,7 +194,7 @@ namespace JobEngine
                     break;
             }
 
-            Dictionary<string,string> settings = DBQueries.readGlobalSettings(true);
+            Dictionary<string,string> settings = DBQueries.readGlobalSettings(true, true);
 
             //cancel if mailserver is not set
             if (settings["mailserver"] == "")

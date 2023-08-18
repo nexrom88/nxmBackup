@@ -8,7 +8,7 @@ using System.Net;
 
 namespace Frontend.Controllers
 {
-    
+    [Frontend.Filter.AuthFilter]
     public class FolderDownloader
     {
         private string folder;

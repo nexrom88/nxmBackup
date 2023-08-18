@@ -28,7 +28,7 @@ $.ajaxSetup({
             document.body.innerHTML = "";
 
             //show login form
-            showLoginForm();
+            initLoginForm();
         }
     }
 });
@@ -64,23 +64,27 @@ function loadMainWindowTemplate() {
 
 //replaces language markups with strings from loaded language strings
 function replaceLanguageMarkups(text) {
-    var markups = text.match(/\$\$[\w]+\$\$/g);
 
-    //iterate through all found markups
-    for (var i = 0; markups != null && i < markups.length; i++) {
-        //remove $$ $$
-        var currentMarkup = markups[i].substring(2, markups[i].length - 2);
+    //just replace markups when language strings are available
+    if (languageStrings) {
+        var markups = text.match(/\$\$[\w]+\$\$/g);
 
-        //look for lang string
-        var currentText = languageStrings[currentMarkup];
+        //iterate through all found markups
+        for (var i = 0; markups != null && i < markups.length; i++) {
+            //remove $$ $$
+            var currentMarkup = markups[i].substring(2, markups[i].length - 2);
 
-        //set default value when text cannot be found
-        if (!currentText) {
-            currentText = currentMarkup;
+            //look for lang string
+            var currentText = languageStrings[currentMarkup];
+
+            //set default value when text cannot be found
+            if (!currentText) {
+                currentText = currentMarkup;
+            }
+
+            //replace original markup
+            text = text.replace(markups[i], currentText);
         }
-
-        //replace original markup
-        text = text.replace(markups[i], currentText);
     }
 
     return text;
@@ -94,7 +98,7 @@ function init() {
     $.ajax({
         url: "api/DBConnectTest",
         error: function (jqXHR, exception) {
-            $("#welcomeText").html("Es besteht ein Problem mit der Datenbank!");
+            $("#welcomeText").html(languageStrings["db_error"]);
             $("#welcomeText").addClass("welcomeTextError");
             dbState = "error";
         },
@@ -144,7 +148,7 @@ function init() {
     $("#versionInfo").click(function () {
         Swal.fire(
             'Update',
-            'Ein neues Update ' + versionControl.AvailableVersion + ' steht zur Verfügung. Besuchen Sie <a href = "https://nxmbackup.com" target="_blank">nxmBackup.com</a> für weitere Infos!',
+            languageStrings["update_available"],
             'info'
         );
     });
@@ -1475,8 +1479,25 @@ function prettyPrintBytes(bytes, si = true, dp = 2) {
 }
 
 
-//show login form
-function showLoginForm(showError) {
+//init login form
+function initLoginForm(showError) {
+    //chech whether 2fa is activated or not
+    $.ajax({
+        url: "api/MFAActivated",
+        success: function (result) {
+            //2fa activated
+            showLoginForm(true, showError);
+        },
+        error: function (jqXHR, exception) {
+            //2fa not activated
+            showLoginForm(false, showError);
+        }
+    });    
+
+}
+
+//shows the login form with or without mfa
+function showLoginForm(mfa, showError) {
     //load login form
     $.ajax({
         url: "Templates/loginForm"
@@ -1492,15 +1513,34 @@ function showLoginForm(showError) {
             allowEnterKey: true,
             didOpen: () => {
                 $("#loginText").focus();
+
+                //show otp input field?
+                if (mfa) {
+                    $("#otpText").css("display", "block");
+                }
             },
             preConfirm: () => {
                 const login = Swal.getPopup().querySelector('#loginText').value;
                 const password = Swal.getPopup().querySelector('#passwordText').value;
+                const otp = Swal.getPopup().querySelector('#otpText').value;
 
                 if (!login || !password) {
                     Swal.showValidationMessage(languageStrings["login_failed"]);
+                    return;
                 }
-                var encodedLogin = String(btoa(login + ":" + password));
+
+                if (mfa && !otp) {
+                    Swal.showValidationMessage(languageStrings["login_failed"]);
+                    return;
+                }
+                var encodedLogin;
+
+                //mfa activated? build login string
+                if (mfa) {
+                    encodedLogin = btoa(login) + ":" + btoa(password) + ":" + btoa(otp);
+                } else {
+                    encodedLogin = btoa(login) + ":" + btoa(password);
+                }               
 
 
                 return encodedLogin;
@@ -1530,7 +1570,6 @@ function showLoginForm(showError) {
             Swal.showValidationMessage(languageStrings["login_failed"]);
         }
     });
-
 }
 
 //async function for login ajax call
@@ -1546,7 +1585,7 @@ function ajaxLogin(encodedLogin) {
                 location.reload();
             },
             error: function (jqXHR, exception) {
-                showLoginForm(true);
+                initLoginForm(true);
             }
         });
     } catch (error) {

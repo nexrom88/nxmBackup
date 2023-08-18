@@ -49,7 +49,9 @@ namespace Common
                     Dictionary<string, object> parameters = new Dictionary<string, object>();
                     parameters.Add("value", settings[key]);
                     parameters.Add("name", key);
-                    dbConn.doWriteQuery("UPDATE settings SET value=@value WHERE name=@name;", parameters, transaction);
+
+                    //insert or update
+                    dbConn.doWriteQuery("INSERT INTO settings (name, value) VALUES (@name, @value) ON CONFLICT(name) DO UPDATE SET value=@value WHERE name=@name", parameters, transaction);
                 }
 
                 //commit transaction
@@ -79,7 +81,7 @@ namespace Common
         }
 
         //reads all global settings from db
-        public static Dictionary<string, string> readGlobalSettings(bool readPasswords)
+        public static Dictionary<string, string> readGlobalSettings(bool readPasswords, bool readOTPKey)
         {
             using (DBConnection dbConn = new DBConnection())
             {
@@ -100,6 +102,21 @@ namespace Common
                         //filter mailpassword to not sending it to frontend
                         if ((string)oneSetting["name"] == "mailpassword" && !readPasswords)
                         {
+                            continue;
+                        }
+
+                        //filter otpkey to not sending it to frontend
+                        if ((string)oneSetting["name"] == "otpkey" && !readOTPKey)
+                        {
+                            if ((string)oneSetting["value"] != "")
+                            {
+                                retVal.Add((string)oneSetting["name"], "1");
+                            }
+                            else
+                            {
+                                retVal.Add((string)oneSetting["name"], "");
+                            }
+
                             continue;
                         }
 

@@ -87,13 +87,71 @@ function showSettingsPopUp() {
             //show settings
             $("#inputMountPath").val(globalSettings["mountpath"]);
             $("#inputMailServer").val(globalSettings["mailserver"]);
-            $("#inputMailSSL").prop("checked",globalSettings["mailssl"] == "true" ? true:false);
+            $("#inputMailSSL").prop("checked", globalSettings["mailssl"] == "true" ? true : false);
             $("#inputMailUser").val(globalSettings["mailuser"]);
             $("#inputMailSender").val(globalSettings["mailsender"]);
             $("#inputMailRecipient").val(globalSettings["mailrecipient"]);
             $("#inputLanguage").val(globalSettings["language"]);
             currentSettingsLanguage = globalSettings["language"];
 
+            //set toggle otp link
+            if (!globalSettings["otpkey"]) {
+                $("#toggleOTPLink a").text(languageStrings["activate_otp"]);
+            } else {
+                $("#toggleOTPLink a").text(languageStrings["disable_otp"]);
+            }
+
+            //handle otp toggle link click
+            $("#toggleOTPLink a").click(function () {
+
+                //show qr code
+                if (!globalSettings["otpkey"]) {
+
+                    //load otr register template
+                    $.ajax({
+                        url: "Templates/otpRegisterForm"
+                    })
+                        .done(function (otpForm) {
+                            //translate language markups
+                            otpForm = replaceLanguageMarkups(otpForm);
+
+                            //show dialog box
+                            Swal.fire({
+                                title: languageStrings["otp_header"],
+                                html: otpForm,
+                                confirmButtonColor: '#3085d6',
+                                showCancelButton: true,
+                                allowOutsideClick: true,
+                                allowEscapeKey: true,
+                                confirmButtonText: languageStrings["apply"],
+                                cancelButtonText: languageStrings["cancel"]
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    //register otp
+                                    registerOTP();
+                                }
+                            });
+
+                            //load qr image
+                            $("#otpimg").attr("src", "api/MFA");
+
+
+                        });
+                } else {
+                    //disable otp
+                    $.ajax({
+                        url: 'api/MFA',
+                        type: 'DELETE'
+                    }).done(function () {
+                        Swal.fire(
+                            '2-FA',
+                            languageStrings["2fa_disabled"],
+                            'info'
+                        );
+                    });
+                }
+
+            });
             //handle reset link click
             $("#resetLink").click(function () {
                 //wipe db
@@ -143,6 +201,39 @@ function showSettingsPopUp() {
             });
 
         });
+}
+
+//registers the otp
+function registerOTP() {
+    var currentOTP = $("#otpConfirmInput").val();
+
+    //build object to send to server
+    var otpObj = {};
+    otpObj["otp"] = currentOTP;
+
+    //send otp to server
+    $.ajax({
+        url: 'api/MFA',
+        contentType: "application/json; charset=utf-8",
+        data: JSON.stringify(otpObj),
+        type: 'PUT',
+        success: function (result) {
+            Swal.fire(
+                languageStrings["success"],
+                languageStrings["2fa_activate"],
+                'success'
+            ).then((result) => {
+                location.reload();
+            });
+        },
+        error: function (jqXHR, exception) {
+            Swal.fire(
+                languageStrings["error"],
+                languageStrings["2fa_activate_error"],
+                'error'
+            );
+        }
+    });
 }
 
 //checks if a given path is valid

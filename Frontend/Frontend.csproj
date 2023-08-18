@@ -55,6 +55,11 @@
     <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.13.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
+    <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
+    <Reference Include="QRCoder, Version=1.4.3.0, Culture=neutral, PublicKeyToken=c4ed5b9ae8358a28, processorArchitecture=MSIL">
+      <HintPath>..\packages\QRCoder.1.4.3\lib\net40\QRCoder.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.DirectoryServices.AccountManagement" />
@@ -124,6 +129,7 @@
       <Private>True</Private>
       <HintPath>..\packages\Antlr.3.5.0.2\lib\Antlr3.Runtime.dll</HintPath>
     </Reference>
+    <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="App_Start\Authentication.cs" />
@@ -173,6 +179,8 @@
     <Compile Include="Controllers\FLRBrowserController.cs" />
     <Compile Include="Controllers\FolderDownloader.cs" />
     <Compile Include="Controllers\LoadLanguageController.cs" />
+    <Compile Include="Controllers\MFAActivatedController.cs" />
+    <Compile Include="Controllers\MFAController.cs" />
     <Compile Include="Controllers\RestoreController.cs" />
     <Compile Include="Controllers\DirectoryController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
@@ -292,6 +300,7 @@
     <Content Include="Templates\newJobPage5.html" />
     <Content Include="Templates\notificationMail.html" />
     <Content Include="Templates\nxmStorageCredentials.html" />
+    <Content Include="Templates\otpRegisterForm.html" />
     <Content Include="Templates\restoreOptions.html" />
     <Content Include="Templates\restorePointsTable.html" />
     <Content Include="Templates\settingsForm.html" />

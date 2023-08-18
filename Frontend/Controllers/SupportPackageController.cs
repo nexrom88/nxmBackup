@@ -8,6 +8,8 @@ using System.Security.Cryptography;
 
 namespace Frontend.Controllers
 {
+    [Frontend.Filter.AuthFilter]
+
     public class SupportPackageController : ApiController
     {
         private string publicKey = @"BgIAAACkAABSU0ExABAAAAEAAQCB2pWs9AOXhjuFyUgcDC6lJ86bQ5hDwM14GvBLQ1A+KATplmKCkc3LT7o7TBqaCxrHjwBcV6a2rhvYQeyzCNZGxgQsju1Zk82F3R7iKSHa6zgvzJcIYEI7w8WvVDFkPcM9ntAX/b/dUVGY3GH2+WiKJyLJoanjN0qYFLSQa0Tu5552OUSBBJZgdNNhM8LAtclmJB+A+4yyVNdGrsaVcxv4NH78OZ9A0ACtMiAMAFQYIpFj/uvuaY94lOci81piR3/zHrtSyMdsI6ITwXQLRnW4aew/8WuOoLwsir5k9c0QuSX91HSwJwob8vwWlH7pfrVeIDoa/RNEJLlM32r5sgx6dvDZ+3/xtWFhhAyDHrfIiezegu1xugkEFoc2X/4DjO4K0N9Udg3F8Y1PandJ/bNNgeVq0cFi3GghBzQzUvP7bbROSlPAxXM25OR/0gvgft4WGFn37m+PEvbOtoYA1U0U1yXFqE71i/4ibiUizh7APySG8/RTQDnl81UzNZo28XOrh2SNiiy623V7WGRHQ4P6E8T8/d7cAJS4d2mg8cho3Su5FFAeR47tKv7EEhFlHWl3n/2oU9ovPWdr1eUxI3MlIMLi1hYjdbOXFpH89Q5kInnJ9TLtJsGUtLqZ4j1Uu6GNrJkpzit9YQpmoRCW4bVpXGiTs7kB3G5C1A3AX/iAwg==";
