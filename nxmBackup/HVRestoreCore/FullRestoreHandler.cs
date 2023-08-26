@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Documents;
+using nxmBackup.Language;
 
 namespace HVRestoreCore
 {
@@ -41,7 +42,7 @@ namespace HVRestoreCore
             int relatedEventId = -1;
             if (this.eventHandler != null)
             {
-                relatedEventId = this.eventHandler.raiseNewEvent("Analysiere Backups...", false, false, NO_RELATED_EVENT, Common.EventStatus.inProgress);
+                relatedEventId = this.eventHandler.raiseNewEvent(LanguageHandler.getString("analyzing_backups"), false, false, NO_RELATED_EVENT, Common.EventStatus.inProgress);
             }
 
             //get full backup chain
@@ -53,8 +54,8 @@ namespace HVRestoreCore
             //target backup found?
             if (targetBackup.instanceID != instanceID && this.eventHandler != null)
             {
-                this.eventHandler.raiseNewEvent("fehlgeschlagen", true, false, relatedEventId, Common.EventStatus.error);
-                this.eventHandler.raiseNewEvent("Ziel-Backup kann nicht gefunden werden", false, false, NO_RELATED_EVENT, Common.EventStatus.error);
+                this.eventHandler.raiseNewEvent(LanguageHandler.getString("failed"), true, false, relatedEventId, Common.EventStatus.error);
+                this.eventHandler.raiseNewEvent(LanguageHandler.getString("target_backup_not_found"), false, false, NO_RELATED_EVENT, Common.EventStatus.error);
                 return; //not found, no restore
             }
 
@@ -79,7 +80,7 @@ namespace HVRestoreCore
                 if (restoreElement.instanceID != restoreChain[restoreChain.Count - 1].parentInstanceID)
                 {
                     //element is not valid, chain is broken, cancel restore
-                    this.eventHandler.raiseNewEvent("fehlgeschlagen.", true, false, relatedEventId, Common.EventStatus.error);
+                    this.eventHandler.raiseNewEvent(LanguageHandler.getString("failed"), true, false, relatedEventId, Common.EventStatus.error);
                     return;
                 }
                 else
@@ -91,7 +92,7 @@ namespace HVRestoreCore
 
             if (this.eventHandler != null)
             {
-                this.eventHandler.raiseNewEvent("erfolgreich", true, false, relatedEventId, Common.EventStatus.successful);
+                this.eventHandler.raiseNewEvent(LanguageHandler.getString("successful"), true, false, relatedEventId, Common.EventStatus.successful);
             }
 
             //copy full backup to destination and get vhdx files
@@ -100,7 +101,7 @@ namespace HVRestoreCore
             //restore not possible
             if (hddFiles == null)
             {
-                this.eventHandler.raiseNewEvent("Backup kann im angegebenen Verzeichnis nicht geschrieben werden", false, false, NO_RELATED_EVENT, Common.EventStatus.error);
+                this.eventHandler.raiseNewEvent(LanguageHandler.getString("backup_not_writeable"), false, false, NO_RELATED_EVENT, Common.EventStatus.error);
                 return;
             }
 
@@ -132,7 +133,7 @@ namespace HVRestoreCore
                         //merge the files
                         if (!diffRestore.merge_rct((BlockCompression.LZ4BlockStream)diffStream, hddFile))
                         {
-                            this.eventHandler.raiseNewEvent("Zusammenführung fehlgeschlagen", true, false, NO_RELATED_EVENT, Common.EventStatus.error);
+                            this.eventHandler.raiseNewEvent(LanguageHandler.getString("merge_failed"), true, false, NO_RELATED_EVENT, Common.EventStatus.error);
                             diffStream.Close();
                             return;
                         }
@@ -160,7 +161,7 @@ namespace HVRestoreCore
             //has the restored VM to be imported into HyperV?
             if (importToHyperV && !stopRequestWrapper.value)
             {
-                relatedEventId = this.eventHandler.raiseNewEvent("An HyperV registrieren...", false, false, NO_RELATED_EVENT, Common.EventStatus.inProgress);
+                relatedEventId = this.eventHandler.raiseNewEvent(LanguageHandler.getString("registering"), false, false, NO_RELATED_EVENT, Common.EventStatus.inProgress);
 
                 //look for vmcx file
                 string[] configFiles = System.IO.Directory.GetFiles(destPath, "*.vmcx", SearchOption.AllDirectories);
@@ -168,8 +169,7 @@ namespace HVRestoreCore
                 //there may just be exactly one config file otherwise cancel import
                 if (configFiles.Length != 1)
                 {
-                    this.eventHandler.raiseNewEvent("fehlgeschlagen", true, false, relatedEventId, Common.EventStatus.warning);
-                    this.eventHandler.raiseNewEvent("done", false, false, NO_RELATED_EVENT, Common.EventStatus.successful);
+                    this.eventHandler.raiseNewEvent(LanguageHandler.getString("failed"), true, false, relatedEventId, Common.EventStatus.warning);
                     return;
                 }
                 else
@@ -178,12 +178,11 @@ namespace HVRestoreCore
                     try
                     {
                         VMImporter.importVM(configFiles[0], destPath, true, vmName);
-                        this.eventHandler.raiseNewEvent("erfolgreich", true, false, relatedEventId, Common.EventStatus.successful);
+                        this.eventHandler.raiseNewEvent(LanguageHandler.getString("successful"), true, false, relatedEventId, Common.EventStatus.successful);
                     }catch(Exception ex)
                     {
                         Common.DBQueries.addLog("importVM failed", Environment.StackTrace, ex);
-                        this.eventHandler.raiseNewEvent("fehlgeschlagen", true, false, relatedEventId, Common.EventStatus.warning);
-                        this.eventHandler.raiseNewEvent("done", false, false, NO_RELATED_EVENT, Common.EventStatus.successful);
+                        this.eventHandler.raiseNewEvent(LanguageHandler.getString("failed"), true, false, relatedEventId, Common.EventStatus.warning);
                         return;
                     }
                 }
@@ -196,13 +195,11 @@ namespace HVRestoreCore
                 //finished "normally"
                 if (!this.stopRequestWrapper.value)
                 {
-                    this.eventHandler.raiseNewEvent("Wiederherstellung erfolgreich", false, false, NO_RELATED_EVENT, Common.EventStatus.successful);
-                    this.eventHandler.raiseNewEvent("done", false, false, NO_RELATED_EVENT, Common.EventStatus.successful);
+                    this.eventHandler.raiseNewEvent(LanguageHandler.getString("restore_successful"), false, false, NO_RELATED_EVENT, Common.EventStatus.successful);
                 }
                 else
                 {
-                    this.eventHandler.raiseNewEvent("Wiederherstellung abgebrochen", false, false, NO_RELATED_EVENT, Common.EventStatus.error);
-                    this.eventHandler.raiseNewEvent("done", false, false, NO_RELATED_EVENT, Common.EventStatus.error);
+                    this.eventHandler.raiseNewEvent(LanguageHandler.getString("restore_canceled"), false, false, NO_RELATED_EVENT, Common.EventStatus.error);
                     return;
                 }
             }
