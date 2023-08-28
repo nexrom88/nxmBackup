@@ -30,13 +30,12 @@ namespace HVRestoreCore
         }
         private Common.StopRequestWrapper stopRequestWrapper = new Common.StopRequestWrapper();
 
-        public FullRestoreHandler(Common.EventHandler eventHandler, bool useEncryption, byte[] aesKey, bool usingDedupe, DateTime startTime)
+        public FullRestoreHandler(Common.EventHandler eventHandler, bool useEncryption, byte[] aesKey, bool usingDedupe)
         {
             this.eventHandler = eventHandler;
             this.useEncryption = useEncryption;
             this.aesKey = aesKey;
             this.usingDedupe = usingDedupe;
-            this.startTime = startTime;
         }
 
         //performs a full restore process
@@ -45,6 +44,7 @@ namespace HVRestoreCore
             int relatedEventId = -1;
             if (this.eventHandler != null)
             {
+                this.startTime = DateTime.Now;
                 relatedEventId = this.eventHandler.raiseNewEvent(LanguageHandler.getString("analyzing_backups"), false, false, NO_RELATED_EVENT, Common.EventStatus.inProgress);
             }
 
@@ -290,6 +290,11 @@ namespace HVRestoreCore
         //closes the current jobexecution
         private void closeExecution(bool successful)
         {
+            if (this.eventHandler == null)
+            {
+                return;
+            }
+
             JobExecutionProperties props = new JobExecutionProperties();
             props.successful  = successful;
             props.endStamp = DateTime.Now;

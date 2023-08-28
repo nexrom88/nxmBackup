@@ -329,7 +329,7 @@ namespace Common
                     }
 
 
-                    return int.Parse((string)(jobExecutions[0]["isrunning"])) == 1 ? true : false ;
+                    return int.Parse(jobExecutions[0]["isrunning"].ToString()) == 1 ? true : false ;
 
                 }
             }
