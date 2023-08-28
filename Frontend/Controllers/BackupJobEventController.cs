@@ -15,9 +15,25 @@ namespace Frontend.Controllers
         public HttpResponseMessage Get([FromUri] BackupJobEventDetails details)
         {
             List<Dictionary<string, object>> retVal = Common.DBQueries.getEvents(details.id, details.jobType);
-            HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.OK);
-            response.Content = new StringContent(Newtonsoft.Json.JsonConvert.SerializeObject(retVal));
-            return response;
+
+            //if restore -> check whether job is still running
+            if (details.jobType == "restore")
+            {
+                RestoreEvents eventObj = new RestoreEvents();
+                eventObj.isRunning = Common.DBQueries.isRestoreRunning(details.id);
+                eventObj.events = retVal;
+                HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.OK);
+                response.Content = new StringContent(Newtonsoft.Json.JsonConvert.SerializeObject(eventObj));
+                return response;
+            }
+            else
+            {
+                HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.OK);
+                response.Content = new StringContent(Newtonsoft.Json.JsonConvert.SerializeObject(retVal));
+                return response;
+            }
+
+
         }
 
         public struct BackupJobEventDetails
@@ -26,5 +42,11 @@ namespace Frontend.Controllers
             public string jobType { get; set; }
         }
 
+
+        public struct RestoreEvents
+        {
+            public bool isRunning;
+            public List<Dictionary<string, object>> events;
+        }
     }
 }

@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Documents;
+using Common;
 using nxmBackup.Language;
 
 namespace HVRestoreCore
@@ -16,6 +17,7 @@ namespace HVRestoreCore
         private bool useEncryption;
         private byte[] aesKey;
         private bool usingDedupe;
+        private DateTime startTime;
         public bool StopRequest {
             set
             {
@@ -28,12 +30,13 @@ namespace HVRestoreCore
         }
         private Common.StopRequestWrapper stopRequestWrapper = new Common.StopRequestWrapper();
 
-        public FullRestoreHandler(Common.EventHandler eventHandler, bool useEncryption, byte[] aesKey, bool usingDedupe)
+        public FullRestoreHandler(Common.EventHandler eventHandler, bool useEncryption, byte[] aesKey, bool usingDedupe, DateTime startTime)
         {
             this.eventHandler = eventHandler;
             this.useEncryption = useEncryption;
             this.aesKey = aesKey;
             this.usingDedupe = usingDedupe;
+            this.startTime = startTime;
         }
 
         //performs a full restore process
@@ -56,6 +59,7 @@ namespace HVRestoreCore
             {
                 this.eventHandler.raiseNewEvent(LanguageHandler.getString("failed"), true, false, relatedEventId, Common.EventStatus.error);
                 this.eventHandler.raiseNewEvent(LanguageHandler.getString("target_backup_not_found"), false, false, NO_RELATED_EVENT, Common.EventStatus.error);
+                closeExecution(false);
                 return; //not found, no restore
             }
 
@@ -81,6 +85,7 @@ namespace HVRestoreCore
                 {
                     //element is not valid, chain is broken, cancel restore
                     this.eventHandler.raiseNewEvent(LanguageHandler.getString("failed"), true, false, relatedEventId, Common.EventStatus.error);
+                    closeExecution(false);
                     return;
                 }
                 else
@@ -102,6 +107,7 @@ namespace HVRestoreCore
             if (hddFiles == null)
             {
                 this.eventHandler.raiseNewEvent(LanguageHandler.getString("backup_not_writeable"), false, false, NO_RELATED_EVENT, Common.EventStatus.error);
+                closeExecution(false);
                 return;
             }
 
@@ -135,6 +141,7 @@ namespace HVRestoreCore
                         {
                             this.eventHandler.raiseNewEvent(LanguageHandler.getString("merge_failed"), true, false, NO_RELATED_EVENT, Common.EventStatus.error);
                             diffStream.Close();
+                            closeExecution(false);
                             return;
                         }
                         diffStream.Close();
@@ -170,6 +177,7 @@ namespace HVRestoreCore
                 if (configFiles.Length != 1)
                 {
                     this.eventHandler.raiseNewEvent(LanguageHandler.getString("failed"), true, false, relatedEventId, Common.EventStatus.warning);
+                    closeExecution(false);
                     return;
                 }
                 else
@@ -183,6 +191,7 @@ namespace HVRestoreCore
                     {
                         Common.DBQueries.addLog("importVM failed", Environment.StackTrace, ex);
                         this.eventHandler.raiseNewEvent(LanguageHandler.getString("failed"), true, false, relatedEventId, Common.EventStatus.warning);
+                        closeExecution(false);
                         return;
                     }
                 }
@@ -196,14 +205,17 @@ namespace HVRestoreCore
                 if (!this.stopRequestWrapper.value)
                 {
                     this.eventHandler.raiseNewEvent(LanguageHandler.getString("restore_successful"), false, false, NO_RELATED_EVENT, Common.EventStatus.successful);
+                    
                 }
                 else
                 {
                     this.eventHandler.raiseNewEvent(LanguageHandler.getString("restore_canceled"), false, false, NO_RELATED_EVENT, Common.EventStatus.error);
+                    closeExecution(false);
                     return;
                 }
             }
 
+            closeExecution(true);
             return;
 
         }
@@ -275,6 +287,16 @@ namespace HVRestoreCore
             return hddFiles;
         }
 
+        //closes the current jobexecution
+        private void closeExecution(bool successful)
+        {
+            JobExecutionProperties props = new JobExecutionProperties();
+            props.successful  = successful;
+            props.endStamp = DateTime.Now;
+            props.startStamp = this.startTime;
+
+            Common.DBQueries.closeJobExecution(props, this.eventHandler.ExecutionId.ToString());
+        }
 
     }
 

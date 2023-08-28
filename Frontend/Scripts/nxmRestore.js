@@ -614,6 +614,9 @@ function refreshFullRestoreLog() {
         .done(function (data) {
             data = JSON.parse(data);
 
+            var isRunning = data["isRunning"];
+            data = data["events"];
+
             //iterate through all events
             var eventsList = [];
             for (var i = 0; i < data.length; i++) {
@@ -645,7 +648,7 @@ function refreshFullRestoreLog() {
                 }
 
                 //"done" event found?
-                if (oneEvent.text == "done") {
+                if (isRunning) {
                     //clear refresh timer
                     clearInterval(refreshFullRestoreLog);
 

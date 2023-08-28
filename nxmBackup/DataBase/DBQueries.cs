@@ -311,6 +311,33 @@ namespace Common
         }
 
 
+        //checks whether a given jobexecution is still running (used for full restore)
+        public static bool isRestoreRunning(int jobId)
+        {
+            try
+            {
+                using (DBConnection dbConn = new DBConnection())
+                {
+                    //get jobExecutions first
+                    List<Dictionary<string, object>> jobExecutions = dbConn.doReadQuery("SELECT isrunning FROM JobExecutions WHERE jobId = @jobId AND type = 'restore' ORDER BY id DESC LIMIT 1;",
+                        new Dictionary<string, object>() { { "jobId", jobId }}, null);
+
+                    //is retval available?
+                    if (jobExecutions == null || jobExecutions.Count == 0)
+                    {
+                        return false;
+                    }
+
+
+                    return int.Parse((string)(jobExecutions[0]["isrunning"])) == 1 ? true : false ;
+
+                }
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+        }
 
         //gets all events for a given job
         public static List<Dictionary<string, object>> getEvents(int jobId, string type)
@@ -335,14 +362,9 @@ namespace Common
                     List<Dictionary<string, object>> jobExecutionEventIds = dbConn.doReadQuery("SELECT jobexecutionevents.id, vmid, timestamp, info, eventstatus.text AS status FROM jobexecutionevents INNER JOIN eventstatus ON eventstatus.id = jobexecutionevents.status WHERE jobexecutionid = @jobexecutionid ORDER BY jobexecutionevents.id DESC;",
                         new Dictionary<string, object>() { { "jobExecutionId", int.Parse(jobExecutionId) } }, null);
 
-                    if (jobExecutionEventIds.Count == 0)
-                    {
-                        throw new Exception("Error during insert operation (affectedRows != 1)");
-                    }
-                    else
-                    {
-                        return jobExecutionEventIds;
-                    }
+
+                    return jobExecutionEventIds;
+
                 }
             }
             catch (Exception ex)
