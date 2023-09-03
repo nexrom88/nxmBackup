@@ -654,10 +654,10 @@ function refreshFullRestoreLog() {
                     clearInterval(refreshFullRestoreLogTimer);
 
                     $(".swal2-confirm").html(languageStrings["close"]);
-                } else {
-                    //add event to eventsList
-                    eventsList.unshift(oneEvent);
                 }
+
+                //add event to list
+                eventsList.unshift(oneEvent);
 
             }
 
