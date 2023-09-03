@@ -43,6 +43,18 @@ namespace Frontend.Controllers
                 otp = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(otp));
             }
 
+            //check otp if necessary
+            if (MFAHandler.isActivated())
+            {
+                if (!checkOTP(otp))
+                {
+                    //given otp is wrong
+                    response = new HttpResponseMessage();
+                    response.StatusCode = HttpStatusCode.Forbidden;
+                    return response;
+                }
+            }
+
             //check credentials local
             bool authorized = checkCredentials(username, password, ContextType.Machine);
 
@@ -56,18 +68,6 @@ namespace Frontend.Controllers
             //check user data
             if (authorized)
             {
-                //check otp if necessary
-                if (MFAHandler.isActivated())
-                {
-                    if (!checkOTP(otp))
-                    {
-                        //given otp is wrong
-                        response = new HttpResponseMessage();
-                        response.StatusCode = HttpStatusCode.Forbidden;
-                        return response;
-                    }
-                }
-
                 //create guid session string
                 string guid = Guid.NewGuid().ToString();
 
