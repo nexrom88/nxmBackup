@@ -3,6 +3,7 @@ var selectedRestoreHDD = ""; //the selected hdd for restore
 var selectedRestoreVM = {}; //the vm selected for restore
 var fullRestoreLogContainerTemplate = ""; // the template for the full restore log container
 var loadedBackupChain = {} //the currently loaded backup chain for restore
+var refreshFullRestoreLogTimer; //timer for refreshing restore events
 
 //starts the restore process
 function startRestoreHandler() {
@@ -599,7 +600,7 @@ function handleRunningFullRestore() {
             refreshFullRestoreLog();
 
             //start refresh timer
-            setInterval(refreshFullRestoreLog, 3000);
+            refreshFullRestoreLogTimer = setInterval(refreshFullRestoreLog, 3000);
 
         });
 }
@@ -613,6 +614,9 @@ function refreshFullRestoreLog() {
     })
         .done(function (data) {
             data = JSON.parse(data);
+
+            var isRunning = data["isRunning"];
+            data = data["events"];
 
             //iterate through all events
             var eventsList = [];
@@ -644,16 +648,16 @@ function refreshFullRestoreLog() {
                         break;
                 }
 
-                //"done" event found?
-                if (oneEvent.text == "done") {
+                //restore completed?
+                if (!isRunning) {
                     //clear refresh timer
-                    clearInterval(refreshFullRestoreLog);
+                    clearInterval(refreshFullRestoreLogTimer);
 
                     $(".swal2-confirm").html(languageStrings["close"]);
-                } else {
-                    //add event to eventsList
-                    eventsList.unshift(oneEvent);
                 }
+
+                //add event to list
+                eventsList.unshift(oneEvent);
 
             }
 

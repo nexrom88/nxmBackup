@@ -65,6 +65,8 @@ namespace Frontend.Controllers
                     {
                         importToHyperV = true;
                     }
+
+                    DateTime startTime = DateTime.Now;
                     
                     int jobExecutionId = Common.DBQueries.addJobExecution(restoreStartDetails.jobID, "restore");
                     HVRestoreCore.FullRestoreHandler fullRestoreHandler = new HVRestoreCore.FullRestoreHandler(new Common.EventHandler(vmObject, jobExecutionId), jobObject.UseEncryption, jobObject.AesKey, jobObject.UsingDedupe);
