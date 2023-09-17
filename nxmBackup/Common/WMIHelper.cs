@@ -10,8 +10,8 @@ namespace Common
     public class WMIHelper
     {
 
-        //lists all active HyperV VMs
-        public static List<OneVM> listVMs()
+        //lists all active HyperV VMss
+        public static List<OneVM> listVMs(ManagementScope scope = null)
         {
             try
             {
@@ -27,8 +27,10 @@ namespace Common
                     query = "SELECT * FROM Msvm_VirtualSystemSettingData WHERE SettingType = 3";
                 }
 
-
-                var scope = new ManagementScope(GetWMIScope());
+                if (scope == null)
+                {
+                    scope = new ManagementScope(GetWMIScope());
+                }
 
                 List<OneVM> vms = new List<OneVM>();
                 using (var searcher = new ManagementObjectSearcher(scope, new ObjectQuery(query)))

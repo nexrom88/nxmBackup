@@ -317,7 +317,7 @@ namespace Common
         /// <param name="className">The class of virtual machine to search for.</param>
         /// <param name="scope">The ManagementScope to use to connect to WMI.</param>
         /// <returns>The instance representing the virtual machine.</returns>
-        private static ManagementObject
+        public static ManagementObject
         GetVmObject(
             string name,
             string className,
