@@ -81,9 +81,22 @@ namespace Common
         }
 
         //reads all configured HyperV hosts
-        public static string[] readHyperVHosts()
+        public static HyperVHost[] readHyperVHosts(bool readAuthData)
         {
+            using (DBConnection dbConn = new DBConnection())
+            {
+                Dictionary<string, object> parameters = new Dictionary<string, object>();
+                List<Dictionary<string, object>> result = dbConn.doReadQuery("SELECT id, description, host, user, password FROM hosts;", null, null);
 
+                //result valid?
+                if (result == null || result.Count == 0)
+                {
+                    return null;
+                }
+                else
+                {
+                }
+            }
         }
 
         //reads all global settings from db
@@ -482,6 +495,15 @@ namespace Common
     {
         public string start;
         public string end;
+    }
+
+    public struct HyperVHost
+    {
+        public string id;
+        public string host;
+        public string description;
+        public string user;
+        public string password;
     }
 
 }
