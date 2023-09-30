@@ -80,6 +80,12 @@ namespace Common
             }
         }
 
+        //reads all configured HyperV hosts
+        public static string[] readHyperVHosts()
+        {
+
+        }
+
         //reads all global settings from db
         public static Dictionary<string, string> readGlobalSettings(bool readPasswords, bool readOTPKey)
         {
