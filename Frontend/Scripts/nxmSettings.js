@@ -1,5 +1,6 @@
 ﻿//shows the settings form
 var globalSettings = {};
+var configuredHosts = {};
 var currentSettingsLanguage;
 function showSettings() {
 
@@ -9,7 +10,17 @@ function showSettings() {
     })
         .done(function (data) {
             globalSettings = JSON.parse(data);
-            showSettingsPopUp();
+
+            //now read configured hyperv hosts
+            $.ajax({
+                url: "api/HyperVHosts"
+            })
+                .done(function (data) {
+                    configuredHosts = JSON.parse(data);
+                    showSettingsPopUp();
+                });
+
+            
         });
 }
 

@@ -5,6 +5,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Security.Cryptography;
+using System.Security;
+using System.Windows.Controls.Primitives;
 
 namespace Common
 {
@@ -83,10 +85,23 @@ namespace Common
         //reads all configured HyperV hosts
         public static HyperVHost[] readHyperVHosts(bool readAuthData)
         {
+            HyperVHost[] hostsArray;
+            string sqlQuery;
+
+            //which sql query to use?
+            if (readAuthData)
+            {
+                sqlQuery = "SELECT id, description, host, user, password FROM hosts;";
+            }
+            else
+            {
+                sqlQuery = "SELECT id, description, host FROM hosts;";
+            }
+
             using (DBConnection dbConn = new DBConnection())
             {
                 Dictionary<string, object> parameters = new Dictionary<string, object>();
-                List<Dictionary<string, object>> result = dbConn.doReadQuery("SELECT id, description, host, user, password FROM hosts;", null, null);
+                List<Dictionary<string, object>> result = dbConn.doReadQuery(sqlQuery, null, null);
 
                 //result valid?
                 if (result == null || result.Count == 0)
@@ -95,6 +110,28 @@ namespace Common
                 }
                 else
                 {
+                    hostsArray = new HyperVHost[result.Count];
+                    int counter = 0;
+
+                    //iterate through every result set
+                    foreach (Dictionary<string, object> oneHostSet in result)
+                    {
+                        hostsArray[counter] = new HyperVHost();
+                        hostsArray[counter].id =  oneHostSet["id"].ToString();
+                        hostsArray[counter].description = (string)oneHostSet["description"];
+                        hostsArray[counter].host = (string)oneHostSet["host"];
+
+                        if (readAuthData)
+                        {
+                            hostsArray[counter].user = (string)oneHostSet["user"];
+                            hostsArray[counter].password = (string)oneHostSet["password"];
+                        }
+
+                        counter++;
+                    }
+
+                    return hostsArray;
+
                 }
             }
         }

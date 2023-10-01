@@ -14,11 +14,8 @@ namespace Frontend.Controllers
         // read all global settings
         public HttpResponseMessage Get()
         {
-            //read general settings first
+            //read settings
             Dictionary<string, string> result = Common.DBQueries.readGlobalSettings(false, false);
-
-            //now read HyperV Hosts
-
 
             HttpResponseMessage response = new HttpResponseMessage();
             response.StatusCode = HttpStatusCode.OK;
