@@ -90,8 +90,12 @@ function showSettingsPopUp() {
     })
         .done(function (settingsForm) {
 
+            //set hyperv hosts list
+            settingsForm = Mustache.render(settingsForm, { hosts: configuredHosts });
+
             //set language strings
             settingsForm = replaceLanguageMarkups(settingsForm);
+
 
             $("#settingsPopUp").html(settingsForm);
 
@@ -174,6 +178,23 @@ function showSettingsPopUp() {
                 });
             });
 
+            //handle click on add hyperv host
+            $("#addHyperVHost").click(function () {
+
+                //load template
+                $.ajax({
+                    url: "Templates/addHyperVHost"
+                })
+                    .done(function (addHostForm) {
+
+                        //replace language markups
+                        addHostForm = replaceLanguageMarkups(addHostForm);
+
+                        showAddHyperVHostForm(addHostForm);
+                    });
+            
+            });
+
             //handle testmail link click
             $("#testmailLink").click(function () {
                 //read given values
@@ -212,6 +233,14 @@ function showSettingsPopUp() {
             });
 
         });
+}
+
+//shows the add hyperv host form
+function showAddHyperVHostForm(form) {
+    Swal.fire({
+        title: languageStrings["add_hyperv_host"],
+        html: form
+    });
 }
 
 //registers the otp

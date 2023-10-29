@@ -90,14 +90,26 @@
     </div>
 
     <div class="tab-pane fade" id="hypervhosts" role="tabpanel" aria-labelledby="hypervhosts-tab">
+
+        <ul class="list-group" id="hyperHostsList">
+            {{#hosts}}
+            <li class="list-group-item d-flex justify-content-between align-items-center hostsListItem">
+                {{description}}
+                <span>
+                    <button data-hostid="{{id}}" type="button" class="btn btn-primary">
+                        $$edit$$
+                        <i class="fa fa-pencil-square-o"></i>
+                    </button>
+                </span>
+            </li>
+            {{/hosts}}
+        </ul>
         <div class="settingWrapper">
-            <div class="settingInput">
-                <label for="inputHostname" class="settingsInputLabel">$$hyperv_hostname$$</label>
-                <input type="text" class="form-control settingInputControl" id="inputHostname">
+            <div class="settingInput" id="addHyperVHost">
+                <a href="#">$$add_hyperv_host$$</a>
             </div>
         </div>
 
-        
     </div>
 
 </div>

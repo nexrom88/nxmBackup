@@ -299,13 +299,27 @@
 #testmailLink {
     text-align: center;
 }
-#testMailResult{
+#addHyperVHost{
+    text-align:center;
+}
+#testMailResult {
     color: red;
 }
 
 #otpText{
     display:none;
 }
+
+.hostsListItem{
+    text-align:left;
+}
+.hostsListItem:hover {
+    background-color: lightgray;
+}
+#hyperHostsList{
+    margin-bottom: 5%;
+}
+
 
 @keyframes color {
     0% {
