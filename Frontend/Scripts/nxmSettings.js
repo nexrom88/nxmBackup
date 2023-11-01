@@ -239,7 +239,66 @@ function showSettingsPopUp() {
 function showAddHyperVHostForm(form) {
     Swal.fire({
         title: languageStrings["add_hyperv_host"],
-        html: form
+        html: form,
+        showCancelButton: true,
+        cancelButtonText: languageStrings["cancel"],
+        confirmButtonText: languageStrings["add"],
+        preConfirm: () => {
+            //set input color to default first
+            $("#inputDescription").css("background-color", "initial");
+            $("#inputHost").css("background-color", "initial");
+            $("#inputUser").css("background-color", "initial");
+            $("#inputPass").css("background-color", "initial");
+
+            //first check that every input is filled
+            if ($("#inputDescription").val() == "") {
+                $("#inputDescription").css("background-color", "rgb(255,77,77)");
+                return false;
+            }
+            if ($("#inputHost").val() == "") {
+                $("#inputHost").css("background-color", "rgb(255,77,77)");
+                return false;
+            }
+            if ($("#inputUser").val() == "") {
+                $("#inputUser").css("background-color", "rgb(255,77,77)");
+                return false;
+            }
+            if ($("#inputPass").val() == "") {
+                $("#inputPass").css("background-color", "rgb(255,77,77)");
+                return false;
+            }
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            //send data to db
+            var newHost = {};
+            newHost["description"] = $("#inputDescription").val();
+            newHost["host"] = $("#inputHost").val();
+            newHost["user"] = $("#inputUser").val();
+            newHost["password"] = $("#inputPass").val();
+            $.ajax({
+                url: "api/HyperVHosts",
+                contentType: "application/json; charset=utf-8",
+                data: JSON.stringify(newHost),
+                type: 'POST',
+                success: function (result) {
+                    Swal.fire(
+                        languageStrings["success"],
+                        languageStrings["host_add_success"],
+                        'success'
+                    );
+                },
+                error: function (result) {
+                    Swal.fire(
+                        languageStrings["error"],
+                        languageStrings["host_add_error"],
+                        'error'
+                    );
+                }
+            });
+        }
+        
+    
     });
 }
 

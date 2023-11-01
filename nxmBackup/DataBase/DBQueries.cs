@@ -7,6 +7,8 @@ using System.Threading.Tasks;
 using System.Security.Cryptography;
 using System.Security;
 using System.Windows.Controls.Primitives;
+using System.Data.Entity.Infrastructure;
+using System.Xml.Linq;
 
 namespace Common
 {
@@ -79,6 +81,21 @@ namespace Common
                 {
                     return (string)result[0]["value"];
                 }
+            }
+        }
+
+        public static bool addHyperVHost(HyperVHost hyperVHost)
+        {
+            using (DBConnection dbConn = new DBConnection())
+            {
+                Dictionary<string, object> parameters = new Dictionary<string, object>();
+                parameters.Add("description", hyperVHost.description);
+                parameters.Add("host", hyperVHost.host);
+                parameters.Add("user", hyperVHost.user);
+                parameters.Add("password", hyperVHost.password);
+
+                List<Dictionary<string, object>> result = dbConn.doReadQuery("INSERT INTO hosts(description, host, user, password) VALUES(@description, @host, @user, @password);", parameters, null);
+                return true;
             }
         }
 

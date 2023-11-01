@@ -5,6 +5,7 @@ using System.Net;
 using System.Net.Http;
 using System.Web.Http;
 using System.Web.Http.Results;
+using static Frontend.Controllers.SettingsController;
 
 namespace Frontend.Controllers
 {
@@ -25,6 +26,37 @@ namespace Frontend.Controllers
             return response;
         }
 
-        
+        // creates a new HyperVHost
+        public HttpResponseMessage Post([FromBody] HyperVHostCreateObject host)
+        {
+            HttpResponseMessage response = new HttpResponseMessage();
+
+            //convert given object to struct
+            Common.HyperVHost newHost = new Common.HyperVHost();
+            newHost.description = host.description;
+            newHost.host = host.host;
+            newHost.user = host.user;
+            newHost.password = host.password;
+
+            //write to db
+            if (Common.DBQueries.addHyperVHost(newHost))
+            {
+                response.StatusCode = HttpStatusCode.OK;
+            }
+            else
+            {
+                response.StatusCode=HttpStatusCode.BadRequest;
+            }
+            return response;
+
+        }
+
+        public class HyperVHostCreateObject
+        {
+            public string description { get; set; }
+            public string host { get; set; }
+            public string user { get; set; }
+            public string password { get; set; }
+        }
     }
 }
