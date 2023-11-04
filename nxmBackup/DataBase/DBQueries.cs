@@ -99,6 +99,18 @@ namespace Common
             }
         }
 
+        //deletes a given hyperv host
+        public static void deleteHyperVHost(string id)
+        {
+            using (DBConnection dbConn = new DBConnection())
+            {
+                Dictionary<string, object> parameters = new Dictionary<string, object>();
+                parameters.Add("id", id);
+
+                List<Dictionary<string, object>> result = dbConn.doReadQuery("DELETE FROM hosts WHERE id=@id", parameters, null);
+            }
+        }
+
         //reads all configured HyperV hosts
         public static HyperVHost[] readHyperVHosts(bool readAuthData)
         {

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Common;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -49,6 +50,20 @@ namespace Frontend.Controllers
             }
             return response;
 
+        }
+
+        //deletes a given host
+        public void Delete([FromBody]string id)
+        {
+            //do not delete 'localhost'
+            if (id == "1")
+            {
+                return;
+            }
+            else
+            {
+                DBQueries.deleteHyperVHost(id);
+            }
         }
 
         public class HyperVHostCreateObject

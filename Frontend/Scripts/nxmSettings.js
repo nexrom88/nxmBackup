@@ -99,6 +99,9 @@ function showSettingsPopUp() {
 
             $("#settingsPopUp").html(settingsForm);
 
+            //disable edit/delete button for localhost
+            $(".hostsListItem").find("[data-hostid='1']").attr("disabled", true);
+
             //show settings
             $("#inputMountPath").val(globalSettings["mountpath"]);
             $("#inputMailServer").val(globalSettings["mailserver"]);
@@ -115,6 +118,17 @@ function showSettingsPopUp() {
             } else {
                 $("#toggleOTPLink a").text(languageStrings["disable_otp"]);
             }
+
+            //handle host delete button click
+            $(".deleteHostButton").click(function () {
+                var hostID = $(this).data("hostid");
+                $.ajax({
+                    url: 'api/HyperVHosts',
+                    type: 'DELETE',
+                    contentType: "application/json; charset=utf-8",
+                    data: String(hostID)
+                });
+            });
 
             //handle otp toggle link click
             $("#toggleOTPLink a").click(function () {
