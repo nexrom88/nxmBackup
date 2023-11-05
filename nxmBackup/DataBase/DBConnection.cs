@@ -58,7 +58,7 @@ namespace Common
                 return;
             }
 
-            string connectionString = "Data Source=" + dbPath;
+            string connectionString = "Data Source=" + dbPath + "; foreign keys=true";
             this.connection = new SQLiteConnection(connectionString);
 
 

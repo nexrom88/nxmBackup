@@ -126,7 +126,17 @@ function showSettingsPopUp() {
                     url: 'api/HyperVHosts',
                     type: 'DELETE',
                     contentType: "application/json; charset=utf-8",
-                    data: String(hostID)
+                    data: String(hostID),
+                    error: function (request, error) {
+                        Swal.fire(
+                            languageStrings["error"],
+                            languageStrings["host_remove_error"],
+                            'error'
+                        );
+                    },
+                    success: function () {
+                        $(".hostsListItem[data-hostid='" + hostID + "']").remove();
+                    }
                 });
             });
 
@@ -297,15 +307,15 @@ function showAddHyperVHostForm(form) {
                 type: 'POST',
                 success: function (result) {
                     Swal.fire(
-                        languageStrings["success"],
-                        languageStrings["host_add_success"],
+                        languageStrings["successful_capital"],
+                        languageStrings["host_added_success"],
                         'success'
                     );
                 },
                 error: function (result) {
                     Swal.fire(
-                        languageStrings["error"],
-                        languageStrings["host_add_error"],
+                        languageStrings["failed_capital"],
+                        languageStrings["host_added_error"],
                         'error'
                     );
                 }

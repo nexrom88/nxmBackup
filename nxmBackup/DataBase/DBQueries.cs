@@ -100,14 +100,15 @@ namespace Common
         }
 
         //deletes a given hyperv host
-        public static void deleteHyperVHost(string id)
+        public static bool deleteHyperVHost(string id)
         {
             using (DBConnection dbConn = new DBConnection())
             {
-                Dictionary<string, object> parameters = new Dictionary<string, object>();
+                Dictionary<string, object> parameters = new Dictionary<string, object>();                
                 parameters.Add("id", id);
 
-                List<Dictionary<string, object>> result = dbConn.doReadQuery("DELETE FROM hosts WHERE id=@id", parameters, null);
+                List<Dictionary<string, object>> result = dbConn.doReadQuery("DELETE FROM hosts WHERE id=@id RETURNING *", parameters, null);
+                return result != null && result.Count > 0;
             }
         }
 

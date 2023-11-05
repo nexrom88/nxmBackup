@@ -53,16 +53,28 @@ namespace Frontend.Controllers
         }
 
         //deletes a given host
-        public void Delete([FromBody]string id)
+        public HttpResponseMessage Delete([FromBody]string id)
         {
+            HttpResponseMessage response = new HttpResponseMessage();
             //do not delete 'localhost'
             if (id == "1")
             {
-                return;
+                response.StatusCode = HttpStatusCode.MethodNotAllowed;
+                return response;
             }
             else
             {
-                DBQueries.deleteHyperVHost(id);
+                if (DBQueries.deleteHyperVHost(id))
+                {
+                    response.StatusCode = HttpStatusCode.OK;
+                    return response;
+                }
+                else
+                {
+                    //remove not possible
+                    response.StatusCode = HttpStatusCode.MethodNotAllowed;
+                    return response;
+                }
             }
         }
 
