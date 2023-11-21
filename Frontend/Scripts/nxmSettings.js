@@ -136,8 +136,23 @@ function showSettingsPopUp() {
                     },
                     success: function () {
                         $(".hostsListItem[data-hostid='" + hostID + "']").remove();
+
+                        //look for host in list and remove it
+                        for (var i = 0; i < configuredHosts.length; i++) {
+                            if (configuredHosts[i]["id"] == hostID) {
+                                configuredHosts.splice(i, 1);
+                                break;
+                            }
+                        }
                     }
                 });
+            });
+
+            //handle host edit button click
+            //handle host delete button click
+            $(".editHostButton").click(function () {
+                var hostID = $(this).data("hostid");
+                loadAddHyperVHostForm(hostID);
             });
 
             //handle otp toggle link click
@@ -204,19 +219,7 @@ function showSettingsPopUp() {
 
             //handle click on add hyperv host
             $("#addHyperVHost").click(function () {
-
-                //load template
-                $.ajax({
-                    url: "Templates/addHyperVHost"
-                })
-                    .done(function (addHostForm) {
-
-                        //replace language markups
-                        addHostForm = replaceLanguageMarkups(addHostForm);
-
-                        showAddHyperVHostForm(addHostForm);
-                    });
-            
+                loadAddHyperVHostForm(-1);           
             });
 
             //handle testmail link click
@@ -259,14 +262,31 @@ function showSettingsPopUp() {
         });
 }
 
-//shows the add hyperv host form
-function showAddHyperVHostForm(form) {
+//loads the add/edit hyperv host form
+//editID is host to edit or -1 when adding a new host
+function loadAddHyperVHostForm(editID) {
+    //load template
+    $.ajax({
+        url: "Templates/addHyperVHost"
+    })
+        .done(function (addHostForm) {
+
+            //replace language markups
+            addHostForm = replaceLanguageMarkups(addHostForm);
+
+            showAddHyperVHostForm(addHostForm, editID);
+        });
+}
+
+
+//shows the add/edit hyperv host form
+function showAddHyperVHostForm(form, editID) {
     Swal.fire({
         title: languageStrings["add_hyperv_host"],
         html: form,
         showCancelButton: true,
         cancelButtonText: languageStrings["cancel"],
-        confirmButtonText: languageStrings["add"],
+        confirmButtonText: languageStrings["save_capital"],
         preConfirm: () => {
             //set input color to default first
             $("#inputDescription").css("background-color", "initial");
@@ -287,7 +307,7 @@ function showAddHyperVHostForm(form) {
                 $("#inputUser").css("background-color", "rgb(255,77,77)");
                 return false;
             }
-            if ($("#inputPass").val() == "") {
+            if ($("#inputPass").val() == "" && editID == -1) {
                 $("#inputPass").css("background-color", "rgb(255,77,77)");
                 return false;
             }
@@ -296,6 +316,7 @@ function showAddHyperVHostForm(form) {
         if (result.isConfirmed) {
             //send data to db
             var newHost = {};
+            newHost["editID"] = $("#hostEditID").html();
             newHost["description"] = $("#inputDescription").val();
             newHost["host"] = $("#inputHost").val();
             newHost["user"] = $("#inputUser").val();
@@ -324,6 +345,27 @@ function showAddHyperVHostForm(form) {
         
     
     });
+
+    //set edit id
+    $("#hostEditID").html(editID);
+
+    //show host details when editing a given host
+    if (editID != -1) {
+        //look for host
+        for (var i = 0; i < configuredHosts.length; i++) {
+            if (configuredHosts[i]["id"] == editID) {
+                //host found
+                $("#inputDescription").val(configuredHosts[i]["description"]);
+                $("#inputHost").val(configuredHosts[i]["host"]);
+                $("#inputUser").val(configuredHosts[i]["user"]);
+
+                //add hint
+                $("#inputPass").attr("placeholder", languageStrings["change_pw_ph"]);
+
+                break;
+            }
+        }
+    }
 }
 
 //registers the otp

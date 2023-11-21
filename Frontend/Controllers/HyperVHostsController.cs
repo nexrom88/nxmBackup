@@ -34,13 +34,14 @@ namespace Frontend.Controllers
 
             //convert given object to struct
             Common.HyperVHost newHost = new Common.HyperVHost();
+            newHost.id = host.editID;
             newHost.description = host.description;
             newHost.host = host.host;
             newHost.user = host.user;
             newHost.password = host.password;
 
             //write to db
-            if (Common.DBQueries.addHyperVHost(newHost))
+            if (Common.DBQueries.saveHyperVHost(newHost))
             {
                 response.StatusCode = HttpStatusCode.OK;
             }
@@ -80,6 +81,7 @@ namespace Frontend.Controllers
 
         public class HyperVHostCreateObject
         {
+            public string editID { get; set; }
             public string description { get; set; }
             public string host { get; set; }
             public string user { get; set; }

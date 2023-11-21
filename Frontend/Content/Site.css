@@ -319,6 +319,9 @@
 #hyperHostsList{
     margin-bottom: 5%;
 }
+#hostEditID{
+    display:none;
+}
 
 
 @keyframes color {

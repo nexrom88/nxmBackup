@@ -84,7 +84,7 @@ namespace Common
             }
         }
 
-        public static bool addHyperVHost(HyperVHost hyperVHost)
+        public static bool saveHyperVHost(HyperVHost hyperVHost)
         {
             using (DBConnection dbConn = new DBConnection())
             {
@@ -92,10 +92,38 @@ namespace Common
                 parameters.Add("description", hyperVHost.description);
                 parameters.Add("host", hyperVHost.host);
                 parameters.Add("user", hyperVHost.user);
-                parameters.Add("password", hyperVHost.password);
 
-                List<Dictionary<string, object>> result = dbConn.doReadQuery("INSERT INTO hosts(description, host, user, password) VALUES(@description, @host, @user, @password);", parameters, null);
-                return true;
+                //have to add a new host entry?
+                if (hyperVHost.id == "-1")
+                {                    
+                    parameters.Add("password", hyperVHost.password);
+
+                    List<Dictionary<string, object>> result = dbConn.doReadQuery("INSERT INTO hosts(description, host, user, password) VALUES(@description, @host, @user, @password);", parameters, null);
+                    return true;
+                }
+                else
+                {
+                    //edit a given host entry
+                    parameters.Add("id", hyperVHost.id);
+                    string updateQuery = "";
+                    if (hyperVHost.password != null && hyperVHost.password != "")
+                    {
+                        //build query for also updating password
+                        updateQuery = "UPDATE hosts SET description=@description, host=@host, user=@user, password=@password WHERE id=@id";
+                        parameters.Add("password", hyperVHost.password);
+                    }
+                    else
+                    {
+                        //build query for not also updating password
+                        updateQuery = "UPDATE hosts SET description=@description, host=@host, user=@user WHERE id=@id";
+                    }
+
+                    //do update query
+                    List<Dictionary<string, object>> result = dbConn.doReadQuery(updateQuery, parameters, null);
+                    return true;
+                }
+
+                
             }
         }
 
@@ -125,7 +153,7 @@ namespace Common
             }
             else
             {
-                sqlQuery = "SELECT id, description, host FROM hosts;";
+                sqlQuery = "SELECT id, description, user, host FROM hosts;";
             }
 
             using (DBConnection dbConn = new DBConnection())
@@ -150,10 +178,10 @@ namespace Common
                         hostsArray[counter].id =  oneHostSet["id"].ToString();
                         hostsArray[counter].description = (string)oneHostSet["description"];
                         hostsArray[counter].host = (string)oneHostSet["host"];
+                        hostsArray[counter].user = (string)oneHostSet["user"];
 
                         if (readAuthData)
                         {
-                            hostsArray[counter].user = (string)oneHostSet["user"];
                             hostsArray[counter].password = (string)oneHostSet["password"];
                         }
 
