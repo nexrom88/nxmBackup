@@ -63,7 +63,7 @@ namespace Common
             //error on connecting?
             if (result != 0)
             {
-                DBQueries.addLog("error on adding smb credentials", Environment.StackTrace, null);
+                DBQueries.addLog("error on adding smb credentials. Code:" + result, Environment.StackTrace, null);
             }
 
 
