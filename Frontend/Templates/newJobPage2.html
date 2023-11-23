@@ -1,9 +1,17 @@
 ﻿<form>
     <h5 class="center_div subHeadline">$$select_vms$$</h5>
+    <div class="newJobElement center_div">
+        <span class="centeredElementSpan">
+            <label class="enter_div" for="sbHyperVHost">$$select_hyperv_host$$</label>
+            <select id="sbHyperVHost" class="form-control">
+                {{#hosts}}
+                <option class="availablehost" data-hostid="{{id}}">{{description}}</option>
+                {{/hosts}}
+            </select>
+        </span>
+    </div>
     <ul id="newJobvmList" class="list-group newJobElement newJobInput">
-        {{#vms}}
-        <li class="list-group-item availablevm" data-vmname="{{name}}" data-vmid="{{id}}">{{name}}</li>
-        {{/vms}}
+        
     </ul>
     <div class="text-center">
         <button id="newJobNextButton" type="button" class="btn btn-primary">$$next$$</button>

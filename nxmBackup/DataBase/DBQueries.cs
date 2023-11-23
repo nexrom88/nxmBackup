@@ -84,6 +84,26 @@ namespace Common
             }
         }
 
+        //returns a host ip/name by a given host id
+        public static string getHostByID(int hostID)
+        {
+            using (DBConnection dbConn = new DBConnection())
+            {
+                Dictionary<string, object> parameters = new Dictionary<string, object>();
+                parameters.Add("id", hostID);
+
+                List<Dictionary<string, object>> result = dbConn.doReadQuery("SELECT host FROM hosts WHERE id=@id;", parameters, null);
+                if (result == null || result.Count == 0)
+                {
+                    return "";
+                }
+                else
+                {
+                    return (string)result[0]["host"];
+                }
+            }
+        }
+
         public static bool saveHyperVHost(HyperVHost hyperVHost)
         {
             using (DBConnection dbConn = new DBConnection())

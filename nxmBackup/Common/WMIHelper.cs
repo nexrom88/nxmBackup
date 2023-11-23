@@ -11,7 +11,7 @@ namespace Common
     {
 
         //lists all active HyperV VMss
-        public static List<OneVM> listVMs(ManagementScope scope = null)
+        public static List<OneVM> listVMs(string host, ManagementScope scope = null)
         {
             try
             {
@@ -29,7 +29,7 @@ namespace Common
 
                 if (scope == null)
                 {
-                    scope = new ManagementScope(GetWMIScope());
+                    scope = new ManagementScope(GetWMIScope(host));
                 }
 
                 List<OneVM> vms = new List<OneVM>();
