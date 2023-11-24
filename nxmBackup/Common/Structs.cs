@@ -54,6 +54,7 @@ namespace Common
     {
         public string vmID;
         public string vmName;
+        public string hostID;
         public List<VMHDD> vmHDDs;
     }
 

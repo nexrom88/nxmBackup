@@ -448,7 +448,8 @@ namespace ConfigHandler
                     parameters = new Dictionary<string, object>();
                     parameters.Add("id", vm.vmID);
                     parameters.Add("name", vm.vmName);
-                    connection.doReadQuery("INSERT INTO vms(id, name) VALUES (@id, @name);", parameters, transaction);
+                    parameters.Add("hostid", vm.hostID);
+                    connection.doReadQuery("INSERT INTO vms(id, name, hostid) VALUES (@id, @name, @hostid);", parameters, transaction);
                 }
                 else
                 {
@@ -518,6 +519,7 @@ namespace ConfigHandler
         private string targetPath;
         private string targetUsername;
         private string targetPassword;
+        private string hostID;
 
         public string Name { get => name; set => name = value; }
         public bool Enabled { get => enabled; set => enabled = value; }
@@ -540,6 +542,7 @@ namespace ConfigHandler
         public string TargetPath { get => targetPath; set => targetPath = value; }
         public string TargetUsername { get => targetUsername; set => targetUsername = value; }
         public string TargetPassword { get => targetPassword; set => targetPassword = value; }
+        public string HostID { get => hostID; set => hostID = value; }
 
         public string IntervalBaseForGUI
         {

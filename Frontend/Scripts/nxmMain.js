@@ -774,11 +774,17 @@ function registerNextPageClickHandler(currentPage, selectedEditJob) {
 
                 break;
             case 2:
+
+                //get selected vms
                 var selectedVMs = $(".availablevm.active");
                 newJobObj["vms"] = [];
 
-                //multiple VMs just possible when lb is disabled
-                if (selectedVMs.length > 1 && newJobObj["livebackup"]) {
+                //get selected host
+                var selectedHostID = $("#sbHyperVHost").find(":selected").data("hostid");
+                newJobObj["hostid"] = selectedHostID;
+
+                //lb just possible on localhost and only when one vm got selected
+                if ((selectedVMs.length > 1 || selectedHostID != 1) && newJobObj["livebackup"]) {
                     Swal.fire(
                         languageStrings["error"],
                         languageStrings["error_one_vm"],
@@ -792,6 +798,7 @@ function registerNextPageClickHandler(currentPage, selectedEditJob) {
                     var vm = {};
                     vm.id = $(selectedVMs[i]).data("vmid");
                     vm.name = $(selectedVMs[i]).data("vmname");
+                    vm.hostid = selectedHostID;
                     newJobObj["vms"].push(vm);
                 }
 
@@ -897,10 +904,11 @@ function checkForValidSMBPath(path) {
 
 //sends the new job data to server
 function saveNewJob() {
+    var jobJSON = JSON.stringify(newJobObj);
     $.ajax({
         url: 'api/JobCreate',
         contentType: "application/json; charset=utf-8",
-        data: JSON.stringify(newJobObj),
+        data: jobJSON,
         type: 'POST',
         cache: false,
         success: function (result) {
