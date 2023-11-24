@@ -322,6 +322,13 @@
 #hostEditID{
     display:none;
 }
+#vmLoadingSpinner{
+    margin-top:10%;
+}
+#spinnerAnimation {
+    width: 3rem;
+    height: 3rem;
+}
 
 
 @keyframes color {

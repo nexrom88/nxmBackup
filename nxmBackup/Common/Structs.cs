@@ -6,6 +6,14 @@ using System.Threading.Tasks;
 
 namespace Common
 {
+    //defines wmi scope options
+    public struct WMIConnectionOptions
+    {
+        public string host;
+        public string user;
+        public string password;
+    }
+
     //defines properties for enryption
     public struct EncryptionProperties
     {

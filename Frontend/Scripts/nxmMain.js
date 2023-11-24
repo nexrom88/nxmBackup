@@ -283,6 +283,9 @@ function showNewJobPage(pageNumber, selectedEditJob) {
                             $("#sbHyperVHost").on("change", function (event) {
                                 var selectedHostID = $(this).find(":selected").data("hostid");
 
+                                //set loading spinner to visible
+                                $("#vmLoadingSpinner").show();
+
                                 //clear current list
                                 $("#newJobvmList").html("");
 
@@ -430,6 +433,9 @@ function loadVMs(hostID, selectedEditJob) {
                 url: "Templates/vmListItem",
                 success: function (data) {
                     data = Mustache.render(data, { vms: parsedJSON });
+
+                    //set loading spinner to unvisible
+                    $("#vmLoadingSpinner").hide();
 
                     //set host list to gui
                     $("#newJobvmList").html(data);

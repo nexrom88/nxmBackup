@@ -85,21 +85,43 @@ namespace Common
         }
 
         //returns a host ip/name by a given host id
-        public static string getHostByID(int hostID)
+        public static WMIConnectionOptions getHostByID(int hostID, bool getAuthData)
         {
+            WMIConnectionOptions options = new WMIConnectionOptions();
+
             using (DBConnection dbConn = new DBConnection())
             {
-                Dictionary<string, object> parameters = new Dictionary<string, object>();
-                parameters.Add("id", hostID);
+                string query;
 
-                List<Dictionary<string, object>> result = dbConn.doReadQuery("SELECT host FROM hosts WHERE id=@id;", parameters, null);
-                if (result == null || result.Count == 0)
+                if (getAuthData)
                 {
-                    return "";
+                    query = "SELECT host, user, password FROM hosts WHERE id=@id;";
                 }
                 else
                 {
-                    return (string)result[0]["host"];
+                    query = "SELECT host FROM hosts WHERE id=@id;";
+                }
+
+                Dictionary<string, object> parameters = new Dictionary<string, object>();
+                parameters.Add("id", hostID);
+
+                List<Dictionary<string, object>> result = dbConn.doReadQuery(query, parameters, null);
+                if (result == null || result.Count == 0)
+                {
+                    DBQueries.addLog("hyperv host could not be found within db", Environment.StackTrace, null);
+                    options.host = null;
+                    return options;
+                }
+                else
+                {
+                    options.host = (string)result[0]["host"];
+
+                    if (getAuthData)
+                    {
+                        options.user = (string)result[0]["user"];
+                        options.password = (string)result[0]["password"];
+                    }
+                    return options;
                 }
             }
         }

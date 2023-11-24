@@ -17,9 +17,16 @@ namespace Frontend.Controllers
         {
             HttpResponseMessage response;
             //translate hostid to host ip/name
-            string hostName = DBQueries.getHostByID(hostid);
+            WMIConnectionOptions host = DBQueries.getHostByID(hostid, true);
 
-            List<Common.WMIHelper.OneVM> vms = Common.WMIHelper.listVMs(hostName);
+            //host found?
+            if (host.host == null)
+            {
+                response = new HttpResponseMessage(HttpStatusCode.BadRequest);
+                return response;
+            }
+
+            List<Common.WMIHelper.OneVM> vms = Common.WMIHelper.listVMs(host);
 
             //error handling
             if (vms == null)

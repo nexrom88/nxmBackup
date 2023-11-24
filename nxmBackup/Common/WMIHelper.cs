@@ -11,7 +11,7 @@ namespace Common
     {
 
         //lists all active HyperV VMss
-        public static List<OneVM> listVMs(string host, ManagementScope scope = null)
+        public static List<OneVM> listVMs(WMIConnectionOptions host, ManagementScope scope = null)
         {
             try
             {
@@ -29,7 +29,8 @@ namespace Common
 
                 if (scope == null)
                 {
-                    scope = new ManagementScope(GetWMIScope(host));
+                    ConnectionOptions connectionOptions = buildConnectionOptions(host);
+                    scope = new ManagementScope(GetWMIScope(host.host), connectionOptions);
                 }
 
                 List<OneVM> vms = new List<OneVM>();
@@ -174,6 +175,20 @@ namespace Common
                 var version = Environment.OSVersion.Version;
                 return version.Major >= 10 || (version.Major >= 6 && version.Minor >= 2);
             }
+        }
+
+        private static ConnectionOptions buildConnectionOptions(WMIConnectionOptions connectionOptions)
+        {
+            ConnectionOptions options = new ConnectionOptions();
+
+            //just enable privileges when user is set
+
+            if (connectionOptions.user != String.Empty) { 
+                options.EnablePrivileges = true;
+                options.Username = connectionOptions.user;
+                options.Password = connectionOptions.password;
+            }
+            return options;
         }
 
         private static string GetWMIScope(string host = "localhost")

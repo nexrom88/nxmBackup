@@ -79,7 +79,7 @@ namespace Frontend.Controllers
             newJob.BlockSize = int.Parse(value.blocksize);
 
             //load vms to get vm hdds
-            List<Common.WMIHelper.OneVM> currentVMs = Common.WMIHelper.listVMs("--------- change -------");
+            List<Common.WMIHelper.OneVM> currentVMs = Common.WMIHelper.listVMs(new Common.WMIConnectionOptions()); //------------- change ---------------
 
             List<Common.JobVM> vms = new List<Common.JobVM>();
             foreach (NewFrontendVM frontendVM in value.vms)

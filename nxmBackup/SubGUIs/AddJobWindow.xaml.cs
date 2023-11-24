@@ -55,7 +55,7 @@ namespace nxmBackup
             cbHours.SelectedIndex = 0;
 
             //load vms
-            this.vms = Common.WMIHelper.listVMs("");
+            this.vms = Common.WMIHelper.listVMs(new WMIConnectionOptions());
 
             if (vms != null)
             {
