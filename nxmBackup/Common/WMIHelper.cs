@@ -30,7 +30,7 @@ namespace Common
                 if (scope == null)
                 {
                     ConnectionOptions connectionOptions = buildConnectionOptions(host);
-                    scope = new ManagementScope(GetWMIScope(host.host), connectionOptions);
+                    scope = new ManagementScope(GetHyperVWMIScope(host.host), connectionOptions);
                 }
 
                 List<OneVM> vms = new List<OneVM>();
@@ -130,7 +130,7 @@ namespace Common
             }
 
 
-            var scope = new ManagementScope(GetWMIScope());
+            var scope = new ManagementScope(GetHyperVWMIScope());
 
             if (vmName != null)
                 query += $" AND (ElementName='" + vmName + "')";
@@ -177,7 +177,7 @@ namespace Common
             }
         }
 
-        private static ConnectionOptions buildConnectionOptions(WMIConnectionOptions connectionOptions)
+        public static ConnectionOptions buildConnectionOptions(WMIConnectionOptions connectionOptions)
         {
             ConnectionOptions options = new ConnectionOptions();
 
@@ -191,7 +191,7 @@ namespace Common
             return options;
         }
 
-        private static string GetWMIScope(string host = "localhost")
+        public static string GetHyperVWMIScope(string host = "localhost")
         {
             string scopeFormatStr;
             if (UseWMIV2NameSpace)

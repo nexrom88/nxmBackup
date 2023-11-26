@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Management;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -55,7 +56,27 @@ namespace Common
         public string vmID;
         public string vmName;
         public string hostID;
+        public string host;
         public List<VMHDD> vmHDDs;
+
+        private ConnectionOptions connectionOptions;
+
+        public ConnectionOptions getHostAuthData()
+        {
+            //read wmi connection options when not already done
+            if (connectionOptions == null)
+            {
+                WMIConnectionOptions options = DBQueries.getHostByID(int.Parse(this.hostID), true);
+
+                //build wmi native object
+                ConnectionOptions wmiOptions = new ConnectionOptions();
+                return WMIHelper.buildConnectionOptions(options);
+            }
+            else
+            {
+                return connectionOptions;
+            }
+        }
     }
 
     //defines one HDD

@@ -117,15 +117,18 @@ namespace ConfigHandler
                     //query VMs
                     Dictionary<string, object> paramaters = new Dictionary<string, object>();
                     paramaters.Add("jobid", Convert.ToInt32(jobDB["id"]));
-                    List<Dictionary<string, object>> vms = connection.doReadQuery("SELECT VMs.id, VMs.name FROM vms INNER JOIN jobvmrelation ON JobVMRelation.jobid=@jobid AND jobvmrelation.vmid=VMs.id", paramaters, null);
+                    List<Dictionary<string, object>> vms = connection.doReadQuery("SELECT VMs.id, VMs.name, VMs.hostid, hosts.host FROM vms INNER JOIN jobvmrelation ON JobVMRelation.jobid=@jobid AND jobvmrelation.vmid=VMs.id INNER JOIN hosts ON hosts.id=VMs.hostid;", paramaters, null);
                     newJob.JobVMs = new List<JobVM>();
 
                     //iterate through all vms
                     foreach (Dictionary<string, object> vm in vms)
                     {
+
                         JobVM newVM = new JobVM();
                         newVM.vmID = vm["id"].ToString();
                         newVM.vmName = vm["name"].ToString();
+                        newVM.hostID = vm["hostid"].ToString();
+                        newVM.host = vm["host"].ToString();
 
                         //read vm hdds
                         paramaters.Clear();

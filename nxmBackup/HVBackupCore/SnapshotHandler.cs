@@ -397,7 +397,7 @@ namespace nxmBackup.HVBackupCore
         //creates the snapshot
         public ManagementObject createSnapshot(ConsistencyLevel cLevel, Boolean allowSnapshotFallback)
         {
-            ManagementScope scope = new ManagementScope("\\\\localhost\\root\\virtualization\\v2", null);
+            ManagementScope scope = getHyperVManagementScope();
             int eventId = this.eventHandler.raiseNewEvent(LanguageHandler.getString("initializing_env"), false, false, NO_RELATED_EVENT, EventStatus.inProgress);
 
             //check for already existing snapshots (user created ones)
@@ -525,7 +525,7 @@ namespace nxmBackup.HVBackupCore
         /// <summary></summary>
         public ManagementObject convertToReferencePoint(ManagementObject snapshot, bool raiseEvents)
         {
-            ManagementScope scope = new ManagementScope("\\\\localhost\\root\\virtualization\\v2", null);
+            ManagementScope scope = getHyperVManagementScope();
             int eventId = 0;
             if (raiseEvents) {
                eventId = this.eventHandler.raiseNewEvent(LanguageHandler.getString("creating_refp"), false, false, NO_RELATED_EVENT, EventStatus.inProgress);
@@ -898,7 +898,7 @@ namespace nxmBackup.HVBackupCore
             diskHandler.close();
 
 
-            ManagementScope scope = new ManagementScope("\\\\localhost\\root\\virtualization\\v2", null);
+            ManagementScope scope = getHyperVManagementScope();
             //get the necessary wmi objects
             using (ManagementObject imageManagementService = WmiUtilities.GetImageManagementService(scope))
             using (ManagementBaseObject inParams = imageManagementService.GetMethodParameters("GetVirtualDiskChanges"))
@@ -1017,7 +1017,7 @@ namespace nxmBackup.HVBackupCore
         public List<ManagementObject> getSnapshots(string snapshotType)
         {
             List<ManagementObject> snapshots = new List<ManagementObject>();
-            ManagementScope scope = new ManagementScope("\\\\localhost\\root\\virtualization\\v2", null);
+            ManagementScope scope = getHyperVManagementScope();
 
             // Get the necessary wmi objects
             using (ManagementObject vm = WmiUtilities.GetVirtualMachine(this.vm.vmID, scope))
@@ -1037,7 +1037,8 @@ namespace nxmBackup.HVBackupCore
                     var snapshot = (System.Management.ManagementObject)iterator.Current;
 
                     //get "dependent" vs settings class
-                    ManagementObject vsSettings = new ManagementObject(snapshot["dependent"].ToString());
+ 
+                    ManagementObject vsSettings = new ManagementObject(getHyperVManagementScope(), new ManagementPath(snapshot["dependent"].ToString()), null);
                     string type = vsSettings["VirtualSystemType"].ToString();
 
                     //is recovery snapshot?
@@ -1055,7 +1056,7 @@ namespace nxmBackup.HVBackupCore
         //reads the virtual disk id from the given vhd
         private string getVHDID(string vhdPath)
         {
-            ManagementScope scope = new ManagementScope("\\\\localhost\\root\\virtualization\\v2", null);
+            ManagementScope scope = getHyperVManagementScope();
             using (ManagementObject service = WmiUtilities.GetImageManagementService(scope))
             using (ManagementBaseObject inParams = service.GetMethodParameters("GetVirtualHardDiskSettingData"))
             {
@@ -1077,7 +1078,7 @@ namespace nxmBackup.HVBackupCore
         public List<ManagementObject> getReferencePoints()
         {
             List<ManagementObject> rPoints = new List<ManagementObject>();
-            ManagementScope scope = new ManagementScope("\\\\localhost\\root\\virtualization\\v2", null);
+            ManagementScope scope = getHyperVManagementScope();
 
             // Get the necessary wmi objects
             using (ManagementObject vm = WmiUtilities.GetVirtualMachine(this.vm.vmID, scope))
@@ -1117,7 +1118,7 @@ namespace nxmBackup.HVBackupCore
         //removes a reference point
         public void removeReferencePoint(ManagementObject rPoint)
         {
-            ManagementScope scope = new ManagementScope("\\\\localhost\\root\\virtualization\\v2", null);
+            ManagementScope scope = getHyperVManagementScope();
 
             // Get the necessary wmi objects
             using (ManagementObject rpService = WmiUtilities.GetVirtualSystemReferencePointService(scope))
@@ -1139,7 +1140,7 @@ namespace nxmBackup.HVBackupCore
         //removes a snapshot (including all child snapshots) --> not working
         public void removeSnapshot(ManagementObject snapshot)
         {
-            ManagementScope scope = new ManagementScope("\\\\localhost\\root\\virtualization\\v2", null);
+            ManagementScope scope = getHyperVManagementScope();
 
             // Get the management service and the VM object.
             using (ManagementObject vm = WmiUtilities.GetVirtualMachine(this.vm.vmID, scope))
@@ -1174,6 +1175,13 @@ namespace nxmBackup.HVBackupCore
             {
                 this.removeReferencePoint(snapshot);
             }
+        }
+
+        //creates a HyperV ManagementScope
+        private ManagementScope getHyperVManagementScope()
+        {
+            ManagementScope scope = new ManagementScope(WMIHelper.GetHyperVWMIScope(this.vm.host), this.vm.getHostAuthData());
+            return scope;
         }
 
         //struct for hddsChanged retVal
