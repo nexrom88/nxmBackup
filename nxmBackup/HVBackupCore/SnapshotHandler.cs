@@ -547,7 +547,9 @@ namespace nxmBackup.HVBackupCore
                     WmiUtilities.ValidateOutput(outParams, scope);
 
                     //get the job and the reference point object
-                    ManagementObject job = new ManagementObject((string)outParams["job"]);
+                    var a = new ManagementObject();
+
+                    ManagementObject job = new ManagementObject(getHyperVManagementScope(), (string)outParams["job"], null);
 
                     //get the reference point
                     ManagementObject refSnapshot = null;
