@@ -499,7 +499,7 @@ namespace nxmBackup.HVBackupCore
                         this.eventHandler.raiseNewEvent(LanguageHandler.getString("successful"), true, false, eventId, EventStatus.successful);
 
                         //get the job and the snapshot object
-                        ManagementObject job = new ManagementObject((string)outParams["job"]);
+                        ManagementObject job = buildManagementObject(outParams["job"]);
 
                         //get the snapshot
                         ManagementObject snapshot = null;
@@ -549,11 +549,14 @@ namespace nxmBackup.HVBackupCore
                     //get the job and the reference point object
                     var a = new ManagementObject();
 
-                    ManagementObject job = new ManagementObject(getHyperVManagementScope(), (string)outParams["job"], null);
+                    ManagementObject job = buildManagementObject(outParams["job"]);
 
                     //get the reference point
                     ManagementObject refSnapshot = null;
-                    var iterator = job.GetRelated("Msvm_VirtualSystemReferencePoint").GetEnumerator();
+                    //ManagementObjectCollection refPs = job.GetRelated("Msvm_VirtualSystemReferencePoint");
+                    ManagementObjectCollection refPs = job.GetRelated();
+                    int af = refPs.Count;
+                    var iterator = refPs.GetEnumerator();
                     while (iterator.MoveNext())
                     {
                         refSnapshot = (System.Management.ManagementObject)iterator.Current;
@@ -1040,7 +1043,7 @@ namespace nxmBackup.HVBackupCore
 
                     //get "dependent" vs settings class
  
-                    ManagementObject vsSettings = new ManagementObject(getHyperVManagementScope(), new ManagementPath(snapshot["dependent"].ToString()), null);
+                    ManagementObject vsSettings = buildManagementObject(snapshot["dependent"]);
                     string type = vsSettings["VirtualSystemType"].ToString();
 
                     //is recovery snapshot?
@@ -1184,6 +1187,12 @@ namespace nxmBackup.HVBackupCore
         {
             ManagementScope scope = new ManagementScope(WMIHelper.GetHyperVWMIScope(this.vm.host), this.vm.getHostAuthData());
             return scope;
+        }
+
+        //builds a ManagementObject structure
+        private ManagementObject buildManagementObject(object managementPath)
+        {
+            return new ManagementObject(getHyperVManagementScope(), new ManagementPath((string)managementPath), null);
         }
 
         //struct for hddsChanged retVal
