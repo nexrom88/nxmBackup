@@ -84,9 +84,9 @@ namespace Common
                 // and wait for it to complete. Then we can check its result.
                 //
 
-                using (ManagementObject job = new ManagementObject((string)outputParameters["Job"]))
+                using (ManagementObject job = new ManagementObject(scope, new ManagementPath ((string)outputParameters["Job"]), null))
                 {
-                    job.Scope = scope;
+                    //job.Scope = scope;
 
                     while (!IsJobComplete(job["JobState"]))
                     {

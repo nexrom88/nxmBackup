@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Management;
 using System.Runtime.InteropServices;
+using System.Security;
 using Common;
 using nxmBackup.Language;
 
@@ -395,6 +396,7 @@ namespace nxmBackup.HVBackupCore
         }
 
         //creates the snapshot
+        [SecurityCritical]
         public ManagementObject createSnapshot(ConsistencyLevel cLevel, Boolean allowSnapshotFallback)
         {
             ManagementScope scope = getHyperVManagementScope();
@@ -499,7 +501,8 @@ namespace nxmBackup.HVBackupCore
                         this.eventHandler.raiseNewEvent(LanguageHandler.getString("successful"), true, false, eventId, EventStatus.successful);
 
                         //get the job and the snapshot object
-                        ManagementObject job = buildManagementObject(outParams["job"]);
+                        
+                        ManagementObject job = buildManagementObject(outParams["Job"]);
 
                         //get the snapshot
                         ManagementObject snapshot = null;
@@ -522,7 +525,8 @@ namespace nxmBackup.HVBackupCore
         }
 
         //converts a snapshot to a reference point
-        /// <summary></summary>
+
+        [SecurityCritical]
         public ManagementObject convertToReferencePoint(ManagementObject snapshot, bool raiseEvents)
         {
             ManagementScope scope = getHyperVManagementScope();
@@ -1192,7 +1196,9 @@ namespace nxmBackup.HVBackupCore
         //builds a ManagementObject structure
         private ManagementObject buildManagementObject(object managementPath)
         {
-            return new ManagementObject(getHyperVManagementScope(), new ManagementPath((string)managementPath), null);
+            ObjectGetOptions options = new ObjectGetOptions();
+            options.UseAmendedQualifiers = true;
+            return new ManagementObject(getHyperVManagementScope(), new ManagementPath((string)managementPath), options);
         }
 
         //struct for hddsChanged retVal
