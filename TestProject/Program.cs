@@ -19,14 +19,14 @@ namespace TestProject
     {
         static void Main(string[] args)
         {
-            ConnectionOptions options = new ConnectionOptions();
-            options.EnablePrivileges = true;
-            options.Username = "administrator";
-            options.Password = "";
+            //ConnectionOptions options = new ConnectionOptions();
+            //options.EnablePrivileges = true;
+            //options.Username = "administrator";
+            //options.Password = "";
 
-            ManagementScope wmiScope = new ManagementScope("\\\\localhost\\root\\virtualization\\v2", options);
-            List<WMIHelper.OneVM> vms = WMIHelper.listVMs(wmiScope);
-            vms = null;
+            //ManagementScope wmiScope = new ManagementScope("\\\\localhost\\root\\virtualization\\v2", options);
+            //List<WMIHelper.OneVM> vms = WMIHelper.listVMs(wmiScope);
+            //vms = null;
 
 
             //var parameters = new Common.VirtualDiskHandler.OPEN_VIRTUAL_DISK_PARAMETERS();

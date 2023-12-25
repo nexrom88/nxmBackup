@@ -282,7 +282,7 @@
     <Content Include="Scripts\restoreHeartbeatWebWorker.js" />
     <Content Include="Scripts\sweetalert2.js" />
     <Content Include="SQLite.Interop.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="Templates\addHyperVHost.html" />
     <Content Include="Templates\eventsListItem.html" />
