@@ -69,7 +69,6 @@ namespace Common
                 WMIConnectionOptions options = DBQueries.getHostByID(int.Parse(this.hostID), true);
 
                 //build wmi native object
-                ConnectionOptions wmiOptions = new ConnectionOptions();
                 return WMIHelper.buildConnectionOptions(options);
             }
             else

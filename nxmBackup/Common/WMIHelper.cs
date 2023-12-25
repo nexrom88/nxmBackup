@@ -179,16 +179,20 @@ namespace Common
 
         public static ConnectionOptions buildConnectionOptions(WMIConnectionOptions connectionOptions)
         {
-            ConnectionOptions options = new ConnectionOptions();
-
             //just enable privileges when user is set
 
-            if (connectionOptions.user != String.Empty) { 
+            if (connectionOptions.user != String.Empty) {
+                ConnectionOptions options = new ConnectionOptions();
                 options.EnablePrivileges = true;
                 options.Username = connectionOptions.user;
                 options.Password = connectionOptions.password;
+                options.Impersonation = ImpersonationLevel.Impersonate;
+                return options;
             }
-            return options;
+            else
+            {
+                return null;
+            }
         }
 
         public static string GetHyperVWMIScope(string host = "localhost")

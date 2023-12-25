@@ -501,8 +501,11 @@ namespace nxmBackup.HVBackupCore
                         this.eventHandler.raiseNewEvent(LanguageHandler.getString("successful"), true, false, eventId, EventStatus.successful);
 
                         //get the job and the snapshot object
-                        
-                        ManagementObject job = buildManagementObject(outParams["Job"]);
+
+                        string jobPath = (string)outParams["Job"];
+                        //ManagementObject job = new ManagementObject(jobPath);
+                        //ManagementObject job = buildManagementObject(outParams["Job"], scope);
+                        ManagementObject job = new ManagementObject(scope, new ManagementPath(jobPath), null);
 
                         //get the snapshot
                         ManagementObject snapshot = null;
@@ -1196,9 +1199,15 @@ namespace nxmBackup.HVBackupCore
         //builds a ManagementObject structure
         private ManagementObject buildManagementObject(object managementPath)
         {
+            return buildManagementObject(managementPath, getHyperVManagementScope());
+        }
+
+        //builds a ManagementObject structure with a given scope
+        private ManagementObject buildManagementObject(object managementPath, ManagementScope scope)
+        {
             ObjectGetOptions options = new ObjectGetOptions();
             options.UseAmendedQualifiers = true;
-            return new ManagementObject(getHyperVManagementScope(), new ManagementPath((string)managementPath), options);
+            return new ManagementObject(scope, new ManagementPath((string)managementPath), options);
         }
 
         //struct for hddsChanged retVal
