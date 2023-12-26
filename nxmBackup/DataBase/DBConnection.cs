@@ -128,9 +128,8 @@ namespace Common
         {
             try
             {
-
-
                 SQLiteCommand command;
+                query = query.ToLower();
 
                 if (transaction == null)
                 {
@@ -148,7 +147,7 @@ namespace Common
                 {
                     foreach (string key in parameters.Keys)
                     {
-                        command.Parameters.AddWithValue(key, parameters[key]);
+                        command.Parameters.AddWithValue(key.ToLower(), parameters[key]);
                     }
                 }
 
