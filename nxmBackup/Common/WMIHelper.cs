@@ -206,6 +206,35 @@ namespace Common
             return (string.Format(scopeFormatStr, host));
         }
 
+        //translates a given ip address to a hostname
+        public static string translateToHostname(string ipAddress, string user, string password)
+        {
+            try
+            {
+                ConnectionOptions options = new ConnectionOptions();
+                options.EnablePrivileges = true;
+                options.Username = user;
+                options.Password = password;
+                options.Impersonation = ImpersonationLevel.Impersonate;
+
+                ManagementScope scope = new ManagementScope();
+                scope.Path = new ManagementPath("\\\\" + ipAddress + "\\root\\CIMV2");
+                scope.Options = options;
+
+                ObjectQuery query = new ObjectQuery("SELECT Name FROM Win32_ComputerSystem");
+
+                ManagementObjectSearcher searcher = new ManagementObjectSearcher(scope, query);
+                foreach (ManagementObject queryObj in searcher.Get())
+                {
+                    return queryObj["Name"].ToString();
+                }
+                return "";
+            } catch
+            {
+                return "";
+            }
+        }
+
         public struct OneVM
         {
             public string id;

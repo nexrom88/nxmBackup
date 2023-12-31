@@ -504,8 +504,8 @@ namespace nxmBackup.HVBackupCore
 
                         string jobPath = (string)outParams["Job"];
                         //ManagementObject job = new ManagementObject(jobPath);
-                        //ManagementObject job = buildManagementObject(outParams["Job"], scope);
-                        ManagementObject job = new ManagementObject(scope, new ManagementPath(jobPath), null);
+                        ManagementObject job = buildManagementObject(outParams["Job"], scope);
+                        //ManagementObject job = new ManagementObject(scope, new ManagementPath(jobPath), null);
 
                         //get the snapshot
                         ManagementObject snapshot = null;
