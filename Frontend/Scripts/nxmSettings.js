@@ -281,6 +281,11 @@ function loadAddHyperVHostForm(editID) {
 
 //shows the add/edit hyperv host form
 function showAddHyperVHostForm(form, editID) {
+    Swal.close();
+    $("#newHostOverlay").css("display", "block");
+
+
+    return;
     Swal.fire({
         title: languageStrings["add_hyperv_host"],
         html: form,
