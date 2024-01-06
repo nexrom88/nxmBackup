@@ -2,6 +2,7 @@
 var globalSettings = {};
 var configuredHosts = {};
 var currentSettingsLanguage;
+var ignoreIP = false;
 function showSettings() {
 
     //get settings from BD
@@ -281,9 +282,55 @@ function loadAddHyperVHostForm(editID) {
 
 //shows the add/edit hyperv host form
 function showAddHyperVHostForm(form, editID) {
+    ignoreIP = false;
     Swal.close();
     $("#newHostOverlay").css("display", "block");
 
+    //delay setting focus, because swal.close would take focus back 
+    setTimeout(() => $("#inputDescription").focus(), 500)
+
+    //register close button handler
+    $(".overlayClose").click(function () {
+        $("#newHostOverlay").css("display", "none");
+    });
+
+    $("#saveAddHostButton").click(function () {
+        //set input color to default first
+        $("#inputDescription").css("background-color", "initial");
+        $("#inputHost").css("background-color", "initial");
+        $("#inputUser").css("background-color", "initial");
+        $("#inputPass").css("background-color", "initial");
+
+        //first check that every input is filled
+        if ($("#inputDescription").val() == "") {
+            $("#inputDescription").css("background-color", "rgb(255,77,77)");
+            return;
+        }
+        if ($("#inputHost").val() == "") {
+            $("#inputHost").css("background-color", "rgb(255,77,77)");
+            return;
+        }
+        if ($("#inputUser").val() == "") {
+            $("#inputUser").css("background-color", "rgb(255,77,77)");
+            return;
+        }
+        if ($("#inputPass").val() == "" && editID == -1) {
+            $("#inputPass").css("background-color", "rgb(255,77,77)");
+            return;
+        }
+
+        //get data from user input
+        var newHost = {};
+        newHost["editID"] = $("#hostEditID").html();
+        newHost["description"] = $("#inputDescription").val();
+        newHost["host"] = $("#inputHost").val();
+        newHost["user"] = $("#inputUser").val();
+        newHost["password"] = $("#inputPass").val();
+
+        //send new host to server
+        sendHostToServer(newHost);
+
+    });
 
     return;
     Swal.fire({
@@ -316,6 +363,7 @@ function showAddHyperVHostForm(form, editID) {
                 $("#inputPass").css("background-color", "rgb(255,77,77)");
                 return false;
             }
+
         }
     }).then((result) => {
         if (result.isConfirmed) {
@@ -371,6 +419,54 @@ function showAddHyperVHostForm(form, editID) {
             }
         }
     }
+}
+
+//send a given host to the server and tries to translate ip address
+function sendHostToServer(newHost) {
+    //when ip has to be ignored -> continue
+    if (ignoreIP == true) {
+        saveHost(newHost);
+        ignoreIP = false;
+    }
+
+    $.ajax({
+        url: "api/TranslateIP",
+        contentType: "application/json; charset=utf-8",
+        data: JSON.stringify(newHost),
+        type: 'POST',
+        success: function (result) {
+            //no ip address found -> go on without translation
+            saveHost(newHost);
+        },
+        error: function (result) {
+            if (result["status"] == 302) {
+                //translation successful
+                newHost["host"] = result["responseText"];
+                $("#inputHost").val(newHost["host"]);
+
+                //show message after ip translation
+                Swal.fire(
+                    languageStrings["hint"],
+                    languageStrings["ip_translated"],
+                    'info'
+                );
+
+            } else if (result["status"] == 404) {
+                //no translation possible
+                ignoreIP = true;
+                Swal.fire(
+                    languageStrings["hint"],
+                    languageStrings["ip_not_translated"],
+                    'info'
+                );
+            }
+        }
+    });
+}
+
+//saves to given host
+function saveHost(newHost) {
+
 }
 
 //registers the otp
