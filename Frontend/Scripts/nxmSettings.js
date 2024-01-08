@@ -153,7 +153,7 @@ function showSettingsPopUp() {
             //handle host delete button click
             $(".editHostButton").click(function () {
                 var hostID = $(this).data("hostid");
-                loadAddHyperVHostForm(hostID);
+                showAddHyperVHostForm(hostID);
             });
 
             //handle otp toggle link click
@@ -220,7 +220,7 @@ function showSettingsPopUp() {
 
             //handle click on add hyperv host
             $("#addHyperVHost").click(function () {
-                loadAddHyperVHostForm(-1);           
+                showAddHyperVHostForm(-1);           
             });
 
             //handle testmail link click
@@ -263,25 +263,9 @@ function showSettingsPopUp() {
         });
 }
 
-//loads the add/edit hyperv host form
-//editID is host to edit or -1 when adding a new host
-function loadAddHyperVHostForm(editID) {
-    //load template
-    $.ajax({
-        url: "Templates/addHyperVHost"
-    })
-        .done(function (addHostForm) {
-
-            //replace language markups
-            addHostForm = replaceLanguageMarkups(addHostForm);
-
-            showAddHyperVHostForm(addHostForm, editID);
-        });
-}
-
 
 //shows the add/edit hyperv host form
-function showAddHyperVHostForm(form, editID) {
+function showAddHyperVHostForm(editID) {
     ignoreIP = false;
     Swal.close();
     $("#newHostOverlay").css("display", "block");
@@ -321,7 +305,7 @@ function showAddHyperVHostForm(form, editID) {
 
         //get data from user input
         var newHost = {};
-        newHost["editID"] = $("#hostEditID").html();
+        newHost["editID"] = editID;
         newHost["description"] = $("#inputDescription").val();
         newHost["host"] = $("#inputHost").val();
         newHost["user"] = $("#inputUser").val();
@@ -332,72 +316,7 @@ function showAddHyperVHostForm(form, editID) {
 
     });
 
-    return;
-    Swal.fire({
-        title: languageStrings["add_hyperv_host"],
-        html: form,
-        showCancelButton: true,
-        cancelButtonText: languageStrings["cancel"],
-        confirmButtonText: languageStrings["save_capital"],
-        preConfirm: () => {
-            //set input color to default first
-            $("#inputDescription").css("background-color", "initial");
-            $("#inputHost").css("background-color", "initial");
-            $("#inputUser").css("background-color", "initial");
-            $("#inputPass").css("background-color", "initial");
-
-            //first check that every input is filled
-            if ($("#inputDescription").val() == "") {
-                $("#inputDescription").css("background-color", "rgb(255,77,77)");
-                return false;
-            }
-            if ($("#inputHost").val() == "") {
-                $("#inputHost").css("background-color", "rgb(255,77,77)");
-                return false;
-            }
-            if ($("#inputUser").val() == "") {
-                $("#inputUser").css("background-color", "rgb(255,77,77)");
-                return false;
-            }
-            if ($("#inputPass").val() == "" && editID == -1) {
-                $("#inputPass").css("background-color", "rgb(255,77,77)");
-                return false;
-            }
-
-        }
-    }).then((result) => {
-        if (result.isConfirmed) {
-            //send data to db
-            var newHost = {};
-            newHost["editID"] = $("#hostEditID").html();
-            newHost["description"] = $("#inputDescription").val();
-            newHost["host"] = $("#inputHost").val();
-            newHost["user"] = $("#inputUser").val();
-            newHost["password"] = $("#inputPass").val();
-            $.ajax({
-                url: "api/HyperVHosts",
-                contentType: "application/json; charset=utf-8",
-                data: JSON.stringify(newHost),
-                type: 'POST',
-                success: function (result) {
-                    Swal.fire(
-                        languageStrings["successful_capital"],
-                        languageStrings["host_added_success"],
-                        'success'
-                    );
-                },
-                error: function (result) {
-                    Swal.fire(
-                        languageStrings["failed_capital"],
-                        languageStrings["host_added_error"],
-                        'error'
-                    );
-                }
-            });
-        }
-        
     
-    });
 
     //set edit id
     $("#hostEditID").html(editID);
@@ -466,7 +385,28 @@ function sendHostToServer(newHost) {
 
 //saves to given host
 function saveHost(newHost) {
-
+    $.ajax({
+        url: "api/HyperVHosts",
+        contentType: "application/json; charset=utf-8",
+        data: JSON.stringify(newHost),
+        type: 'POST',
+        success: function (result) {
+            $("#newHostOverlay").css("display", "none");
+            Swal.fire(
+                languageStrings["successful_capital"],
+                languageStrings["host_added_success"],
+                'success'
+            );
+        },
+        error: function (result) {
+            $("#newHostOverlay").css("display", "none");
+            Swal.fire(
+                languageStrings["failed_capital"],
+                languageStrings["host_added_error"],
+                'error'
+            );
+        }
+    });
 }
 
 //registers the otp

@@ -285,7 +285,6 @@
     <Content Include="SQLite.Interop.dll">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="Templates\addHyperVHost.html" />
     <Content Include="Templates\eventsListItem.html" />
     <Content Include="Templates\flrBrowser.html" />
     <Content Include="Templates\fullRestoreLogContainer.html" />
