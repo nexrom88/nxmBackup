@@ -276,6 +276,10 @@ function showAddHyperVHostForm(editID) {
     //register close button handler
     $(".overlayClose").click(function () {
         $("#newHostOverlay").css("display", "none");
+        $("#inputDescription").val("");
+        $("#inputHost").val("");
+        $("#inputUser").val("");
+        $("#inputPass").val("");
     });
 
     $("#saveAddHostButton").click(function () {
@@ -310,6 +314,12 @@ function showAddHyperVHostForm(editID) {
         newHost["host"] = $("#inputHost").val();
         newHost["user"] = $("#inputUser").val();
         newHost["password"] = $("#inputPass").val();
+
+        //empty inputs
+        $("#inputDescription").val("");
+        $("#inputHost").val("");
+        $("#inputUser").val("");
+        $("#inputPass").val("");
 
         //send new host to server
         sendHostToServer(newHost);
