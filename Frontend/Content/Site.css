@@ -348,6 +348,11 @@
     height: 3rem;
 }
 
+#saveHostLoadingSpinner {
+    margin-top: 5%;
+    margin-bottom:5%;
+}
+
 
 @keyframes color {
     0% {

@@ -270,6 +270,9 @@ function showAddHyperVHostForm(editID) {
     Swal.close();
     $("#newHostOverlay").css("display", "block");
 
+    //set loading spinner to unvisible
+    $("#saveHostLoadingSpinner").hide();
+
     //delay setting focus, because swal.close would take focus back 
     setTimeout(() => $("#inputDescription").focus(), 500)
 
@@ -288,6 +291,13 @@ function showAddHyperVHostForm(editID) {
         $("#inputHost").css("background-color", "initial");
         $("#inputUser").css("background-color", "initial");
         $("#inputPass").css("background-color", "initial");
+
+        //disable button
+        $('#saveAddHostButton').css("display", "none")
+
+        //set loading spinner to visible
+        $("#saveHostLoadingSpinner").show();
+
 
         //first check that every input is filled
         if ($("#inputDescription").val() == "") {
@@ -314,12 +324,6 @@ function showAddHyperVHostForm(editID) {
         newHost["host"] = $("#inputHost").val();
         newHost["user"] = $("#inputUser").val();
         newHost["password"] = $("#inputPass").val();
-
-        //empty inputs
-        $("#inputDescription").val("");
-        $("#inputHost").val("");
-        $("#inputUser").val("");
-        $("#inputPass").val("");
 
         //send new host to server
         sendHostToServer(newHost);
@@ -356,6 +360,7 @@ function sendHostToServer(newHost) {
     if (ignoreIP == true) {
         saveHost(newHost);
         ignoreIP = false;
+        return;
     }
 
     $.ajax({
@@ -380,6 +385,11 @@ function sendHostToServer(newHost) {
                     'info'
                 );
 
+                //show button
+                $('#saveAddHostButton').css('display', "inline-block")
+                //set loading spinner to unvisible
+                $("#saveHostLoadingSpinner").hide();
+
             } else if (result["status"] == 404) {
                 //no translation possible
                 ignoreIP = true;
@@ -388,6 +398,10 @@ function sendHostToServer(newHost) {
                     languageStrings["ip_not_translated"],
                     'info'
                 );
+                //show button
+                $('#saveAddHostButton').css('display', "inline-block")
+                //set loading spinner to unvisible
+                $("#saveHostLoadingSpinner").hide();
             }
         }
     });
@@ -402,19 +416,40 @@ function saveHost(newHost) {
         type: 'POST',
         success: function (result) {
             $("#newHostOverlay").css("display", "none");
+            //empty inputs
+            $("#inputDescription").val("");
+            $("#inputHost").val("");
+            $("#inputUser").val("");
+            $("#inputPass").val("");
+
             Swal.fire(
                 languageStrings["successful_capital"],
                 languageStrings["host_added_success"],
                 'success'
             );
+            //show button
+            $('#saveAddHostButton').css('display', "inline-block")
+            //set loading spinner to unvisible
+            $("#saveHostLoadingSpinner").hide();
         },
         error: function (result) {
             $("#newHostOverlay").css("display", "none");
+
+            //empty inputs
+            $("#inputDescription").val("");
+            $("#inputHost").val("");
+            $("#inputUser").val("");
+            $("#inputPass").val("");
+
             Swal.fire(
                 languageStrings["failed_capital"],
                 languageStrings["host_added_error"],
                 'error'
             );
+            //show button
+            $('#saveAddHostButton').css('display', "inline-block")
+            //set loading spinner to unvisible
+            $("#saveHostLoadingSpinner").hide();
         }
     });
 }

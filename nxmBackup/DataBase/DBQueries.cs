@@ -606,11 +606,11 @@ namespace Common
                 dbConn.doWriteQuery("DELETE FROM vmhddrelation;", null, transaction);
                 dbConn.doWriteQuery("DELETE FROM vms;", null, transaction);
                 dbConn.doWriteQuery("DELETE FROM hdds;", null, transaction);
-                dbConn.doWriteQuery("DELETE FROM hosts WHERE id > 1;", null, transaction);
                 dbConn.doWriteQuery("DELETE FROM jobexecutionevents;", null, transaction);
                 dbConn.doWriteQuery("DELETE FROM jobexecutions;", null, transaction);
                 dbConn.doWriteQuery("DELETE FROM rates;", null, transaction);
                 dbConn.doWriteQuery("DELETE FROM jobs;", null, transaction);
+                dbConn.doWriteQuery("DELETE FROM hosts WHERE id > 1;", null, transaction);
                 wipeSettings(dbConn, transaction);
                 transaction.Commit();
             }
