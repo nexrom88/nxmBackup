@@ -9,6 +9,7 @@ using System.Security;
 using System.Windows.Controls.Primitives;
 using System.Data.Entity.Infrastructure;
 using System.Xml.Linq;
+using ConfigHandler;
 
 namespace Common
 {
@@ -177,8 +178,21 @@ namespace Common
                 Dictionary<string, object> parameters = new Dictionary<string, object>();                
                 parameters.Add("id", id);
 
-                List<Dictionary<string, object>> result = dbConn.doReadQuery("DELETE FROM hosts WHERE id=@id RETURNING *", parameters, null);
-                return result != null && result.Count > 0;
+                //check that host is not still in use within a job
+                foreach (OneJob job in JobConfigHandler.Jobs)
+                {
+                    foreach (JobVM vm in job.JobVMs)
+                    {
+                        if (vm.hostID == id)
+                        {
+                            //host still in use
+                            return false;
+                        }
+                    }
+                }
+
+                List<Dictionary<string, object>> result = dbConn.doReadQuery("UPDATE hosts SET deleted=TRUE WHERE id=@id", parameters, null);
+                return true;
             }
         }
 
@@ -191,11 +205,11 @@ namespace Common
             //which sql query to use?
             if (readAuthData)
             {
-                sqlQuery = "SELECT id, description, host, user, password FROM hosts;";
+                sqlQuery = "SELECT id, description, host, user, password FROM hosts WHERE deleted=FALSE;";
             }
             else
             {
-                sqlQuery = "SELECT id, description, user, host FROM hosts;";
+                sqlQuery = "SELECT id, description, user, host FROM hosts WHERE deleted=FALSE;";
             }
 
             using (DBConnection dbConn = new DBConnection())
