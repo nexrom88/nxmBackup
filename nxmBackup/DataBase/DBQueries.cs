@@ -613,6 +613,7 @@ namespace Common
                 dbConn.doWriteQuery("DELETE FROM hosts WHERE id > 1;", null, transaction);
                 wipeSettings(dbConn, transaction);
                 transaction.Commit();
+                dbConn.doWriteQuery("VACUUM;", null, null);
             }
         }
 
