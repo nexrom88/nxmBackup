@@ -560,8 +560,8 @@ namespace nxmBackup.HVBackupCore
 
                     //get the reference point
                     ManagementObject refSnapshot = null;
-                    //ManagementObjectCollection refPs = job.GetRelated("Msvm_VirtualSystemReferencePoint");
-                    ManagementObjectCollection refPs = job.GetRelated();
+                    ManagementObjectCollection refPs = job.GetRelated("Msvm_VirtualSystemReferencePoint");
+                    //ManagementObjectCollection refPs = job.GetRelated();
                     int af = refPs.Count;
                     var iterator = refPs.GetEnumerator();
                     while (iterator.MoveNext())
@@ -644,6 +644,12 @@ namespace nxmBackup.HVBackupCore
                 if (!hddPath[0].EndsWith(".vhdx"))
                 {
                     continue;
+                }
+
+                //translate vhdx path to remote smb path when vm is remote
+                if (this.vm.host != "localhost")
+                {
+                    hddPath[0] = translatevhdxPath(hddPath[0]);
                 }
 
                 //copy a full snapshot?
@@ -885,6 +891,11 @@ namespace nxmBackup.HVBackupCore
             //get vhdx id from vhdx file
             string vhdxPath = ((string[])mo["HostResource"])[0];
 
+            //translate hdd path to smb path when vm is not local
+            if (this.vm.host != "localhost")
+            {
+                vhdxPath = translatevhdxPath(vhdxPath);
+            }
 
             string hddID = Convert.ToBase64String(vhdxParser.getVHDXIDFromFile(vhdxPath));
             
@@ -893,6 +904,21 @@ namespace nxmBackup.HVBackupCore
             newHDD.path = vhdxPath;
 
             return newHDD;
+        }
+
+        //translates a given vhdx path to a remote smb path
+        private string translatevhdxPath(string vhdxPath)
+        {
+            //remove ":"
+            vhdxPath = vhdxPath.Remove(1, 1);
+
+            //add "$"
+            vhdxPath = vhdxPath.Insert(1, "$");
+
+            //add host path
+            vhdxPath = @"\\" + this.vm.host + @"\" + vhdxPath;
+
+            return vhdxPath;
         }
 
 
