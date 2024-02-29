@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Management;
 using System.Runtime.InteropServices;
 using System.Security;
@@ -118,6 +119,12 @@ namespace nxmBackup.HVBackupCore
                 }
             }
 
+            //add smb credentials for source file if necessary
+            if (this.vm.host != "localhost")
+            {
+                gainRemoteSourceAccess(snapshot);
+            }
+
             //export the snapshot
             TransferDetails transferDetails = export(destination, snapshot, refP, job);
 
@@ -212,6 +219,51 @@ namespace nxmBackup.HVBackupCore
 
 
             return transferDetails;
+        }
+
+        //check whether remote source file is accessible -> when not, gain access
+        private void gainRemoteSourceAccess(ManagementObject snapshot)
+        {
+            //iterate hdds
+            var iterator = snapshot.GetRelated("Msvm_StorageAllocationSettingData").GetEnumerator();
+
+            while (iterator.MoveNext())
+            {
+                //just add vhdx files to hdd list
+                if (((string[])iterator.Current["HostResource"])[0].EndsWith(".vhdx"))
+                {
+                    ManagementObject hddObject = ((ManagementObject)iterator.Current);
+                    string vhdxPath = ((string[])hddObject["HostResource"])[0];
+
+                    //translate to remote smb path
+                    vhdxPath = translatevhdxPath(vhdxPath);
+
+                    if (!isFileReadable(vhdxPath))
+                    {
+                        WMIConnectionOptions authData = DBQueries.getHostByID(int.Parse(this.vm.hostID), true);
+                        CredentialCacheManager.add(vhdxPath, authData.user, authData.password);
+
+                        //clear password field
+                        authData.password = "";
+                        authData = new WMIConnectionOptions();
+                    }
+                }
+            }
+        }
+
+        //checks whether a file can be read or not
+        private bool isFileReadable(string path)
+        {
+            try
+            {
+                FileStream str = new FileStream(path, FileMode.Open, FileAccess.Read);
+                str.ReadByte();
+                str.Close();
+                return true;
+            }catch(Exception ex)
+            {
+                return false;
+            }
         }
 
         //gets the block count for the given chain
@@ -693,7 +745,15 @@ namespace nxmBackup.HVBackupCore
             //no vhd? do nothing anymore
 
             //get config files
-            string[] configFiles = System.IO.Directory.GetFiles(currentSnapshot["ConfigurationDataRoot"].ToString() + "\\Snapshots", currentSnapshot["ConfigurationID"].ToString() + "*");
+            string configPath = currentSnapshot["ConfigurationDataRoot"].ToString() + "\\Snapshots";
+
+            //translate to remote smb path if necessary
+            if (this.vm.host != "localhost")
+            {
+                configPath = translatevhdxPath(configPath);
+            }
+
+            string[] configFiles = System.IO.Directory.GetFiles(configPath, currentSnapshot["ConfigurationID"].ToString() + "*");
 
             //copy config files when no error occured
             if (transferDetailsSummary.successful)
