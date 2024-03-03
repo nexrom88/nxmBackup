@@ -277,7 +277,7 @@ function showNewJobPage(pageNumber, selectedEditJob) {
                             var selectedHostID = $("#sbHyperVHost").find(":selected").data("hostid");
 
                             //load vms for selected host
-                            loadVMs(selectedHostID, selectedEditJob);
+                            loadVMs(selectedHostID, selectedEditJob, false);
 
                             //on host change event handler
                             $("#sbHyperVHost").on("change", function (event) {
@@ -290,7 +290,7 @@ function showNewJobPage(pageNumber, selectedEditJob) {
                                 $("#newJobvmList").html("");
 
                                 //load vms for selected host
-                                loadVMs(selectedHostID, selectedEditJob);
+                                loadVMs(selectedHostID, selectedEditJob, true);
                             });
 
                             registerNextPageClickHandler(pageNumber, selectedEditJob);
@@ -421,7 +421,7 @@ function showNewJobPage(pageNumber, selectedEditJob) {
 }
 
 //load vms for a given host id when creating a new job
-function loadVMs(hostID, selectedEditJob) {
+function loadVMs(hostID, selectedEditJob, showErrorBox) {
     $.ajax({
         url: "api/vms?hostid=" + hostID
     })
@@ -472,12 +472,17 @@ function loadVMs(hostID, selectedEditJob) {
             
         })
         .fail(function () {
+            //hide loading anim
+            $("#vmLoadingSpinner").hide();
+
             //show message on error while loading vms
-            Swal.fire(
-                languageStrings["error"],
-                languageStrings["error_connecting_host"],
-                'error'
-            );
+            if (showErrorBox) {
+                Swal.fire(
+                    languageStrings["error"],
+                    languageStrings["error_connecting_host"],
+                    'error'
+                );
+            }
         });
 }
 
