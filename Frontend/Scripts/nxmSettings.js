@@ -317,6 +317,9 @@ function showAddHyperVHostForm(editID) {
             return;
         }
 
+        //listen on input change
+        $("#inputPass, #inputUser, #inputHost").on("input", hypervInputChanged);
+
         //get data from user input
         var newHost = {};
         newHost["editID"] = editID;
@@ -352,6 +355,11 @@ function showAddHyperVHostForm(editID) {
             }
         }
     }
+}
+
+//on new hyperv host input change
+function hypervInputChanged() {
+    ignoreIP = false;
 }
 
 //send a given host to the server and tries to translate ip address
