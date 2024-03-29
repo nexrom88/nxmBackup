@@ -10,11 +10,13 @@ using System.Windows.Controls.Primitives;
 using System.Data.Entity.Infrastructure;
 using System.Xml.Linq;
 using ConfigHandler;
+using System.IO;
 
 namespace Common
 {
     public class DBQueries
     {
+        private static byte[] aesStaticKey = { 0x34, 0x2, 0xe3, 0xaa, 0x88, 0xf7, 0xbb, 0x9a, 0x71, 0x4b, 0x28, 0xa1, 0xc5, 0x04, 0xa7, 0xe1};
 
         //adds an entry to log table
         public static void addLog(string text, string stacktrace, Exception ex)
@@ -642,6 +644,41 @@ namespace Common
             dbConn.doWriteQuery("UPDATE settings SET value = \"\" WHERE name=\"mailrecipient\"", null, transaction);
             dbConn.doWriteQuery("UPDATE settings SET value = \"en\" WHERE name=\"language\"", null, transaction);
         }
+
+        //encrypts a given plain text password and returns its base64 string
+        private static string encrpytPassword (string password)
+        {
+            AesCryptoServiceProvider aesProvider = new AesCryptoServiceProvider ();
+            aesProvider.Key = aesStaticKey;
+            aesProvider.GenerateIV();
+
+            //init crypto system
+            ICryptoTransform encryptor = aesProvider.CreateEncryptor(aesProvider.Key, aesProvider.IV);
+            MemoryStream memStream = new MemoryStream ();
+
+            //write iv length to mem stream
+            memStream.Write(BitConverter.GetBytes(aesProvider.IV.Length), 0, 4);
+
+            //write iv to mem stream
+            memStream.Write(aesProvider.IV, 0, aesProvider.IV.Length);
+
+            //start crypto stream
+            CryptoStream cryptoStream = new CryptoStream(memStream, encryptor, CryptoStreamMode.Write);
+
+            //encrypt pw
+            byte[] passwordBytes = Encoding.UTF8.GetBytes (password);
+            cryptoStream.Write(passwordBytes, 0, passwordBytes.Length);
+            cryptoStream.FlushFinalBlock();
+
+            //cleanup
+            string retVal = Convert.ToBase64String(memStream.ToArray());
+            cryptoStream.Close();
+            memStream.Close();
+
+            return retVal;
+
+        }
+
     }
 
     public struct LBTimestamps
