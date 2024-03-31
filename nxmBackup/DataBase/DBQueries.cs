@@ -53,6 +53,13 @@ namespace Common
                         continue;
                     }
 
+                    //when mailpassword, encrypt it
+                    if (key == "mailpassword")
+                    {
+                        string encryptedPassword = encrpytPassword(settings[key]);
+                        settings[key] = encryptedPassword;
+                    }
+
                     Dictionary<string, object> parameters = new Dictionary<string, object>();
                     parameters.Add("value", settings[key]);
                     parameters.Add("name", key);
@@ -141,7 +148,7 @@ namespace Common
                 //have to add a new host entry?
                 if (hyperVHost.id == "-1")
                 {                    
-                    parameters.Add("password", hyperVHost.password);
+                    parameters.Add("password", encrpytPassword(hyperVHost.password));
 
                     List<Dictionary<string, object>> result = dbConn.doReadQuery("INSERT INTO hosts(description, host, user, password) VALUES(@description, @host, @user, @password);", parameters, null);
                     return true;
@@ -155,7 +162,7 @@ namespace Common
                     {
                         //build query for also updating password
                         updateQuery = "UPDATE hosts SET description=@description, host=@host, user=@user, password=@password WHERE id=@id";
-                        parameters.Add("password", hyperVHost.password);
+                        parameters.Add("password", encrpytPassword(hyperVHost.password));
                     }
                     else
                     {
@@ -644,6 +651,46 @@ namespace Common
             dbConn.doWriteQuery("UPDATE settings SET value = \"\" WHERE name=\"mailrecipient\"", null, transaction);
             dbConn.doWriteQuery("UPDATE settings SET value = \"en\" WHERE name=\"language\"", null, transaction);
         }
+
+        //decrypts a given decrypted passwort string to plain text
+        private static string decryptPassword(string encryptedPassword)
+        {
+            //decode base64 string
+            byte[] encodedBytes = Convert.FromBase64String(encryptedPassword);
+            
+            //get iv length
+            UInt32 ivLength = BitConverter.ToUInt32(encodedBytes, 0);
+            byte[] iv = new byte[ivLength];
+
+            //get iv
+            Array.Copy(encodedBytes, 4, iv, 0, ivLength);
+
+            //init buffer for encrypted password
+            byte[] encryptedPasswordBytes = new byte[encodedBytes.Length - (4 + ivLength)];
+            Array.Copy(encodedBytes, 4 + ivLength, encryptedPasswordBytes, 0, encryptedPasswordBytes.Length);
+
+            //init crypto system
+            AesCryptoServiceProvider aesProvider = new AesCryptoServiceProvider();
+            aesProvider.Key = aesStaticKey;
+            aesProvider.IV = iv;
+            ICryptoTransform decryptor = aesProvider.CreateDecryptor(aesProvider.Key, aesProvider.IV);
+            MemoryStream memStream = new MemoryStream(encryptedPasswordBytes);
+
+            //start crypto stream
+            CryptoStream cryptoStream = new CryptoStream(memStream, decryptor, CryptoStreamMode.Read);
+
+            //decrypt password
+            MemoryStream decryptedStream = new MemoryStream();
+            cryptoStream.CopyTo(decryptedStream);
+
+            byte[] decryptedBytes = decryptedStream.ToArray();
+            cryptoStream.Close();
+            decryptedStream.Close();
+
+            //decode bytes to utf8 and return string 
+            return Encoding.UTF8.GetString(decryptedBytes);
+        }
+
 
         //encrypts a given plain text password and returns its base64 string
         private static string encrpytPassword (string password)
