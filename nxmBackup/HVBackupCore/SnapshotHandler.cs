@@ -156,7 +156,7 @@ namespace nxmBackup.HVBackupCore
                 
                 
                 
-                List<ManagementObject> refPs = getReferencePoints();
+                //List<ManagementObject> refPs = getReferencePoints();
 
                 //iterate chain
                 foreach (ConfigHandler.BackupConfigHandler.BackupInfo backup in chain)
@@ -1198,20 +1198,6 @@ namespace nxmBackup.HVBackupCore
             return rPoints;
         }
 
-        //gets a list of reference points filtered by InstanceId
-        public ManagementObject getReferencePoint(string iid)
-        {
-            List<ManagementObject> refPs = getReferencePoints();
-
-            foreach (ManagementObject refP in refPs)
-            {
-                if ((string)refP["InstanceId"] == iid)
-                {
-                    return refP;
-                }
-            }
-            return null;
-        }
 
         //removes a reference point
         public void removeReferencePoint(ManagementObject rPoint)

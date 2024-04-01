@@ -47,6 +47,7 @@ namespace Common
                 //iterate through each key
                 foreach (string key in settings.Keys)
                 {
+                    string valueToSet = settings[key];
                     //ignore write when mailpassword is empty => no change
                     if (key == "mailpassword" && settings[key] == "")
                     {
@@ -57,11 +58,11 @@ namespace Common
                     if (key == "mailpassword")
                     {
                         string encryptedPassword = encrpytPassword(settings[key]);
-                        settings[key] = encryptedPassword;
+                        valueToSet = encryptedPassword;
                     }
 
                     Dictionary<string, object> parameters = new Dictionary<string, object>();
-                    parameters.Add("value", settings[key]);
+                    parameters.Add("value", valueToSet);
                     parameters.Add("name", key);
 
                     //insert or update
@@ -129,7 +130,7 @@ namespace Common
                     if (getAuthData)
                     {
                         options.user = (string)result[0]["user"];
-                        options.password = (string)result[0]["password"];
+                        options.password = decryptPassword( (string)result[0]["password"]);
                     }
                     return options;
                 }
@@ -247,7 +248,7 @@ namespace Common
 
                         if (readAuthData)
                         {
-                            hostsArray[counter].password = (string)oneHostSet["password"];
+                            hostsArray[counter].password = decryptPassword((string)oneHostSet["password"]);
                         }
 
                         counter++;
@@ -282,6 +283,12 @@ namespace Common
                         if ((string)oneSetting["name"] == "mailpassword" && !readPasswords)
                         {
                             continue;
+                        }
+
+                        //if password has to be read, decrypt it
+                        if ((string)oneSetting["name"] == "mailpassword" && readPasswords)
+                        {
+                            oneSetting["value"] = decryptPassword((string)oneSetting["value"]);
                         }
 
                         //filter otpkey to not sending it to frontend
@@ -655,6 +662,12 @@ namespace Common
         //decrypts a given decrypted passwort string to plain text
         private static string decryptPassword(string encryptedPassword)
         {
+            //when encrypted password is an empty string, return an empty string
+            if (encryptedPassword == null || encryptedPassword == "")
+            {
+                return "";
+            }
+
             //decode base64 string
             byte[] encodedBytes = Convert.FromBase64String(encryptedPassword);
             
