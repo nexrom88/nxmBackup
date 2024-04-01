@@ -10,14 +10,12 @@ using System.Windows.Controls.Primitives;
 using System.Data.Entity.Infrastructure;
 using System.Xml.Linq;
 using ConfigHandler;
-using System.IO;
+using Common;
 
 namespace Common
 {
     public class DBQueries
     {
-        private static byte[] aesStaticKey = { 0x34, 0x2, 0xe3, 0xaa, 0x88, 0xf7, 0xbb, 0x9a, 0x71, 0x4b, 0x28, 0xa1, 0xc5, 0x04, 0xa7, 0xe1};
-
         //adds an entry to log table
         public static void addLog(string text, string stacktrace, Exception ex)
         {
@@ -57,7 +55,7 @@ namespace Common
                     //when mailpassword, encrypt it
                     if (key == "mailpassword")
                     {
-                        string encryptedPassword = encrpytPassword(settings[key]);
+                        string encryptedPassword = PasswordCrypto.encrpytPassword(settings[key]);
                         valueToSet = encryptedPassword;
                     }
 
@@ -130,7 +128,7 @@ namespace Common
                     if (getAuthData)
                     {
                         options.user = (string)result[0]["user"];
-                        options.password = decryptPassword( (string)result[0]["password"]);
+                        options.password = PasswordCrypto.decryptPassword( (string)result[0]["password"]);
                     }
                     return options;
                 }
@@ -149,7 +147,7 @@ namespace Common
                 //have to add a new host entry?
                 if (hyperVHost.id == "-1")
                 {                    
-                    parameters.Add("password", encrpytPassword(hyperVHost.password));
+                    parameters.Add("password", PasswordCrypto.encrpytPassword(hyperVHost.password));
 
                     List<Dictionary<string, object>> result = dbConn.doReadQuery("INSERT INTO hosts(description, host, user, password) VALUES(@description, @host, @user, @password);", parameters, null);
                     return true;
@@ -163,7 +161,7 @@ namespace Common
                     {
                         //build query for also updating password
                         updateQuery = "UPDATE hosts SET description=@description, host=@host, user=@user, password=@password WHERE id=@id";
-                        parameters.Add("password", encrpytPassword(hyperVHost.password));
+                        parameters.Add("password", PasswordCrypto.encrpytPassword(hyperVHost.password));
                     }
                     else
                     {
@@ -248,7 +246,7 @@ namespace Common
 
                         if (readAuthData)
                         {
-                            hostsArray[counter].password = decryptPassword((string)oneHostSet["password"]);
+                            hostsArray[counter].password = PasswordCrypto.decryptPassword((string)oneHostSet["password"]);
                         }
 
                         counter++;
@@ -288,7 +286,7 @@ namespace Common
                         //if password has to be read, decrypt it
                         if ((string)oneSetting["name"] == "mailpassword" && readPasswords)
                         {
-                            oneSetting["value"] = decryptPassword((string)oneSetting["value"]);
+                            oneSetting["value"] = PasswordCrypto.decryptPassword((string)oneSetting["value"]);
                         }
 
                         //filter otpkey to not sending it to frontend
@@ -659,85 +657,7 @@ namespace Common
             dbConn.doWriteQuery("UPDATE settings SET value = \"en\" WHERE name=\"language\"", null, transaction);
         }
 
-        //decrypts a given decrypted passwort string to plain text
-        private static string decryptPassword(string encryptedPassword)
-        {
-            //when encrypted password is an empty string, return an empty string
-            if (encryptedPassword == null || encryptedPassword == "")
-            {
-                return "";
-            }
-
-            //decode base64 string
-            byte[] encodedBytes = Convert.FromBase64String(encryptedPassword);
-            
-            //get iv length
-            UInt32 ivLength = BitConverter.ToUInt32(encodedBytes, 0);
-            byte[] iv = new byte[ivLength];
-
-            //get iv
-            Array.Copy(encodedBytes, 4, iv, 0, ivLength);
-
-            //init buffer for encrypted password
-            byte[] encryptedPasswordBytes = new byte[encodedBytes.Length - (4 + ivLength)];
-            Array.Copy(encodedBytes, 4 + ivLength, encryptedPasswordBytes, 0, encryptedPasswordBytes.Length);
-
-            //init crypto system
-            AesCryptoServiceProvider aesProvider = new AesCryptoServiceProvider();
-            aesProvider.Key = aesStaticKey;
-            aesProvider.IV = iv;
-            ICryptoTransform decryptor = aesProvider.CreateDecryptor(aesProvider.Key, aesProvider.IV);
-            MemoryStream memStream = new MemoryStream(encryptedPasswordBytes);
-
-            //start crypto stream
-            CryptoStream cryptoStream = new CryptoStream(memStream, decryptor, CryptoStreamMode.Read);
-
-            //decrypt password
-            MemoryStream decryptedStream = new MemoryStream();
-            cryptoStream.CopyTo(decryptedStream);
-
-            byte[] decryptedBytes = decryptedStream.ToArray();
-            cryptoStream.Close();
-            decryptedStream.Close();
-
-            //decode bytes to utf8 and return string 
-            return Encoding.UTF8.GetString(decryptedBytes);
-        }
-
-
-        //encrypts a given plain text password and returns its base64 string
-        private static string encrpytPassword (string password)
-        {
-            AesCryptoServiceProvider aesProvider = new AesCryptoServiceProvider ();
-            aesProvider.Key = aesStaticKey;
-            aesProvider.GenerateIV();
-
-            //init crypto system
-            ICryptoTransform encryptor = aesProvider.CreateEncryptor(aesProvider.Key, aesProvider.IV);
-            MemoryStream memStream = new MemoryStream ();
-
-            //write iv length to mem stream
-            memStream.Write(BitConverter.GetBytes(aesProvider.IV.Length), 0, 4);
-
-            //write iv to mem stream
-            memStream.Write(aesProvider.IV, 0, aesProvider.IV.Length);
-
-            //start crypto stream
-            CryptoStream cryptoStream = new CryptoStream(memStream, encryptor, CryptoStreamMode.Write);
-
-            //encrypt pw
-            byte[] passwordBytes = Encoding.UTF8.GetBytes (password);
-            cryptoStream.Write(passwordBytes, 0, passwordBytes.Length);
-            cryptoStream.FlushFinalBlock();
-
-            //cleanup
-            string retVal = Convert.ToBase64String(memStream.ToArray());
-            cryptoStream.Close();
-            memStream.Close();
-
-            return retVal;
-
-        }
+        
 
     }
 

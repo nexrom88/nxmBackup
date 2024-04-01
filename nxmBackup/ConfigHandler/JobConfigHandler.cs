@@ -61,7 +61,7 @@ namespace ConfigHandler
                     newJob.TargetType = jobDB["targettype"].ToString();
                     newJob.TargetPath = jobDB["targetpath"].ToString();
                     newJob.TargetUsername = jobDB["targetuser"].ToString();
-                    newJob.TargetPassword = jobDB["targetpassword"].ToString();
+                    newJob.TargetPassword = Common.PasswordCrypto.decryptPassword(jobDB["targetpassword"].ToString());
 
                     newJob.UseEncryption = Convert.ToBoolean(jobDB["useencryption"]);
 
@@ -366,7 +366,7 @@ namespace ConfigHandler
             parameters.Add("targettype", type);
             parameters.Add("targetpath", path);
             parameters.Add("targetuser", username);
-            parameters.Add("targetpassword", password);            
+            parameters.Add("targetpassword", Common.PasswordCrypto.encrpytPassword(password));            
 
             connection.doReadQuery("INSERT INTO storagetarget (targetjobid, targettype, targetpath, targetuser, targetpassword) VALUES (@targetjobid, @targettype, @targetpath, @targetuser, @targetpassword);", parameters, transaction);
         }

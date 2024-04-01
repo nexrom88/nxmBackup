@@ -208,6 +208,7 @@
     <Compile Include="Common\CredentialCacheManager.cs" />
     <Compile Include="Common\DeviceIO.cs" />
     <Compile Include="Common\MailClient.cs" />
+    <Compile Include="Common\PasswordCrypto.cs" />
     <Compile Include="Common\SHA1Provider.cs" />
     <Compile Include="Common\SHA256Provider.cs" />
     <Compile Include="Common\WebClientWrapper.cs" />
