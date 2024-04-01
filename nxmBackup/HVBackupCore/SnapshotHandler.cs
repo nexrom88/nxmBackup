@@ -1191,6 +1191,7 @@ namespace nxmBackup.HVBackupCore
 
                     //get "dependent" vs settings class
                     ManagementObject vsSettings = new ManagementObject(rPoint["dependent"].ToString());
+                    vsSettings.Scope = scope;
                     rPoints.Add(vsSettings);
                 }
             }
