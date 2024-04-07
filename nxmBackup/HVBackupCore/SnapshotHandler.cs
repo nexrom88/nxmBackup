@@ -756,7 +756,7 @@ namespace nxmBackup.HVBackupCore
             string[] configFiles = System.IO.Directory.GetFiles(configPath, currentSnapshot["ConfigurationID"].ToString() + "*");
 
             //copy config files when no error occured
-            if (transferDetailsSummary.successful)
+            if (transferDetailsSummary.successful && !StopRequestWrapper.value)
             {
                 foreach (string file in configFiles)
                 {
@@ -771,7 +771,7 @@ namespace nxmBackup.HVBackupCore
             archive.close();
 
             //hdds changed? write the new hdd config to job
-            if (hddsChangedResponse.hddsChanged)
+            if (hddsChangedResponse.hddsChanged && !StopRequestWrapper.value)
             {
                 //build hdd string list
                 List<string> hddStrings = new List<string>();
@@ -815,7 +815,7 @@ namespace nxmBackup.HVBackupCore
 
             //if LB activated for job and no error occured, start it before converting to reference point
             LiveBackupWorker lbWorker = null;
-            if (job.LiveBackup && transferDetailsSummary.successful)
+            if (job.LiveBackup && transferDetailsSummary.successful && !StopRequestWrapper.value)
             {
                 //another lb job already running? cancel!
                 if (LiveBackupWorker.ActiveWorkers.Count > 0)
@@ -842,8 +842,12 @@ namespace nxmBackup.HVBackupCore
                 }                    
             }
 
-            //convert the snapshot to a reference point when no error occured
-            if (transferDetailsSummary.successful)
+            //when stopped, convert to ref point
+            if (StopRequestWrapper.value && currentSnapshot != null)
+            {
+                this.convertToReferencePoint(currentSnapshot, true);
+            }
+            else if (transferDetailsSummary.successful) //when everything successful, do cleanup stuff
             {
                 ManagementObject refP = this.convertToReferencePoint(currentSnapshot, true);
 
