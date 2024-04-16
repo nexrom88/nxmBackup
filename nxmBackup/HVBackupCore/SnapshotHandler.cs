@@ -554,8 +554,9 @@ namespace nxmBackup.HVBackupCore
 
                         //get the job and the snapshot object
 
-                        string jobPath = (string)outParams["Job"];
+                        //string jobPath = (string)outParams["Job"];
                         //ManagementObject job = new ManagementObject(jobPath);
+
                         ManagementObject job = buildManagementObject(outParams["Job"], scope);
                         //ManagementObject job = new ManagementObject(scope, new ManagementPath(jobPath), null);
 
@@ -1269,7 +1270,8 @@ namespace nxmBackup.HVBackupCore
         //creates a HyperV ManagementScope
         private ManagementScope getHyperVManagementScope()
         {
-            ManagementScope scope = new ManagementScope(WMIHelper.GetHyperVWMIScope(this.vm.host), this.vm.getHostAuthData());
+            ConnectionOptions connectionOptions = this.vm.getHostAuthData();
+            ManagementScope scope = new ManagementScope(WMIHelper.GetHyperVWMIScope(this.vm.host), connectionOptions);
             return scope;
         }
 
@@ -1282,9 +1284,16 @@ namespace nxmBackup.HVBackupCore
         //builds a ManagementObject structure with a given scope
         private ManagementObject buildManagementObject(object managementPath, ManagementScope scope)
         {
-            ObjectGetOptions options = new ObjectGetOptions();
-            options.UseAmendedQualifiers = true;
-            return new ManagementObject(scope, new ManagementPath((string)managementPath), options);
+            //build object without scope when localhost
+            if (scope.Options.Username == null)
+            {
+                return new ManagementObject((String)managementPath);
+            }
+
+            //ObjectGetOptions options = new ObjectGetOptions();
+            //options.UseAmendedQualifiers = true;
+        
+            return new ManagementObject(scope, new ManagementPath((string)managementPath), null);
         }
 
         //struct for hddsChanged retVal
