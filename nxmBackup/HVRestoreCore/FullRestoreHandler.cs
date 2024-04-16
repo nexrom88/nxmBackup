@@ -171,7 +171,7 @@ namespace HVRestoreCore
                 relatedEventId = this.eventHandler.raiseNewEvent(LanguageHandler.getString("registering"), false, false, NO_RELATED_EVENT, Common.EventStatus.inProgress);
 
                 //look for vmcx file
-                string[] configFiles = System.IO.Directory.GetFiles(destPath, "*.vmcx", SearchOption.AllDirectories);
+                string[] configFiles = System.IO.Directory.GetFiles(destPath + "\\Virtual Machines", "*.vmcx", SearchOption.AllDirectories);
                 
                 //there may just be exactly one config file otherwise cancel import
                 if (configFiles.Length != 1)
