@@ -347,10 +347,14 @@
     width: 3rem;
     height: 3rem;
 }
+#hostHint{
+    color:lightcoral;
+    display:none;
+}
 
 #saveHostLoadingSpinner {
     margin-top: 5%;
-    margin-bottom:5%;
+    margin-bottom: 5%;
 }
 
 

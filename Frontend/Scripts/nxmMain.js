@@ -273,6 +273,13 @@ function showNewJobPage(pageNumber, selectedEditJob) {
                             var renderedData = Mustache.render(data, { hosts: configuredHosts });
                             $("#newJobPage").html(renderedData);
 
+                            //disable host select when lb is enabled
+                            if (newJobObj["livebackup"]) {
+                                $('.availableHost[data-hostid="1"]').attr('selected', 'selected');
+                                $("#sbHyperVHost").attr('disabled', 'disabled');
+                                $("#hostHint").css("display", "block");
+                            }
+
                             //get first selected host id
                             var selectedHostID = $("#sbHyperVHost").find(":selected").data("hostid");
 
@@ -789,7 +796,7 @@ function registerNextPageClickHandler(currentPage, selectedEditJob) {
                 newJobObj["hostid"] = selectedHostID;
 
                 //lb just possible on localhost and only when one vm got selected
-                if ((selectedVMs.length > 1 || selectedHostID != 1) && newJobObj["livebackup"]) {
+                if (selectedVMs.length > 1 && newJobObj["livebackup"]) {
                     Swal.fire(
                         languageStrings["error"],
                         languageStrings["error_one_vm"],

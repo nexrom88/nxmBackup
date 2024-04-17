@@ -18,6 +18,22 @@ namespace Frontend.Controllers
         {
             HttpResponseMessage response = new HttpResponseMessage();
 
+            //when lb is activated, vms may just be local
+            if (value.livebackup)
+            {
+                foreach (NewFrontendVM vm in value.vms)
+                {
+                    if(vm.hostID != "1")
+                    {
+                        //return error
+                        Common.DBQueries.addLog("lb activated on remote vm", Environment.StackTrace, null);
+
+                        response.StatusCode = HttpStatusCode.BadRequest;
+                        return response;
+                    }
+                }
+            }
+
 
             ConfigHandler.OneJob newJob = new ConfigHandler.OneJob();
 
