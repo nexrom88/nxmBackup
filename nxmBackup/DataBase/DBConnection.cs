@@ -68,14 +68,16 @@ namespace Common
                 //open DB connection
                 connection.Open();
 
-                //read db version but just if main database file
+               
                 if (filename == "nxm.db")
                 {
+                    //read db version but just if main database file
                     List<Dictionary<string, object>> dbResult = doReadQuery("SELECT value FROM settings WHERE name='dbversion'", null, null);
                     if (dbResult.Count != 1)
                     {
                         //wrong number of results
                         ConnectionEstablished = false;
+                        this.connection.Close();
                         return;
                     }
                     else
@@ -84,9 +86,32 @@ namespace Common
                         {
                             //wrong db version
                             ConnectionEstablished = false;
+                            this.connection.Close();
                             return;
                         }
                     }
+
+                    //check that "localhost" is hostid "1"
+                    dbResult = doReadQuery("SELECT host FROM hosts WHERE id='1'", null, null);
+                    if (dbResult.Count != 1)
+                    {
+                        //wrong number of results
+                        ConnectionEstablished = false;
+                        this.connection.Close();
+                        return;
+                    }
+                    else
+                    {
+                        if ((string)dbResult[0]["host"] != "localhost")
+                        {
+                            //wrong db version
+                            ConnectionEstablished = false;
+                            this.connection.Close();
+                            return;
+                        }
+                    }
+
+
                 }
                 else
                 {

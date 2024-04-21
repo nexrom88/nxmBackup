@@ -825,19 +825,29 @@ namespace nxmBackup.HVBackupCore
                 }
                 else
                 {
-                    //it is possible that the job structure changed while performing backup (e.g. new job created)
-                    // => so we do not update the job structure here but we look for the current job within joblist and update that structure                
-                    foreach (ConfigHandler.OneJob dbJob in ConfigHandler.JobConfigHandler.Jobs)
+                    //check that source vm is on localhost
+                    if (job.HostID != "1")
                     {
-                        if (dbJob.DbId == job.DbId)
+                        DBQueries.addLog("lb failed -> not on localhost", Environment.StackTrace, null);
+                        this.eventHandler.raiseNewEvent(LanguageHandler.getString("lb_start_failed"), false, false, NO_RELATED_EVENT, EventStatus.error);
+                    }
+                    else
+                    {
+
+                        //it is possible that the job structure changed while performing backup (e.g. new job created)
+                        // => so we do not update the job structure here but we look for the current job within joblist and update that structure                
+                        foreach (ConfigHandler.OneJob dbJob in ConfigHandler.JobConfigHandler.Jobs)
                         {
-                            lbWorker = new nxmBackup.HVBackupCore.LiveBackupWorker(job.DbId, this.eventHandler);
+                            if (dbJob.DbId == job.DbId)
+                            {
+                                lbWorker = new nxmBackup.HVBackupCore.LiveBackupWorker(job.DbId, this.eventHandler);
 
-                            //add worker to global list
-                            LiveBackupWorker.ActiveWorkers.Add(lbWorker);
-                            lbWorker.startLB();
+                                //add worker to global list
+                                LiveBackupWorker.ActiveWorkers.Add(lbWorker);
+                                lbWorker.startLB();
 
-                            dbJob.LiveBackupActive = true;
+                                dbJob.LiveBackupActive = true;
+                            }
                         }
                     }
                 }                    

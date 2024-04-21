@@ -52,6 +52,12 @@ namespace nxmBackup.Language
                 //read language setting
                 string language = DBQueries.readGlobalSetting("language");
 
+                //on error -> fall back to "en"
+                if (language == null)
+                {
+                    language = "en";
+                }
+
                 Dictionary<string, string> languageStrings = new Dictionary<string, string>();
 
                 Common.DBConnection connection = new Common.DBConnection("lang.db");
