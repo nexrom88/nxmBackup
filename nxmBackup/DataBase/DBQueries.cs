@@ -625,7 +625,7 @@ namespace Common
         //removes dynamic data from db
         public static void wipeDB()
         {
-            using (DBConnection dbConn = new DBConnection())
+            using (DBConnection dbConn = new DBConnection(true))
             {
                 SQLiteTransaction transaction = dbConn.beginTransaction();
                 dbConn.doWriteQuery("DELETE FROM log;", null, transaction);
@@ -639,6 +639,7 @@ namespace Common
                 dbConn.doWriteQuery("DELETE FROM rates;", null, transaction);
                 dbConn.doWriteQuery("DELETE FROM jobs;", null, transaction);
                 dbConn.doWriteQuery("DELETE FROM hosts WHERE id > 1;", null, transaction);
+                dbConn.doWriteQuery("UPDATE hosts set host='localhost' WHERE id = 1;", null, transaction);
                 wipeSettings(dbConn, transaction);
                 transaction.Commit();
                 dbConn.doWriteQuery("VACUUM;", null, null);

@@ -21,19 +21,19 @@ namespace Common
 
         private static string DBPathBase{ get; set;}
 
-        public DBConnection (string filename)
+        public DBConnection (string filename, bool ignoreDBLoadingError)
         {
 
-            loadDBFile(filename);
+            loadDBFile(filename, ignoreDBLoadingError);
         }
 
-        public DBConnection()
+        public DBConnection(bool ignoreDBLoadingError = false)
         {
-            loadDBFile("nxm.db");
+            loadDBFile("nxm.db", ignoreDBLoadingError);
         }
 
         //loads a given sqlite db file
-        private void loadDBFile(string filename)
+        private void loadDBFile(string filename, bool ignoreDBLoadingError)
         {
             //start SQLite Server connection
 
@@ -77,7 +77,10 @@ namespace Common
                     {
                         //wrong number of results
                         ConnectionEstablished = false;
-                        this.connection.Close();
+                        if (!ignoreDBLoadingError)
+                        {
+                            this.connection.Close();
+                        }
                         return;
                     }
                     else
@@ -86,7 +89,10 @@ namespace Common
                         {
                             //wrong db version
                             ConnectionEstablished = false;
-                            this.connection.Close();
+                            if (!ignoreDBLoadingError)
+                            {
+                                this.connection.Close();
+                            }
                             return;
                         }
                     }
@@ -97,7 +103,10 @@ namespace Common
                     {
                         //wrong number of results
                         ConnectionEstablished = false;
-                        this.connection.Close();
+                        if (!ignoreDBLoadingError)
+                        {
+                            this.connection.Close();
+                        }
                         return;
                     }
                     else
@@ -106,7 +115,10 @@ namespace Common
                         {
                             //wrong db version
                             ConnectionEstablished = false;
-                            this.connection.Close();
+                            if (!ignoreDBLoadingError)
+                            {
+                                this.connection.Close();
+                            }
                             return;
                         }
                     }
