@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Data.SQLite;
+using System.Threading;
 
 namespace Common
 {
@@ -14,6 +15,8 @@ namespace Common
         //private string database = "nxmBackup";
         //private string user = "nxm";
         //private string password = "31ACE875A263C33BD30465F8FD1008FF";
+
+        private static Mutex syncLock = new Mutex();
 
         public bool ConnectionEstablished { set; get; }
 
@@ -35,6 +38,9 @@ namespace Common
         //loads a given sqlite db file
         private void loadDBFile(string filename, bool ignoreDBLoadingError)
         {
+            //synclock db usage
+            syncLock.WaitOne();
+
             //start SQLite Server connection
 
             //read base path from registry if necessary
@@ -273,6 +279,9 @@ namespace Common
         //closes the db connection
         public void Dispose()
         {
+            //release mutex
+            syncLock.ReleaseMutex();
+
             if (this.connection != null) {
                 this.connection.Close();
                 this.connection.Dispose();
