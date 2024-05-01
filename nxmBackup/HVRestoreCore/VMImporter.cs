@@ -82,6 +82,9 @@ namespace HVRestoreCore
 
                     foreach (ManagementObject nicAllocation in nicAllocations)
                     {
+                        //get connected ethernet switch
+                        string switchName = nicAllocation["LastKnownSwitchName"].ToString();
+
                         nicAllocation["EnabledState"] = 3;
                         ManagementBaseObject inParams = managementService.GetMethodParameters("ModifyResourceSettings");
                         inParams["ResourceSettings"] = new string[] {nicAllocation.GetText(TextFormat.WmiDtd20) };
@@ -93,6 +96,12 @@ namespace HVRestoreCore
             }
 
               
+
+        }
+
+        //checks whether a vswitch with the given name exists
+        private static bool checkSwitch(string name)
+        {
 
         }
 
