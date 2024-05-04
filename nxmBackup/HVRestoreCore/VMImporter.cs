@@ -61,7 +61,7 @@ namespace HVRestoreCore
             }
         }
 
-        //disconnects the current ethernet adapters
+        //disconnects the current ethernet adapters. When vSwitch is not available it removes nic completely
         private static void disconnectEthernet(ManagementObject vm)
         {
             ManagementScope scope = new ManagementScope(@"root\virtualization\v2");
@@ -74,7 +74,10 @@ namespace HVRestoreCore
             foreach (ManagementObject settingData in settingDatas)
             {
                 ManagementObjectCollection ethernetSettingData = settingData.GetRelated("Msvm_SyntheticEthernetPortSettingData", "Msvm_VirtualSystemSettingDataComponent", null, null, "PartComponent", "GroupComponent", false, null);
-                
+
+                //get virtual switches on local system
+                ManagementObject[] vSwitches = WmiUtilities.GetVirtualSwitches(scope);
+
                 //iterate nics
                 foreach(ManagementObject nic in ethernetSettingData)
                 {
@@ -84,6 +87,8 @@ namespace HVRestoreCore
                     {
                         //get connected ethernet switch
                         string switchName = nicAllocation["LastKnownSwitchName"].ToString();
+
+                        bool switchAvailable = checkSwitch(switchName, vSwitches);
 
                         nicAllocation["EnabledState"] = 3;
                         ManagementBaseObject inParams = managementService.GetMethodParameters("ModifyResourceSettings");
@@ -100,9 +105,16 @@ namespace HVRestoreCore
         }
 
         //checks whether a vswitch with the given name exists
-        private static bool checkSwitch(string name)
+        private static bool checkSwitch(string name, ManagementObject[] switches)
         {
-
+            foreach (ManagementObject vSwitch in switches)
+            {
+                if (vSwitch["ElementName"].ToString() == name)
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
         //sets the vhdx path for a planned vm
