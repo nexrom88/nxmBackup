@@ -88,7 +88,7 @@ namespace HVRestoreCore
                         //get connected ethernet switch
                         string switchName = nicAllocation["LastKnownSwitchName"].ToString();
 
-                        bool switchAvailable = checkSwitch(switchName, vSwitches);
+                        bool switchAvailable = checkSwitch(switchName, vSwitches); //ignore result atm
 
                         nicAllocation["EnabledState"] = 3;
                         ManagementBaseObject inParams = managementService.GetMethodParameters("ModifyResourceSettings");
