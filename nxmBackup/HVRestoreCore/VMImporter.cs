@@ -53,6 +53,9 @@ namespace HVRestoreCore
                     //set new smart paging path
                     setSmartPagingPath(vm, basePath);
 
+                    //set new snapshot data root
+                    setSnapshotDataRoot(vm, basePath);
+
                     string vmID = vm["Name"].ToString();
 
                     //realize the planned vm
@@ -61,6 +64,28 @@ namespace HVRestoreCore
                     return vmID;
 
                 }
+            }
+        }
+
+        //sets the vm snapshot data root to the given new basePath
+        private static void setSnapshotDataRoot(ManagementObject vm, string basePath)
+        {
+            ManagementScope scope = new ManagementScope(@"root\virtualization\v2");
+            ManagementObject managementService = WmiUtilities.GetVirtualMachineManagementService(scope);
+            ManagementBaseObject outParams;
+
+            ManagementObjectCollection settingDatas = vm.GetRelated("Msvm_VirtualSystemSettingData");
+
+            //iterate settings
+            foreach (ManagementObject settingData in settingDatas)
+            {
+                settingData["SnapshotDataRoot"] = basePath;
+
+                string settingsString = settingData.GetText(TextFormat.WmiDtd20);
+                ManagementBaseObject inParams = managementService.GetMethodParameters("ModifySystemSettings");
+                inParams["SystemSettings"] = settingsString;
+                outParams = managementService.InvokeMethod("ModifySystemSettings", inParams, null);
+                WmiUtilities.ValidateOutput(outParams, scope);
             }
         }
 
