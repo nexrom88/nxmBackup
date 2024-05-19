@@ -50,6 +50,12 @@ namespace HVRestoreCore
                     //disconnect ethernet
                     disconnectEthernet(vm);
 
+                    //set new smart paging path
+                    setSmartPagingPath(vm, basePath);
+
+                    //set new snapshot data root
+                    setSnapshotDataRoot(vm, basePath);
+
                     string vmID = vm["Name"].ToString();
 
                     //realize the planned vm
@@ -61,7 +67,51 @@ namespace HVRestoreCore
             }
         }
 
-        //disconnects the current ethernet adapters
+        //sets the vm snapshot data root to the given new basePath
+        private static void setSnapshotDataRoot(ManagementObject vm, string basePath)
+        {
+            ManagementScope scope = new ManagementScope(@"root\virtualization\v2");
+            ManagementObject managementService = WmiUtilities.GetVirtualMachineManagementService(scope);
+            ManagementBaseObject outParams;
+
+            ManagementObjectCollection settingDatas = vm.GetRelated("Msvm_VirtualSystemSettingData");
+
+            //iterate settings
+            foreach (ManagementObject settingData in settingDatas)
+            {
+                settingData["SnapshotDataRoot"] = basePath;
+
+                string settingsString = settingData.GetText(TextFormat.WmiDtd20);
+                ManagementBaseObject inParams = managementService.GetMethodParameters("ModifySystemSettings");
+                inParams["SystemSettings"] = settingsString;
+                outParams = managementService.InvokeMethod("ModifySystemSettings", inParams, null);
+                WmiUtilities.ValidateOutput(outParams, scope);
+            }
+        }
+
+        //sets the vm smart paging path to the given new basePath
+        private static void setSmartPagingPath(ManagementObject vm, string basePath)
+        {
+            ManagementScope scope = new ManagementScope(@"root\virtualization\v2");
+            ManagementObject managementService = WmiUtilities.GetVirtualMachineManagementService(scope);
+            ManagementBaseObject outParams;
+
+            ManagementObjectCollection settingDatas = vm.GetRelated("Msvm_VirtualSystemSettingData");
+
+            //iterate settings
+            foreach (ManagementObject settingData in settingDatas)
+            {
+                settingData["SwapFileDataRoot"] = basePath;
+
+                string settingsString = settingData.GetText(TextFormat.WmiDtd20);
+                ManagementBaseObject inParams = managementService.GetMethodParameters("ModifySystemSettings");
+                inParams["SystemSettings"] =  settingsString ;
+                outParams = managementService.InvokeMethod("ModifySystemSettings", inParams, null);
+                WmiUtilities.ValidateOutput(outParams, scope);
+            }
+        }
+
+        //disconnects the current ethernet adapters. When vSwitch is not available it removes nic completely
         private static void disconnectEthernet(ManagementObject vm)
         {
             ManagementScope scope = new ManagementScope(@"root\virtualization\v2");
@@ -74,7 +124,10 @@ namespace HVRestoreCore
             foreach (ManagementObject settingData in settingDatas)
             {
                 ManagementObjectCollection ethernetSettingData = settingData.GetRelated("Msvm_SyntheticEthernetPortSettingData", "Msvm_VirtualSystemSettingDataComponent", null, null, "PartComponent", "GroupComponent", false, null);
-                
+
+                //get virtual switches on local system
+                ManagementObject[] vSwitches = WmiUtilities.GetVirtualSwitches(scope);
+
                 //iterate nics
                 foreach(ManagementObject nic in ethernetSettingData)
                 {
@@ -82,6 +135,11 @@ namespace HVRestoreCore
 
                     foreach (ManagementObject nicAllocation in nicAllocations)
                     {
+                        //get connected ethernet switch
+                        string switchName = nicAllocation["LastKnownSwitchName"].ToString();
+
+                        bool switchAvailable = checkSwitch(switchName, vSwitches); //ignore result atm
+
                         nicAllocation["EnabledState"] = 3;
                         ManagementBaseObject inParams = managementService.GetMethodParameters("ModifyResourceSettings");
                         inParams["ResourceSettings"] = new string[] {nicAllocation.GetText(TextFormat.WmiDtd20) };
@@ -94,6 +152,19 @@ namespace HVRestoreCore
 
               
 
+        }
+
+        //checks whether a vswitch with the given name exists
+        private static bool checkSwitch(string name, ManagementObject[] switches)
+        {
+            foreach (ManagementObject vSwitch in switches)
+            {
+                if (vSwitch["ElementName"].ToString() == name)
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
         //sets the vhdx path for a planned vm

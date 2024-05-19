@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Management;
 using System.Runtime.InteropServices;
+using System.Security;
 using Common;
 using nxmBackup.Language;
 
@@ -117,6 +119,12 @@ namespace nxmBackup.HVBackupCore
                 }
             }
 
+            //add smb credentials for source file if necessary
+            if (this.vm.host != "localhost")
+            {
+                gainRemoteSourceAccess(snapshot);
+            }
+
             //export the snapshot
             TransferDetails transferDetails = export(destination, snapshot, refP, job);
 
@@ -148,7 +156,7 @@ namespace nxmBackup.HVBackupCore
                 
                 
                 
-                List<ManagementObject> refPs = getReferencePoints();
+                //List<ManagementObject> refPs = getReferencePoints();
 
                 //iterate chain
                 foreach (ConfigHandler.BackupConfigHandler.BackupInfo backup in chain)
@@ -211,6 +219,51 @@ namespace nxmBackup.HVBackupCore
 
 
             return transferDetails;
+        }
+
+        //check whether remote source file is accessible -> when not, gain access
+        private void gainRemoteSourceAccess(ManagementObject snapshot)
+        {
+            //iterate hdds
+            var iterator = snapshot.GetRelated("Msvm_StorageAllocationSettingData").GetEnumerator();
+
+            while (iterator.MoveNext())
+            {
+                //just add vhdx files to hdd list
+                if (((string[])iterator.Current["HostResource"])[0].EndsWith(".vhdx"))
+                {
+                    ManagementObject hddObject = ((ManagementObject)iterator.Current);
+                    string vhdxPath = ((string[])hddObject["HostResource"])[0];
+
+                    //translate to remote smb path
+                    vhdxPath = translatevhdxPath(vhdxPath);
+
+                    if (!isFileReadable(vhdxPath))
+                    {
+                        WMIConnectionOptions authData = DBQueries.getHostByID(int.Parse(this.vm.hostID), true);
+                        CredentialCacheManager.add(vhdxPath, authData.user, authData.password);
+
+                        //clear password field
+                        authData.password = "";
+                        authData = new WMIConnectionOptions();
+                    }
+                }
+            }
+        }
+
+        //checks whether a file can be read or not
+        private bool isFileReadable(string path)
+        {
+            try
+            {
+                FileStream str = new FileStream(path, FileMode.Open, FileAccess.Read);
+                str.ReadByte();
+                str.Close();
+                return true;
+            }catch(Exception ex)
+            {
+                return false;
+            }
         }
 
         //gets the block count for the given chain
@@ -395,9 +448,10 @@ namespace nxmBackup.HVBackupCore
         }
 
         //creates the snapshot
+        [SecurityCritical]
         public ManagementObject createSnapshot(ConsistencyLevel cLevel, Boolean allowSnapshotFallback)
         {
-            ManagementScope scope = new ManagementScope("\\\\localhost\\root\\virtualization\\v2", null);
+            ManagementScope scope = getHyperVManagementScope();
             int eventId = this.eventHandler.raiseNewEvent(LanguageHandler.getString("initializing_env"), false, false, NO_RELATED_EVENT, EventStatus.inProgress);
 
             //check for already existing snapshots (user created ones)
@@ -499,7 +553,12 @@ namespace nxmBackup.HVBackupCore
                         this.eventHandler.raiseNewEvent(LanguageHandler.getString("successful"), true, false, eventId, EventStatus.successful);
 
                         //get the job and the snapshot object
-                        ManagementObject job = new ManagementObject((string)outParams["job"]);
+
+                        //string jobPath = (string)outParams["Job"];
+                        //ManagementObject job = new ManagementObject(jobPath);
+
+                        ManagementObject job = buildManagementObject(outParams["Job"], scope);
+                        //ManagementObject job = new ManagementObject(scope, new ManagementPath(jobPath), null);
 
                         //get the snapshot
                         ManagementObject snapshot = null;
@@ -522,10 +581,11 @@ namespace nxmBackup.HVBackupCore
         }
 
         //converts a snapshot to a reference point
-        /// <summary></summary>
+
+        [SecurityCritical]
         public ManagementObject convertToReferencePoint(ManagementObject snapshot, bool raiseEvents)
         {
-            ManagementScope scope = new ManagementScope("\\\\localhost\\root\\virtualization\\v2", null);
+            ManagementScope scope = getHyperVManagementScope();
             int eventId = 0;
             if (raiseEvents) {
                eventId = this.eventHandler.raiseNewEvent(LanguageHandler.getString("creating_refp"), false, false, NO_RELATED_EVENT, EventStatus.inProgress);
@@ -547,11 +607,16 @@ namespace nxmBackup.HVBackupCore
                     WmiUtilities.ValidateOutput(outParams, scope);
 
                     //get the job and the reference point object
-                    ManagementObject job = new ManagementObject((string)outParams["job"]);
+                    var a = new ManagementObject();
+
+                    ManagementObject job = buildManagementObject(outParams["job"]);
 
                     //get the reference point
                     ManagementObject refSnapshot = null;
-                    var iterator = job.GetRelated("Msvm_VirtualSystemReferencePoint").GetEnumerator();
+                    ManagementObjectCollection refPs = job.GetRelated("Msvm_VirtualSystemReferencePoint");
+                    //ManagementObjectCollection refPs = job.GetRelated();
+                    int af = refPs.Count;
+                    var iterator = refPs.GetEnumerator();
                     while (iterator.MoveNext())
                     {
                         refSnapshot = (System.Management.ManagementObject)iterator.Current;
@@ -634,6 +699,12 @@ namespace nxmBackup.HVBackupCore
                     continue;
                 }
 
+                //translate vhdx path to remote smb path when vm is remote
+                if (this.vm.host != "localhost")
+                {
+                    hddPath[0] = translatevhdxPath(hddPath[0]);
+                }
+
                 //copy a full snapshot?
                 if (rctBase == null)
                 {
@@ -675,10 +746,18 @@ namespace nxmBackup.HVBackupCore
             //no vhd? do nothing anymore
 
             //get config files
-            string[] configFiles = System.IO.Directory.GetFiles(currentSnapshot["ConfigurationDataRoot"].ToString() + "\\Snapshots", currentSnapshot["ConfigurationID"].ToString() + "*");
+            string configPath = currentSnapshot["ConfigurationDataRoot"].ToString() + "\\Snapshots";
+
+            //translate to remote smb path if necessary
+            if (this.vm.host != "localhost")
+            {
+                configPath = translatevhdxPath(configPath);
+            }
+
+            string[] configFiles = System.IO.Directory.GetFiles(configPath, currentSnapshot["ConfigurationID"].ToString() + "*");
 
             //copy config files when no error occured
-            if (transferDetailsSummary.successful)
+            if (transferDetailsSummary.successful && !StopRequestWrapper.value)
             {
                 foreach (string file in configFiles)
                 {
@@ -693,7 +772,7 @@ namespace nxmBackup.HVBackupCore
             archive.close();
 
             //hdds changed? write the new hdd config to job
-            if (hddsChangedResponse.hddsChanged)
+            if (hddsChangedResponse.hddsChanged && !StopRequestWrapper.value)
             {
                 //build hdd string list
                 List<string> hddStrings = new List<string>();
@@ -737,7 +816,7 @@ namespace nxmBackup.HVBackupCore
 
             //if LB activated for job and no error occured, start it before converting to reference point
             LiveBackupWorker lbWorker = null;
-            if (job.LiveBackup && transferDetailsSummary.successful)
+            if (job.LiveBackup && transferDetailsSummary.successful && !StopRequestWrapper.value)
             {
                 //another lb job already running? cancel!
                 if (LiveBackupWorker.ActiveWorkers.Count > 0)
@@ -746,26 +825,40 @@ namespace nxmBackup.HVBackupCore
                 }
                 else
                 {
-                    //it is possible that the job structure changed while performing backup (e.g. new job created)
-                    // => so we do not update the job structure here but we look for the current job within joblist and update that structure                
-                    foreach (ConfigHandler.OneJob dbJob in ConfigHandler.JobConfigHandler.Jobs)
+                    //check that source vm is on localhost
+                    if (job.HostID != "1")
                     {
-                        if (dbJob.DbId == job.DbId)
+                        DBQueries.addLog("lb failed -> not on localhost", Environment.StackTrace, null);
+                        this.eventHandler.raiseNewEvent(LanguageHandler.getString("lb_start_failed"), false, false, NO_RELATED_EVENT, EventStatus.error);
+                    }
+                    else
+                    {
+
+                        //it is possible that the job structure changed while performing backup (e.g. new job created)
+                        // => so we do not update the job structure here but we look for the current job within joblist and update that structure                
+                        foreach (ConfigHandler.OneJob dbJob in ConfigHandler.JobConfigHandler.Jobs)
                         {
-                            lbWorker = new nxmBackup.HVBackupCore.LiveBackupWorker(job.DbId, this.eventHandler);
+                            if (dbJob.DbId == job.DbId)
+                            {
+                                lbWorker = new nxmBackup.HVBackupCore.LiveBackupWorker(job.DbId, this.eventHandler);
 
-                            //add worker to global list
-                            LiveBackupWorker.ActiveWorkers.Add(lbWorker);
-                            lbWorker.startLB();
+                                //add worker to global list
+                                LiveBackupWorker.ActiveWorkers.Add(lbWorker);
+                                lbWorker.startLB();
 
-                            dbJob.LiveBackupActive = true;
+                                dbJob.LiveBackupActive = true;
+                            }
                         }
                     }
                 }                    
             }
 
-            //convert the snapshot to a reference point when no error occured
-            if (transferDetailsSummary.successful)
+            //when stopped, convert to ref point
+            if (StopRequestWrapper.value && currentSnapshot != null)
+            {
+                this.convertToReferencePoint(currentSnapshot, true);
+            }
+            else if (transferDetailsSummary.successful) //when everything successful, do cleanup stuff
             {
                 ManagementObject refP = this.convertToReferencePoint(currentSnapshot, true);
 
@@ -873,6 +966,11 @@ namespace nxmBackup.HVBackupCore
             //get vhdx id from vhdx file
             string vhdxPath = ((string[])mo["HostResource"])[0];
 
+            //translate hdd path to smb path when vm is not local
+            if (this.vm.host != "localhost")
+            {
+                vhdxPath = translatevhdxPath(vhdxPath);
+            }
 
             string hddID = Convert.ToBase64String(vhdxParser.getVHDXIDFromFile(vhdxPath));
             
@@ -881,6 +979,21 @@ namespace nxmBackup.HVBackupCore
             newHDD.path = vhdxPath;
 
             return newHDD;
+        }
+
+        //translates a given vhdx path to a remote smb path
+        private string translatevhdxPath(string vhdxPath)
+        {
+            //remove ":"
+            vhdxPath = vhdxPath.Remove(1, 1);
+
+            //add "$"
+            vhdxPath = vhdxPath.Insert(1, "$");
+
+            //add host path
+            vhdxPath = @"\\" + this.vm.host + @"\" + vhdxPath;
+
+            return vhdxPath;
         }
 
 
@@ -898,7 +1011,7 @@ namespace nxmBackup.HVBackupCore
             diskHandler.close();
 
 
-            ManagementScope scope = new ManagementScope("\\\\localhost\\root\\virtualization\\v2", null);
+            ManagementScope scope = getHyperVManagementScope();
             //get the necessary wmi objects
             using (ManagementObject imageManagementService = WmiUtilities.GetImageManagementService(scope))
             using (ManagementBaseObject inParams = imageManagementService.GetMethodParameters("GetVirtualDiskChanges"))
@@ -1017,7 +1130,7 @@ namespace nxmBackup.HVBackupCore
         public List<ManagementObject> getSnapshots(string snapshotType)
         {
             List<ManagementObject> snapshots = new List<ManagementObject>();
-            ManagementScope scope = new ManagementScope("\\\\localhost\\root\\virtualization\\v2", null);
+            ManagementScope scope = getHyperVManagementScope();
 
             // Get the necessary wmi objects
             using (ManagementObject vm = WmiUtilities.GetVirtualMachine(this.vm.vmID, scope))
@@ -1037,7 +1150,8 @@ namespace nxmBackup.HVBackupCore
                     var snapshot = (System.Management.ManagementObject)iterator.Current;
 
                     //get "dependent" vs settings class
-                    ManagementObject vsSettings = new ManagementObject(snapshot["dependent"].ToString());
+ 
+                    ManagementObject vsSettings = buildManagementObject(snapshot["dependent"]);
                     string type = vsSettings["VirtualSystemType"].ToString();
 
                     //is recovery snapshot?
@@ -1055,7 +1169,7 @@ namespace nxmBackup.HVBackupCore
         //reads the virtual disk id from the given vhd
         private string getVHDID(string vhdPath)
         {
-            ManagementScope scope = new ManagementScope("\\\\localhost\\root\\virtualization\\v2", null);
+            ManagementScope scope = getHyperVManagementScope();
             using (ManagementObject service = WmiUtilities.GetImageManagementService(scope))
             using (ManagementBaseObject inParams = service.GetMethodParameters("GetVirtualHardDiskSettingData"))
             {
@@ -1077,7 +1191,7 @@ namespace nxmBackup.HVBackupCore
         public List<ManagementObject> getReferencePoints()
         {
             List<ManagementObject> rPoints = new List<ManagementObject>();
-            ManagementScope scope = new ManagementScope("\\\\localhost\\root\\virtualization\\v2", null);
+            ManagementScope scope = getHyperVManagementScope();
 
             // Get the necessary wmi objects
             using (ManagementObject vm = WmiUtilities.GetVirtualMachine(this.vm.vmID, scope))
@@ -1092,6 +1206,7 @@ namespace nxmBackup.HVBackupCore
 
                     //get "dependent" vs settings class
                     ManagementObject vsSettings = new ManagementObject(rPoint["dependent"].ToString());
+                    vsSettings.Scope = scope;
                     rPoints.Add(vsSettings);
                 }
             }
@@ -1099,25 +1214,11 @@ namespace nxmBackup.HVBackupCore
             return rPoints;
         }
 
-        //gets a list of reference points filtered by InstanceId
-        public ManagementObject getReferencePoint(string iid)
-        {
-            List<ManagementObject> refPs = getReferencePoints();
-
-            foreach (ManagementObject refP in refPs)
-            {
-                if ((string)refP["InstanceId"] == iid)
-                {
-                    return refP;
-                }
-            }
-            return null;
-        }
 
         //removes a reference point
         public void removeReferencePoint(ManagementObject rPoint)
         {
-            ManagementScope scope = new ManagementScope("\\\\localhost\\root\\virtualization\\v2", null);
+            ManagementScope scope = getHyperVManagementScope();
 
             // Get the necessary wmi objects
             using (ManagementObject rpService = WmiUtilities.GetVirtualSystemReferencePointService(scope))
@@ -1139,7 +1240,7 @@ namespace nxmBackup.HVBackupCore
         //removes a snapshot (including all child snapshots) --> not working
         public void removeSnapshot(ManagementObject snapshot)
         {
-            ManagementScope scope = new ManagementScope("\\\\localhost\\root\\virtualization\\v2", null);
+            ManagementScope scope = getHyperVManagementScope();
 
             // Get the management service and the VM object.
             using (ManagementObject vm = WmiUtilities.GetVirtualMachine(this.vm.vmID, scope))
@@ -1174,6 +1275,35 @@ namespace nxmBackup.HVBackupCore
             {
                 this.removeReferencePoint(snapshot);
             }
+        }
+
+        //creates a HyperV ManagementScope
+        private ManagementScope getHyperVManagementScope()
+        {
+            ConnectionOptions connectionOptions = this.vm.getHostAuthData();
+            ManagementScope scope = new ManagementScope(WMIHelper.GetHyperVWMIScope(this.vm.host), connectionOptions);
+            return scope;
+        }
+
+        //builds a ManagementObject structure
+        private ManagementObject buildManagementObject(object managementPath)
+        {
+            return buildManagementObject(managementPath, getHyperVManagementScope());
+        }
+
+        //builds a ManagementObject structure with a given scope
+        private ManagementObject buildManagementObject(object managementPath, ManagementScope scope)
+        {
+            //build object without scope when localhost
+            if (scope.Options.Username == null)
+            {
+                return new ManagementObject((String)managementPath);
+            }
+
+            //ObjectGetOptions options = new ObjectGetOptions();
+            //options.UseAmendedQualifiers = true;
+        
+            return new ManagementObject(scope, new ManagementPath((string)managementPath), null);
         }
 
         //struct for hddsChanged retVal

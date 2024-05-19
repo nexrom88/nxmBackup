@@ -10,8 +10,8 @@ namespace Common
     public class WMIHelper
     {
 
-        //lists all active HyperV VMs
-        public static List<OneVM> listVMs()
+        //lists all active HyperV VMss
+        public static List<OneVM> listVMs(WMIConnectionOptions host, ManagementScope scope = null)
         {
             try
             {
@@ -27,8 +27,11 @@ namespace Common
                     query = "SELECT * FROM Msvm_VirtualSystemSettingData WHERE SettingType = 3";
                 }
 
-
-                var scope = new ManagementScope(GetWMIScope());
+                if (scope == null)
+                {
+                    ConnectionOptions connectionOptions = buildConnectionOptions(host);
+                    scope = new ManagementScope(GetHyperVWMIScope(host.host), connectionOptions);
+                }
 
                 List<OneVM> vms = new List<OneVM>();
                 using (var searcher = new ManagementObjectSearcher(scope, new ObjectQuery(query)))
@@ -127,7 +130,7 @@ namespace Common
             }
 
 
-            var scope = new ManagementScope(GetWMIScope());
+            var scope = new ManagementScope(GetHyperVWMIScope());
 
             if (vmName != null)
                 query += $" AND (ElementName='" + vmName + "')";
@@ -174,7 +177,25 @@ namespace Common
             }
         }
 
-        private static string GetWMIScope(string host = "localhost")
+        public static ConnectionOptions buildConnectionOptions(WMIConnectionOptions connectionOptions)
+        {
+            //just enable privileges when user is set
+
+            if (connectionOptions.user != String.Empty) {
+                ConnectionOptions options = new ConnectionOptions();
+                options.EnablePrivileges = true;
+                options.Username = connectionOptions.user;
+                options.Password = connectionOptions.password;
+                options.Impersonation = ImpersonationLevel.Impersonate;
+                return options;
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        public static string GetHyperVWMIScope(string host = "localhost")
         {
             string scopeFormatStr;
             if (UseWMIV2NameSpace)
@@ -183,6 +204,35 @@ namespace Common
                 scopeFormatStr = "\\\\{0}\\root\\virtualization";
 
             return (string.Format(scopeFormatStr, host));
+        }
+
+        //translates a given ip address to a hostname
+        public static string translateToHostname(string ipAddress, string user, string password)
+        {
+            try
+            {
+                ConnectionOptions options = new ConnectionOptions();
+                options.EnablePrivileges = true;
+                options.Username = user;
+                options.Password = password;
+                options.Impersonation = ImpersonationLevel.Impersonate;
+
+                ManagementScope scope = new ManagementScope();
+                scope.Path = new ManagementPath("\\\\" + ipAddress + "\\root\\CIMV2");
+                scope.Options = options;
+
+                ObjectQuery query = new ObjectQuery("SELECT Name FROM Win32_ComputerSystem");
+
+                ManagementObjectSearcher searcher = new ManagementObjectSearcher(scope, query);
+                foreach (ManagementObject queryObj in searcher.Get())
+                {
+                    return queryObj["Name"].ToString();
+                }
+                return "";
+            } catch
+            {
+                return "";
+            }
         }
 
         public struct OneVM

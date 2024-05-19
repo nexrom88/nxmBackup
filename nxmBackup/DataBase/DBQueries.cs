@@ -5,12 +5,17 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Security.Cryptography;
+using System.Security;
+using System.Windows.Controls.Primitives;
+using System.Data.Entity.Infrastructure;
+using System.Xml.Linq;
+using ConfigHandler;
+using Common;
 
 namespace Common
 {
     public class DBQueries
     {
-
         //adds an entry to log table
         public static void addLog(string text, string stacktrace, Exception ex)
         {
@@ -40,14 +45,22 @@ namespace Common
                 //iterate through each key
                 foreach (string key in settings.Keys)
                 {
+                    string valueToSet = settings[key];
                     //ignore write when mailpassword is empty => no change
                     if (key == "mailpassword" && settings[key] == "")
                     {
                         continue;
                     }
 
+                    //when mailpassword, encrypt it
+                    if (key == "mailpassword")
+                    {
+                        string encryptedPassword = PasswordCrypto.encrpytPassword(settings[key]);
+                        valueToSet = encryptedPassword;
+                    }
+
                     Dictionary<string, object> parameters = new Dictionary<string, object>();
-                    parameters.Add("value", settings[key]);
+                    parameters.Add("value", valueToSet);
                     parameters.Add("name", key);
 
                     //insert or update
@@ -80,6 +93,171 @@ namespace Common
             }
         }
 
+        //returns a host ip/name by a given host id
+        public static WMIConnectionOptions getHostByID(int hostID, bool getAuthData)
+        {
+            WMIConnectionOptions options = new WMIConnectionOptions();
+
+            using (DBConnection dbConn = new DBConnection())
+            {
+                string query;
+
+                if (getAuthData)
+                {
+                    query = "SELECT host, user, password FROM hosts WHERE id=@id;";
+                }
+                else
+                {
+                    query = "SELECT host FROM hosts WHERE id=@id;";
+                }
+
+                Dictionary<string, object> parameters = new Dictionary<string, object>();
+                parameters.Add("id", hostID);
+
+                List<Dictionary<string, object>> result = dbConn.doReadQuery(query, parameters, null);
+                if (result == null || result.Count == 0)
+                {
+                    DBQueries.addLog("hyperv host could not be found within db", Environment.StackTrace, null);
+                    options.host = null;
+                    return options;
+                }
+                else
+                {
+                    options.host = (string)result[0]["host"];
+
+                    if (getAuthData)
+                    {
+                        options.user = (string)result[0]["user"];
+                        options.password = PasswordCrypto.decryptPassword( (string)result[0]["password"]);
+                    }
+                    return options;
+                }
+            }
+        }
+
+        public static bool saveHyperVHost(HyperVHost hyperVHost)
+        {
+            using (DBConnection dbConn = new DBConnection())
+            {
+                Dictionary<string, object> parameters = new Dictionary<string, object>();
+                parameters.Add("description", hyperVHost.description);
+                parameters.Add("host", hyperVHost.host);
+                parameters.Add("user", hyperVHost.user);
+
+                //have to add a new host entry?
+                if (hyperVHost.id == "-1")
+                {                    
+                    parameters.Add("password", PasswordCrypto.encrpytPassword(hyperVHost.password));
+
+                    List<Dictionary<string, object>> result = dbConn.doReadQuery("INSERT INTO hosts(description, host, user, password) VALUES(@description, @host, @user, @password);", parameters, null);
+                    return true;
+                }
+                else
+                {
+                    //edit a given host entry
+                    parameters.Add("id", hyperVHost.id);
+                    string updateQuery = "";
+                    if (hyperVHost.password != null && hyperVHost.password != "")
+                    {
+                        //build query for also updating password
+                        updateQuery = "UPDATE hosts SET description=@description, host=@host, user=@user, password=@password WHERE id=@id";
+                        parameters.Add("password", PasswordCrypto.encrpytPassword(hyperVHost.password));
+                    }
+                    else
+                    {
+                        //build query for not also updating password
+                        updateQuery = "UPDATE hosts SET description=@description, host=@host, user=@user WHERE id=@id";
+                    }
+
+                    //do update query
+                    List<Dictionary<string, object>> result = dbConn.doReadQuery(updateQuery, parameters, null);
+                    return true;
+                }
+
+                
+            }
+        }
+
+        //deletes a given hyperv host
+        public static bool deleteHyperVHost(string id)
+        {
+            using (DBConnection dbConn = new DBConnection())
+            {
+                Dictionary<string, object> parameters = new Dictionary<string, object>();                
+                parameters.Add("id", id);
+
+                //check that host is not still in use within a job
+                foreach (OneJob job in JobConfigHandler.Jobs)
+                {
+                    foreach (JobVM vm in job.JobVMs)
+                    {
+                        if (vm.hostID == id)
+                        {
+                            //host still in use
+                            return false;
+                        }
+                    }
+                }
+
+                List<Dictionary<string, object>> result = dbConn.doReadQuery("UPDATE hosts SET deleted=TRUE WHERE id=@id", parameters, null);
+                return true;
+            }
+        }
+
+        //reads all configured HyperV hosts
+        public static HyperVHost[] readHyperVHosts(bool readAuthData)
+        {
+            HyperVHost[] hostsArray;
+            string sqlQuery;
+
+            //which sql query to use?
+            if (readAuthData)
+            {
+                sqlQuery = "SELECT id, description, host, user, password FROM hosts WHERE deleted=FALSE;";
+            }
+            else
+            {
+                sqlQuery = "SELECT id, description, user, host FROM hosts WHERE deleted=FALSE;";
+            }
+
+            using (DBConnection dbConn = new DBConnection())
+            {
+                Dictionary<string, object> parameters = new Dictionary<string, object>();
+                List<Dictionary<string, object>> result = dbConn.doReadQuery(sqlQuery, null, null);
+
+                //result valid?
+                if (result == null || result.Count == 0)
+                {
+                    return null;
+                }
+                else
+                {
+                    hostsArray = new HyperVHost[result.Count];
+                    int counter = 0;
+
+                    //iterate through every result set
+                    foreach (Dictionary<string, object> oneHostSet in result)
+                    {
+                        hostsArray[counter] = new HyperVHost();
+                        hostsArray[counter].id =  oneHostSet["id"].ToString();
+                        hostsArray[counter].description = (string)oneHostSet["description"];
+                        hostsArray[counter].host = (string)oneHostSet["host"];
+                        hostsArray[counter].user = (string)oneHostSet["user"];
+
+                        if (readAuthData)
+                        {
+                            hostsArray[counter].password = PasswordCrypto.decryptPassword((string)oneHostSet["password"]);
+                        }
+
+                        counter++;
+                    }
+
+                    return hostsArray;
+
+                }
+            }
+        }
+
         //reads all global settings from db
         public static Dictionary<string, string> readGlobalSettings(bool readPasswords, bool readOTPKey)
         {
@@ -103,6 +281,12 @@ namespace Common
                         if ((string)oneSetting["name"] == "mailpassword" && !readPasswords)
                         {
                             continue;
+                        }
+
+                        //if password has to be read, decrypt it
+                        if ((string)oneSetting["name"] == "mailpassword" && readPasswords)
+                        {
+                            oneSetting["value"] = PasswordCrypto.decryptPassword((string)oneSetting["value"]);
                         }
 
                         //filter otpkey to not sending it to frontend
@@ -441,7 +625,7 @@ namespace Common
         //removes dynamic data from db
         public static void wipeDB()
         {
-            using (DBConnection dbConn = new DBConnection())
+            using (DBConnection dbConn = new DBConnection(true))
             {
                 SQLiteTransaction transaction = dbConn.beginTransaction();
                 dbConn.doWriteQuery("DELETE FROM log;", null, transaction);
@@ -454,8 +638,11 @@ namespace Common
                 dbConn.doWriteQuery("DELETE FROM jobexecutions;", null, transaction);
                 dbConn.doWriteQuery("DELETE FROM rates;", null, transaction);
                 dbConn.doWriteQuery("DELETE FROM jobs;", null, transaction);
+                dbConn.doWriteQuery("DELETE FROM hosts WHERE id > 1;", null, transaction);
+                dbConn.doWriteQuery("UPDATE hosts set host='localhost' WHERE id = 1;", null, transaction);
                 wipeSettings(dbConn, transaction);
                 transaction.Commit();
+                dbConn.doWriteQuery("VACUUM;", null, null);
             }
         }
 
@@ -470,12 +657,24 @@ namespace Common
             dbConn.doWriteQuery("UPDATE settings SET value = \"\" WHERE name=\"mailrecipient\"", null, transaction);
             dbConn.doWriteQuery("UPDATE settings SET value = \"en\" WHERE name=\"language\"", null, transaction);
         }
+
+        
+
     }
 
     public struct LBTimestamps
     {
         public string start;
         public string end;
+    }
+
+    public struct HyperVHost
+    {
+        public string id;
+        public string host;
+        public string description;
+        public string user;
+        public string password;
     }
 
 }

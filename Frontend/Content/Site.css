@@ -74,6 +74,10 @@
     text-align:center;
 }
 
+#newHostHeader {
+    text-align: center;
+}
+
 #restoreHeader {
     text-align: center;
 }
@@ -85,6 +89,10 @@
 }
 
 .newJobElement{
+    margin-top: 5%;
+}
+
+.newHostElement {
     margin-top: 5%;
 }
 
@@ -115,6 +123,11 @@
 }
 
 #startRestoreButton {
+    margin-top: 5%;
+    margin-bottom: 5%;
+}
+
+#saveAddHostButton {
     margin-top: 5%;
     margin-bottom: 5%;
 }
@@ -165,6 +178,11 @@
 #restoreContainer{
     overflow-x:hidden;
     overflow-y:scroll;
+}
+
+#newHostContainer {
+    overflow-x: hidden;
+    overflow-y: scroll;
 }
 
 .centeredElement{
@@ -299,13 +317,46 @@
 #testmailLink {
     text-align: center;
 }
-#testMailResult{
+#addHyperVHost{
+    text-align:center;
+}
+#testMailResult {
     color: red;
 }
 
 #otpText{
     display:none;
 }
+
+.hostsListItem{
+    text-align:left;
+}
+.hostsListItem:hover {
+    background-color: lightgray;
+}
+#hyperHostsList{
+    margin-bottom: 5%;
+}
+#hostEditID{
+    display:none;
+}
+#vmLoadingSpinner{
+    margin-top:10%;
+}
+#spinnerAnimation {
+    width: 3rem;
+    height: 3rem;
+}
+#hostHint{
+    color:lightcoral;
+    display:none;
+}
+
+#saveHostLoadingSpinner {
+    margin-top: 5%;
+    margin-bottom: 5%;
+}
+
 
 @keyframes color {
     0% {

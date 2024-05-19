@@ -65,6 +65,7 @@
     <Reference Include="System.DirectoryServices.AccountManagement" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.IO.Compression" />
+    <Reference Include="System.Management" />
     <Reference Include="System.Web.Entity" />
     <Reference Include="System.Web.ApplicationServices" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
@@ -174,6 +175,7 @@
     <Compile Include="Controllers\ChecknxmStorageCredentialsController.cs" />
     <Compile Include="Controllers\CheckSMBCredentialsController.cs" />
     <Compile Include="Controllers\DBConnectTestController.cs" />
+    <Compile Include="Controllers\HyperVHostsController.cs" />
     <Compile Include="Controllers\JobEnableController.cs" />
     <Compile Include="Controllers\FileIconController.cs" />
     <Compile Include="Controllers\FLRBrowserController.cs" />
@@ -196,6 +198,7 @@
     <Compile Include="Controllers\JobDeleteController.cs" />
     <Compile Include="Controllers\LogoutController.cs" />
     <Compile Include="Controllers\TestMailController.cs" />
+    <Compile Include="Controllers\TranslateIPController.cs" />
     <Compile Include="Controllers\UpdateController.cs" />
     <Compile Include="Controllers\vmsController.cs" />
     <Compile Include="Controllers\wipeDBController.cs" />
@@ -280,7 +283,7 @@
     <Content Include="Scripts\restoreHeartbeatWebWorker.js" />
     <Content Include="Scripts\sweetalert2.js" />
     <Content Include="SQLite.Interop.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="Templates\eventsListItem.html" />
     <Content Include="Templates\flrBrowser.html" />
@@ -305,6 +308,7 @@
     <Content Include="Templates\restorePointsTable.html" />
     <Content Include="Templates\settingsForm.html" />
     <Content Include="Templates\smbCredentials.html" />
+    <Content Include="Templates\vmListItem.html" />
     <Content Include="Web.config" />
     <Content Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>

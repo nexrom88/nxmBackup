@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Data.SQLite;
+using System.Threading;
 
 namespace Common
 {
@@ -15,26 +16,31 @@ namespace Common
         //private string user = "nxm";
         //private string password = "31ACE875A263C33BD30465F8FD1008FF";
 
+        private static Mutex syncLock = new Mutex();
+
         public bool ConnectionEstablished { set; get; }
 
         private SQLiteConnection connection;
 
         private static string DBPathBase{ get; set;}
 
-        public DBConnection (string filename)
+        public DBConnection (string filename, bool ignoreDBLoadingError)
         {
 
-            loadDBFile(filename);
+            loadDBFile(filename, ignoreDBLoadingError);
         }
 
-        public DBConnection()
+        public DBConnection(bool ignoreDBLoadingError = false)
         {
-            loadDBFile("nxm.db");
+            loadDBFile("nxm.db", ignoreDBLoadingError);
         }
 
         //loads a given sqlite db file
-        private void loadDBFile(string filename)
+        private void loadDBFile(string filename, bool ignoreDBLoadingError)
         {
+            //synclock db usage
+            syncLock.WaitOne();
+
             //start SQLite Server connection
 
             //read base path from registry if necessary
@@ -58,7 +64,7 @@ namespace Common
                 return;
             }
 
-            string connectionString = "Data Source=" + dbPath;
+            string connectionString = "Data Source=" + dbPath + "; foreign keys=true";
             this.connection = new SQLiteConnection(connectionString);
 
 
@@ -68,14 +74,19 @@ namespace Common
                 //open DB connection
                 connection.Open();
 
-                //read db version but just if main database file
+               
                 if (filename == "nxm.db")
                 {
+                    //read db version but just if main database file
                     List<Dictionary<string, object>> dbResult = doReadQuery("SELECT value FROM settings WHERE name='dbversion'", null, null);
                     if (dbResult.Count != 1)
                     {
                         //wrong number of results
                         ConnectionEstablished = false;
+                        if (!ignoreDBLoadingError)
+                        {
+                            this.connection.Close();
+                        }
                         return;
                     }
                     else
@@ -84,9 +95,41 @@ namespace Common
                         {
                             //wrong db version
                             ConnectionEstablished = false;
+                            if (!ignoreDBLoadingError)
+                            {
+                                this.connection.Close();
+                            }
                             return;
                         }
                     }
+
+                    //check that "localhost" is hostid "1"
+                    dbResult = doReadQuery("SELECT host FROM hosts WHERE id='1'", null, null);
+                    if (dbResult.Count != 1)
+                    {
+                        //wrong number of results
+                        ConnectionEstablished = false;
+                        if (!ignoreDBLoadingError)
+                        {
+                            this.connection.Close();
+                        }
+                        return;
+                    }
+                    else
+                    {
+                        if ((string)dbResult[0]["host"] != "localhost")
+                        {
+                            //wrong db version
+                            ConnectionEstablished = false;
+                            if (!ignoreDBLoadingError)
+                            {
+                                this.connection.Close();
+                            }
+                            return;
+                        }
+                    }
+
+
                 }
                 else
                 {
@@ -128,9 +171,8 @@ namespace Common
         {
             try
             {
-
-
                 SQLiteCommand command;
+                query = query.ToLower();
 
                 if (transaction == null)
                 {
@@ -148,7 +190,7 @@ namespace Common
                 {
                     foreach (string key in parameters.Keys)
                     {
-                        command.Parameters.AddWithValue(key, parameters[key]);
+                        command.Parameters.AddWithValue(key.ToLower(), parameters[key]);
                     }
                 }
 
@@ -197,6 +239,7 @@ namespace Common
         public int doWriteQuery(string query, Dictionary<string, object> parameters, SQLiteTransaction transaction)
         {
             SQLiteCommand command;
+            query = query.ToLower();
 
             if (transaction == null)
             {
@@ -214,7 +257,7 @@ namespace Common
             {
                 foreach (string key in parameters.Keys)
                 {
-                    command.Parameters.AddWithValue(key, parameters[key]);
+                    command.Parameters.AddWithValue(key.ToLower(), parameters[key]);
                 }
             }
 
@@ -236,6 +279,9 @@ namespace Common
         //closes the db connection
         public void Dispose()
         {
+            //release mutex
+            syncLock.ReleaseMutex();
+
             if (this.connection != null) {
                 this.connection.Close();
                 this.connection.Dispose();

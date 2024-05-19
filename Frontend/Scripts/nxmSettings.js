@@ -1,6 +1,8 @@
 ﻿//shows the settings form
 var globalSettings = {};
+var configuredHosts = {};
 var currentSettingsLanguage;
+var ignoreIP = false;
 function showSettings() {
 
     //get settings from BD
@@ -9,7 +11,17 @@ function showSettings() {
     })
         .done(function (data) {
             globalSettings = JSON.parse(data);
-            showSettingsPopUp();
+
+            //now read configured hyperv hosts
+            $.ajax({
+                url: "api/HyperVHosts"
+            })
+                .done(function (data) {
+                    configuredHosts = JSON.parse(data);
+                    showSettingsPopUp();
+                });
+
+            
         });
 }
 
@@ -79,27 +91,72 @@ function showSettingsPopUp() {
     })
         .done(function (settingsForm) {
 
+            //set hyperv hosts list
+            settingsForm = Mustache.render(settingsForm, { hosts: configuredHosts });
+
             //set language strings
             settingsForm = replaceLanguageMarkups(settingsForm);
 
+
             $("#settingsPopUp").html(settingsForm);
 
-            //show settings
-            $("#inputMountPath").val(globalSettings["mountpath"]);
-            $("#inputMailServer").val(globalSettings["mailserver"]);
-            $("#inputMailSSL").prop("checked", globalSettings["mailssl"] == "true" ? true : false);
-            $("#inputMailUser").val(globalSettings["mailuser"]);
-            $("#inputMailSender").val(globalSettings["mailsender"]);
-            $("#inputMailRecipient").val(globalSettings["mailrecipient"]);
-            $("#inputLanguage").val(globalSettings["language"]);
-            currentSettingsLanguage = globalSettings["language"];
+            //disable edit/delete button for localhost
+            $(".hostsListItem").find("[data-hostid='1']").attr("disabled", true);
 
-            //set toggle otp link
-            if (!globalSettings["otpkey"]) {
-                $("#toggleOTPLink a").text(languageStrings["activate_otp"]);
-            } else {
-                $("#toggleOTPLink a").text(languageStrings["disable_otp"]);
+            //show settings
+            if (globalSettings) {
+                $("#inputMountPath").val(globalSettings["mountpath"]);
+                $("#inputMailServer").val(globalSettings["mailserver"]);
+                $("#inputMailSSL").prop("checked", globalSettings["mailssl"] == "true" ? true : false);
+                $("#inputMailUser").val(globalSettings["mailuser"]);
+                $("#inputMailSender").val(globalSettings["mailsender"]);
+                $("#inputMailRecipient").val(globalSettings["mailrecipient"]);
+                $("#inputLanguage").val(globalSettings["language"]);
+                currentSettingsLanguage = globalSettings["language"];
+
+                //set toggle otp link
+                if (!globalSettings["otpkey"]) {
+                    $("#toggleOTPLink a").text(languageStrings["activate_otp"]);
+                } else {
+                    $("#toggleOTPLink a").text(languageStrings["disable_otp"]);
+                }
             }
+
+            //handle host delete button click
+            $(".deleteHostButton").click(function () {
+                var hostID = $(this).data("hostid");
+                $.ajax({
+                    url: 'api/HyperVHosts',
+                    type: 'DELETE',
+                    contentType: "application/json; charset=utf-8",
+                    data: String(hostID),
+                    error: function (request, error) {
+                        Swal.fire(
+                            languageStrings["error"],
+                            languageStrings["host_remove_error"],
+                            'error'
+                        );
+                    },
+                    success: function () {
+                        $(".hostsListItem[data-hostid='" + hostID + "']").remove();
+
+                        //look for host in list and remove it
+                        for (var i = 0; i < configuredHosts.length; i++) {
+                            if (configuredHosts[i]["id"] == hostID) {
+                                configuredHosts.splice(i, 1);
+                                break;
+                            }
+                        }
+                    }
+                });
+            });
+
+            //handle host edit button click
+            //handle host delete button click
+            $(".editHostButton").click(function () {
+                var hostID = $(this).data("hostid");
+                showAddHyperVHostForm(hostID);
+            });
 
             //handle otp toggle link click
             $("#toggleOTPLink a").click(function () {
@@ -163,6 +220,11 @@ function showSettingsPopUp() {
                 });
             });
 
+            //handle click on add hyperv host
+            $("#addHyperVHost").click(function () {
+                showAddHyperVHostForm(-1);           
+            });
+
             //handle testmail link click
             $("#testmailLink").click(function () {
                 //read given values
@@ -201,6 +263,205 @@ function showSettingsPopUp() {
             });
 
         });
+}
+
+
+//shows the add/edit hyperv host form
+function showAddHyperVHostForm(editID) {
+    ignoreIP = false;
+    Swal.close();
+    $("#newHostOverlay").css("display", "block");
+
+    //set loading spinner to unvisible
+    $("#saveHostLoadingSpinner").hide();
+
+    //delay setting focus, because swal.close would take focus back 
+    setTimeout(() => $("#inputDescription").focus(), 500)
+
+    //register close button handler
+    $(".overlayClose").click(function () {
+        $("#newHostOverlay").css("display", "none");
+        $("#inputDescription").val("");
+        $("#inputHost").val("");
+        $("#inputUser").val("");
+        $("#inputPass").val("");
+    });
+
+    $("#saveAddHostButton").click(function () {
+        //set input color to default first
+        $("#inputDescription").css("background-color", "initial");
+        $("#inputHost").css("background-color", "initial");
+        $("#inputUser").css("background-color", "initial");
+        $("#inputPass").css("background-color", "initial");
+
+        //disable button
+        $('#saveAddHostButton').css("display", "none")
+
+        //set loading spinner to visible
+        $("#saveHostLoadingSpinner").show();
+
+
+        //first check that every input is filled
+        if ($("#inputDescription").val() == "") {
+            $("#inputDescription").css("background-color", "rgb(255,77,77)");
+            return;
+        }
+        if ($("#inputHost").val() == "") {
+            $("#inputHost").css("background-color", "rgb(255,77,77)");
+            return;
+        }
+        if ($("#inputUser").val() == "") {
+            $("#inputUser").css("background-color", "rgb(255,77,77)");
+            return;
+        }
+        if ($("#inputPass").val() == "" && editID == -1) {
+            $("#inputPass").css("background-color", "rgb(255,77,77)");
+            return;
+        }
+
+        //listen on input change
+        $("#inputPass, #inputUser, #inputHost").on("input", hypervInputChanged);
+
+        //get data from user input
+        var newHost = {};
+        newHost["editID"] = editID;
+        newHost["description"] = $("#inputDescription").val();
+        newHost["host"] = $("#inputHost").val();
+        newHost["user"] = $("#inputUser").val();
+        newHost["password"] = $("#inputPass").val();
+
+        //send new host to server
+        sendHostToServer(newHost);
+
+    });
+
+    
+
+    //set edit id
+    $("#hostEditID").html(editID);
+
+    //show host details when editing a given host
+    if (editID != -1) {
+        //look for host
+        for (var i = 0; i < configuredHosts.length; i++) {
+            if (configuredHosts[i]["id"] == editID) {
+                //host found
+                $("#inputDescription").val(configuredHosts[i]["description"]);
+                $("#inputHost").val(configuredHosts[i]["host"]);
+                $("#inputUser").val(configuredHosts[i]["user"]);
+
+                //add hint
+                $("#inputPass").attr("placeholder", languageStrings["change_pw_ph"]);
+
+                break;
+            }
+        }
+    }
+}
+
+//on new hyperv host input change
+function hypervInputChanged() {
+    ignoreIP = false;
+}
+
+//send a given host to the server and tries to translate ip address
+function sendHostToServer(newHost) {
+    //when ip has to be ignored -> continue
+    if (ignoreIP == true) {
+        saveHost(newHost);
+        ignoreIP = false;
+        return;
+    }
+
+    $.ajax({
+        url: "api/TranslateIP",
+        contentType: "application/json; charset=utf-8",
+        data: JSON.stringify(newHost),
+        type: 'POST',
+        success: function (result) {
+            //no ip address found -> go on without translation
+            saveHost(newHost);
+        },
+        error: function (result) {
+            if (result["status"] == 302) {
+                //translation successful
+                newHost["host"] = result["responseText"];
+                $("#inputHost").val(newHost["host"]);
+
+                //show message after ip translation
+                Swal.fire(
+                    languageStrings["hint"],
+                    languageStrings["ip_translated"],
+                    'info'
+                );
+
+                //show button
+                $('#saveAddHostButton').css('display', "inline-block")
+                //set loading spinner to unvisible
+                $("#saveHostLoadingSpinner").hide();
+
+            } else if (result["status"] == 404) {
+                //no translation possible
+                ignoreIP = true;
+                Swal.fire(
+                    languageStrings["hint"],
+                    languageStrings["ip_not_translated"],
+                    'info'
+                );
+                //show button
+                $('#saveAddHostButton').css('display', "inline-block")
+                //set loading spinner to unvisible
+                $("#saveHostLoadingSpinner").hide();
+            }
+        }
+    });
+}
+
+//saves to given host
+function saveHost(newHost) {
+    $.ajax({
+        url: "api/HyperVHosts",
+        contentType: "application/json; charset=utf-8",
+        data: JSON.stringify(newHost),
+        type: 'POST',
+        success: function (result) {
+            $("#newHostOverlay").css("display", "none");
+            //empty inputs
+            $("#inputDescription").val("");
+            $("#inputHost").val("");
+            $("#inputUser").val("");
+            $("#inputPass").val("");
+
+            Swal.fire(
+                languageStrings["successful_capital"],
+                languageStrings["host_added_success"],
+                'success'
+            );
+            //show button
+            $('#saveAddHostButton').css('display', "inline-block")
+            //set loading spinner to unvisible
+            $("#saveHostLoadingSpinner").hide();
+        },
+        error: function (result) {
+            $("#newHostOverlay").css("display", "none");
+
+            //empty inputs
+            $("#inputDescription").val("");
+            $("#inputHost").val("");
+            $("#inputUser").val("");
+            $("#inputPass").val("");
+
+            Swal.fire(
+                languageStrings["failed_capital"],
+                languageStrings["host_added_error"],
+                'error'
+            );
+            //show button
+            $('#saveAddHostButton').css('display', "inline-block")
+            //set loading spinner to unvisible
+            $("#saveHostLoadingSpinner").hide();
+        }
+    });
 }
 
 //registers the otp

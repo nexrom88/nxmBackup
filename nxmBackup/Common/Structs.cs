@@ -1,11 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Management;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace Common
 {
+    //defines wmi scope options
+    public struct WMIConnectionOptions
+    {
+        public string host;
+        public string user;
+        public string password;
+    }
+
     //defines properties for enryption
     public struct EncryptionProperties
     {
@@ -46,7 +55,27 @@ namespace Common
     {
         public string vmID;
         public string vmName;
+        public string hostID;
+        public string host;
         public List<VMHDD> vmHDDs;
+
+        private ConnectionOptions connectionOptions;
+
+        public ConnectionOptions getHostAuthData()
+        {
+            //read wmi connection options when not already done
+            if (connectionOptions == null)
+            {
+                WMIConnectionOptions options = DBQueries.getHostByID(int.Parse(this.hostID), true);
+
+                //build wmi native object
+                return WMIHelper.buildConnectionOptions(options);
+            }
+            else
+            {
+                return connectionOptions;
+            }
+        }
     }
 
     //defines one HDD

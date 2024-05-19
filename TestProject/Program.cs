@@ -10,6 +10,8 @@ using System.Runtime.InteropServices;
 using System.Net.Mail;
 using System.Diagnostics;
 using System.Security.Cryptography;
+using System.Management;
+using Common;
 
 namespace TestProject
 {
@@ -17,14 +19,15 @@ namespace TestProject
     {
         static void Main(string[] args)
         {
-            string key = Common.MFAHandler.GenerateNewKey();
-            
+            //ConnectionOptions options = new ConnectionOptions();
+            //options.EnablePrivileges = true;
+            //options.Username = "administrator";
+            //options.Password = "";
 
+            //ManagementScope wmiScope = new ManagementScope("\\\\localhost\\root\\virtualization\\v2", options);
+            //List<WMIHelper.OneVM> vms = WMIHelper.listVMs(wmiScope);
+            //vms = null;
 
-
-
-            Console.Read();
-            
 
             //var parameters = new Common.VirtualDiskHandler.OPEN_VIRTUAL_DISK_PARAMETERS();
             //parameters.Version = Common.VirtualDiskHandler.OPEN_VIRTUAL_DISK_VERSION.OPEN_VIRTUAL_DISK_VERSION_1;

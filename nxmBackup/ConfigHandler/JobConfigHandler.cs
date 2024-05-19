@@ -61,7 +61,7 @@ namespace ConfigHandler
                     newJob.TargetType = jobDB["targettype"].ToString();
                     newJob.TargetPath = jobDB["targetpath"].ToString();
                     newJob.TargetUsername = jobDB["targetuser"].ToString();
-                    newJob.TargetPassword = jobDB["targetpassword"].ToString();
+                    newJob.TargetPassword = Common.PasswordCrypto.decryptPassword(jobDB["targetpassword"].ToString());
 
                     newJob.UseEncryption = Convert.ToBoolean(jobDB["useencryption"]);
 
@@ -117,15 +117,18 @@ namespace ConfigHandler
                     //query VMs
                     Dictionary<string, object> paramaters = new Dictionary<string, object>();
                     paramaters.Add("jobid", Convert.ToInt32(jobDB["id"]));
-                    List<Dictionary<string, object>> vms = connection.doReadQuery("SELECT VMs.id, VMs.name FROM vms INNER JOIN jobvmrelation ON JobVMRelation.jobid=@jobid AND jobvmrelation.vmid=VMs.id", paramaters, null);
+                    List<Dictionary<string, object>> vms = connection.doReadQuery("SELECT VMs.id, VMs.name, VMs.hostid, hosts.host FROM vms INNER JOIN jobvmrelation ON JobVMRelation.jobid=@jobid AND jobvmrelation.vmid=VMs.id INNER JOIN hosts ON hosts.id=VMs.hostid;", paramaters, null);
                     newJob.JobVMs = new List<JobVM>();
 
                     //iterate through all vms
                     foreach (Dictionary<string, object> vm in vms)
                     {
+
                         JobVM newVM = new JobVM();
                         newVM.vmID = vm["id"].ToString();
                         newVM.vmName = vm["name"].ToString();
+                        newVM.hostID = vm["hostid"].ToString();
+                        newVM.host = vm["host"].ToString();
 
                         //read vm hdds
                         paramaters.Clear();
@@ -363,7 +366,7 @@ namespace ConfigHandler
             parameters.Add("targettype", type);
             parameters.Add("targetpath", path);
             parameters.Add("targetuser", username);
-            parameters.Add("targetpassword", password);            
+            parameters.Add("targetpassword", Common.PasswordCrypto.encrpytPassword(password));            
 
             connection.doReadQuery("INSERT INTO storagetarget (targetjobid, targettype, targetpath, targetuser, targetpassword) VALUES (@targetjobid, @targettype, @targetpath, @targetuser, @targetpassword);", parameters, transaction);
         }
@@ -448,7 +451,8 @@ namespace ConfigHandler
                     parameters = new Dictionary<string, object>();
                     parameters.Add("id", vm.vmID);
                     parameters.Add("name", vm.vmName);
-                    connection.doReadQuery("INSERT INTO vms(id, name) VALUES (@id, @name);", parameters, transaction);
+                    parameters.Add("hostid", vm.hostID);
+                    connection.doReadQuery("INSERT INTO vms(id, name, hostid) VALUES (@id, @name, @hostid);", parameters, transaction);
                 }
                 else
                 {
@@ -518,6 +522,7 @@ namespace ConfigHandler
         private string targetPath;
         private string targetUsername;
         private string targetPassword;
+        private string hostID;
 
         public string Name { get => name; set => name = value; }
         public bool Enabled { get => enabled; set => enabled = value; }
@@ -540,6 +545,7 @@ namespace ConfigHandler
         public string TargetPath { get => targetPath; set => targetPath = value; }
         public string TargetUsername { get => targetUsername; set => targetUsername = value; }
         public string TargetPassword { get => targetPassword; set => targetPassword = value; }
+        public string HostID { get => hostID; set => hostID = value; }
 
         public string IntervalBaseForGUI
         {

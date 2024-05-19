@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Common;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -17,6 +18,21 @@ namespace Frontend.Controllers
         {
             HttpResponseMessage response = new HttpResponseMessage();
 
+            //when lb is activated, vms may just be local
+            if (value.livebackup)
+            {
+                foreach (NewFrontendVM vm in value.vms)
+                {
+                    if(vm.hostID != "1")
+                    {
+                        //return error
+                        Common.DBQueries.addLog("lb activated on remote vm", Environment.StackTrace, null);
+
+                        response.StatusCode = HttpStatusCode.BadRequest;
+                        return response;
+                    }
+                }
+            }
 
 
             ConfigHandler.OneJob newJob = new ConfigHandler.OneJob();
@@ -33,6 +49,7 @@ namespace Frontend.Controllers
             newJob.UseEncryption = value.useencryption;
             newJob.UsingDedupe = value.usingdedupe;
             newJob.MailNotifications = value.mailnotifications;
+            newJob.HostID = value.hostID;
 
             if (newJob.UseEncryption) {
                 newJob.AesKey = Common.SHA256Provider.computeHash(System.Text.Encoding.UTF8.GetBytes(value.encpassword));
@@ -78,8 +95,12 @@ namespace Frontend.Controllers
             newJob.Rotation = rotation;
             newJob.BlockSize = int.Parse(value.blocksize);
 
+            //load host credentials and build wmi settings
+            WMIConnectionOptions wmiOptions = DBQueries.getHostByID(int.Parse(newJob.HostID), true);
+            
+
             //load vms to get vm hdds
-            List<Common.WMIHelper.OneVM> currentVMs = Common.WMIHelper.listVMs();
+            List<Common.WMIHelper.OneVM> currentVMs = Common.WMIHelper.listVMs(wmiOptions); //------------- change ---------------
 
             List<Common.JobVM> vms = new List<Common.JobVM>();
             foreach (NewFrontendVM frontendVM in value.vms)
@@ -87,6 +108,7 @@ namespace Frontend.Controllers
                 Common.JobVM vm = new Common.JobVM();
                 vm.vmID = frontendVM.id;
                 vm.vmName = frontendVM.name;
+                vm.hostID = frontendVM.hostID;
 
                 //search for vm
                 foreach(Common.WMIHelper.OneVM oneVM in currentVMs)
@@ -188,12 +210,14 @@ namespace Frontend.Controllers
             public string blocksize { get; set; }
             public string rotationtype { get; set; }
             public NewFrontendVM[] vms { get; set; }
+            public string hostID { get; set; }
         }
 
         public class NewFrontendVM
         {
             public string name { get; set; }
             public string id { get; set; }
+            public string hostID { get; set; }
         }
     }
 }

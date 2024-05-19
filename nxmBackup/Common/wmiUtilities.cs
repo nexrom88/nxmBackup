@@ -14,6 +14,7 @@ namespace Common
     using System.IO;
     using System.Xml;
     using System.Collections.Generic;
+    using System.Xml.Linq;
 
     enum JobState
     {
@@ -84,9 +85,9 @@ namespace Common
                 // and wait for it to complete. Then we can check its result.
                 //
 
-                using (ManagementObject job = new ManagementObject((string)outputParameters["Job"]))
+                using (ManagementObject job = new ManagementObject(scope, new ManagementPath ((string)outputParameters["Job"]), null))
                 {
-                    job.Scope = scope;
+                    //job.Scope = scope;
 
                     while (!IsJobComplete(job["JobState"]))
                     {
@@ -235,6 +236,39 @@ namespace Common
             return GetVmObject(name, "Msvm_ComputerSystem", scope);
         }
 
+
+        /// <summary>
+        /// Gets the Msvm_VirtualEthernetSwitch instances
+        /// </summary>
+        /// <param name="scope">The ManagementScope to use to connect to WMI.</param>
+        /// <returns>The Msvm_VirtualEthernetSwitch instances.</returns>
+        public static ManagementObject[]
+        GetVirtualSwitches(ManagementScope scope)
+        {
+            string vsQueryWql = string.Format(CultureInfo.InvariantCulture,
+               "SELECT * FROM {0}", "Msvm_VirtualEthernetSwitch");
+
+            SelectQuery vsQuery = new SelectQuery(vsQueryWql);
+
+            using (ManagementObjectSearcher vsSearcher = new ManagementObjectSearcher(scope, vsQuery))
+            using (ManagementObjectCollection vsCollection = vsSearcher.Get())
+            {
+                //build output
+                ManagementObject[] vSwitches = new ManagementObject[vsCollection.Count];
+
+                int counter = 0;
+                ManagementObjectCollection.ManagementObjectEnumerator enumerator =  vsCollection.GetEnumerator();
+
+                while (enumerator.MoveNext())
+                {
+                    vSwitches[counter] = (ManagementObject)enumerator.Current;
+                    counter++;
+                }
+
+                return vSwitches;
+            }
+        }
+
         //own method
         /// <summary>
         /// Gets the Msvm_VirtualSystemManagementService instance
@@ -317,7 +351,7 @@ namespace Common
         /// <param name="className">The class of virtual machine to search for.</param>
         /// <param name="scope">The ManagementScope to use to connect to WMI.</param>
         /// <returns>The instance representing the virtual machine.</returns>
-        private static ManagementObject
+        public static ManagementObject
         GetVmObject(
             string name,
             string className,

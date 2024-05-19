@@ -264,42 +264,45 @@ function showNewJobPage(pageNumber, selectedEditJob) {
 
                     break;
                 case 2:
-                    //load vms
+                    //load hyperv hosts
                     $.ajax({
-                        url: "api/vms"
+                        url: "api/HyperVHosts"
                     })
-                        .done(function (vmdata) {
-                            var parsedJSON = jQuery.parseJSON(vmdata)
-                            var renderedData = Mustache.render(data, { vms: parsedJSON });
+                        .done(function (hostsData) {
+                            configuredHosts = JSON.parse(hostsData);
+                            var renderedData = Mustache.render(data, { hosts: configuredHosts });
                             $("#newJobPage").html(renderedData);
-                            registerNextPageClickHandler(pageNumber, selectedEditJob);
 
-                            //vm click handler
-                            $(".availablevm").click(function (event) {
-                                $(this).toggleClass("active");
+                            //disable host select when lb is enabled
+                            if (newJobObj["livebackup"]) {
+                                $('.availableHost[data-hostid="1"]').attr('selected', 'selected');
+                                $("#sbHyperVHost").attr('disabled', 'disabled');
+                                $("#hostHint").css("display", "block");
+                            }
 
-                                //enable next-button
-                                if ($(".availablevm.active").length > 0) {
-                                    $("#newJobNextButton").removeAttr("disabled");
-                                } else {
-                                    $("#newJobNextButton").attr("disabled", "disabled");
-                                }
+                            //get first selected host id
+                            var selectedHostID = $("#sbHyperVHost").find(":selected").data("hostid");
 
+                            //load vms for selected host
+                            loadVMs(selectedHostID, selectedEditJob, false);
+
+                            //on host change event handler
+                            $("#sbHyperVHost").on("change", function (event) {
+                                var selectedHostID = $(this).find(":selected").data("hostid");
+
+                                //set loading spinner to visible
+                                $("#vmLoadingSpinner").show();
+
+                                //clear current list
+                                $("#newJobvmList").html("");
+
+                                //load vms for selected host
+                                loadVMs(selectedHostID, selectedEditJob, true);
                             });
 
-                            //set next-button to disabled
-                            $("#newJobNextButton").attr("disabled", "disabled");
-
-                            //show current settings when editing a job
-                            if (selectedEditJob) {
-                                showCurrentSettings(pageNumber, selectedEditJob);
-
-                                //activate next button when vm is selected
-                                if ($(".availablevm.active")) {
-                                    $("#newJobNextButton").attr("disabled", false);
-                                }
-                            }
+                            registerNextPageClickHandler(pageNumber, selectedEditJob);
                         });
+
 
                     break;
                 case 3:
@@ -423,6 +426,73 @@ function showNewJobPage(pageNumber, selectedEditJob) {
         });
 
 }
+
+//load vms for a given host id when creating a new job
+function loadVMs(hostID, selectedEditJob, showErrorBox) {
+    $.ajax({
+        url: "api/vms?hostid=" + hostID
+    })
+        .done(function (vmdata) {
+            var parsedJSON = jQuery.parseJSON(vmdata);
+
+            //load host item template
+            $.ajax({
+                url: "Templates/vmListItem",
+                success: function (data) {
+                    data = Mustache.render(data, { vms: parsedJSON });
+
+                    //set loading spinner to unvisible
+                    $("#vmLoadingSpinner").hide();
+
+                    //set host list to gui
+                    $("#newJobvmList").html(data);
+
+                    //vm click handler                    
+                    $(".availablevm").click(function (event) {
+                        $(this).toggleClass("active");
+
+                        //enable next-button
+                        if ($(".availablevm.active").length > 0) {
+                            $("#newJobNextButton").removeAttr("disabled");
+                        } else {
+                            $("#newJobNextButton").attr("disabled", "disabled");
+                        }
+
+                    });
+
+                    //set next-button to disabled
+                    $("#newJobNextButton").attr("disabled", "disabled");
+
+                    //show current settings when editing a job
+                    if (selectedEditJob) {
+                        showCurrentSettings(pageNumber, selectedEditJob);
+
+                        //activate next button when vm is selected
+                        if ($(".availablevm.active")) {
+                            $("#newJobNextButton").attr("disabled", false);
+                        }
+                    }
+
+                }
+            });
+
+            
+        })
+        .fail(function () {
+            //hide loading anim
+            $("#vmLoadingSpinner").hide();
+
+            //show message on error while loading vms
+            if (showErrorBox) {
+                Swal.fire(
+                    languageStrings["error"],
+                    languageStrings["error_connecting_host"],
+                    'error'
+                );
+            }
+        });
+}
+
 
 //generic funktion for checking credentials
 function checkCredentials() {
@@ -716,10 +786,16 @@ function registerNextPageClickHandler(currentPage, selectedEditJob) {
 
                 break;
             case 2:
+
+                //get selected vms
                 var selectedVMs = $(".availablevm.active");
                 newJobObj["vms"] = [];
 
-                //multiple VMs just possible when lb is disabled
+                //get selected host
+                var selectedHostID = $("#sbHyperVHost").find(":selected").data("hostid");
+                newJobObj["hostid"] = selectedHostID;
+
+                //lb just possible on localhost and only when one vm got selected
                 if (selectedVMs.length > 1 && newJobObj["livebackup"]) {
                     Swal.fire(
                         languageStrings["error"],
@@ -734,6 +810,7 @@ function registerNextPageClickHandler(currentPage, selectedEditJob) {
                     var vm = {};
                     vm.id = $(selectedVMs[i]).data("vmid");
                     vm.name = $(selectedVMs[i]).data("vmname");
+                    vm.hostid = selectedHostID;
                     newJobObj["vms"].push(vm);
                 }
 
@@ -839,10 +916,11 @@ function checkForValidSMBPath(path) {
 
 //sends the new job data to server
 function saveNewJob() {
+    var jobJSON = JSON.stringify(newJobObj);
     $.ajax({
         url: 'api/JobCreate',
         contentType: "application/json; charset=utf-8",
-        data: JSON.stringify(newJobObj),
+        data: jobJSON,
         type: 'POST',
         cache: false,
         success: function (result) {
