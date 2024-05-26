@@ -308,6 +308,15 @@
     fill: #007bff;
 }
 
+.importBackupButtons {
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.importBackupButtons svg:hover {
+       fill: #007bff;
+}
+
 #resetLink{
     text-align:center;
 }
