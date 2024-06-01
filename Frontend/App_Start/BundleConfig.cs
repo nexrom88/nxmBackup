@@ -50,6 +50,9 @@ namespace Frontend
             bundles.Add(new ScriptBundle("~/bundles/nxmRestore").Include(
                  "~/Scripts/nxmRestore.js"));
 
+            bundles.Add(new ScriptBundle("~/bundles/nxmImport").Include(
+                 "~/Scripts/nxmImport.js"));
+
             bundles.Add(new ScriptBundle("~/bundles/nxmHelp").Include(
                  "~/Scripts/nxmHelp.js"));
 

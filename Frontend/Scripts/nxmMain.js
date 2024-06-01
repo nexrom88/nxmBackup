@@ -162,6 +162,15 @@ function init() {
 
     });
 
+    //register "import backup" Button handler
+    $("#importBackupButton").click(function () {
+
+        if (dbState == "success") {
+            startImportBackupProcess();
+        }
+
+    });
+
     //register tooltips
     registerTooltips();
 

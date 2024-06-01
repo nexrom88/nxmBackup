@@ -276,6 +276,7 @@
     <Content Include="Scripts\moment.js" />
     <Content Include="Scripts\moment.min.js" />
     <Content Include="Scripts\mustache.js" />
+    <Content Include="Scripts\nxmImport.js" />
     <Content Include="Scripts\nxmMain.js" />
     <Content Include="Scripts\modernizr-2.8.3.js" />
     <Content Include="Scripts\nxmRestore.js" />
@@ -306,6 +307,7 @@
     <Content Include="Templates\otpRegisterForm.html" />
     <Content Include="Templates\restoreOptions.html" />
     <Content Include="Templates\restorePointsTable.html" />
+    <Content Include="Templates\selectImportSource.html" />
     <Content Include="Templates\settingsForm.html" />
     <Content Include="Templates\smbCredentials.html" />
     <Content Include="Templates\vmListItem.html" />
