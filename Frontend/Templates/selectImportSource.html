@@ -1,13 +1,10 @@
 ﻿<div>
-    <h5 class="center_div subHeadline">Backup auswählen</h5>
-
     <div class="newJobElement center_div">
         <span class="centeredElementSpan">
-            <label class="enter_div" for="sbTargetType">$$target_type$$</label>
+            <label class="enter_div" for="sbTargetType">$$backup_location$$:</label>
             <select id="sbTargetType" class="form-control">
                 <option data-targettype="local" selected>$$local_drive$$</option>
                 <option data-targettype="smb">$$network_drive$$</option>
-                <option data-targettype="nxmstorage">nxmStorage</option>
             </select>
         </span>
     </div>
@@ -20,6 +17,5 @@
 
     <div class="text-center">
         <button id="checkCredentialsButton" type="button" class="btn btn-primary">$$check_credentials$$</button>
-        <button id="newJobNextButton" type="button" class="btn btn-primary">$$next$$</button>
     </div>
 </div>
