@@ -14,5 +14,25 @@ function startImportBackupProcess() {
             allowEscapeKey: true,
             confirmButtonText: languageStrings["close"],
         });
+
+        //build folder browser
+        buildFolderBrowser();
+
+        //register change on backup location type selection
+        $("#sbLocationType").on("change", function (event) {
+            var targetType = $(this).children("option:selected").data("locationtype");
+
+            switch (targetType) {
+                case "local":
+                    buildFolderBrowser();
+                    $("#checkCredentialsButton").css("display", "none");
+                    break;
+                case "smb":
+                    $('#folderBrowser').jstree("destroy");
+                    $("#checkCredentialsButton").css("display", "inline");
+                    buildSMBForm();
+                    break;
+            }
+        });
     });
 }

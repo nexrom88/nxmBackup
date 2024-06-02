@@ -21,6 +21,10 @@
     
 }
 
+.mtElement {
+    margin-top: 5%;
+}
+
 #jobControlls{
     margin-bottom: 24px;
     padding-left: 15px;
@@ -172,6 +176,10 @@
 }
 
 .folderBrowserOnRestore{
+    text-align:left;
+}
+
+#folderBrowser{
     text-align:left;
 }
 
