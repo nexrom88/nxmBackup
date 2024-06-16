@@ -178,7 +178,7 @@ namespace ConfigHandler
                             //read last transferrate
                             paramaters.Clear();
                             paramaters.Add("jobexecutionid", jobExecution["id"]);
-                            List<Dictionary<string, object>> rates = connection.doReadQuery("SELECT transferrate, processrate FROM rates WHERE jobexecutionid=@jobexecutionid ORDER BY id ASC", paramaters, null);
+                            List<Dictionary<string, object>> rates = connection.doReadQuery("SELECT transferrate, processrate, timestamp FROM rates WHERE jobexecutionid=@jobexecutionid ORDER BY id ASC", paramaters, null);
                             if (rates != null)
                             {
                                 newJob.Rates = new OneJob.Rate[rates.Count];
@@ -187,6 +187,7 @@ namespace ConfigHandler
                                 {
                                     newJob.Rates[counter].transfer = UInt32.Parse(rate["transferrate"].ToString());
                                     newJob.Rates[counter].process = UInt32.Parse(rate["processrate"].ToString());
+                                    newJob.Rates[counter].timestamp = rate["timestamp"].ToString();
                                     counter++;
                                 }
                             }
@@ -608,6 +609,7 @@ namespace ConfigHandler
         {
             public UInt64 process;
             public UInt64 transfer;
+            public string timestamp;
         }
     }
 

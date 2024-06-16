@@ -14,6 +14,8 @@ var lastJobStateData; //last data for job state to decide whether to refresh job
 var ratesChart; //var to hold the chart for displaying transferrates
 var transferrates = []; //var to hold the current transfer rates
 var processrates = []; //var to hold the current process rates
+var ratesStamps = []; //timestamp array for holding timestamps for transfer-/process rates
+var ratesMode = "rall"; //defines whether rates charts shows all rates or just last 5 minutes
 var versionControl = {} //object to hold version and update information
 var languageStrings = {}; //object to hold all language strings
 var currentLanguage; //string object to hold current selected language
@@ -992,6 +994,7 @@ function buildJobsList() {
                     if (configuredJobs[i].DbId == JobDbId) {
                         lastJobStateData = "";
                         selectedJobObj = configuredJobs[i];
+                        ratesMode = "all";
                         buildJobDetailsPanel();
                     }
                 }
@@ -1303,6 +1306,19 @@ function buildTransferrateChart() {
         labels.push("");
     }
 
+    //just view the last 5 mins? Cut arrays
+    var startIndex = 0;
+    if (ratesMode != "all") {
+        var lastMoment = ratesStamps[ratesStamps.length - 1];
+        for (var i = 0; i < ratesStamps.length; i++) {
+            var difference = (moment.duration(lastMoment.diff(ratesStamps[i]))).asSeconds();
+            if (difference <= 300) {
+                startIndex = i;
+                break;
+            }
+        }
+    }
+
     const data = {
         labels: labels,
         datasets: [{
@@ -1310,13 +1326,13 @@ function buildTransferrateChart() {
             fill: true,
             backgroundColor: 'rgb(0, 123, 255)',
             borderColor: 'rgb(0, 123, 255)',
-            data: transferrates,
+            data: transferrates.slice(startIndex),
         }, {
                 label: languageStrings["processingrate"],
             fill: true,
             backgroundColor: 'rgb(255, 26, 26)',
             borderColor: 'rgb(255, 26, 26)',
-            data: processrates,
+            data: processrates.slice(startIndex),
             }]
     };
 
@@ -1336,8 +1352,8 @@ function buildTransferrateChart() {
         ratesChart = new Chart(document.getElementById('chartCanvas'), config);
     } else { //update chart
         ratesChart.data.labels = labels;
-        ratesChart.data.datasets[0].data = transferrates;
-        ratesChart.data.datasets[1].data = processrates;
+        ratesChart.data.datasets[0].data = transferrates.slice(startIndex);
+        ratesChart.data.datasets[1].data = processrates.slice(startIndex);
         ratesChart.update();
 
     }
@@ -1414,6 +1430,8 @@ function renderJobStateTable() {
 
             processrates = [];
             transferrates = [];
+            ratesStamps = [];
+            
             if (data["Rates"] && data["Rates"].length > 0) {
                 var currentTransferrateString = prettyPrintBytes(data["Rates"][data["Rates"].length - 1]["transfer"]) + "/s";
                 var tempRates = data["Rates"];
@@ -1423,6 +1441,7 @@ function renderJobStateTable() {
                     if (tempRates[i]["process"] > 0 || tempRates[i]["transfer"] > 0) {
                         transferrates.push(tempRates[i]["transfer"] / 1000000);
                         processrates.push(tempRates[i]["process"] / 1000000);
+                        ratesStamps.push(moment(tempRates[i]["timestamp"], "YYYY-MM-DD HH:mm:ss"));
                     }
                 }
             }

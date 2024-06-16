@@ -445,8 +445,8 @@ namespace Common
         {
             using (DBConnection dbConn = new DBConnection())
             {
-                dbConn.doWriteQuery("INSERT INTO rates (jobexecutionid, transferrate, processrate) VALUES (@jobexecutionid, @transferrate, @processrate);",
-                        new Dictionary<string, object>() { { "jobexecutionid", jobExecutionid }, { "transferrate", transferrate }, { "processrate", processrate } }, null);
+                dbConn.doWriteQuery("INSERT INTO rates (jobexecutionid, timestamp, transferrate, processrate) VALUES (@jobexecutionid, datetime('now','localtime'), @transferrate, @processrate);",
+                        new Dictionary<string, object>() { { "jobexecutionid", jobExecutionid },  { "transferrate", transferrate }, { "processrate", processrate } }, null);
             }
         }
 
