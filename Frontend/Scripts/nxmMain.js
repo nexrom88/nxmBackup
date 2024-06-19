@@ -15,7 +15,7 @@ var ratesChart; //var to hold the chart for displaying transferrates
 var transferrates = []; //var to hold the current transfer rates
 var processrates = []; //var to hold the current process rates
 var ratesStamps = []; //timestamp array for holding timestamps for transfer-/process rates
-var ratesMode = "rall"; //defines whether rates charts shows all rates or just last 5 minutes
+var ratesMode = "all"; //defines whether rates charts shows all rates or just last 5 minutes
 var versionControl = {} //object to hold version and update information
 var languageStrings = {}; //object to hold all language strings
 var currentLanguage; //string object to hold current selected language
@@ -1064,11 +1064,26 @@ function buildJobDetailsPanel() {
             //edit enableJobButton caption
             $("#enableJobButtonCaption").html(selectedJobObj["Enabled"] ? languageStrings["disable_job_button"] : languageStrings["enable_job_button"]);
 
+            //set graph click handler
+            $("#chartCanvas").click(graphClickHandler);
+
             //select first vm
             $(".vm").first().click();
 
         });
 
+}
+
+//gets called when user clicks graph (toggle graph range)
+function graphClickHandler() {
+    if (ratesMode == "all") {
+        ratesMode = "5min";
+    } else {
+        ratesMode = "all";
+    }
+
+    //redraw chart
+    buildTransferrateChart();
 }
 
 //stops running lb
@@ -1300,11 +1315,8 @@ function showCurrentEvents() {
 
 //builds the transferrates chart
 function buildTransferrateChart() {
-    var labels = [];
-    //build labels
-    for (var i = 0; i < transferrates.length; i++) {
-        labels.push("");
-    }
+    //var a = Chart.defaults;
+
 
     //just view the last 5 mins? Cut arrays
     var startIndex = 0;
@@ -1319,6 +1331,15 @@ function buildTransferrateChart() {
         }
     }
 
+    var transferratesSliced = transferrates.slice(startIndex);
+    var processratesSliced = processrates.slice(startIndex);
+
+    var labels = [];
+    //build labels
+    for (var i = 0; i < transferratesSliced.length; i++) {
+        labels.push("");
+    }
+
     const data = {
         labels: labels,
         datasets: [{
@@ -1326,13 +1347,13 @@ function buildTransferrateChart() {
             fill: true,
             backgroundColor: 'rgb(0, 123, 255)',
             borderColor: 'rgb(0, 123, 255)',
-            data: transferrates.slice(startIndex),
+            data: transferratesSliced,
         }, {
                 label: languageStrings["processingrate"],
             fill: true,
             backgroundColor: 'rgb(255, 26, 26)',
             borderColor: 'rgb(255, 26, 26)',
-            data: processrates.slice(startIndex),
+            data: processratesSliced,
             }]
     };
 
@@ -1352,11 +1373,26 @@ function buildTransferrateChart() {
         ratesChart = new Chart(document.getElementById('chartCanvas'), config);
     } else { //update chart
         ratesChart.data.labels = labels;
-        ratesChart.data.datasets[0].data = transferrates.slice(startIndex);
-        ratesChart.data.datasets[1].data = processrates.slice(startIndex);
+        ratesChart.data.datasets[0].data = transferratesSliced;
+        ratesChart.data.datasets[1].data = processratesSliced;
         ratesChart.update();
 
     }
+
+    //update sub headline
+    var stringToSet;
+    if (ratesMode == "all") {
+        stringToSet = languageStrings["graphAllTime"]
+    } else {
+        stringToSet = languageStrings["graph5Minutes"]
+    }
+
+    //remove sub headline when no data is present
+    if (transferratesSliced.length == 0) {
+        stringToSet = "";
+    }
+
+    $("#graphTimeRange").html(stringToSet);
 }
 
 
