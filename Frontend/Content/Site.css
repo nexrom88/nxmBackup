@@ -25,9 +25,13 @@
     margin-top: 5%;
 }
 
-#graphTimeRange{
-    text-align:right;
-    margin-top:-5%;
+#chartCanvas{
+    cursor:pointer;
+}
+
+#graphTimeRange {
+    text-align: right;
+    margin-top: -5%;
     color: #666;
 }
 
