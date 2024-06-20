@@ -382,7 +382,7 @@ namespace BlockCompression
                         this.structBuffer.Write(offsetBuffer, 0, 8);
 
                         //write payload data:
-                        return writeToStorage(this.mStream, this.fileStream, this.useEncryption);
+                        return writeToStorage(this.mStream, this.fileStream, this.useEncryption) != StorageWriteResult.Error;
 
                     }
 
@@ -394,7 +394,7 @@ namespace BlockCompression
                     this.structBuffer.Write(offsetBuffer, 0, 8);
 
                     //write payload data:
-                    return writeToStorage(this.mStream, this.fileStream, this.useEncryption);
+                    return writeToStorage(this.mStream, this.fileStream, this.useEncryption) != StorageWriteResult.Error;
                 }
 
             }
@@ -430,7 +430,7 @@ namespace BlockCompression
                         this.structBuffer.Write(offsetBuffer, 0, 8);
 
                         //write payload data
-                        return writeToStorage(this.mStream, this.fileStream, this.useEncryption);
+                        return writeToStorage(this.mStream, this.fileStream, this.useEncryption) != StorageWriteResult.Error;
                     }
 
                 }
@@ -441,14 +441,27 @@ namespace BlockCompression
                     this.structBuffer.Write(offsetBuffer, 0, 8);
 
                     //write payload data
-                   return  writeToStorage(this.mStream, this.fileStream, this.useEncryption);
+                   return  writeToStorage(this.mStream, this.fileStream, this.useEncryption) != StorageWriteResult.Error;
                 }
             }
         }
 
         //writes the given payload data to storage. Returns false on error
-        private bool writeToStorage(MemoryStream source, FileStream target, bool useEncryption)
+        private StorageWriteResult writeToStorage(MemoryStream source, FileStream target, bool useEncryption)
         {
+            //check for zero block
+            if (isZeroBlock(source))
+            {
+                byte[] zeroBuffer = new byte[8];
+                this.structBuffer.Seek(-16, SeekOrigin.Current); //jump back 16 bytes to find right position for cbs
+                this.structBuffer.Write(zeroBuffer, 0, 8);
+
+                //write payload data offset again to set it to zero
+                this.structBuffer.Write(zeroBuffer, 0, 8);
+
+                return StorageWriteResult.Zero;
+            }
+
             using (MemoryStream compMemStream = new MemoryStream())
             using (LZ4EncoderStream compressionStream = LZ4Stream.Encode(compMemStream, this.encoderSettings, true))
             {
@@ -506,12 +519,31 @@ namespace BlockCompression
                 }catch (Exception ex)
                 {
                     DBQueries.addLog("failed to write to storage", Environment.StackTrace, ex);
-                    return false;
+                    return StorageWriteResult.Error;
                 }
 
                 //write successful
-                return true;
+                return StorageWriteResult.Success;
             }
+        }
+
+        //checks whether a given MemoryStream just contains zero values
+        private bool isZeroBlock(MemoryStream source)
+        {
+            source.Position = 0;
+            byte[] buffer = new byte[source.Length];
+
+            source.Read(buffer, 0, buffer.Length);
+
+            //iterate through all elements
+            for (int i = 0; i < buffer.Length; i++)
+            {
+                if (buffer[i] != 0)
+                {
+                    return false;
+                }
+            }
+            return true;
         }
 
         //can block be found within dedupe table? currentFileOffset is for adding a new dedupe entry
@@ -934,6 +966,12 @@ namespace BlockCompression
         public UInt64 fileOffset;
         public UInt64 decompressedFileByteOffset;
         public UInt64 compressedBlockSize;
+    }
+
+    //storage write results
+    public enum StorageWriteResult
+    {
+        Success,Zero,Error
     }
 }
 
