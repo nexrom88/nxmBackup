@@ -724,6 +724,13 @@ namespace BlockCompression
                 //within cache?
                 if (cacheBlock == null) //cache miss
                 {
+                    //check if null-block?
+                    if (decompressedFileByteOffset == 0 && compressedBlockSize == 0)
+                    {
+                        //null block
+
+                    }
+
                     //fill memory stream with compressed block data
                     byte[] compData = new byte[compressedBlockSize];
                     this.fileStream.Seek((long)(this.structCache[(int)structCacheEntryOffset].fileOffset), SeekOrigin.Begin);
