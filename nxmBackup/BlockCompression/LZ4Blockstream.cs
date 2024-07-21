@@ -195,7 +195,8 @@ namespace BlockCompression
                         int readBytes = cryptoStream.Read(signature, 0, 16);
                         signatureString = System.Text.Encoding.ASCII.GetString(signature, 0, readBytes);
                         this.decompressedFileSizeOffset = this.fileStream.Position;
-                    }catch(Exception ex)
+                    }
+                    catch (Exception ex)
                     {
                         Common.DBQueries.addLog("error on reading signature string (wrong decrypt pw?)", Environment.StackTrace, ex);
                     }
@@ -354,7 +355,7 @@ namespace BlockCompression
                 //check dedupe dict if necessary
                 if (this.usingDedupe)
                 {
-                    Int64 dedupeStructOffset = getOffsetFromDeDupeDict(this.mStream, this.structBuffer.Position +8);
+                    Int64 dedupeStructOffset = getOffsetFromDeDupeDict(this.mStream, this.structBuffer.Position + 8);
                     if (dedupeStructOffset >= 0) //dedupe entry found
                     {
                         //read deduped struct block
@@ -403,7 +404,7 @@ namespace BlockCompression
                 //check dedupe dict if necessary
                 if (this.usingDedupe)
                 {
-                    Int64 dedupeStructOffset = getOffsetFromDeDupeDict(this.mStream, this.structBuffer.Position +8);
+                    Int64 dedupeStructOffset = getOffsetFromDeDupeDict(this.mStream, this.structBuffer.Position + 8);
                     if (dedupeStructOffset >= 0) //dedupe entry found
                     {
                         //read deduped struct block
@@ -441,7 +442,7 @@ namespace BlockCompression
                     this.structBuffer.Write(offsetBuffer, 0, 8);
 
                     //write payload data
-                   return  writeToStorage(this.mStream, this.fileStream, this.useEncryption) != StorageWriteResult.Error;
+                    return writeToStorage(this.mStream, this.fileStream, this.useEncryption) != StorageWriteResult.Error;
                 }
             }
         }
@@ -516,7 +517,8 @@ namespace BlockCompression
                         //write to storage without encryption
                         compMemStream.WriteTo(target);
                     }
-                }catch (Exception ex)
+                }
+                catch (Exception ex)
                 {
                     DBQueries.addLog("failed to write to storage", Environment.StackTrace, ex);
                     return StorageWriteResult.Error;
@@ -580,7 +582,7 @@ namespace BlockCompression
             if (this.mode == AccessMode.write)
             {
                 closeBlock();
-                
+
                 //write decompressed file size
                 this.fileStream.Seek(this.decompressedFileSizeOffset, SeekOrigin.Begin);
                 byte[] buffer = BitConverter.GetBytes(this.totalDecompressedByteCount);
@@ -715,6 +717,17 @@ namespace BlockCompression
                 compressedBlockSize = structCache[(int)structCacheEntryOffset].compressedBlockSize;
 
                 byte[] cacheBlock = null;
+
+                //check if null-block?
+                if (decompressedFileByteOffset == 0 && compressedBlockSize == 0)
+                {
+                    //null block
+                    destMemoryStream.Write(new byte[decompressedBlockSize], 0, (int)decompressedBlockSize);
+                    structCacheEntryOffset++;
+                    continue;
+                }
+
+
                 //check whether block exists within cache
                 if (this.CachingMode)
                 {
@@ -724,78 +737,70 @@ namespace BlockCompression
                 //within cache?
                 if (cacheBlock == null) //cache miss
                 {
-                    //check if null-block?
-                    if (decompressedFileByteOffset == 0 && compressedBlockSize == 0)
+
+                    //fill memory stream with compressed block data
+                    byte[] compData = new byte[compressedBlockSize];
+                    this.fileStream.Seek((long)(this.structCache[(int)structCacheEntryOffset].fileOffset), SeekOrigin.Begin);
+                    this.fileStream.Read(compData, 0, (int)compressedBlockSize);
+                    int readableBytesCount = (int)compressedBlockSize;
+
+                    //decryption necessary?
+                    if (this.useEncryption)
                     {
-                        //null block
-                        destMemoryStream.Write(new byte[decompressedBlockSize], 0, (int)decompressedBlockSize);
-                    }
-                    else
-                    { //not a null block, read, decompress and decrypt it
-
-                        //fill memory stream with compressed block data
-                        byte[] compData = new byte[compressedBlockSize];
-                        this.fileStream.Seek((long)(this.structCache[(int)structCacheEntryOffset].fileOffset), SeekOrigin.Begin);
-                        this.fileStream.Read(compData, 0, (int)compressedBlockSize);
-                        int readableBytesCount = (int)compressedBlockSize;
-
-                        //decryption necessary?
-                        if (this.useEncryption)
+                        using (MemoryStream memStream = new MemoryStream(compData, true))
+                        using (CryptoStream cryptoStream = new CryptoStream(memStream, this.decryptor, CryptoStreamMode.Read))
                         {
-                            using (MemoryStream memStream = new MemoryStream(compData, true))
-                            using (CryptoStream cryptoStream = new CryptoStream(memStream, this.decryptor, CryptoStreamMode.Read))
-                            {
-                                readableBytesCount = cryptoStream.Read(compData, 0, compData.Length);
-                            }
-
+                            readableBytesCount = cryptoStream.Read(compData, 0, compData.Length);
                         }
 
-                        this.mStream.Dispose();
-                        this.mStream = new MemoryStream(compData, 0, readableBytesCount);
+                    }
 
-                        //init decompression stream
-                        this.decompressionStream = LZ4Stream.Decode(this.mStream, 0, false);
+                    this.mStream.Dispose();
+                    this.mStream = new MemoryStream(compData, 0, readableBytesCount);
+
+                    //init decompression stream
+                    this.decompressionStream = LZ4Stream.Decode(this.mStream, 0, false);
 
 
-                        byte[] destBuffer = new byte[4096];
-                        int dataRead = -1;
+                    byte[] destBuffer = new byte[4096];
+                    int dataRead = -1;
 
-                        //read one block
-                        int blockUncompressedBytesRead = 0;
+                    //read one block
+                    int blockUncompressedBytesRead = 0;
 
-                        //init cache block if necessarry
+                    //init cache block if necessarry
+                    if (this.CachingMode)
+                    {
+                        cacheBlock = new byte[this.decompressedBlockSize];
+                    }
+
+                    while (dataRead != 0)
+                    {
+                        dataRead = this.decompressionStream.Read(destBuffer, 0, destBuffer.Length);
+                        destMemoryStream.Write(destBuffer, 0, (int)dataRead);
+                        totalUncompressedBytesRead += (ulong)dataRead;
+
+                        //add data to cache block
                         if (this.CachingMode)
                         {
-                            cacheBlock = new byte[this.decompressedBlockSize];
+                            destMemoryStream.Seek(dataRead * -1, SeekOrigin.Current);
+                            destMemoryStream.Read(cacheBlock, blockUncompressedBytesRead, dataRead);
                         }
 
-                        while (dataRead != 0)
-                        {
-                            dataRead = this.decompressionStream.Read(destBuffer, 0, destBuffer.Length);
-                            destMemoryStream.Write(destBuffer, 0, (int)dataRead);
-                            totalUncompressedBytesRead += (ulong)dataRead;
+                        blockUncompressedBytesRead += dataRead;
 
-                            //add data to cache block
-                            if (this.CachingMode)
-                            {
-                                destMemoryStream.Seek(dataRead * -1, SeekOrigin.Current);
-                                destMemoryStream.Read(cacheBlock, blockUncompressedBytesRead, dataRead);
-                            }
-
-                            blockUncompressedBytesRead += dataRead;
-
-                        }
-
-                        if (this.CachingMode)
-                        {
-                            addBlockToCache(decompressedFileByteOffset, compressedBlockSize, cacheBlock);
-                        }
-
-                        //jump to next block
-                        structCacheEntryOffset++;
-
-                        this.decompressionStream.Close();
                     }
+
+                    if (this.CachingMode)
+                    {
+                        addBlockToCache(decompressedFileByteOffset, compressedBlockSize, cacheBlock);
+                    }
+
+                    //jump to next block
+                    structCacheEntryOffset++;
+
+                    this.decompressionStream.Close();
+
                 }
                 else //cache match
                 {
@@ -973,7 +978,7 @@ namespace BlockCompression
     //storage write results
     public enum StorageWriteResult
     {
-        Success,Zero,Error
+        Success, Zero, Error
     }
 }
 
