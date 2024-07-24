@@ -643,7 +643,6 @@ function showCurrentSettings(pageNumber, selectedEditJob) {
             $("#cbIncremental").prop("checked", selectedEditJob["Incremental"]);
             $("#cbLiveBackup").prop("checked", selectedEditJob["LiveBackup"]);
             $("#spLiveBackupSize").val(selectedEditJob["LiveBackupSize"]);
-            $("#cbDedupe").prop("checked", selectedEditJob["UsingDedupe"]);
             $("#cbEncryption").prop("checked", selectedEditJob["UseEncryption"]);
             $("#cbEncryption").prop("disabled", true); //encrpytion setting not changeable
 
@@ -780,9 +779,6 @@ function registerNextPageClickHandler(currentPage, selectedEditJob) {
 
                 //mail notifications enabled?
                 newJobObj["mailnotifications"] = $("#cbMail").prop("checked");
-
-                //use dedupe?
-                newJobObj["usingdedupe"] = $("#cbDedupe").prop("checked");
 
                 //use live backup?
                 newJobObj["livebackup"] = $("#cbLiveBackup").prop("checked");

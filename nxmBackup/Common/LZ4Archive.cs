@@ -17,17 +17,15 @@ namespace Common
         private const int NO_RELATED_EVENT = -1;
         private bool useEncryption;
         private byte[] aesKey;
-        private bool usingDedupe;
         private StopRequestWrapper stopRequest;
 
 
-        public LZ4Archive(string path, Common.EventHandler eventHandler, bool useEncryption, byte[] aesKey, bool usingDedupe, StopRequestWrapper stopRequest)
+        public LZ4Archive(string path, Common.EventHandler eventHandler, bool useEncryption, byte[] aesKey, StopRequestWrapper stopRequest)
         {
             this.path = path;
             this.eventHandler = eventHandler;
             this.useEncryption = useEncryption;
             this.aesKey = aesKey;
-            this.usingDedupe = usingDedupe;
 
             if (stopRequest != null) {
                 this.stopRequest = stopRequest;
@@ -93,7 +91,7 @@ namespace Common
             System.IO.FileStream baseDestStream = new FileStream(System.IO.Path.Combine(this.path, path + "\\" + fileName) , FileMode.Create);
 
             //open LZ4 stream
-            BlockCompression.LZ4BlockStream compressionStream = new BlockCompression.LZ4BlockStream(baseDestStream, BlockCompression.AccessMode.write, this.useEncryption, this.aesKey, this.usingDedupe);
+            BlockCompression.LZ4BlockStream compressionStream = new BlockCompression.LZ4BlockStream(baseDestStream, BlockCompression.AccessMode.write, this.useEncryption, this.aesKey);
 
             if (!compressionStream.init())
             {
@@ -250,7 +248,7 @@ namespace Common
             System.IO.FileStream baseDestStream = new FileStream(System.IO.Path.Combine(this.path, path), FileMode.Create);
 
             //open LZ4 stream
-            BlockCompression.LZ4BlockStream compressionStream = new BlockCompression.LZ4BlockStream(baseDestStream, BlockCompression.AccessMode.write, this.useEncryption, this.aesKey, this.usingDedupe);
+            BlockCompression.LZ4BlockStream compressionStream = new BlockCompression.LZ4BlockStream(baseDestStream, BlockCompression.AccessMode.write, this.useEncryption, this.aesKey);
 
             if (!compressionStream.init())
             {
@@ -280,7 +278,7 @@ namespace Common
             System.IO.FileStream sourceStream = new FileStream(sourcePath, FileMode.Open);
 
             //open decoder stream
-            BlockCompression.LZ4BlockStream blockCompressionStream = new BlockCompression.LZ4BlockStream(sourceStream, BlockCompression.AccessMode.read, this.useEncryption, this.aesKey, this.usingDedupe);
+            BlockCompression.LZ4BlockStream blockCompressionStream = new BlockCompression.LZ4BlockStream(sourceStream, BlockCompression.AccessMode.read, this.useEncryption, this.aesKey);
             if (!blockCompressionStream.init())
             {                
                 return false;
@@ -387,7 +385,7 @@ namespace Common
             FileStream sourceStream = new FileStream(System.IO.Path.Combine(this.path, path), FileMode.Open);
 
             //open decoder stream
-            BlockCompression.LZ4BlockStream blockCompressionStream = new BlockCompression.LZ4BlockStream(sourceStream, BlockCompression.AccessMode.read, this.useEncryption, this.aesKey, this.usingDedupe);
+            BlockCompression.LZ4BlockStream blockCompressionStream = new BlockCompression.LZ4BlockStream(sourceStream, BlockCompression.AccessMode.read, this.useEncryption, this.aesKey);
 
             if (!blockCompressionStream.init())
             {

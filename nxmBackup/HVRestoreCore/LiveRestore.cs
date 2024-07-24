@@ -24,7 +24,7 @@ namespace HVRestoreCore
 
         public lrState State { get; set; }
 
-        public LiveRestore(bool useEncryption, byte[] aesKey, bool usingDedupe)
+        public LiveRestore(bool useEncryption, byte[] aesKey)
         {
             this.useEncryption = useEncryption;
             this.aesKey = aesKey;

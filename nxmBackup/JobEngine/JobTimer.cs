@@ -112,7 +112,7 @@ namespace JobEngine
             {
                 if (!stopRequest)
                 {
-                    CurrentSnapshotHandler = new SnapshotHandler(vm, executionId, this.Job.UseEncryption, this.Job.AesKey, this.job.UsingDedupe, new StopRequestWrapper());
+                    CurrentSnapshotHandler = new SnapshotHandler(vm, executionId, this.Job.UseEncryption, this.Job.AesKey, new StopRequestWrapper());
 
                     //incremental allowed?
                     bool incremental = this.Job.Incremental;

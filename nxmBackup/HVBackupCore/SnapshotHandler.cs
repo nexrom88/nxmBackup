@@ -21,20 +21,18 @@ namespace nxmBackup.HVBackupCore
         private Common.EventHandler eventHandler;
         private bool useEncryption;
         private byte[] aesKey;
-        private bool usingDedupe;
         public StopRequestWrapper StopRequestWrapper { get; set; }
 
         public const string USER_SNAPSHOT_TYPE = "Microsoft:Hyper-V:Snapshot:Realized";
         public const string RECOVERY_SNAPSHOT_TYPE = "Microsoft:Hyper-V:Snapshot:Recovery";
 
-        public SnapshotHandler(JobVM vm, int executionId, bool useEncryption, byte[] aesKey, bool usingDedupe, StopRequestWrapper stopRequestWrapper)
+        public SnapshotHandler(JobVM vm, int executionId, bool useEncryption, byte[] aesKey, StopRequestWrapper stopRequestWrapper)
         {
             this.useEncryption = useEncryption;
             this.aesKey = aesKey;
             this.vm = vm;
             this.executionId = executionId;
             this.eventHandler = new Common.EventHandler(vm, executionId);
-            this.usingDedupe = usingDedupe;
             this.StopRequestWrapper = stopRequestWrapper;
             if (this.StopRequestWrapper == null)
             {
@@ -375,7 +373,7 @@ namespace nxmBackup.HVBackupCore
                 int eventId;
                 eventId = this.eventHandler.raiseNewEvent(LanguageHandler.getString("rotating_1"), false, false, NO_RELATED_EVENT, EventStatus.inProgress);
 
-                HVRestoreCore.FullRestoreHandler restHandler = new HVRestoreCore.FullRestoreHandler(null, this.useEncryption, this.aesKey, this.usingDedupe);
+                HVRestoreCore.FullRestoreHandler restHandler = new HVRestoreCore.FullRestoreHandler(null, this.useEncryption, this.aesKey);
 
                 //perform restore to staging directory (including merge with second backup)
                 restHandler.performFullRestoreProcess(path, System.IO.Path.Combine(path, "staging"), "", chain[1].instanceID, false, 0);
@@ -392,7 +390,7 @@ namespace nxmBackup.HVBackupCore
                 //create new backup container from merged backups
                 Guid g = Guid.NewGuid();
                 string guidFolder = g.ToString();
-                Common.LZ4Archive backupArchive = new Common.LZ4Archive(System.IO.Path.Combine(path, guidFolder + ".nxm"), null, this.useEncryption, this.aesKey,this.usingDedupe, null);
+                Common.LZ4Archive backupArchive = new Common.LZ4Archive(System.IO.Path.Combine(path, guidFolder + ".nxm"), null, this.useEncryption, this.aesKey, null);
                 backupArchive.create();
                 backupArchive.open(System.IO.Compression.ZipArchiveMode.Create);
 
@@ -511,10 +509,6 @@ namespace nxmBackup.HVBackupCore
 
                     this.eventHandler.raiseNewEvent(LanguageHandler.getString("successful"), true, false, eventId, EventStatus.successful);
 
-                    if (this.usingDedupe)
-                    {
-                        this.eventHandler.raiseNewEvent(LanguageHandler.getString("dedupe_used"), false, false, NO_RELATED_EVENT, EventStatus.info);
-                    }
                     if (this.useEncryption)
                     {
                         this.eventHandler.raiseNewEvent(LanguageHandler.getString("encryption_used"), false, false, NO_RELATED_EVENT, EventStatus.info);
@@ -647,7 +641,7 @@ namespace nxmBackup.HVBackupCore
             Common.IArchive archive;
 
 
-            archive = new Common.LZ4Archive(System.IO.Path.Combine(path, guidFolder + ".nxm"), this.eventHandler, this.useEncryption, this.aesKey, this.usingDedupe, StopRequestWrapper);
+            archive = new Common.LZ4Archive(System.IO.Path.Combine(path, guidFolder + ".nxm"), this.eventHandler, this.useEncryption, this.aesKey, StopRequestWrapper);
             
             
             archive.create();

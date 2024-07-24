@@ -35,7 +35,7 @@ namespace ConfigHandler
                     queryExtension = " AND jobs.id=" + jobid;
                 }
 
-                List<Dictionary<string, object>> jobsDB = connection.doReadQuery("SELECT storagetarget.targettype, storagetarget.targetpath, storagetarget.targetuser,storagetarget.targetpassword, jobs.id, jobs.enabled, jobs.name, jobs.mailnotifications, jobs.incremental, jobs.maxelements, jobs.blocksize, jobs.day, jobs.hour, jobs.minute, jobs.interval, jobs.livebackup, jobs.livebackupsize, jobs.useencryption, jobs.aeskey, jobs.usededupe, rotationtype.name AS rotationname FROM jobs INNER JOIN rotationtype ON jobs.rotationtypeid=rotationtype.id INNER JOIN storagetarget ON jobs.id=storagetarget.targetjobid WHERE jobs.deleted=FALSE" + queryExtension, null, null);
+                List<Dictionary<string, object>> jobsDB = connection.doReadQuery("SELECT storagetarget.targettype, storagetarget.targetpath, storagetarget.targetuser,storagetarget.targetpassword, jobs.id, jobs.enabled, jobs.name, jobs.mailnotifications, jobs.incremental, jobs.maxelements, jobs.blocksize, jobs.day, jobs.hour, jobs.minute, jobs.interval, jobs.livebackup, jobs.livebackupsize, jobs.useencryption, jobs.aeskey, rotationtype.name AS rotationname FROM jobs INNER JOIN rotationtype ON jobs.rotationtypeid=rotationtype.id INNER JOIN storagetarget ON jobs.id=storagetarget.targetjobid WHERE jobs.deleted=FALSE" + queryExtension, null, null);
 
                 //check that jobs != null
                 if (jobsDB == null) //DB error
@@ -57,7 +57,6 @@ namespace ConfigHandler
                     newJob.LiveBackup = Convert.ToBoolean(jobDB["livebackup"]);
                     newJob.LiveBackupSize = Convert.ToInt32(jobDB["livebackupsize"]);
                     newJob.Incremental = Convert.ToBoolean(jobDB["incremental"]);
-                    newJob.UsingDedupe = Convert.ToBoolean(jobDB["usededupe"]);
                     newJob.TargetType = jobDB["targettype"].ToString();
                     newJob.TargetPath = jobDB["targetpath"].ToString();
                     newJob.TargetUsername = jobDB["targetuser"].ToString();
@@ -260,10 +259,9 @@ namespace ConfigHandler
                 parameters.Add("livebackup", job.LiveBackup);
                 parameters.Add("livebackupsize", job.LiveBackupSize);
                 parameters.Add("updatejobID", updatedJobID);
-                parameters.Add("usededupe", job.UsingDedupe);
 
 
-                values = connection.doReadQuery("UPDATE jobs SET name = @name, mailnotifications = @mailnotifications, incremental = @incremental, interval = @interval, minute = @minute, hour = @hour, day = @day, blocksize = @blocksize, maxelements = @maxelements, livebackup = @livebackup, rotationtypeid = @rotationtypeID, usededupe = @usededupe, livebackupsize = @livebackupsize WHERE id=@updatejobID;", parameters, transaction);
+                values = connection.doReadQuery("UPDATE jobs SET name = @name, mailnotifications = @mailnotifications, incremental = @incremental, interval = @interval, minute = @minute, hour = @hour, day = @day, blocksize = @blocksize, maxelements = @maxelements, livebackup = @livebackup, rotationtypeid = @rotationtypeID, livebackupsize = @livebackupsize WHERE id=@updatejobID;", parameters, transaction);
 
                 //delete existing JObVM relation
                 deleteJobVMRelation(updatedJobID, connection, transaction);
@@ -321,10 +319,9 @@ namespace ConfigHandler
                 parameters.Add("livebackupsize", job.LiveBackupSize);
                 parameters.Add("useencryption", job.UseEncryption);
                 parameters.Add("aeskey", job.AesKey);
-                parameters.Add("usededupe", job.UsingDedupe);
 
 
-                values = connection.doReadQuery("INSERT INTO jobs (name, mailnotifications, incremental, interval, minute, hour, day, blocksize, maxelements, livebackup, rotationtypeid, useencryption, aeskey, usededupe, livebackupsize) VALUES(@name, @mailnotifications, @incremental, @interval, @minute, @hour, @day, @blocksize, @maxelements, @livebackup, @rotationtypeID, @useencryption, @aeskey, @usededupe, @livebackupsize);", parameters, transaction);
+                values = connection.doReadQuery("INSERT INTO jobs (name, mailnotifications, incremental, interval, minute, hour, day, blocksize, maxelements, livebackup, rotationtypeid, useencryption, aeskey, livebackupsize) VALUES(@name, @mailnotifications, @incremental, @interval, @minute, @hour, @day, @blocksize, @maxelements, @livebackup, @rotationtypeID, @useencryption, @aeskey, @livebackupsize);", parameters, transaction);
 
                 int jobID = (int)connection.getLastInsertedID();
 
@@ -530,7 +527,6 @@ namespace ConfigHandler
         public Interval Interval { get => interval; set => interval = value; }
         public bool UseEncryption { get => useEncryption; set => useEncryption = value; }
         public byte[] AesKey { get => aesKey; set => aesKey = value; }
-        public bool UsingDedupe { get => usingDedupe; set => usingDedupe = value; }
         public bool MailNotifications { get => mailNotifications; set => mailNotifications = value; }
         public List<JobVM> JobVMs { get => jobVMs; set => jobVMs = value; }
         public int BlockSize { get => blockSize; set => blockSize = value; }

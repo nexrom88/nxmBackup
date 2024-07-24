@@ -137,15 +137,15 @@ namespace RestoreHelper
                     }
 
                     int jobExecutionId = Common.DBQueries.addJobExecution(this.job.DbId, "restore");
-                    HVRestoreCore.FullRestoreHandler fullRestoreHandler = new HVRestoreCore.FullRestoreHandler(new Common.EventHandler(targetVM, jobExecutionId), this.job.UseEncryption, this.job.AesKey, this.job.UsingDedupe);
+                    HVRestoreCore.FullRestoreHandler fullRestoreHandler = new HVRestoreCore.FullRestoreHandler(new Common.EventHandler(targetVM, jobExecutionId), this.job.UseEncryption, this.job.AesKey);
                     fullRestoreHandler.performFullRestoreProcess(sourcePath, "c:\\target", ((ComboBoxItem)cbVMs.SelectedItem).Content.ToString() + "_restored", restorePoint.InstanceId, importToHyperV, 0);
                     break;
                 case "flr":
-                    HVRestoreCore.FileLevelRestoreHandler flrHandler = new HVRestoreCore.FileLevelRestoreHandler(this.job.UseEncryption, this.job.AesKey, this.job.UsingDedupe);
+                    HVRestoreCore.FileLevelRestoreHandler flrHandler = new HVRestoreCore.FileLevelRestoreHandler(this.job.UseEncryption, this.job.AesKey);
                     flrHandler.performGuestFilesRestore(sourcePath, restorePoint.InstanceId, true, "", 0);
                     break;
                 case "lr":
-                    HVRestoreCore.LiveRestore lrHandler = new HVRestoreCore.LiveRestore(this.job.UseEncryption, this.job.AesKey, this.job.UsingDedupe);
+                    HVRestoreCore.LiveRestore lrHandler = new HVRestoreCore.LiveRestore(this.job.UseEncryption, this.job.AesKey);
                     lrHandler.performLiveRestore(sourcePath, ((ComboBoxItem)cbVMs.SelectedItem).Content.ToString(), restorePoint.InstanceId, true, 0);
                     break;
             }

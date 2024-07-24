@@ -26,7 +26,7 @@ namespace HVRestoreCore
         public GuestVolume[] GuestVolumes { get; set; }
 
 
-        public FileLevelRestoreHandler(bool useEncryption, byte[] aesKey, bool usingDedupe)
+        public FileLevelRestoreHandler(bool useEncryption, byte[] aesKey)
         {
             this.useEncryption = useEncryption;
             this.aesKey = aesKey;

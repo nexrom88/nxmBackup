@@ -69,7 +69,7 @@ namespace Frontend.Controllers
                     DateTime startTime = DateTime.Now;
                     
                     int jobExecutionId = Common.DBQueries.addJobExecution(restoreStartDetails.jobID, "restore");
-                    HVRestoreCore.FullRestoreHandler fullRestoreHandler = new HVRestoreCore.FullRestoreHandler(new Common.EventHandler(vmObject, jobExecutionId), jobObject.UseEncryption, jobObject.AesKey, jobObject.UsingDedupe);
+                    HVRestoreCore.FullRestoreHandler fullRestoreHandler = new HVRestoreCore.FullRestoreHandler(new Common.EventHandler(vmObject, jobExecutionId), jobObject.UseEncryption, jobObject.AesKey);
                     System.Threading.Thread frThread = new System.Threading.Thread(() => fullRestoreHandler.performFullRestoreProcess(sourcePath, restoreStartDetails.destPath, vmObject.vmName + "_restored", restoreStartDetails.instanceID, importToHyperV, lbTimeLimit));
                     frThread.Start();
 
@@ -80,7 +80,7 @@ namespace Frontend.Controllers
 
                     break;
                 case "lr":
-                    HVRestoreCore.LiveRestore lrHandler = new HVRestoreCore.LiveRestore(jobObject.UseEncryption, jobObject.AesKey, jobObject.UsingDedupe);
+                    HVRestoreCore.LiveRestore lrHandler = new HVRestoreCore.LiveRestore(jobObject.UseEncryption, jobObject.AesKey);
 
                     //set global object
                     App_Start.RunningRestoreJobs.CurrentLiveRestore = lrHandler;
@@ -110,7 +110,7 @@ namespace Frontend.Controllers
                     break;
 
                 case "flr":
-                    HVRestoreCore.FileLevelRestoreHandler flrHandler = new HVRestoreCore.FileLevelRestoreHandler(jobObject.UseEncryption, jobObject.AesKey, jobObject.UsingDedupe);
+                    HVRestoreCore.FileLevelRestoreHandler flrHandler = new HVRestoreCore.FileLevelRestoreHandler(jobObject.UseEncryption, jobObject.AesKey);
 
                     //set global object
                     App_Start.RunningRestoreJobs.CurrentFileLevelRestore = flrHandler;

@@ -47,7 +47,6 @@ namespace Frontend.Controllers
             newJob.LiveBackup = value.livebackup;
             newJob.LiveBackupSize = int.Parse(value.livebackupsize);
             newJob.UseEncryption = value.useencryption;
-            newJob.UsingDedupe = value.usingdedupe;
             newJob.MailNotifications = value.mailnotifications;
             newJob.HostID = value.hostID;
 
@@ -194,7 +193,6 @@ namespace Frontend.Controllers
             public bool mailnotifications { get; set; }
             public bool incremental { get; set; }
             public bool useencryption { get; set; }
-            public bool usingdedupe { get; set; }
             public string encpassword { get; set; }
             public bool livebackup { get; set; }
             public string livebackupsize { get; set; }
