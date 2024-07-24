@@ -656,6 +656,7 @@ namespace Common
             dbConn.doWriteQuery("UPDATE settings SET value = \"\" WHERE name=\"mailsender\"", null, transaction);
             dbConn.doWriteQuery("UPDATE settings SET value = \"\" WHERE name=\"mailrecipient\"", null, transaction);
             dbConn.doWriteQuery("UPDATE settings SET value = \"en\" WHERE name=\"language\"", null, transaction);
+            dbConn.doWriteQuery("UPDATE settings SET value = \"c:\\nxmMount\" WHERE name=\"mountpath\"", null, transaction);
         }
 
         
