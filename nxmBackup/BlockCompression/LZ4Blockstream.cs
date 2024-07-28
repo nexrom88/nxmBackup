@@ -546,7 +546,7 @@ namespace BlockCompression
             //read current block header
             byte[] headerData = new byte[8];
             ulong decompressedFileByteOffset = 0;
-            ulong fileOffset = 0;
+            ulong payloadDataOffset = 0;
             ulong compressedBlockSize = 0;
             ulong totalUncompressedBytesRead = 0;
             ulong startDiffOffset = 0;
@@ -562,7 +562,7 @@ namespace BlockCompression
                 //block found?
                 if (decompressedFileByteOffset + this.DecompressedBlockSize > (ulong)this.Position)
                 {
-                    fileOffset = entry.payloadDataOffset;
+                    payloadDataOffset = entry.payloadDataOffset;
                     blockFound = true;
                     break;
                 }
@@ -607,7 +607,7 @@ namespace BlockCompression
                 byte[] cacheBlock = null;
 
                 //check if null-block?
-                if (decompressedFileByteOffset == 0 && compressedBlockSize == 0)
+                if (payloadDataOffset == 0 && compressedBlockSize == 0)
                 {
                     //null block
                     destMemoryStream.Write(new byte[decompressedBlockSize], 0, (int)decompressedBlockSize);
