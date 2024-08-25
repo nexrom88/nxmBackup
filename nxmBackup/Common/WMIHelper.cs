@@ -229,8 +229,9 @@ namespace Common
                     return queryObj["Name"].ToString();
                 }
                 return "";
-            } catch
+            } catch (Exception ex)
             {
+                DBQueries.addLog("error while translating ip to hostname", Environment.StackTrace, ex);
                 return "";
             }
         }
