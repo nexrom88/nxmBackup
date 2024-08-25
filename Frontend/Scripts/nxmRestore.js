@@ -386,10 +386,12 @@ function handleRunningFLR(volumes) {
         $.ajax({
             url: 'api/Restore',
             type: 'DELETE'
+        }).done(function (data) {
+            restoreWebWorker.terminate();
+            restoreWebWorker = null;  
         });
 
-        restoreWebWorker.terminate();
-        restoreWebWorker = null;
+        
     });
 
     //load file browser container

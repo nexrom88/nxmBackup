@@ -194,6 +194,8 @@ namespace HVRestoreCore
                 }
             }
 
+            
+
             //clean-up
             if (!windowMode)
             {
@@ -204,6 +206,10 @@ namespace HVRestoreCore
             mountThread.Abort();
             mountHandler.stopMfHandling();
 
+            //set state to stopped
+            newRunningState = new flrState();
+            newRunningState.type = flrStateType.stopped;
+            State = newRunningState;
 
         }
 

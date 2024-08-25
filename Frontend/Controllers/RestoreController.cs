@@ -166,6 +166,12 @@ namespace Frontend.Controllers
             if (App_Start.RunningRestoreJobs.CurrentFileLevelRestore != null)
             {
                 App_Start.RunningRestoreJobs.CurrentFileLevelRestore.StopRequest = true;
+
+                //wait for process being stopped
+                while(App_Start.RunningRestoreJobs.CurrentFileLevelRestore.State.type != HVRestoreCore.FileLevelRestoreHandler.flrStateType.stopped)
+                {
+                    System.Threading.Thread.Sleep(220);
+                }
                 App_Start.RunningRestoreJobs.CurrentFileLevelRestore = null;
             }
 
