@@ -104,41 +104,23 @@ namespace HVRestoreCore
 
             //show hdd picker window when more than one hdd
             string selectedHDD = null;
-            if (windowMode)
-            {
-                if (baseHDDFiles.Length > 1)
-                {
-                    HDDPickerWindow pickerWindow = new HDDPickerWindow();
-                    pickerWindow.BaseHDDs = baseHDDFiles;
-                    pickerWindow.ShowDialog();
-                    selectedHDD = pickerWindow.UserPickedHDD;
 
-                    //no hdd selected -> cancel restore
-                    if (selectedHDD == null)
-                    {
-                        DBQueries.addLog("no hdd selcted", Environment.StackTrace, null);
-                        return;
-                    }
-                }
-            }
-            else
+            //web GUI mode, build return struct if more than one hdd
+            if (baseHDDFiles.Length > 1)
             {
-                //web GUI mode, build return struct if more than one hdd
-                if (baseHDDFiles.Length > 1)
+                if (guiSelectedHDD == "")
                 {
-                    if (guiSelectedHDD == "")
-                    {
-                        flrState newState = new flrState();
-                        newState.type = flrStateType.waitingForHDDSelect;
-                        newState.hddsToSelect = baseHDDFiles;
-                        State = newState;
-                        return;
-                    }
-                    else
-                    {
-                        selectedHDD = guiSelectedHDD;
-                    }
+                    flrState newState = new flrState();
+                    newState.type = flrStateType.waitingForHDDSelect;
+                    newState.hddsToSelect = baseHDDFiles;
+                    State = newState;
+                    return;
                 }
+                else
+                {
+                    selectedHDD = guiSelectedHDD;
+                }
+
             }
 
             //if lb is first element, show date picker
@@ -206,7 +188,7 @@ namespace HVRestoreCore
             }
             else
             {
-                while (!StopRequest  && mountHandler.mountState != MountHandler.ProcessState.error )
+                while (!StopRequest && mountHandler.mountState != MountHandler.ProcessState.error)
                 {
                     Thread.Sleep(200);
                 }
