@@ -185,7 +185,7 @@ namespace nxmBackup.MFUserMode
         //starts the vm import process
         private void startImportVMProcess(string configFile, string mountDirectory, bool newId, string newName)
         {
-            System.Threading.Thread.Sleep(1000);
+            System.Threading.Thread.Sleep(2000);
 
             //import vm to hyperv
             try
