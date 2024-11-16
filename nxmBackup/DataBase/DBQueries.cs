@@ -33,7 +33,6 @@ namespace Common
             }
         }
 
-
         //writes the given settings to db
         public static void writeGlobalSettings(Dictionary<string, string> settings)
         {
