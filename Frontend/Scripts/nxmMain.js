@@ -976,7 +976,7 @@ function buildJobsList() {
                 var currentTemplate = jobTemplate.slice();
 
                 //add job to sidebar
-                $("#jobsList").append(Mustache.render(currentTemplate, { JobName: configuredJobs[i].Name, JobDbId: configuredJobs[i].DbId, JobEnabled: configuredJobs[i].Enabled }));
+                $("#jobsList").append(Mustache.render(currentTemplate, { JobName: configuredJobs[i].Name, JobDbId: configuredJobs[i].DbId, JobEnabled: configuredJobs[i].Enabled, IsRunning: configuredJobs[i].isRunning }));
 
             }
 
@@ -1487,7 +1487,7 @@ function renderJobStateTable() {
             //set state color and set start/stop button caption
             if (data["LastRun"] == "" && !data["IsRunning"]) {
                 $("#jobDetailsRow").css("background-color", "#e6e6e6");
-                $("#jobDetailsRow").removeClass("detailsRowRunning");
+                $("#jobDetailsRow").removeClass("runningAnim");
 
                 //change start/stop button caption
                 $("#startStopButtonCaption").html(languageStrings["start_job_button"]);
@@ -1496,7 +1496,7 @@ function renderJobStateTable() {
             } else {
                 if (data["Successful"] == "successful") {
                     $("#jobDetailsRow").css("background-color", "#ccffcc");
-                    $("#jobDetailsRow").removeClass("detailsRowRunning");
+                    $("#jobDetailsRow").removeClass("runningAnim");
 
                     //change start/stop button caption
                     $("#startStopButtonCaption").html(languageStrings["start_job_button"]);
@@ -1504,7 +1504,7 @@ function renderJobStateTable() {
                     $("#startStopJobButton").removeClass("btn-danger");
                 } else {
                     $("#jobDetailsRow").css("background-color", "#ffb3b3");
-                    $("#jobDetailsRow").removeClass("detailsRowRunning");
+                    $("#jobDetailsRow").removeClass("runninganim");
 
                     //change start/stop button caption
                     $("#startStopButtonCaption").html(languageStrings["start_job_button"]);
@@ -1513,7 +1513,7 @@ function renderJobStateTable() {
                 }
 
                 if (data.IsRunning) {
-                    $("#jobDetailsRow").addClass("detailsRowRunning");
+                    $("#jobDetailsRow").addClass("runningAnim");
 
                     //change start/stop button caption
                     $("#startStopButtonCaption").html(languageStrings["stop_job_button"]);

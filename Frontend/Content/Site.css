@@ -290,7 +290,7 @@
     text-align: left;
 }
 
-.detailsRowRunning {
+.runningAnim {
     animation-name: color;
     animation-duration: 2s;
     animation-iteration-count: infinite;
