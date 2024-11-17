@@ -114,9 +114,9 @@ namespace ConfigHandler
                     newJob.Interval = interval;
 
                     //query VMs
-                    Dictionary<string, object> paramaters = new Dictionary<string, object>();
-                    paramaters.Add("jobid", Convert.ToInt32(jobDB["id"]));
-                    List<Dictionary<string, object>> vms = connection.doReadQuery("SELECT VMs.id, VMs.name, VMs.hostid, hosts.host FROM vms INNER JOIN jobvmrelation ON JobVMRelation.jobid=@jobid AND jobvmrelation.vmid=VMs.id INNER JOIN hosts ON hosts.id=VMs.hostid;", paramaters, null);
+                    Dictionary<string, object> parameters = new Dictionary<string, object>();
+                    parameters.Add("jobid", Convert.ToInt32(jobDB["id"]));
+                    List<Dictionary<string, object>> vms = connection.doReadQuery("SELECT VMs.id, VMs.name, VMs.hostid, hosts.host FROM vms INNER JOIN jobvmrelation ON JobVMRelation.jobid=@jobid AND jobvmrelation.vmid=VMs.id INNER JOIN hosts ON hosts.id=VMs.hostid;", parameters, null);
                     newJob.JobVMs = new List<JobVM>();
 
                     //iterate through all vms
@@ -130,9 +130,9 @@ namespace ConfigHandler
                         newVM.host = vm["host"].ToString();
 
                         //read vm hdds
-                        paramaters.Clear();
-                        paramaters.Add("vmid", vm["id"]);
-                        List<Dictionary<string, object>> hdds = connection.doReadQuery("SELECT hdds.name, hdds.path FROM hdds INNER JOIN vmhddrelation ON hdds.id=vmhddrelation.hddid WHERE vmhddrelation.vmid=@vmid;", paramaters, null);
+                        parameters.Clear();
+                        parameters.Add("vmid", vm["id"]);
+                        List<Dictionary<string, object>> hdds = connection.doReadQuery("SELECT hdds.name, hdds.path FROM hdds INNER JOIN vmhddrelation ON hdds.id=vmhddrelation.hddid WHERE vmhddrelation.vmid=@vmid;", parameters, null);
 
                         newVM.vmHDDs = new List<VMHDD>();
 
@@ -154,12 +154,13 @@ namespace ConfigHandler
 
 
                     //get last jobExecution attributes
-                    paramaters.Clear();
-                    paramaters.Add("jobid", Convert.ToInt32(jobDB["id"]));
-                    List<Dictionary<string, object>> jobExecutions = connection.doReadQuery("SELECT * FROM jobexecutions WHERE jobexecutions.jobid=@jobid and jobexecutions.id = (SELECT MAX(id) FROM jobexecutions WHERE jobexecutions.jobid=@jobid AND jobexecutions.type='backup')", paramaters, null);
+                    parameters.Clear();
+                    parameters.Add("jobid", Convert.ToInt32(jobDB["id"]));
+                    List<Dictionary<string, object>> jobExecutions = connection.doReadQuery("SELECT * FROM jobexecutions WHERE jobexecutions.jobid=@jobid and jobexecutions.id = (SELECT MAX(id) FROM jobexecutions WHERE jobexecutions.jobid=@jobid AND jobexecutions.type='backup')", parameters, null);
 
                     if (jobExecutions.Count > 1) MessageBox.Show("db error: jobExecutions hat mehr als 1 result");
-                    else if (jobExecutions.Count == 1){
+                    else if (jobExecutions.Count == 1)
+                    {
                         foreach (Dictionary<string, object> jobExecution in jobExecutions)
                         {
                             newJob.LastRun = jobExecution["startstamp"].ToString();
@@ -167,7 +168,7 @@ namespace ConfigHandler
                             newJob.LastStop = jobExecution["stoptime"].ToString();
 
                             newJob.Successful = Convert.ToBoolean(jobExecution["successful"]).ToString();
-                           
+
                             newJob.IsRunning = Convert.ToBoolean(jobExecution["isrunning"]);
 
                             newJob.LastBytesProcessed = UInt64.Parse(jobExecution["bytesprocessed"].ToString());
@@ -175,9 +176,9 @@ namespace ConfigHandler
                             newJob.LastBytesTransfered = UInt64.Parse(jobExecution["bytestransfered"].ToString());
 
                             //read last transferrate
-                            paramaters.Clear();
-                            paramaters.Add("jobexecutionid", jobExecution["id"]);
-                            List<Dictionary<string, object>> rates = connection.doReadQuery("SELECT transferrate, processrate, timestamp FROM rates WHERE jobexecutionid=@jobexecutionid ORDER BY id ASC", paramaters, null);
+                            parameters.Clear();
+                            parameters.Add("jobexecutionid", jobExecution["id"]);
+                            List<Dictionary<string, object>> rates = connection.doReadQuery("SELECT transferrate, processrate, timestamp FROM rates WHERE jobexecutionid=@jobexecutionid ORDER BY id ASC", parameters, null);
                             if (rates != null)
                             {
                                 newJob.Rates = new OneJob.Rate[rates.Count];
@@ -355,7 +356,7 @@ namespace ConfigHandler
                 password = "";
             }
 
-            Dictionary<string, object>  parameters = new Dictionary<string, object>();
+            Dictionary<string, object> parameters = new Dictionary<string, object>();
             parameters.Add("targetjobid", jobID);
 
             //first delete any existing storage target, necessary for update
@@ -364,7 +365,7 @@ namespace ConfigHandler
             parameters.Add("targettype", type);
             parameters.Add("targetpath", path);
             parameters.Add("targetuser", username);
-            parameters.Add("targetpassword", Common.PasswordCrypto.encrpytPassword(password));            
+            parameters.Add("targetpassword", Common.PasswordCrypto.encrpytPassword(password));
 
             connection.doReadQuery("INSERT INTO storagetarget (targetjobid, targettype, targetpath, targetuser, targetpassword) VALUES (@targetjobid, @targettype, @targetpath, @targetuser, @targetpassword);", parameters, transaction);
         }
@@ -397,7 +398,7 @@ namespace ConfigHandler
 
                 List<int> hddIDs = new List<int>();
                 //add hdd DB entries
-                foreach(VMHDD currentHDD in vm.vmHDDs)
+                foreach (VMHDD currentHDD in vm.vmHDDs)
                 {
                     Dictionary<string, object> parameters = new Dictionary<string, object>();
                     parameters.Add("name", currentHDD.name);
@@ -407,7 +408,7 @@ namespace ConfigHandler
                 }
 
                 //add vm hdd relations
-                foreach(int hddID in hddIDs)
+                foreach (int hddID in hddIDs)
                 {
                     Dictionary<string, object> parameters = new Dictionary<string, object>();
                     parameters.Add("vmid", vm.vmID);
@@ -581,21 +582,21 @@ namespace ConfigHandler
         public string LastRun { get => lastRun; set => lastRun = value; }
 
         public string LastStop { get => lastStop; set => lastStop = value; }
-        public string Successful 
-        { 
-            get 
-            { 
-                switch(successful)
+        public string Successful
+        {
+            get
+            {
+                switch (successful)
                 {
                     case true:
                         return "successful";
                     case false:
                         return "failed";
                     default:
-                        return "default";                        
+                        return "default";
                 }
             }
-            set => successful = bool.Parse(value); 
+            set => successful = bool.Parse(value);
         }
 
         public UInt64 LastBytesTransfered { get => lastBytesTransfered; set => lastBytesTransfered = value; }
@@ -609,6 +610,6 @@ namespace ConfigHandler
         }
     }
 
-    
+
 
 }

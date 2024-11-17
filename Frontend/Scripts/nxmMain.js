@@ -4,6 +4,7 @@ var selectedJob; //the id of the currently selected job
 var selectedJobObj; //the obj with the currently selected job
 var selectedVM; //the selected vm id within main panel
 var eventRefreshTimer; //timer for refreshing vm events
+var jobsRefreshTimer; //timer for refreshing configured jobs
 var maxNodeID; //counter for treeview nodes
 var selectedDirectory; //the currently selected directory within folder browser
 var newJobObj; //new job object
@@ -24,8 +25,9 @@ var currentLanguage; //string object to hold current selected language
 $.ajaxSetup({
     statusCode: {
         401: function (jqxhr, textStatus, errorThrown) {
-            //stop possible running eventRefreshTimer
+            //stop possible running timers
             clearInterval(eventRefreshTimer);
+            clearInterval(jobsRefreshTimer);
 
             document.body.innerHTML = "";
 
@@ -122,14 +124,9 @@ function init() {
         }
     });
 
-    //load configured jobs
-    $.ajax({
-        url: "api/ConfiguredJobs"
-    })
-        .done(function (data) {
-            configuredJobs = jQuery.parseJSON(data);
-            buildJobsList();
-        });
+    //start configured jobs timer
+    jobsRefreshTimer = setInterval(loadConfiguredJobs, 7000);
+    loadConfiguredJobs();
 
     //register logout handler
     $("#logout").click(function () {
@@ -176,6 +173,41 @@ function init() {
     //register tooltips
     registerTooltips();
 
+}
+
+//loads the configured jobs
+function loadConfiguredJobs() {
+    $.ajax({
+        url: "api/ConfiguredJobs"
+    })
+        .done(function (data) {
+            var newConfiguredJobs = jQuery.parseJSON(data);
+
+            //check if data changed
+            if (configuredJobs && newConfiguredJobs.length == configuredJobs.length) {
+                for (var i = 0; i < newConfiguredJobs.length; i++) {
+                    //remove "rates" for comparison
+                    newConfiguredJobs[i].Rates = [];
+                }
+
+                //compare both objects
+                if (JSON.stringify(newConfiguredJobs) != JSON.stringify(configuredJobs)) {
+                    configuredJobs = newConfiguredJobs;
+                    buildJobsList();
+                }
+
+
+            } else {
+                //job counts differ, reload
+                for (var i = 0; i < newConfiguredJobs.length; i++) {
+                    //remove "rates" for comparison
+                    newConfiguredJobs[i].Rates = [];
+                }
+                configuredJobs = newConfiguredJobs;
+                buildJobsList();
+            }
+            
+        });
 }
 
 $(window).on('load', function () {
@@ -976,7 +1008,7 @@ function buildJobsList() {
                 var currentTemplate = jobTemplate.slice();
 
                 //add job to sidebar
-                $("#jobsList").append(Mustache.render(currentTemplate, { JobName: configuredJobs[i].Name, JobDbId: configuredJobs[i].DbId, JobEnabled: configuredJobs[i].Enabled, IsRunning: configuredJobs[i].isRunning }));
+                $("#jobsList").append(Mustache.render(currentTemplate, { JobName: configuredJobs[i].Name, JobDbId: configuredJobs[i].DbId, JobEnabled: configuredJobs[i].Enabled, IsRunning: configuredJobs[i].IsRunning }));
 
             }
 
