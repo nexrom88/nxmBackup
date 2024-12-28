@@ -40,6 +40,18 @@ namespace nxmBackup.HVBackupCore
             }
         }
 
+        //error handling when destination is not available
+        private void destinationFailed(ManagementObject snapshot, Exception ex)
+        {
+            this.eventHandler.raiseNewEvent(LanguageHandler.getString("destination_failed"), false, false, NO_RELATED_EVENT, EventStatus.error);
+            this.eventHandler.raiseNewEvent(LanguageHandler.getString("backup_failed"), false, false, NO_RELATED_EVENT, EventStatus.error);
+            DBQueries.addLog("error on creating folder", Environment.StackTrace, ex);
+
+            //delete previously created snapshot
+            ManagementObject refPoint = convertToReferencePoint(snapshot, false);
+            removeReferencePoint(refPoint);
+        }
+
         //performs a full backup chain
         public TransferDetails performFullBackupProcess(ConsistencyLevel cLevel, Boolean allowSnapshotFallback, bool incremental, ConfigHandler.OneJob job, ManagementObject snapshot = null)
         {
@@ -71,16 +83,29 @@ namespace nxmBackup.HVBackupCore
                 System.IO.Directory.CreateDirectory(destination);
             }catch(Exception ex)
             {
-                this.eventHandler.raiseNewEvent(LanguageHandler.getString("destination_failed"), false, false, NO_RELATED_EVENT, EventStatus.error);
-                this.eventHandler.raiseNewEvent(LanguageHandler.getString("backup_failed"), false, false, NO_RELATED_EVENT, EventStatus.error);
-                DBQueries.addLog("error on creating folder", Environment.StackTrace, ex);
+                //whn failed to write to smb destination, try to reconnect
+                if (job.TargetType == "smb")
+                {
+                    Common.CredentialCacheManager.add(job.TargetPath, job.TargetUsername, job.TargetPassword);
 
-                //delete previously created snapshot
-                ManagementObject refPoint = convertToReferencePoint(snapshot, false);
-                removeReferencePoint(refPoint);
-
-                retVal.successful = false;
-                return retVal;
+                    //try to recreate folder
+                    try
+                    {
+                        System.IO.Directory.CreateDirectory(destination);
+                    }catch(Exception ex_smb)
+                    {
+                        //smb reconnect also failed
+                        destinationFailed(snapshot, ex_smb);
+                        retVal.successful = false;
+                        return retVal;
+                    }
+                }
+                else
+                {
+                    destinationFailed(snapshot, ex);
+                    retVal.successful = false;
+                    return retVal;
+                }
             }
 
             List<ConfigHandler.BackupConfigHandler.BackupInfo> chain = ConfigHandler.BackupConfigHandler.readChain(destination);
