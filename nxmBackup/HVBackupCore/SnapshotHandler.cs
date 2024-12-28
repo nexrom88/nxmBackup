@@ -86,6 +86,7 @@ namespace nxmBackup.HVBackupCore
                 //whn failed to write to smb destination, try to reconnect
                 if (job.TargetType == "smb")
                 {
+                    this.eventHandler.raiseNewEvent(LanguageHandler.getString("smb_reconnect"), false, false, NO_RELATED_EVENT, EventStatus.info);
                     Common.CredentialCacheManager.add(job.TargetPath, job.TargetUsername, job.TargetPassword);
 
                     //try to recreate folder
