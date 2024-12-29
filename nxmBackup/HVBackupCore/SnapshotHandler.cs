@@ -5,6 +5,7 @@ using System.Management;
 using System.Runtime.InteropServices;
 using System.Security;
 using Common;
+using Microsoft.Extensions.Logging;
 using nxmBackup.Language;
 
 
@@ -86,16 +87,20 @@ namespace nxmBackup.HVBackupCore
                 //whn failed to write to smb destination, try to reconnect
                 if (job.TargetType == "smb")
                 {
-                    this.eventHandler.raiseNewEvent(LanguageHandler.getString("smb_reconnect"), false, false, NO_RELATED_EVENT, EventStatus.info);
+                    this.eventHandler.raiseNewEvent(LanguageHandler.getString("smb_path_failed"), false, false, NO_RELATED_EVENT, EventStatus.error);
+                    int reconnectEvent = this.eventHandler.raiseNewEvent(LanguageHandler.getString("smb_reconnect"), false, false, NO_RELATED_EVENT, EventStatus.info);
                     Common.CredentialCacheManager.add(job.TargetPath, job.TargetUsername, job.TargetPassword);
 
                     //try to recreate folder
                     try
                     {
                         System.IO.Directory.CreateDirectory(destination);
-                    }catch(Exception ex_smb)
+                        this.eventHandler.raiseNewEvent(LanguageHandler.getString("successful"), true, false, reconnectEvent, EventStatus.successful);
+                    }
+                    catch(Exception ex_smb)
                     {
                         //smb reconnect also failed
+                        this.eventHandler.raiseNewEvent(LanguageHandler.getString("failed"), true, false, reconnectEvent, EventStatus.error);
                         destinationFailed(snapshot, ex_smb);
                         retVal.successful = false;
                         return retVal;
