@@ -13,9 +13,16 @@ namespace Frontend.Controllers
         // POST api/<controller>
         public HttpResponseMessage Post([FromBody] ImportPath path)
         {
-            string[] files = System.IO.Directory.GetFiles(path.path);
+            HttpResponseMessage response;
+            string configPath = path.path + "\\config.xml";
+            if (!System.IO.File.Exists(configPath))
+            {
+                //config file does not exist -> error
+                response = new HttpResponseMessage(HttpStatusCode.NotFound);
+                return response;
+            }
 
-            HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.OK);
+            response = new HttpResponseMessage(HttpStatusCode.OK);
             return response;
         }
 
