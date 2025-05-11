@@ -6,13 +6,33 @@ function startImportBackupProcess() {
     }).done(function (data) {
         data = replaceLanguageMarkups(data);
 
+        //show overlay for path select
         Swal.fire({
             title: languageStrings["import_backup"],
             html: data,
             confirmButtonColor: '#3085d6',
             allowOutsideClick: true,
             allowEscapeKey: true,
-            confirmButtonText: languageStrings["close"],
+            confirmButtonText: languageStrings["import"],
+            showCancelButton: true,
+            cancelButtonText: languageStrings["cancel"]
+        }).then((result) => {
+            if (result.isConfirmed) {
+                //send path to api
+                var postObj = {};
+                postObj["path"] = selectedDirectory;
+
+                $.ajax({
+                    url: 'api/ImportBackup',
+                    contentType: "application/json; charset=utf-8",
+                    data: JSON.stringify(postObj),
+                    type: 'POST',
+                    cache: false,
+                    success: function (result) {
+                        
+                    }
+                });
+            }
         });
 
         //build folder browser

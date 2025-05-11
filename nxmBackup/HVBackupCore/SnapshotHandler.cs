@@ -84,7 +84,7 @@ namespace nxmBackup.HVBackupCore
                 System.IO.Directory.CreateDirectory(destination);
             }catch(Exception ex)
             {
-                //whn failed to write to smb destination, try to reconnect
+                //when failed to write to smb destination, try to reconnect
                 if (job.TargetType == "smb")
                 {
                     this.eventHandler.raiseNewEvent(LanguageHandler.getString("smb_path_failed"), false, false, NO_RELATED_EVENT, EventStatus.error);
@@ -436,7 +436,7 @@ namespace nxmBackup.HVBackupCore
                 eventId = this.eventHandler.raiseNewEvent(LanguageHandler.getString("rotating_4"), false, false, NO_RELATED_EVENT, EventStatus.inProgress);
 
                 //create entry to backup chain
-                bool configWritten = ConfigHandler.BackupConfigHandler.addBackup(path,this.useEncryption, guidFolder, "full", chain[1].instanceID, "", true, this.executionId.ToString());
+                bool configWritten = ConfigHandler.BackupConfigHandler.addBackup(path, this.vm.vmName, this.useEncryption, guidFolder, "full", chain[1].instanceID, "", true, this.executionId.ToString());
 
                 if (configWritten)
                 {
@@ -895,7 +895,7 @@ namespace nxmBackup.HVBackupCore
                     parentiid = (string)rctBase["InstanceId"];
                 }
 
-                bool configWritten = ConfigHandler.BackupConfigHandler.addBackup(basePath, this.useEncryption, guidFolder, backupType, (string)refP["InstanceId"], parentiid, false, this.executionId.ToString());
+                bool configWritten = ConfigHandler.BackupConfigHandler.addBackup(basePath, this.vm.vmName, this.useEncryption, guidFolder, backupType, (string)refP["InstanceId"], parentiid, false, this.executionId.ToString());
 
                 if (!configWritten)
                 {

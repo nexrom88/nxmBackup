@@ -226,7 +226,7 @@ namespace nxmBackup.HVBackupCore
                 //get parent backup
                 string parentInstanceID = currentChain[currentChain.Count - 1].instanceID;
 
-                if (!ConfigHandler.BackupConfigHandler.addBackup(System.IO.Path.Combine(jobObject.TargetPath, jobObject.Name + "\\" + vm.vmID), jobObject.UseEncryption, this.backupuuid, "lb", "nxm:" + this.backupuuid, parentInstanceID, false, this.eventHandler.ExecutionId.ToString()))
+                if (!ConfigHandler.BackupConfigHandler.addBackup(System.IO.Path.Combine(jobObject.TargetPath, jobObject.Name + "\\" + vm.vmID), vm.vmName, jobObject.UseEncryption, this.backupuuid, "lb", "nxm:" + this.backupuuid, parentInstanceID, false, this.eventHandler.ExecutionId.ToString()))
                 {
                     return false;
                 }

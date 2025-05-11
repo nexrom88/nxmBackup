@@ -8,12 +8,12 @@ namespace ConfigHandler
     public class BackupConfigHandler
     {
         //adds a newly created backup to the config file
-        public static bool addBackup(string basePath, bool encryption, string uuid, string type, string newInstanceID, string parentInstanceID, bool prepend, string jobExecutionId)
+        public static bool addBackup(string basePath, string vmName, bool encryption, string uuid, string type, string newInstanceID, string parentInstanceID, bool prepend, string jobExecutionId)
         {
             //check whether config file already exists
             if (!File.Exists(Path.Combine(basePath, "config.xml")))
             {
-                if (!initConfigFile(basePath, encryption))
+                if (!initConfigFile(basePath, encryption, vmName))
                 {
                     return false;
                 }
@@ -64,7 +64,7 @@ namespace ConfigHandler
         }
 
         //creates a new xml config file
-        private static bool initConfigFile(string basePath, bool encryption)
+        private static bool initConfigFile(string basePath, bool encryption, string vmName)
         {
             try
             {
@@ -82,6 +82,7 @@ namespace ConfigHandler
                 //generate attributes node
                 XmlElement attrElement = doc.CreateElement(string.Empty, "Attributes", string.Empty);
                 attrElement.SetAttribute("encryption", encryption.ToString());
+                attrElement.SetAttribute("vmname", vmName);
                 bodyElement.AppendChild(attrElement);
 
                 //generate BackupChain node

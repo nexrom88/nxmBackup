@@ -176,6 +176,7 @@
     <Compile Include="Controllers\CheckSMBCredentialsController.cs" />
     <Compile Include="Controllers\DBConnectTestController.cs" />
     <Compile Include="Controllers\HyperVHostsController.cs" />
+    <Compile Include="Controllers\ImportBackupController.cs" />
     <Compile Include="Controllers\JobEnableController.cs" />
     <Compile Include="Controllers\FileIconController.cs" />
     <Compile Include="Controllers\FLRBrowserController.cs" />
