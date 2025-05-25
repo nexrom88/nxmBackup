@@ -469,6 +469,19 @@ namespace nxmBackup.MFUserMode
                 return null;
             }
 
+            //check if mount path exists
+            if (!Directory.Exists(mountPath)){
+                Common.DBQueries.addLog("mountpath does not exist. Creating...", Environment.StackTrace, null);
+                try
+                {
+                    Directory.CreateDirectory(mountPath);
+                }catch(Exception ex)
+                {
+                    Common.DBQueries.addLog("failed creating mountpath", Environment.StackTrace, null);
+                    return null;
+                }
+            }
+
             //get physical path from path-obj to prevent case-sensitive errors
             mountPath = getWindowsPhysicalPath(mountPath);
 
