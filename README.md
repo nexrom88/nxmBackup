@@ -2,7 +2,7 @@
 nxmBackup is a backup software to backup HyperV virtual machines.
 nxmBackup is developed and continuously improved by private individuals.
 <p align="center">
-  <img src="https://nxmbackup.com/logo_nxm.png">
+  <img src="logo_nxm.png">
 </p>
 
 ## Feature-Highlights
