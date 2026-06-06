@@ -120,7 +120,17 @@ namespace Common
             {
                 if (bytesRemaining >= buffer.Length) //still a whole block to read?
                 {
-                    baseSourceStream.Read(buffer, 0, buffer.Length);
+                    try
+                    {
+                        baseSourceStream.Read(buffer, 0, buffer.Length);
+                    }
+                    catch (Exception ex)
+                    {
+                        this.eventHandler.raiseNewEvent(LanguageHandler.getString("source_reading_error"), false, false, NO_RELATED_EVENT, EventStatus.error);
+                        errorOccured = true;
+                        break;
+                    }
+                        
                     
                     try
                     {
