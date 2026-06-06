@@ -260,9 +260,10 @@ namespace ConfigHandler
                 parameters.Add("livebackup", job.LiveBackup);
                 parameters.Add("livebackupsize", job.LiveBackupSize);
                 parameters.Add("updatejobID", updatedJobID);
+                parameters.Add("imported", job.Imported);
 
 
-                values = connection.doReadQuery("UPDATE jobs SET name = @name, mailnotifications = @mailnotifications, incremental = @incremental, interval = @interval, minute = @minute, hour = @hour, day = @day, blocksize = @blocksize, maxelements = @maxelements, livebackup = @livebackup, rotationtypeid = @rotationtypeID, livebackupsize = @livebackupsize WHERE id=@updatejobID;", parameters, transaction);
+                values = connection.doReadQuery("UPDATE jobs SET name = @name, mailnotifications = @mailnotifications, incremental = @incremental, interval = @interval, minute = @minute, hour = @hour, day = @day, blocksize = @blocksize, maxelements = @maxelements, livebackup = @livebackup, rotationtypeid = @rotationtypeID, livebackupsize = @livebackupsize, imported = @imported WHERE id=@updatejobID;", parameters, transaction);
 
                 //delete existing JObVM relation
                 deleteJobVMRelation(updatedJobID, connection, transaction);
@@ -320,9 +321,10 @@ namespace ConfigHandler
                 parameters.Add("livebackupsize", job.LiveBackupSize);
                 parameters.Add("useencryption", job.UseEncryption);
                 parameters.Add("aeskey", job.AesKey);
+                parameters.Add("imported", job.Imported);
 
 
-                values = connection.doReadQuery("INSERT INTO jobs (name, mailnotifications, incremental, interval, minute, hour, day, blocksize, maxelements, livebackup, rotationtypeid, useencryption, aeskey, livebackupsize) VALUES(@name, @mailnotifications, @incremental, @interval, @minute, @hour, @day, @blocksize, @maxelements, @livebackup, @rotationtypeID, @useencryption, @aeskey, @livebackupsize);", parameters, transaction);
+                values = connection.doReadQuery("INSERT INTO jobs (name, mailnotifications, incremental, interval, minute, hour, day, blocksize, maxelements, livebackup, rotationtypeid, useencryption, aeskey, livebackupsize, imported) VALUES(@name, @mailnotifications, @incremental, @interval, @minute, @hour, @day, @blocksize, @maxelements, @livebackup, @rotationtypeID, @useencryption, @aeskey, @livebackupsize, @imported);", parameters, transaction);
 
                 int jobID = (int)connection.getLastInsertedID();
 
@@ -522,6 +524,7 @@ namespace ConfigHandler
         private string targetUsername;
         private string targetPassword;
         private string hostID;
+        private bool imported;
 
         public string Name { get => name; set => name = value; }
         public bool Enabled { get => enabled; set => enabled = value; }
@@ -534,6 +537,7 @@ namespace ConfigHandler
         public Rotation Rotation { get => rotation; set => rotation = value; }
         public bool IsRunning { get => isRunning; set => isRunning = value; }
         public bool Incremental { get => incremental; set => incremental = value; }
+        public bool Imported { get => imported; set => imported = value; }
         public int DbId { get => dbId; set => dbId = value; }
         public bool LiveBackupActive { get => liveBackupActive; set => liveBackupActive = value; }
         public bool LiveBackup { get => liveBackup; set => liveBackup = value; }

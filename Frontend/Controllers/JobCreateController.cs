@@ -49,6 +49,7 @@ namespace Frontend.Controllers
             newJob.UseEncryption = value.useencryption;
             newJob.MailNotifications = value.mailnotifications;
             newJob.HostID = value.hostID;
+            newJob.Imported = false;
 
             if (newJob.UseEncryption) {
                 newJob.AesKey = Common.SHA256Provider.computeHash(System.Text.Encoding.UTF8.GetBytes(value.encpassword));
