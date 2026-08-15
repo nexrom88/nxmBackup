@@ -222,6 +222,7 @@
     <Compile Include="Common\PrettyPrinter.cs" />
     <Compile Include="Common\Structs.cs" />
     <Compile Include="Common\vhdxParser.cs" />
+    <Compile Include="Common\vmdkParser.cs" />
     <Compile Include="Common\VirtualDiskHandler.cs" />
     <Compile Include="Common\WMIHelper.cs" />
     <Compile Include="Common\wmiUtilities.cs" />
